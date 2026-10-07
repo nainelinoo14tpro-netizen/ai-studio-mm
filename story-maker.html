@@ -99,7 +99,6 @@ button:active { transform: scale(0.97); }
 .headerBtns { display: flex; gap: 5px; align-items: center; }
 .iconBtn { width: 32px; height: 32px; padding: 0; border-radius: 8px; font-size: 13px; }
 
-/* Dashboard Hub Modal */
 .appMenuBackdrop {
   position: fixed; inset: 0; background: rgba(0, 0, 0, 0.75);
   backdrop-filter: blur(6px); z-index: 500; display: none;
@@ -110,6 +109,7 @@ button:active { transform: scale(0.97); }
   background: #0f1422; border: 1px solid var(--border-light);
   border-radius: 18px; padding: 16px; width: 100%; max-width: 440px;
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.85); animation: dropMenu 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  max-height: 85vh; overflow-y: auto;
 }
 @keyframes dropMenu {
   from { opacity: 0; transform: translateY(-12px) scale(0.97); }
@@ -155,14 +155,20 @@ button:active { transform: scale(0.97); }
 .card {
   background: linear-gradient(180deg, #111521, #0c0f17);
   border: 1px solid var(--border); border-radius: 16px; overflow: hidden;
-  box-shadow: var(--shadow); margin-bottom: 14px;
+  box-shadow: var(--shadow); margin-bottom: 14px; width: 100%;
 }
 .cardHead {
   padding: 12px 16px; border-bottom: 1px solid var(--border);
   display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  cursor: pointer;
 }
+.cardHead.no-cursor { cursor: default; }
 .title { font-weight: 750; font-size: 13.5px; display: flex; align-items: center; gap: 6px; }
 .body { padding: 14px 16px; }
+.body.collapsed { display: none; }
+
+.chevron { font-size: 11px; color: var(--muted); transition: transform 0.2s ease; }
+.chevron.rotate { transform: rotate(180deg); }
 
 .field { margin-bottom: 12px; }
 .field label {
@@ -175,8 +181,6 @@ button:active { transform: scale(0.97); }
 }
 .inputField:focus, .selectField:focus { border-color: var(--accent); }
 
-.gridRow { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-
 .tagGroup { display: flex; flex-wrap: wrap; gap: 6px; }
 .tagBtn {
   background: #111624; border: 1px solid var(--border);
@@ -186,7 +190,6 @@ button:active { transform: scale(0.97); }
   border-color: var(--accent); background: rgba(255, 190, 59, 0.15); color: var(--accent);
 }
 
-/* Episode Separator Header */
 .epDivider {
   background: linear-gradient(90deg, rgba(255, 190, 59, 0.18), transparent);
   border-left: 3px solid var(--accent);
@@ -196,29 +199,38 @@ button:active { transform: scale(0.97); }
   margin-top: 8px; margin-bottom: 4px;
 }
 
-.sceneList { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; max-height: 640px; overflow-y: auto; padding-right: 4px; }
+.sceneList { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; max-height: 640px; overflow-y: auto; padding-right: 2px; }
 .sceneCard {
   background: #090c14; border: 1px solid var(--border);
   border-radius: 14px; padding: 12px; transition: border-color 0.2s ease;
-  display: flex; flex-direction: column; gap: 8px;
+  display: flex; flex-direction: column; gap: 8px; width: 100%; box-sizing: border-box;
 }
 .sceneCard:hover { border-color: var(--border-light); }
+
 .sceneCardHead {
   display: flex; justify-content: space-between; align-items: center;
   font-size: 11px; font-weight: 800; color: var(--accent);
+  gap: 4px; width: 100%;
 }
-.sceneCardBtns { display: flex; gap: 4px; align-items: center; }
+.sceneHeadTitle { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.sceneCardBtns { 
+  display: flex; gap: 4px; align-items: center; flex-shrink: 0; margin-left: auto;
+}
+.sceneCardBtns button {
+  padding: 3px 6px; font-size: 9.5px; border-radius: 6px;
+}
 
 .sceneTextMM {
   width: 100%; background: #0c101a; border: 1px solid var(--border);
-  border-radius: 8px; padding: 8px 10px; font-size: 13px; line-height: 1.45; color: #fff;
+  border-radius: 8px; padding: 8px 10px; font-size: 12.5px; line-height: 1.6; color: #fff;
   resize: vertical; min-height: 56px; outline: 0;
 }
 .sceneTextMM:focus { border-color: var(--cyan); }
 
 .scenePromptEN {
   width: 100%; background: #060910; border: 1px solid #1a2234;
-  border-radius: 8px; padding: 7px 10px; font-size: 11.5px; line-height: 1.35; color: var(--cyan);
+  border-radius: 8px; padding: 7px 10px; font-size: 11.5px; line-height: 1.4; color: var(--cyan);
   font-family: ui-monospace, monospace; resize: vertical; min-height: 48px; outline: 0;
 }
 .scenePromptEN:focus { border-color: var(--accent); }
@@ -229,7 +241,6 @@ button:active { transform: scale(0.97); }
   margin-top: 14px; flex-wrap: wrap;
 }
 
-/* Error Diagnostic Modal */
 .errorModalSheet {
   background: #190e14; border: 1.5px solid var(--red);
   border-radius: 18px; padding: 18px; width: 100%; max-width: 440px;
@@ -268,7 +279,6 @@ button:active { transform: scale(0.97); }
   </div>
 </header>
 
-<!-- DASHBOARD TILE GRID MODAL -->
 <div class="appMenuBackdrop" id="appMenuBackdrop" onclick="toggleAppMenu(event)">
   <div class="appMenuSheet" onclick="event.stopPropagation()">
     <div class="appMenuHead">
@@ -288,12 +298,17 @@ button:active { transform: scale(0.97); }
         <div class="appTileName">Story Maker</div>
         <div class="appTileDesc">ခေါင်းစဉ်ဖြင့် AI ဇာတ်လမ်းရေး</div>
       </a>
+      <a href="voice-clone.html" class="appTileCard">
+        <div class="appTileIcon" style="background:linear-gradient(135deg, #20d7ff, #7657ff)">🎙️</div>
+        <div class="appTileName">Voice Clone</div>
+        <div class="appTileDesc">ကိုယ်ပိုင်အသံ AI အဖြစ်ပြောင်း</div>
+      </a>
       <a href="story-to-video.html" class="appTileCard">
         <div class="appTileIcon" style="background:linear-gradient(135deg, #2bd576, #20d7ff)">🎥</div>
         <div class="appTileName">Story to Video</div>
         <div class="appTileDesc">Photo Slideshow & Subtitles</div>
       </a>
-      <a href="index.html" class="appTileCard">
+      <a href="index.html" class="appTileCard" style="grid-column: span 2;">
         <div class="appTileIcon" style="background:linear-gradient(135deg, #7657ff, #20d7ff)">🏠</div>
         <div class="appTileName">Main Hub</div>
         <div class="appTileDesc">ပင်မစာမျက်နှာ Dashboard သို့</div>
@@ -304,7 +319,6 @@ button:active { transform: scale(0.97); }
 
 <div class="toast" id="toast"></div>
 
-<!-- ERROR DIAGNOSTIC MODAL -->
 <div class="appMenuBackdrop" id="errorModalBackdrop" onclick="closeErrorModal()">
   <div class="errorModalSheet" onclick="event.stopPropagation()">
     <div class="errorModalHead">
@@ -322,13 +336,15 @@ button:active { transform: scale(0.97); }
 <main class="container">
   <div class="appBodyGrid">
     
-    <!-- LEFT PANEL: GENERATOR CONFIGURATION -->
     <div class="card">
-      <div class="cardHead">
+      <div class="cardHead" onclick="toggleCard('setupBody', 'setupChev')">
         <div class="title">✨ AI Story Studio Setup</div>
-        <button onclick="testMyanmarVoice()" style="font-size:10px;padding:3px 8px;color:var(--cyan);border-color:#2b3954">🔊 Test Voice</button>
+        <div style="display:flex;align-items:center;gap:6px">
+          <button onclick="event.stopPropagation(); testMyanmarVoice();" style="font-size:10px;padding:3px 8px;color:var(--cyan);border-color:#2b3954">🔊 Test Voice</button>
+          <span class="chevron" id="setupChev">▲</span>
+        </div>
       </div>
-      <div class="body">
+      <div class="body" id="setupBody">
         
         <div class="field">
           <label>📝 STORY TOPIC / TITLE (ခေါင်းစဉ် သို့မဟုတ် အကြောင်းအရာ)</label>
@@ -347,7 +363,6 @@ button:active { transform: scale(0.97); }
           </div>
         </div>
 
-        <!-- FORMAT SELECTION: SINGLE OR SERIES -->
         <div class="field">
           <label>📖 STORY FORMAT (ဇာတ်လမ်း ပုံစံ)</label>
           <div class="tagGroup">
@@ -356,7 +371,6 @@ button:active { transform: scale(0.97); }
           </div>
         </div>
 
-        <!-- DYNAMIC CONTROL: SINGLE DURATION VS SERIES EPISODES -->
         <div class="field" id="singleDurationBox" style="display:none">
           <label>⏱️ SINGLE VIDEO DURATION (ကြာချိန်)</label>
           <div class="tagGroup">
@@ -366,7 +380,6 @@ button:active { transform: scale(0.97); }
           </div>
         </div>
 
-        <!-- SERIES EPISODE SELECTOR: 2 Ep မှ 6 Ep အထိ ရွေးချယ်မှု -->
         <div class="field" id="seriesEpisodesBox">
           <label style="color:var(--accent)">📺 SERIES EPISODES (၁ မိနစ် ၁ ပိုင်းနှုန်းဖြင့် အပိုင်း ရွေးချယ်မှု)</label>
           <div class="tagGroup">
@@ -409,9 +422,8 @@ button:active { transform: scale(0.97); }
       </div>
     </div>
 
-    <!-- RIGHT PANEL: TIMELINE VIEWER WITH EPISODE TABS -->
     <div class="card">
-      <div class="cardHead">
+      <div class="cardHead no-cursor">
         <div class="title">
           🎬 Story Timeline <span id="sceneCountBadge" style="font-size:11px;color:var(--muted)"></span>
         </div>
@@ -423,11 +435,8 @@ button:active { transform: scale(0.97); }
       </div>
       <div class="body">
         
-        <!-- EPISODE FILTER BAR -->
         <div id="episodeFilterBar" style="display:none;margin-bottom:10px">
-          <div class="tagGroup" id="episodeFilterTags">
-            <!-- Dynamically populated episode filter pills -->
-          </div>
+          <div class="tagGroup" id="episodeFilterTags"></div>
         </div>
 
         <div class="sceneList" id="sceneList">
@@ -460,12 +469,20 @@ let history = [];
 let future = [];
 let selectedCategory = "horror";
 let selectedDuration = 1;
-let selectedType = "series"; // Default: ဇာတ်လမ်းတွဲ
-let selectedEpisodes = 6;    // Default: 6 Episodes (6 Mins)
+let selectedType = "series";
+let selectedEpisodes = 6;
 let selectedVoice = "my-MM-ThihaNeural";
-let activeEpFilter = 0;      // 0 = All Episodes
+let activeEpFilter = 0;
 let isGenerating = false;
 let currentPlayingAudio = null;
+
+function toggleCard(bodyId, chevId) {
+  const b = document.getElementById(bodyId);
+  const c = document.getElementById(chevId);
+  if (!b) return;
+  b.classList.toggle("collapsed");
+  if (c) c.classList.toggle("rotate");
+}
 
 function toast(msg) {
   const x = document.getElementById("toast");
@@ -551,9 +568,6 @@ function redo() {
   toast("Redo performed");
 }
 
-/* ==========================================================================
-   DUAL-ENGINE TTS FOR PREVIEW
-   ========================================================================== */
 async function getSecMsGecClient() {
   const unixSeconds = Math.floor(Date.now() / 1000);
   const fileTimeSeconds = BigInt(unixSeconds) + 11644473600n;
@@ -660,7 +674,7 @@ async function playSceneVoice(idx) {
   if (!s || !s.text_mm) return;
   toast(`Playing Ep ${s.episode || 1} • Scene ${s.scene} voice...`);
   try {
-    const url = await fetchMyanmarAudio(s.text_mm, selectedVoice);
+    const url = await fetchMyanmarAudio(s.text_mm.replace(/\n+/g, " "), selectedVoice);
     if (currentPlayingAudio) currentPlayingAudio.pause();
     currentPlayingAudio = new Audio(url);
     currentPlayingAudio.play();
@@ -669,9 +683,6 @@ async function playSceneVoice(idx) {
   }
 }
 
-/* ==========================================================================
-   MULTI-EPISODE AI STORY PIPELINE
-   ========================================================================== */
 async function generateStory() {
   const topic = document.getElementById("topicInput").value.trim();
   if (!topic) { toast("Please enter a story title/topic"); return; }
@@ -700,7 +711,7 @@ async function generateStory() {
         duration: selectedDuration,
         type: selectedType,
         category: selectedCategory,
-        episodes: selectedType === "series" ? selectedEpisodes : 1 // 2 to 6 Episodes
+        episodes: selectedType === "series" ? selectedEpisodes : 1
       })
     });
 
@@ -714,7 +725,6 @@ async function generateStory() {
 
     if (!rawScenes.length) throw new Error("No scenes generated. Please try again.");
 
-    // Formatting & Episode Mapping
     scenes = rawScenes.map((s, idx) => ({
       episode: Number(s.episode) || 1,
       scene: Number(s.scene) || (idx + 1),
@@ -722,7 +732,7 @@ async function generateStory() {
       image_prompt_en: `${s.image_prompt_en || "Cinematic visual"}, ${artStyle}`
     }));
 
-    activeEpFilter = 0; // Show all
+    activeEpFilter = 0;
     setupEpisodeFilters();
     renderScenes();
     saveStoryToLocal();
@@ -786,7 +796,6 @@ function renderScenes() {
     const realIdx = scenes.indexOf(s);
     const epNum = s.episode || 1;
 
-    // အပိုင်းခွဲခြားသည့် Divider Header
     if (activeEpFilter === 0 && epNum !== currentEpisodeHeader) {
       currentEpisodeHeader = epNum;
       outputHTML += `
@@ -799,13 +808,13 @@ function renderScenes() {
     outputHTML += `
     <div class="sceneCard" id="sceneCard-${realIdx}">
       <div class="sceneCardHead">
-        <span>🎬 EP ${epNum} • SCENE ${s.scene}</span>
+        <span class="sceneHeadTitle">🎬 EP ${epNum} • SCENE ${s.scene}</span>
         <div class="sceneCardBtns">
-          <button onclick="playSceneVoice(${realIdx})" style="padding:2px 7px;font-size:10px" title="Listen voice">🔊 Play</button>
-          <button onclick="copySinglePrompt(${realIdx})" style="padding:2px 7px;font-size:10px;color:var(--cyan)" title="Copy English prompt">📋 Prompt</button>
-          <button onclick="moveScene(${realIdx}, -1)" style="padding:2px 6px;font-size:10px" title="Move Up">▲</button>
-          <button onclick="moveScene(${realIdx}, 1)" style="padding:2px 6px;font-size:10px" title="Move Down">▼</button>
-          <button class="danger" onclick="deleteScene(${realIdx})" style="padding:2px 6px;font-size:10px" title="Delete">✕</button>
+          <button onclick="playSceneVoice(${realIdx})" title="Listen voice">🔊 Play</button>
+          <button onclick="copySinglePrompt(${realIdx})" style="color:var(--cyan)" title="Copy English prompt">📋 Prompt</button>
+          <button onclick="moveScene(${realIdx}, -1)" title="Move Up">▲</button>
+          <button onclick="moveScene(${realIdx}, 1)" title="Move Down">▼</button>
+          <button class="danger" onclick="deleteScene(${realIdx})" title="Delete">✕</button>
         </div>
       </div>
 
@@ -953,7 +962,7 @@ function sendToVideoStudio() {
 }
 
 window.onload = function() {
-  setType("series"); // Default to series as requested
+  setType("series");
   setEpisodes(6);
   loadStoryFromLocal();
 };
