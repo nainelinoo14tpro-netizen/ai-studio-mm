@@ -108,9 +108,15 @@ button:active { transform: scale(0.97); }
 .cardHead {
   padding: 10px 14px; border-bottom: 1px solid var(--border);
   display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  cursor: pointer;
 }
+.cardHead.no-cursor { cursor: default; }
 .title { font-weight: 750; font-size: 13px; display: flex; align-items: center; gap: 6px; }
 .body { padding: 12px 14px; }
+.body.collapsed { display: none; }
+
+.chevron { font-size: 11px; color: var(--muted); transition: transform 0.2s ease; }
+.chevron.rotate { transform: rotate(180deg); }
 
 .previewCanvasBox {
   position: relative; width: 100%; background: #020406;
@@ -191,8 +197,13 @@ canvas#videoCanvas { width: 100%; height: 100%; object-fit: contain; display: bl
 .scenePromptBox {
   font-size: 9.5px; color: var(--cyan); font-family: ui-monospace, monospace;
   background: #060910; padding: 4px 6px; border-radius: 6px;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 280px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 215px;
 }
+.copyBtn {
+  background: #141a27; border: 1px solid var(--border-light); color: var(--muted);
+  border-radius: 6px; padding: 2px 6px; font-size: 9px; cursor: pointer; flex-shrink: 0;
+}
+.copyBtn:hover { color: #fff; border-color: var(--accent); }
 
 .settingGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
 .field label { display: block; font-size: 10px; color: var(--muted); margin-bottom: 4px; font-weight: 700; }
@@ -228,13 +239,12 @@ canvas#videoCanvas { width: 100%; height: 100%; object-fit: contain; display: bl
     </div>
   </div>
   <div class="headerBtns">
-    <button class="iconBtn" onclick="toggleAppMenu()" title="All Studios" style="background:rgba(43,213,118,0.22);border-color:var(--accent);color:#fff">▦</button>
+    <button class="iconBtn" id="mainMenuBtn" onclick="toggleAppMenu()" title="All Studios" style="background:rgba(43,213,118,0.22);border-color:var(--accent);color:#fff">▦</button>
     <button class="iconBtn" onclick="reloadFromStoryMaker()" title="Reload from Story Maker">🔄</button>
     <button class="iconBtn" onclick="exportFullVideo()" title="Burn Video" style="color:var(--red)">🔥</button>
   </div>
 </header>
 
-<!-- APP MENU MODAL (INLINE STYLED: PREVENTS OVERFLOW) -->
 <div class="appMenuBackdrop" id="appMenuBackdrop" onclick="toggleAppMenu(event)" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);backdrop-filter:blur(6px);z-index:9999;align-items:flex-start;justify-content:center;padding:60px 14px 14px 14px;">
   <div class="appMenuSheet" onclick="event.stopPropagation()" style="background:#0f1422;border:1px solid #34415c;border-radius:18px;padding:16px;width:100%;max-width:440px;box-shadow:0 20px 50px rgba(0,0,0,0.8);">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
@@ -244,12 +254,12 @@ canvas#videoCanvas { width: 100%; height: 100%; object-fit: contain; display: bl
       <button onclick="toggleAppMenu()" style="padding:4px 8px;font-size:11px;background:#1a2234;border:1px solid #34415c;border-radius:6px;color:#fff;cursor:pointer;">✕</button>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-      <a href="movie-recaps.html" style="background:#141a29;border:1px solid #232c3f;border-radius:14px;padding:12px 10px;text-decoration:none;display:flex;flex-direction:column;align-items:center;text-align:center;">
+      <a href="movie-recaps.html" target="_blank" style="background:#141a29;border:1px solid #232c3f;border-radius:14px;padding:12px 10px;text-decoration:none;display:flex;flex-direction:column;align-items:center;text-align:center;">
         <div style="width:40px;height:40px;border-radius:11px;display:grid;place-items:center;font-size:20px;margin-bottom:8px;background:linear-gradient(135deg, #ff5572, #ff7e40)">🎬</div>
         <div style="font-size:12px;font-weight:700;color:#fff;margin-bottom:3px;">Movie Recaps</div>
         <div style="font-size:9.5px;color:#8e9bb2;">ဇာတ်ကြောင်းပြော & မြန်မာ Voice</div>
       </a>
-      <a href="story-maker.html" style="background:#141a29;border:1px solid #232c3f;border-radius:14px;padding:12px 10px;text-decoration:none;display:flex;flex-direction:column;align-items:center;text-align:center;">
+      <a href="story-maker.html" target="_blank" style="background:#141a29;border:1px solid #232c3f;border-radius:14px;padding:12px 10px;text-decoration:none;display:flex;flex-direction:column;align-items:center;text-align:center;">
         <div style="width:40px;height:40px;border-radius:11px;display:grid;place-items:center;font-size:20px;margin-bottom:8px;background:linear-gradient(135deg, #ffbe3b, #ff5572)">✍️</div>
         <div style="font-size:12px;font-weight:700;color:#fff;margin-bottom:3px;">Story Maker</div>
         <div style="font-size:9.5px;color:#8e9bb2;">ခေါင်းစဉ်ဖြင့် AI ဇာတ်လမ်းရေး</div>
@@ -259,7 +269,7 @@ canvas#videoCanvas { width: 100%; height: 100%; object-fit: contain; display: bl
         <div style="font-size:12px;font-weight:700;color:#fff;margin-bottom:3px;">Story to Video</div>
         <div style="font-size:9.5px;color:#8e9bb2;">Photo Slideshow & Subtitles</div>
       </a>
-      <a href="index.html" style="background:#141a29;border:1px solid #232c3f;border-radius:14px;padding:12px 10px;text-decoration:none;display:flex;flex-direction:column;align-items:center;text-align:center;">
+      <a href="index.html" target="_blank" style="background:#141a29;border:1px solid #232c3f;border-radius:14px;padding:12px 10px;text-decoration:none;display:flex;flex-direction:column;align-items:center;text-align:center;">
         <div style="width:40px;height:40px;border-radius:11px;display:grid;place-items:center;font-size:20px;margin-bottom:8px;background:linear-gradient(135deg, #7657ff, #20d7ff)">🏠</div>
         <div style="font-size:12px;font-weight:700;color:#fff;margin-bottom:3px;">Main Hub</div>
         <div style="font-size:9.5px;color:#8e9bb2;">ပင်မစာမျက်နှာ Dashboard သို့</div>
@@ -274,8 +284,9 @@ canvas#videoCanvas { width: 100%; height: 100%; object-fit: contain; display: bl
   <div class="appBodyGrid">
     
     <div>
-      <div class="card" style="margin-bottom:10px">
-        <div class="cardHead">
+      <!-- VIDEO CANVAS BOX -->
+      <div class="card" style="margin-bottom:10px" id="videoPreviewCard">
+        <div class="cardHead no-cursor">
           <div class="title">🎬 Real-Time Video Preview</div>
           <div style="display:flex;gap:5px">
             <button class="tagBtn active" id="ratioLandscape" onclick="setAspectRatio('16/9')">📺 16:9 Landscape</button>
@@ -304,14 +315,76 @@ canvas#videoCanvas { width: 100%; height: 100%; object-fit: contain; display: bl
               <div style="font-size:14px;font-weight:800;color:var(--cyan);font-family:ui-monospace" id="progPercentText">0%</div>
             </div>
           </div>
+
+          <!-- GENERATE VOICES & EXPORT BUTTONS (LOADING PREVIEW BOX အောက်ခြေ) -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px">
+            <button class="primary" onclick="generateAllVoices()" id="genVoicesBtn">
+              <span class="btnSpinner" id="voiceSpinner" style="display:none"></span>
+              <span>🎙️ Generate Voices</span>
+            </button>
+            <button class="burnBtn" onclick="exportFullVideo()" id="exportBtn">
+              🎬 Export Video (.mp4)
+            </button>
+          </div>
         </div>
       </div>
 
+      <!-- 1. SUBTITLE & AUDIO STUDIO (အပေါ်ဆုံး) -->
       <div class="card" style="margin-bottom:10px">
-        <div class="cardHead">
-          <div class="title">⚙️ AI Image Engine Settings</div>
+        <div class="cardHead" onclick="toggleCard('subAudioBody', 'subAudioChev')">
+          <div class="title">🎨 Subtitle & Audio Studio</div>
+          <span class="chevron" id="subAudioChev">▲</span>
         </div>
-        <div class="body">
+        <div class="body" id="subAudioBody">
+          <div class="settingGrid">
+            <div class="field">
+              <label>Subtitle Text Color</label>
+              <input id="subColor" type="color" value="#ffffff" oninput="drawCurrentFrame()">
+            </div>
+            <div class="field">
+              <label>Subtitle Outline</label>
+              <input id="subOutline" type="color" value="#000000" oninput="drawCurrentFrame()">
+            </div>
+          </div>
+
+          <div class="settingGrid">
+            <div class="field">
+              <label>Font Size: <span id="subSizeVal" style="color:var(--cyan)">24px</span></label>
+              <input id="subSize" type="range" min="16" max="44" value="24" oninput="document.getElementById('subSizeVal').textContent=this.value+'px'; drawCurrentFrame()">
+            </div>
+            <div class="field">
+              <label>Y Position (%): <span id="subYVal" style="color:var(--cyan)">82%</span></label>
+              <input id="subY" type="range" min="50" max="95" value="82" oninput="document.getElementById('subYVal').textContent=this.value+'%'; drawCurrentFrame()">
+            </div>
+          </div>
+
+          <div class="settingGrid">
+            <div class="field">
+              <label>Ken Burns Motion</label>
+              <select id="motionSelect" onchange="drawCurrentFrame()">
+                <option value="slow">🌿 Smooth Slow Zoom</option>
+                <option value="medium" selected>⚡ Medium Motion</option>
+                <option value="none">🔒 Static</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>AI Voice Actor</label>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px">
+                <button class="voiceBtn active" id="vThiha" onclick="setVoice('my-MM-ThihaNeural')">👨 သီဟ</button>
+                <button class="voiceBtn" id="vNilar" onclick="setVoice('my-MM-NilarNeural')">👩 နီလာ</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. AI IMAGE ENGINE SETTINGS (ဒုတိယ) -->
+      <div class="card" style="margin-bottom:10px">
+        <div class="cardHead" onclick="toggleCard('engineBody', 'engineChev')">
+          <div class="title">⚙️ AI Image Engine Settings</div>
+          <span class="chevron" id="engineChev">▲</span>
+        </div>
+        <div class="body" id="engineBody">
           <div class="field" style="margin-bottom:8px">
             <label>⚡ PRIMARY AI GENERATOR MODE</label>
             <select id="engineModeSelect">
@@ -324,16 +397,20 @@ canvas#videoCanvas { width: 100%; height: 100%; object-fit: contain; display: bl
         </div>
       </div>
 
+      <!-- 3. VIDEO TITLE & CHANNEL LOGO (တတိယ) -->
       <div class="card" style="margin-bottom:10px">
-        <div class="cardHead">
+        <div class="cardHead" onclick="toggleCard('titleLogoBody', 'titleLogoChev')">
           <div class="title">🏷️ Video Title & Channel Logo</div>
-          <label style="font-size:10px;display:flex;align-items:center;gap:4px;cursor:pointer">
-            <input type="checkbox" id="showTitleCheck" checked onchange="drawCurrentFrame()"> Show Title
-          </label>
+          <span class="chevron" id="titleLogoChev">▲</span>
         </div>
-        <div class="body">
+        <div class="body" id="titleLogoBody">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+            <label style="font-size:10px;color:var(--muted);font-weight:700">📝 VIDEO TITLE TEXT (ဗီဒီယို ခေါင်းစဉ်)</label>
+            <label style="font-size:10px;display:flex;align-items:center;gap:4px;cursor:pointer">
+              <input type="checkbox" id="showTitleCheck" checked onchange="drawCurrentFrame()"> Show Title
+            </label>
+          </div>
           <div class="field" style="margin-bottom:8px">
-            <label>📝 VIDEO TITLE TEXT (ဗီဒီယို ခေါင်းစဉ်)</label>
             <input type="text" id="videoTitleInput" value="တောနက်ထဲက ထူးဆန်းသောအိမ်ကြီး" oninput="drawCurrentFrame()">
           </div>
 
@@ -378,65 +455,11 @@ canvas#videoCanvas { width: 100%; height: 100%; object-fit: contain; display: bl
           </div>
         </div>
       </div>
-
-      <div class="card">
-        <div class="cardHead"><div class="title">🎨 Subtitle & Audio Studio</div></div>
-        <div class="body">
-          <div class="settingGrid">
-            <div class="field">
-              <label>Subtitle Text Color</label>
-              <input id="subColor" type="color" value="#ffffff" oninput="drawCurrentFrame()">
-            </div>
-            <div class="field">
-              <label>Subtitle Outline</label>
-              <input id="subOutline" type="color" value="#000000" oninput="drawCurrentFrame()">
-            </div>
-          </div>
-
-          <div class="settingGrid">
-            <div class="field">
-              <label>Font Size: <span id="subSizeVal" style="color:var(--cyan)">24px</span></label>
-              <input id="subSize" type="range" min="16" max="44" value="24" oninput="document.getElementById('subSizeVal').textContent=this.value+'px'; drawCurrentFrame()">
-            </div>
-            <div class="field">
-              <label>Y Position (%): <span id="subYVal" style="color:var(--cyan)">82%</span></label>
-              <input id="subY" type="range" min="50" max="95" value="82" oninput="document.getElementById('subYVal').textContent=this.value+'%'; drawCurrentFrame()">
-            </div>
-          </div>
-
-          <div class="settingGrid">
-            <div class="field">
-              <label>Ken Burns Motion</label>
-              <select id="motionSelect" onchange="drawCurrentFrame()">
-                <option value="slow">🌿 Smooth Slow Zoom</option>
-                <option value="medium" selected>⚡ Medium Motion</option>
-                <option value="none">🔒 Static</option>
-              </select>
-            </div>
-            <div class="field">
-              <label>AI Voice Actor</label>
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px">
-                <button class="voiceBtn active" id="vThiha" onclick="setVoice('my-MM-ThihaNeural')">👨 သီဟ</button>
-                <button class="voiceBtn" id="vNilar" onclick="setVoice('my-MM-NilarNeural')">👩 နီလာ</button>
-              </div>
-            </div>
-          </div>
-
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px">
-            <button class="primary" onclick="generateAllVoices()" id="genVoicesBtn">
-              <span class="btnSpinner" id="voiceSpinner" style="display:none"></span>
-              <span>🎙️ Generate Voices</span>
-            </button>
-            <button class="burnBtn" onclick="exportFullVideo()" id="exportBtn">
-              🎬 Export Video (.mp4)
-            </button>
-          </div>
-        </div>
-      </div>
     </div>
 
+    <!-- TIMELINE LIST -->
     <div class="card">
-      <div class="cardHead">
+      <div class="cardHead no-cursor">
         <div class="title">
           <span>📸 Scenes Timeline</span>
           <span id="sceneCountBadge" style="font-size:10.5px;color:var(--muted)"></span>
@@ -446,7 +469,7 @@ canvas#videoCanvas { width: 100%; height: 100%; object-fit: contain; display: bl
             <span class="btnSpinner" id="bulkAISpinner" style="display:none"></span>
             <span>🎨 Auto Gen All Images</span>
           </button>
-          <input type="file" id="bulkImgInput" accept="image/*" multiple hidden onchange="handleBulkImageUpload(event)">
+          <input type="file" id="bulkImgInput" accept="image/*,video/*" multiple hidden onchange="handleBulkImageUpload(event)">
           <button onclick="document.getElementById('bulkImgInput').click()" style="padding:4px 8px;font-size:10.5px">📁 Upload</button>
         </div>
       </div>
@@ -504,7 +527,18 @@ const progPercentText = document.getElementById("progPercentText");
 const progTitle = document.getElementById("progTitle");
 const progDesc = document.getElementById("progDesc");
 
+function toggleCard(bodyId, chevId) {
+  const b = document.getElementById(bodyId);
+  const c = document.getElementById(chevId);
+  if (!b) return;
+  b.classList.toggle("collapsed");
+  if (c) c.classList.toggle("rotate");
+}
+
 function showProgressBar(title, desc) {
+  const preview = document.getElementById("videoPreviewCard");
+  if (preview) preview.scrollIntoView({ behavior: "smooth", block: "start" });
+
   activeProgressOverlay.classList.add("active");
   animBarFill.style.width = "0%";
   progPercentText.textContent = "0%";
@@ -628,6 +662,20 @@ function selectEpisode(ep) {
   drawCurrentFrame();
 }
 
+function copyPrompt(text) {
+  if (!text) return;
+  const decoded = decodeURIComponent(text);
+  navigator.clipboard.writeText(decoded).then(() => {
+    toast("📋 Copied Prompt!");
+  }).catch(() => {
+    const el = document.createElement("textarea");
+    el.value = decoded; document.body.appendChild(el);
+    el.select(); document.execCommand("copy");
+    document.body.removeChild(el);
+    toast("📋 Copied!");
+  });
+}
+
 function renderSceneList() {
   const list = document.getElementById("sceneList");
   document.getElementById("sceneCountBadge").textContent = `(Ep ${activeEpisode}: ${currentScenes.length} Scenes)`;
@@ -638,8 +686,8 @@ function renderSceneList() {
       <div class="sceneImgThumbBox ${isPortrait ? 'portrait' : ''}" onclick="triggerSceneImgUpload(${idx})">
         <img id="thumb-${idx}" alt="Scene ${idx+1}">
         <span id="emptyIcon-${idx}">📷</span>
-        <small id="emptyText-${idx}">Upload</small>
-        <input type="file" id="sceneFileInput-${idx}" accept="image/*" hidden onchange="handleSingleImgUpload(${idx}, event)">
+        <small id="emptyText-${idx}">Photo/Video</small>
+        <input type="file" id="sceneFileInput-${idx}" accept="image/*,video/*" hidden onchange="handleSingleImgUpload(${idx}, event)">
       </div>
 
       <div class="sceneInfoCol">
@@ -652,14 +700,17 @@ function renderSceneList() {
         </div>
 
         <div class="sceneScriptText">${s.text_mm}</div>
-        <div class="scenePromptBox" title="${s.image_prompt_en}">🎨 ${s.image_prompt_en}</div>
+        <div style="display:flex;align-items:center;gap:4px">
+          <div class="scenePromptBox" title="${s.image_prompt_en}">🎨 ${s.image_prompt_en}</div>
+          <button class="copyBtn" onclick="copyPrompt('${encodeURIComponent(s.image_prompt_en || '').replace(/'/g, "%27")}')">📋 Copy</button>
+        </div>
       </div>
     </div>
   `).join("");
 }
 
 /* ==========================================================================
-   HYBRID AI IMAGE FETCHER
+   HYBRID AI IMAGE FETCHER (မူရင်းအတိုင်း)
    ========================================================================== */
 async function fetchClientDirectImage(rawPrompt, sceneIndex) {
   const isLandscape = currentAspect === "16/9";
@@ -799,11 +850,11 @@ async function generateAllAIImages() {
   toast(`🎉 Finished! Generated ${completedCount}/${total} scenes.`);
 }
 
-function applyLoadedImage(idx, img) {
-  imageObjects.set(idx, img);
+function applyLoadedImage(idx, media, coverUrl) {
+  imageObjects.set(idx, media);
   const thumb = document.getElementById(`thumb-${idx}`);
   if (thumb) {
-    thumb.src = img.src;
+    thumb.src = coverUrl || media.src;
     thumb.style.display = "block";
     const emptyIcon = document.getElementById(`emptyIcon-${idx}`);
     const emptyText = document.getElementById(`emptyText-${idx}`);
@@ -818,20 +869,39 @@ function triggerSceneImgUpload(idx) { document.getElementById(`sceneFileInput-${
 function handleSingleImgUpload(idx, e) {
   const f = e.target.files[0];
   if (!f) return;
-  const img = new Image();
-  img.crossOrigin = "anonymous";
-  img.onload = () => applyLoadedImage(idx, img);
-  img.src = URL.createObjectURL(f);
+  loadMediaFile(idx, f);
+}
+
+function loadMediaFile(idx, f) {
+  if (f.type.startsWith("video")) {
+    const vid = document.createElement("video");
+    vid.preload = "auto"; vid.playsInline = true; vid.muted = true;
+    const url = URL.createObjectURL(f);
+    vid.src = url;
+
+    vid.onloadeddata = () => { vid.currentTime = 0.1; };
+    vid.onseeked = () => {
+      const c = document.createElement("canvas");
+      c.width = vid.videoWidth || 640;
+      c.height = vid.videoHeight || 360;
+      c.getContext("2d").drawImage(vid, 0, 0, c.width, c.height);
+      const coverUrl = c.toDataURL("image/jpeg");
+      applyLoadedImage(idx, vid, coverUrl);
+      toast(`🎬 Video clip loaded for Scene #${idx+1}`);
+    };
+  } else {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => applyLoadedImage(idx, img);
+    img.src = URL.createObjectURL(f);
+  }
 }
 
 function handleBulkImageUpload(e) {
   const files = Array.from(e.target.files);
   files.forEach((f, i) => {
     if (i < currentScenes.length) {
-      const img = new Image();
-      img.crossOrigin = "anonymous";
-      img.onload = () => applyLoadedImage(i, img);
-      img.src = URL.createObjectURL(f);
+      loadMediaFile(i, f);
     }
   });
 }
@@ -849,6 +919,9 @@ function handleLogoUpload(e) {
   img.src = URL.createObjectURL(f);
 }
 
+/* ==========================================================================
+   GENERATE ALL VOICES (မူရင်းအတိုင်း အသံဖိုင်အားလုံး အစဉ်လိုက် ရယူစေခြင်း)
+   ========================================================================== */
 async function generateAllVoices() {
   if (!currentScenes.length) return;
   const btn = document.getElementById("genVoicesBtn");
@@ -875,26 +948,46 @@ async function generateAllVoices() {
         if (blob.size > 200) {
           const aud = new Audio(URL.createObjectURL(blob));
           await new Promise((resolve) => {
+            let done = false;
+            const fallbackTimer = setTimeout(() => {
+              if (!done) {
+                done = true;
+                sceneDurations[i] = Math.max(3.0, (s.text_mm.length * 0.16) + 0.8);
+                audioBuffers.set(i, aud);
+                resolve();
+              }
+            }, 1800);
+
             aud.onloadedmetadata = () => {
-              sceneDurations[i] = Math.max(3.0, aud.duration + 0.6);
-              audioBuffers.set(i, aud);
-              resolve();
+              if (!done) {
+                done = true;
+                clearTimeout(fallbackTimer);
+                sceneDurations[i] = Math.max(3.0, aud.duration + 0.6);
+                audioBuffers.set(i, aud);
+                resolve();
+              }
             };
-            aud.onerror = () => resolve();
+            aud.onerror = () => {
+              if (!done) {
+                done = true;
+                clearTimeout(fallbackTimer);
+                resolve();
+              }
+            };
           });
         }
       }
     } catch(e) {}
 
     updateProgressBar(((i + 1) / total) * 100, `Completed Voice ${i+1}/${total}`);
-    await new Promise(r => setTimeout(r, 200));
+    await new Promise(r => setTimeout(r, 150));
   }
 
   calculateTotalDuration();
   renderSceneList();
 
   updateProgressBar(100, "All voices completed!");
-  await new Promise(r => setTimeout(r, 500));
+  await new Promise(r => setTimeout(r, 400));
   hideProgressBar();
 
   btn.disabled = false; spinner.style.display = "none";
@@ -933,20 +1026,32 @@ function drawCurrentFrame() {
   if (!currentScenes.length) return;
 
   const current = getSceneAtTime(currentTime);
-  const img = imageObjects.get(current.index);
+  const media = imageObjects.get(current.index);
   const motionMode = document.getElementById("motionSelect").value;
 
-  if (img && img.complete) {
+  if (media) {
+    const isVid = (media instanceof HTMLVideoElement);
+    if (isVid && media.duration) {
+      const vTime = current.sceneTime % media.duration;
+      if (Math.abs(media.currentTime - vTime) > 0.3) {
+        media.currentTime = vTime;
+      }
+    }
+
     const progress = Math.min(1, Math.max(0, current.sceneTime / current.sceneDur));
     let scale = motionMode === "slow" ? 1.0 + (progress * 0.08) : (motionMode === "medium" ? 1.05 + (progress * 0.15) : 1.0);
     let panY = motionMode === "none" ? 0 : progress * 20;
+
+    if (isVid) { scale = 1.0; panY = 0; }
 
     ctx.save();
     ctx.translate(canvas.width / 2, canvas.height / 2);
     ctx.scale(scale, scale);
     ctx.translate(-canvas.width / 2, -canvas.height / 2 + (current.index % 2 === 0 ? -panY : panY));
 
-    const imgAspect = img.width / img.height;
+    const mW = isVid ? (media.videoWidth || 1280) : media.width;
+    const mH = isVid ? (media.videoHeight || 720) : media.height;
+    const imgAspect = mW / mH;
     const canAspect = canvas.width / canvas.height;
     let drawW, drawH, drawX, drawY;
 
@@ -957,7 +1062,7 @@ function drawCurrentFrame() {
       drawW = canvas.width; drawH = canvas.width / imgAspect;
       drawX = 0; drawY = (canvas.height - drawH) / 2;
     }
-    ctx.drawImage(img, drawX, drawY, drawW, drawH);
+    ctx.drawImage(media, drawX, drawY, drawW, drawH);
     ctx.restore();
   } else {
     ctx.fillStyle = "#090d16"; ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -1054,15 +1159,18 @@ function togglePlayPause() {
 }
 
 /* ==========================================================================
-   SAFE PLAYBACK LOOP (FIXES DOUBLE AUDIO / ECHO BUG)
+   SAFE PLAYBACK LOOP (မူရင်းဖိုင်အတိုင်း ၁၀၀%)
    ========================================================================== */
 function startPlayback() {
   if (!currentScenes.length) return;
 
-  // အရင်ဖွင့်လက်စ Audio အားလုံးကို အပြတ်ရပ်ပစ်ခြင်း
   audioBuffers.forEach(a => {
     a.pause();
     a.currentTime = 0;
+  });
+
+  imageObjects.forEach(m => {
+    if (m instanceof HTMLVideoElement) m.pause();
   });
 
   isPlaying = true;
@@ -1070,7 +1178,6 @@ function startPlayback() {
   lastTimestamp = performance.now();
   canvasControls.classList.add("show");
 
-  // လက်ရှိအချိန်နှင့် ကိုက်ညီသော scene ကို ရှာဖွေပြီး အသံ ၁ ကြိမ်သာ တိကျစွာ ဖွင့်ခြင်း
   const current = getSceneAtTime(currentTime);
   lastPlayedSceneIdx = current.index;
 
@@ -1078,6 +1185,12 @@ function startPlayback() {
   if (currentAud) {
     currentAud.currentTime = current.sceneTime;
     currentAud.play().catch(() => {});
+  }
+
+  const currentVid = imageObjects.get(current.index);
+  if (currentVid instanceof HTMLVideoElement) {
+    currentVid.currentTime = current.sceneTime % (currentVid.duration || 1);
+    currentVid.play().catch(() => {});
   }
 
   document.querySelectorAll(".sceneCard.activePlaying").forEach(c => c.classList.remove("activePlaying"));
@@ -1093,6 +1206,9 @@ function pausePlayback() {
   if (animFrameId) cancelAnimationFrame(animFrameId);
   audioBuffers.forEach(a => {
     a.pause();
+  });
+  imageObjects.forEach(m => {
+    if (m instanceof HTMLVideoElement) m.pause();
   });
 }
 
@@ -1112,11 +1228,14 @@ function playbackLoop(now) {
 
   const current = getSceneAtTime(currentTime);
   
-  // Scene ပြောင်းသွားမှသာ အသံအသစ်ကို ကူးဖွင့်ပေးခြင်း (Double Audio လုံးဝ မဖြစ်စေရန်)
   if (current.index !== lastPlayedSceneIdx) {
     audioBuffers.forEach(a => {
       a.pause();
       a.currentTime = 0;
+    });
+
+    imageObjects.forEach(m => {
+      if (m instanceof HTMLVideoElement) m.pause();
     });
 
     lastPlayedSceneIdx = current.index;
@@ -1124,6 +1243,12 @@ function playbackLoop(now) {
     if (aud) {
       aud.currentTime = 0;
       aud.play().catch(() => {});
+    }
+
+    const vid = imageObjects.get(current.index);
+    if (vid instanceof HTMLVideoElement) {
+      vid.currentTime = 0;
+      vid.play().catch(() => {});
     }
 
     document.querySelectorAll(".sceneCard.activePlaying").forEach(c => c.classList.remove("activePlaying"));
@@ -1191,6 +1316,7 @@ async function exportFullVideo() {
   for (let i = 0; i < currentScenes.length; i++) {
     const dur = sceneDurations[i] || 4.5;
     const aud = audioBuffers.get(i);
+    const media = imageObjects.get(i);
 
     if (aud && aud.src) {
       try {
@@ -1204,6 +1330,11 @@ async function exportFullVideo() {
       } catch(e) {}
     }
 
+    if (media instanceof HTMLVideoElement) {
+      media.currentTime = 0;
+      media.play().catch(() => {});
+    }
+
     const sceneStart = performance.now();
     while (performance.now() - sceneStart < (dur * 1000)) {
       currentTime = accumulatedTime + ((performance.now() - sceneStart) / 1000);
@@ -1214,6 +1345,11 @@ async function exportFullVideo() {
 
       await new Promise(r => setTimeout(r, 33));
     }
+
+    if (media instanceof HTMLVideoElement) {
+      media.pause();
+    }
+
     accumulatedTime += dur;
   }
 
