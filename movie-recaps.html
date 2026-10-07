@@ -98,7 +98,7 @@ button:active { transform: scale(0.97); }
 .headerBtns { display: flex; gap: 5px; align-items: center; }
 .iconBtn { width: 32px; height: 32px; padding: 0; border-radius: 8px; font-size: 13px; }
 
-/* Dashboard Hub Modal (Background Persistence with target="_blank") */
+/* Dashboard Hub Modal */
 .appMenuBackdrop {
   position: fixed; inset: 0; background: rgba(0, 0, 0, 0.75);
   backdrop-filter: blur(6px); z-index: 500; display: none;
@@ -316,7 +316,12 @@ video { width: 100%; height: 100%; display: none; object-fit: contain; backgroun
 .itemTop { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
 .badge { font: 10px ui-monospace, monospace; color: #94a3b8; }
 .item.active .badge { color: var(--cyan); font-weight: 700; }
-.itemCardMM { font-size: 12.5px; font-weight: 600; color: #fff; line-height: 1.35; }
+.itemEditText {
+  width: 100%; background: #101625; border: 1px solid var(--border);
+  border-radius: 8px; padding: 6px 8px; color: #fff; font-size: 12.5px;
+  line-height: 1.4; outline: none; margin-bottom: 4px; resize: vertical;
+}
+.itemEditText:focus { border-color: var(--cyan); }
 
 .timesBar { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 6px; }
 .timeGroup {
@@ -411,7 +416,8 @@ video { width: 100%; height: 100%; display: none; object-fit: contain; backgroun
     </div>
   </div>
   <div class="headerBtns">
-    <button class="iconBtn" onclick="toggleAppMenu()" title="All Studios" style="background:rgba(255,85,114,0.25);border-color:var(--accent);color:#fff">▦</button>
+    <!-- Menu button အမြဲနှိပ်လို့ရအောင် ထားရှိပါသည် -->
+    <button class="iconBtn" id="menuHubBtn" onclick="toggleAppMenu()" title="All Studios" style="background:rgba(255,85,114,0.25);border-color:var(--accent);color:#fff">▦</button>
     <button class="iconBtn" onclick="undo()" title="Undo">↶</button>
     <button class="iconBtn" onclick="redo()" title="Redo">↷</button>
     <button class="iconBtn" onclick="loadProject(true)" title="Open Project">📂</button>
@@ -497,7 +503,7 @@ video { width: 100%; height: 100%; display: none; object-fit: contain; backgroun
                  controlslist="nodownload nofullscreen noremoteplayback" disableremoteplayback disablepictureinpicture preload="auto"></video>
           
           <div class="modeBadge" id="modeBadge">
-            <span>●</span> <span>🎬 RECAP MODE: မြန်မာစကားပြော ပါဝင်ပြီး</span>
+            <span>●</span> <span>🎬 RECAP MODE: ဇာတ်ကြောင်းပြော အသင့်ဖြစ်ပါပြီ</span>
           </div>
 
           <div class="videoFloatingTools" id="videoFloatingTools" style="display:none">
@@ -525,7 +531,7 @@ video { width: 100%; height: 100%; display: none; object-fit: contain; backgroun
           <!-- LOCKED SHIELD & WORKING PROGRESS -->
           <div class="videoLockOverlay" id="videoLockOverlay">
             <div class="lockSpinnerRing"></div>
-            <div class="lockTitle" id="lockTitle">⏳ AI Recap ဖန်တီးနေပါသည်...</div>
+            <div class="lockTitle" id="lockTitle">⏳ AI Script ဖန်တီးနေပါသည်...</div>
             <div class="lockDesc" id="lockDesc">ရုပ်ရှင်အသံများကို နားထောင်ပြီး စကားပြော Script ရေးနေပါသည်...</div>
             <div class="lockProgTrack">
               <div class="lockProgFill" id="lockProgFill"></div>
@@ -544,20 +550,19 @@ video { width: 100%; height: 100%; display: none; object-fit: contain; backgroun
       <section class="tabPane activeTab card" id="tabRecap">
         <div class="cardHead">
           <div>
-            <div class="title">🎬 Movie Recap Setup</div>
+            <div class="title">🎬 1. Movie Recap Setup (Script Generator)</div>
             <div class="status">
               <span class="dot ready" id="dot"></span>
               <span id="status">Waiting for movie video</span>
             </div>
           </div>
           <div style="display:flex;gap:5px">
-            <button onclick="testMyanmarVoice()" style="font-size:10px;padding:4px 8px;color:var(--cyan);border-color:#2b3954">🔊 Test Voice</button>
             <button onclick="triggerFileInput(true)" style="font-size:10px;padding:4px 8px;color:var(--cyan);border-color:#2b3954">🔄 Change Video</button>
           </div>
         </div>
 
         <div class="body">
-          <div style="margin-bottom:10px">
+          <div style="margin-bottom:12px">
             <label style="font-size:10px;color:var(--muted);font-weight:700;display:block;margin-bottom:4px">
               🎭 RECAP MOOD & TONE (ဇာတ်ကြောင်းပြော ပုံစံ)
             </label>
@@ -570,10 +575,23 @@ video { width: 100%; height: 100%; display: none; object-fit: contain; backgroun
             </div>
           </div>
 
-          <!-- VOICE SELECTION INCLUDING ZERO-GPU CLONE -->
+          <!-- PRIMARY ACTION: ONLY GENERATE SCRIPT FIRST -->
+          <div style="margin-top:14px">
+            <button class="primary" id="generateScriptBtn" style="width:100%;padding:12px" onclick="generateRecapScriptOnly()">
+              <span class="btnSpinner" id="btnSpinner" style="display:none"></span>
+              <span id="btnText">✨ Generate Script (စာသားအရင်ရေးမည်)</span>
+            </button>
+            <p style="font-size:10px;color:var(--muted);text-align:center;margin-top:6px">
+              💡 Script စာသားထွက်လာပြီးမှ စိတ်ကြိုက်ပြင်ဆင်ကာ Voiceover ကို အောက်တွင် သီးသန့် ထုတ်ယူနိုင်ပါသည်
+            </p>
+          </div>
+
+          <hr style="border:0;border-top:1px solid var(--border);margin:14px 0">
+
+          <!-- VOICE SELECTION & PRODUCTION CENTER (POST-SCRIPT) -->
           <div style="margin-bottom:12px">
             <label style="font-size:10px;color:var(--muted);font-weight:700;display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
-              <span>🗣️ AI VOICE CHARACTER (အသံရွေးချယ်မှု)</span>
+              <span>🗣️ AI VOICE SETTINGS (အသံရွေးချယ်ပြီး အသံသွင်းရန်)</span>
               <span id="cloneQuotaBadge" style="font-size:9px;color:var(--cyan)">ZeroGPU Voice Ready</span>
             </label>
             <div style="display:grid;grid-template-columns:1fr 1fr 1.2fr;gap:6px">
@@ -610,19 +628,19 @@ video { width: 100%; height: 100%; display: none; object-fit: contain; backgroun
             <input id="voiceSpeed" type="range" min="-20" max="30" step="5" value="0" oninput="document.getElementById('speedVal').textContent = (this.value>0?'+':'') + this.value + '%'">
           </div>
 
-          <div class="btnGrid" style="display:grid;grid-template-columns:1.2fr 1fr;gap:8px;margin-top:6px">
-            <button class="primary" id="generateRecapBtn" onclick="generateRecapPipeline()">
-              <span class="btnSpinner" id="btnSpinner" style="display:none"></span>
-              <span id="btnText">✨ Generate Script & Voice</span>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            <button class="secondaryBtn" onclick="testMyanmarVoice()">🔊 Test Voice</button>
+            <button class="primary" id="synthesizeAllVoiceBtn" style="background:linear-gradient(135deg, #2bd576, #20d7ff)" onclick="synthesizeAllVoiceovers()">
+              <span class="btnSpinner" id="voiceSpinner" style="display:none"></span>
+              <span>🎙️ Generate All Voices</span>
             </button>
-            <button class="burnBtn" id="exportVideoBtn" onclick="startRecapVideoBurn()">🔥 Export Video</button>
           </div>
         </div>
       </section>
 
       <section class="tabPane card" id="tabEditor">
         <div class="cardHead">
-          <div class="title">📝 Recap Script Editor <span id="subCount" style="color:var(--muted);font-size:11px"></span></div>
+          <div class="title">📝 2. Recap Script Editor <span id="subCount" style="color:var(--muted);font-size:11px"></span></div>
           <div style="display:flex;gap:5px">
             <button class="secondaryBtn" id="playAllBtn" onclick="playAllVoiceover()" style="padding:4px 8px;font-size:10.5px">🔊 Play All</button>
             <button class="primary" id="addLineBtn" onclick="addSub()" style="padding:4px 8px;font-size:10.5px">+ Add Line</button>
@@ -640,7 +658,7 @@ video { width: 100%; height: 100%; display: none; object-fit: contain; backgroun
             <input class="search" id="search" placeholder="🔍 Search script text..." oninput="render()">
           </div>
           <div class="list" id="list">
-            <div class="empty">🎬 Upload a movie clip to generate narration.</div>
+            <div class="empty">🎬 Upload a movie clip to generate script.</div>
           </div>
         </div>
       </section>
@@ -990,7 +1008,7 @@ async function fetchZeroGpuAudio(text, lockedStyle) {
     body: JSON.stringify({
       text: text,
       style: stylePrompt,
-      seed: 42 // အသံ ကာရိုက်တာ စာကြောင်းတိုင်း တူညီငြိမ်သက်စေရန် ပုံသေ Seed
+      seed: 42
     })
   });
 
@@ -1014,7 +1032,6 @@ async function fetchMyanmarAudio(text, voice, rate, lockedStyle) {
       console.error("ZeroGPU Error:", err);
       const errMsg = String(err?.message || err || "");
       
-      // Quota Limit ပြည့်သည့်အခါမှသာ Limit ပိတ်မည်
       if (errMsg.includes("429") || errMsg.toLowerCase().includes("exceeded your current quota") || errMsg.toLowerCase().includes("zerogpu quota")) {
         disableCloneDueToLimit("ZeroGPU နေ့စဉ်အသုံးပြုခွင့် Quota ပြည့်သွားပါသည်");
         throw new Error("ZeroGPU Quota Exceeded");
@@ -1191,47 +1208,46 @@ function applySubtitlePosition() {
 }
 
 /* ==========================================================================
-   MOVIE RECAP PIPELINE (AUTO-SCROLL, STRICT UI LOCK & SEED PERSISTENCE)
+   STEP 1, 2, 3: GENERATE SCRIPT ONLY (TRANSCRIBE & RECAP)
    ========================================================================== */
-async function generateRecapPipeline() {
+async function generateRecapScriptOnly() {
   if (generating) return;
   if (!file) { toast("Please upload a movie video first"); return; }
 
-  // ၁။ Video Loading Box သို့ Auto Scroll ဆွဲတင်ခြင်း
+  // Video Loading Box သို့ Smooth Auto-Scroll တင်ခြင်း
   const targetBox = document.getElementById("videoBox");
   if (targetBox) {
     targetBox.scrollIntoView({ behavior: "smooth", block: "center" });
   }
 
-  // ၂။ အသံစတိုင် ရောနှောမသွားစေရန် စတင်ချိန်တွင် Style ကို Lock ချသိမ်းဆည်းခြင်း
-  const lockedCloneStyle = document.getElementById("cloneVoiceStyle")?.value;
-
   generating = true;
   video.pause();
   videoLockOverlay.classList.add("active");
-  setLockProgress(5, "🚀 စတင်လုပ်ဆောင်နေပါသည်...", "ဗီဒီယို ဖိုင်ကို ဖတ်ရှုနေပါသည်...");
+  setLockProgress(5, "🚀 စတင်လုပ်ဆောင်နေပါသည်...", "ဗီဒီယို ဖိုင်ကို စစ်ဆေးနေပါသည်...");
 
-  // ၃။ Loading လုပ်နေချိန် တခြား Button / Input များအားလုံးကို Disable ပြုလုပ်ခြင်း
+  // Menu button မှလွဲ၍ အခြား controls များကို disable လုပ်ခြင်း
   document.querySelectorAll("button, select, input").forEach(el => {
-    if (!el.closest("#errorModalBackdrop")) {
+    if (el.id !== "menuHubBtn" && !el.closest("#errorModalBackdrop") && !el.closest("#appMenuBackdrop")) {
       el.disabled = true;
     }
   });
 
-  const btn = document.getElementById("generateRecapBtn");
+  const btn = document.getElementById("generateScriptBtn");
   const spinner = document.getElementById("btnSpinner");
   const btnText = document.getElementById("btnText");
 
   spinner.style.display = "inline-block"; 
-  btnText.textContent = "Processing...";
+  btnText.textContent = "AI စာသားရေးနေပါသည်...";
   subs = []; 
   audioMap.clear(); 
   render();
 
   try {
-    setStatus("busy", "Stage 1/3: Whisper Transcribing...");
-    step("Upload", "done"); step("Whisper", "active");
-    setLockProgress(15, "🎙️ ရုပ်ရှင်အသံများကို နားထောင်နေပါသည်...", "Whisper AI Speech-to-Text အလုပ်လုပ်နေပါသည်...");
+    // STAGE 1: WHISPER TRANSCRIBE
+    setStatus("busy", "Stage 1/2: Whisper Transcribing...");
+    step("Upload", "done"); 
+    step("Whisper", "active");
+    setLockProgress(25, "🎙️ ရုပ်ရှင်အသံများကို နားထောင်နေပါသည်...", "Whisper AI Speech-to-Text အလုပ်လုပ်နေပါသည်...");
 
     const fd = new FormData();
     fd.append("file", file);
@@ -1248,10 +1264,11 @@ async function generateRecapPipeline() {
 
     const totalVideoDuration = Math.round(video.duration || (rawSegments[rawSegments.length - 1].end || 60));
 
-    setLockProgress(32, "✨ ဇာတ်ကြောင်းပြော Script ရေးနေပါသည်...", `စကားပြော ${rawSegments.length} ခု တွေ့ရှိပြီး ဗီဒီယိုအဆုံး (${totalVideoDuration}s) ထိ ဖြန့်ခွဲရေးနေပါသည်...`);
+    // STAGE 2: GEMINI RECAP SCRIPT
+    setLockProgress(65, "✨ ဇာတ်ကြောင်းပြော Script ရေးနေပါသည်...", `စကားပြော ${rawSegments.length} ခု တွေ့ရှိပြီး ဗီဒီယိုအဆုံး (${totalVideoDuration}s) ထိ ဖြန့်ခွဲရေးနေပါသည်...`);
     step("Whisper", "done");
     step("Recap", "active");
-    setStatus("busy", `Stage 2/3: Generating Recap Script [${recapTone.toUpperCase()}]...`);
+    setStatus("busy", `Stage 2/2: Generating Recap Script [${recapTone.toUpperCase()}]...`);
 
     const recapReq = await fetch(WORKER_URL + "/recap", {
       method: "POST",
@@ -1281,16 +1298,69 @@ async function generateRecapPipeline() {
     step("Recap", "done");
     render();
 
-    // STAGE 3: SYNTHESIZE VOICEOVER (USING LOCKED VOICE STYLE & SEED)
-    setStatus("busy", `Stage 3/3: Synthesizing Voiceover (${subs.length} lines)...`);
-    step("Ready", "active");
+    setLockProgress(100, "🎉 Script ရေးပြီးပါပြီ!", "Recap စာသားများ အသင့်ဖြစ်ပါပြီ။ Script Editor တွင် ပြန်လည်စစ်ဆေးပြင်ဆင်နိုင်ပါပြီ...");
+    await new Promise(r => setTimeout(r, 600));
 
-    const spd = document.getElementById("voiceSpeed").value;
-    const rateStr = (spd >= 0 ? "+" : "") + spd + "%";
+    setStatus("ready", `Script Ready (${subs.length} lines) - Ready to edit`);
+    videoLockOverlay.classList.remove("active");
+    toast("🎉 Script ရေးပြီးပါပြီ! စာသားများကို လိုသလို ပြင်ဆင်နိုင်ပါပြီ။");
 
+    // Script Editor Tab သို့ အလိုအလျောက် ရွှေ့ပြောင်းပေးခြင်း
+    const editorTabBtn = document.querySelectorAll(".bottomNav button")[1];
+    if (editorTabBtn) switchTab('tabEditor', editorTabBtn);
+
+  } catch(err) {
+    console.error(err);
+    videoLockOverlay.classList.remove("active");
+    setStatus("error", "Error occurred");
+    showErrorModal("အဆင့်တွင် အမှားဖြစ်ပေါ်ပါသည်", err.message);
+  } finally {
+    generating = false;
+    document.querySelectorAll("button, select, input").forEach(el => {
+      if (el.id !== "voiceClone" || !isCloneDisabledByLimit) {
+        el.disabled = false;
+      }
+    });
+    spinner.style.display = "none"; 
+    btnText.textContent = "✨ Generate Script (စာသားအရင်ရေးမည်)";
+  }
+}
+
+/* ==========================================================================
+   STEP 4: SYNTHESIZE VOICEOVER (AFTER SCRIPT IS EDITED)
+   ========================================================================== */
+async function synthesizeAllVoiceovers() {
+  if (generating) return;
+  if (!subs.length) { toast("ကျေးဇူးပြု၍ Script အရင်ရေးပေးပါ"); return; }
+
+  const targetBox = document.getElementById("videoBox");
+  if (targetBox) targetBox.scrollIntoView({ behavior: "smooth", block: "center" });
+
+  const lockedCloneStyle = document.getElementById("cloneVoiceStyle")?.value;
+  generating = true;
+  video.pause();
+  videoLockOverlay.classList.add("active");
+
+  document.querySelectorAll("button, select, input").forEach(el => {
+    if (el.id !== "menuHubBtn" && !el.closest("#errorModalBackdrop") && !el.closest("#appMenuBackdrop")) {
+      el.disabled = true;
+    }
+  });
+
+  const spinner = document.getElementById("voiceSpinner");
+  spinner.style.display = "inline-block";
+  audioMap.clear();
+
+  step("Ready", "active");
+  setStatus("busy", `Synthesizing Voiceover (${subs.length} lines)...`);
+
+  const spd = document.getElementById("voiceSpeed").value;
+  const rateStr = (spd >= 0 ? "+" : "") + spd + "%";
+
+  try {
     for (let i = 0; i < subs.length; i++) {
       const line = subs[i];
-      const currentProgress = 55 + Math.round(((i + 1) / subs.length) * 40);
+      const currentProgress = Math.round(((i + 1) / subs.length) * 100);
       setLockProgress(
         currentProgress,
         `🗣️ မြန်မာအသံဖိုင် သွင်းယူနေပါသည် (${i + 1}/${subs.length})...`,
@@ -1304,25 +1374,18 @@ async function generateRecapPipeline() {
         }
       } catch (err) {
         console.warn(`Line #${line.id} voice generation skipped:`, err);
-        if (isCloneDisabledByLimit) {
-          break;
-        }
+        if (isCloneDisabledByLimit) break;
       }
 
       await new Promise(r => setTimeout(r, 120));
     }
 
     if (!isCloneDisabledByLimit) {
-      setLockProgress(100, "🎉 ပြီးစီးပါပြီ!", "ဗီဒီယိုနှင့် မြန်မာအသံကို ပေါင်းစပ်ချိတ်ဆက်နေပါသည်...");
-      await new Promise(r => setTimeout(r, 600));
-
       step("Ready", "done");
-      setStatus("ready", `Recap Ready (${subs.length} lines, ${audioMap.size} voices)`);
-
+      setStatus("ready", `Voiceover Ready (${audioMap.size}/${subs.length} lines)`);
       videoLockOverlay.classList.remove("active");
       modeBadge.classList.add("show");
 
-      // AUTO-START PLAYBACK
       video.currentTime = 0;
       updateAudioLevels();
       video.play().then(() => {
@@ -1330,30 +1393,24 @@ async function generateRecapPipeline() {
         showControlsBriefly();
       }).catch(() => {});
 
-      toast("🎉 Recap Video အသင့်ဖြစ်ပါပြီ! မြန်မာစကားပြောဖြင့် စတင်ဖွင့်နေပါသည်...");
+      toast("🎉 အသံသွင်းယူပြီးပါပြီ! ဇာတ်ကြောင်းပြော ဗီဒီယိုကို စတင်ဖွင့်နေပါသည်...");
     } else {
       videoLockOverlay.classList.remove("active");
       step("Ready", "warn");
-      setStatus("ready", "Voice Clone Limit! မူရင်းအသံဖြင့် ပြန်လည် Generate လုပ်ပေးပါ");
+      setStatus("ready", "Voice Clone Limit! မူရင်းအသံ (သီဟ) ဖြင့် ပြန်လည် ထုတ်ပေးပါ");
     }
 
   } catch(err) {
-    console.error(err);
     videoLockOverlay.classList.remove("active");
-    setStatus("error", "Error occurred");
-    if (!isCloneDisabledByLimit) {
-      showErrorModal("အဆင့်တွင် အမှားဖြစ်ပေါ်ပါသည်", err.message);
-    }
+    showErrorModal("အသံသွင်းရာတွင် အမှားဖြစ်ပေါ်ပါသည်", err.message);
   } finally {
     generating = false;
-    // ပြီးဆုံးပါက Controls များကို ပြန်ဖွင့်ပေးခြင်း
     document.querySelectorAll("button, select, input").forEach(el => {
       if (el.id !== "voiceClone" || !isCloneDisabledByLimit) {
         el.disabled = false;
       }
     });
-    spinner.style.display = "none"; 
-    btnText.textContent = "✨ Generate Script & Voice";
+    spinner.style.display = "none";
   }
 }
 
@@ -1425,13 +1482,28 @@ function playVoiceForSub(sub) {
   };
 }
 
-function playSingleVoice(id) {
+async function playSingleVoice(id) {
   if (generating) return;
   const sub = subs.find(s => s.id === id);
-  if (sub) {
-    playVoiceForSub(sub);
-    toast(`Playing voice line #${id}`);
+  if (!sub) return;
+
+  // အကယ်၍ အသံဖိုင် မထုတ်ရသေးပါက ထိုတစ်ကြောင်းတည်းအတွက် ချက်ချင်းထုတ်ပေးခြင်း
+  if (!audioMap.has(sub.id)) {
+    toast(`Generating voice for line #${id}...`);
+    try {
+      const spd = document.getElementById("voiceSpeed").value;
+      const rateStr = (spd >= 0 ? "+" : "") + spd + "%";
+      const lockedStyle = document.getElementById("cloneVoiceStyle")?.value;
+      const audioUrl = await fetchMyanmarAudio(sub.mm, selectedVoice, rateStr, lockedStyle);
+      if (audioUrl) audioMap.set(sub.id, audioUrl);
+    } catch(e) {
+      toast("Voice generation failed");
+      return;
+    }
   }
+
+  playVoiceForSub(sub);
+  toast(`Playing voice line #${id}`);
 }
 
 function playAllVoiceover() {
@@ -1458,23 +1530,33 @@ function render() {
     <div class="item" id="sub-${x.id}" onclick="if(!generating){ video.currentTime = ${x.start}; video.play(); }">
       <div class="itemTop">
         <span class="badge">#${x.id} &nbsp; ${formatTime(x.start)} → ${formatTime(x.end)}</span>
-        <button onclick="event.stopPropagation(); playSingleVoice(${x.id})" style="font-size:10px;padding:3px 7px" ${generating ? 'disabled' : ''}>🔊 Play Voice</button>
+        <button onclick="event.stopPropagation(); playSingleVoice(${x.id})" style="font-size:10px;padding:3px 7px" ${generating ? 'disabled' : ''}>
+          ${audioMap.has(x.id) ? "🔊 Play Voice" : "🎙️ Create Voice"}
+        </button>
       </div>
-      <div class="itemCardMM">${x.mm}</div>
+      <textarea class="itemEditText" onclick="event.stopPropagation()" oninput="editScriptText(${x.id}, this.value)">${x.mm}</textarea>
       <div class="timesBar" onclick="event.stopPropagation()">
         <div class="timeGroup">
-          <input class="timeInput" type="number" step="0.05" value="${x.start.toFixed(2)}" onchange="editTime(${x.id},'start',this.value)" ${generating ? 'disabled' : ''}>
-          <button class="timeStepBtn" onclick="stepTime(${x.id},'start',-0.1)" ${generating ? 'disabled' : ''}>-0.1</button>
-          <button class="timeStepBtn" onclick="stepTime(${x.id},'start',0.1)" ${generating ? 'disabled' : ''}>+0.1</button>
+          <input class="timeInput" type="number" step="0.05" value="${x.start.toFixed(2)}" onchange="editTime(${x.id},'start',this.value)">
+          <button class="timeStepBtn" onclick="stepTime(${x.id},'start',-0.1)">-0.1</button>
+          <button class="timeStepBtn" onclick="stepTime(${x.id},'start',0.1)">+0.1</button>
         </div>
         <div class="timeGroup">
-          <input class="timeInput" type="number" step="0.05" value="${x.end.toFixed(2)}" onchange="editTime(${x.id},'end',this.value)" ${generating ? 'disabled' : ''}>
-          <button class="timeStepBtn" onclick="stepTime(${x.id},'end',-0.1)" ${generating ? 'disabled' : ''}>-0.1</button>
-          <button class="timeStepBtn" onclick="stepTime(${x.id},'end',0.1)" ${generating ? 'disabled' : ''}>+0.1</button>
+          <input class="timeInput" type="number" step="0.05" value="${x.end.toFixed(2)}" onchange="editTime(${x.id},'end',this.value)">
+          <button class="timeStepBtn" onclick="stepTime(${x.id},'end',-0.1)">-0.1</button>
+          <button class="timeStepBtn" onclick="stepTime(${x.id},'end',0.1)">+0.1</button>
         </div>
       </div>
     </div>
   `).join("");
+}
+
+function editScriptText(id, text) {
+  const x = subs.find(a => a.id === id);
+  if (!x) return;
+  x.mm = text;
+  // စာသားပြင်လိုက်ပါက နဂိုအသံဟောင်းကို ဖျက်ပြီး ပြန်ထုတ်ယူရန် အသင့်ပြင်ခြင်း
+  audioMap.delete(id);
 }
 
 function editTime(id, field, val) {
