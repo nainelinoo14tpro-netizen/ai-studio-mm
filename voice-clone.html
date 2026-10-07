@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="my">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice Clone & Myanmar TTS - AI Studio MM</title>
+    <!-- Gradio Client JS Library -->
+    <script type="module">
+        import { Client } from "https://cdn.jsdelivr.net/npm/@gradio/client/dist/index.min.js";
+        window.GradioClient = Client;
+    </script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        body { background: #0b0f19; color: #f1f5f9; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
+        .container { background: #151e2e; border: 1px solid #1e293b; border-radius: 16px; width: 100%; max-width: 550px; padding: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.6); }
+        .back-link { color: #38bdf8; text-decoration: none; font-size: 14px; display: inline-block; margin-bottom: 16px; }
+        h1 { font-size: 22px; margin-bottom: 16px; color: #38bdf8; display: flex; align-items: center; gap: 8px; }
+        
+        .mode-tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid #334155; padding-bottom: 10px; }
+        .tab-btn { background: transparent; border: none; color: #94a3b8; font-size: 14px; font-weight: bold; cursor: pointer; padding: 6px 12px; border-radius: 6px; }
+        .tab-btn.active { color: #fff; background: #0284c7; }
+
+        label { display: block; font-size: 13px; color: #94a3b8; margin: 12px 0 6px; }
+        input[type="file"], select, textarea { width: 100%; background: #0b0f19; border: 1px solid #334155; border-radius: 8px; padding: 10px; color: #fff; font-size: 14px; outline: none; }
+        input:focus, select:focus, textarea:focus { border-color: #38bdf8; }
+        textarea { height: 110px; resize: vertical; }
+
+        .btn-gen { width: 100%; margin-top: 20px; padding: 12px; border-radius: 8px; border: none; background: #0284c7; color: #fff; font-size: 15px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .btn-gen:hover { background: #0369a1; }
+        .btn-gen:disabled { background: #475569; cursor: not-allowed; }
+
+        .status-box { margin-top: 15px; font-size: 13px; color: #38bdf8; text-align: center; }
+        audio { width: 100%; margin-top: 16px; border-radius: 8px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <a href="index.html" class="back-link">← ပင်မစာမျက်နှာသို့ ပြန်သွားမည်</a>
+    <h1>🎙️ Voice Clone & Myanmar TTS</h1>
+
+    <div class="mode-tabs">
+        <button type="button" class="tab-btn active" id="tabClone" onclick="switchMode('clone')">🎤 Voice Clone</button>
+        <button type="button" class="tab-btn" id="tabPrompt" onclick="switchMode('prompt')">✨ AI Voice Styles</button>
+    </div>
+
+    <!-- Common Text Input -->
+    <label>ပြောစေလိုသော မြန်မာ/အင်္ဂလိပ် စာသား (Text):</label>
+    <textarea id="ttsText" placeholder="ဒီနေရာမှာ အသံထွက်စေလိုသော စာသားကို ရိုက်ထည့်ပါ..."></textarea>
+
+    <!-- Voice Clone Section -->
+    <div id="cloneSection">
+        <label>Clone လုပ်မည့် အသံဖိုင် (Audio Reference):</label>
+        <input type="file" id="audioFile" accept="audio/*">
+
+        <label>အသံဖိုင်ထဲမှ မူရင်းပြောစကား (Reference Text):</label>
+        <textarea id="refText" style="height: 60px;" placeholder="တင်ထားသော အသံဖိုင်ထဲတွင် ပြောထားသည့် စာသားကို အတိအကျ ထည့်ပါ..."></textarea>
+    </div>
+
+    <!-- AI Styles Section -->
+    <div id="promptSection" style="display: none;">
+        <label>အသံစတိုင် ရွေးချယ်ပါ (Voice Style):</label>
+        <select id="voiceStyle">
+            <option value="A young male voice, calm and clear, medium pace, deep tone">🧑 လူငယ်အမျိုးသားသံ (တည်ငြိမ်ပြတ်သား)</option>
+            <option value="A young female voice, crystal clear, professional and articulate, confident tone">👩 လူငယ်အမျိုးသမီးသံ (ကြည်လင်ပြတ်သား)</option>
+            <option value="A news anchor voice, formal and authoritative, steady pace, perfect for broadcast">📰 သတင်းကြေညာသူအသံ (လေးနက်တည်ငြိမ်)</option>
+            <option value="A storyteller voice, dramatic and expressive, slow pace, rich and warm tone">📖 ပုံပြင်/ဇာတ်လမ်းပြောသူအသံ (ရသစုံ)</option>
+            <option value="A cheerful host voice, energetic and friendly, fast pace, bright and engaging">😄 ရွှင်လန်းတက်ကြွသော အစီအစဉ်တင်ဆက်သူအသံ</option>
+        </select>
+    </div>
+
+    <button id="genBtn" class="btn-gen" onclick="generateVoice()">Generate Voice</button>
+
+    <div id="status" class="status-box"></div>
+    <audio id="audioOut" controls style="display: none;"></audio>
+</div>
+
+<script>
+let currentMode = 'clone';
+
+function switchMode(mode) {
+    currentMode = mode;
+    document.getElementById('cloneSection').style.display = mode === 'clone' ? 'block' : 'none';
+    document.getElementById('promptSection').style.display = mode === 'prompt' ? 'block' : 'none';
+    document.getElementById('tabClone').className = mode === 'clone' ? 'tab-btn active' : 'tab-btn';
+    document.getElementById('tabPrompt').className = mode === 'prompt' ? 'tab-btn active' : 'tab-btn';
+}
+
+async function generateVoice() {
+    const text = document.getElementById('ttsText').value.trim();
+    const status = document.getElementById('status');
+    const audioOut = document.getElementById('audioOut');
+    const btn = document.getElementById('genBtn');
+
+    if (!text) {
+        alert("ကျေးဇူးပြု၍ ပြောစေလိုသော စာသား ရိုက်ထည့်ပါ");
+        return;
+    }
+
+    let payload = {};
+    let endpoint = "";
+
+    if (currentMode === 'clone') {
+        const file = document.getElementById('audioFile').files[0];
+        const refText = document.getElementById('refText').value.trim();
+
+        if (!file) {
+            alert("Clone ပြုလုပ်ရန် နမူနာ အသံဖိုင် တင်ပေးပါ");
+            return;
+        }
+        if (!refText) {
+            alert("အသံဖိုင်ထဲတွင် ပါဝင်သော မူရင်းစာသား (Reference Text) ကို ထည့်ပေးပါ");
+            return;
+        }
+
+        endpoint = "/clone";
+        payload = {
+            text_input: text,
+            uploaded_audio: file,
+            reference_text: refText
+        };
+    } else {
+        const style = document.getElementById('voiceStyle').value;
+        endpoint = "/prompt_voice";
+        payload = {
+            text_input: text,
+            style_prompt: style
+        };
+    }
+
+    btn.disabled = true;
+    audioOut.style.display = "none";
+    status.innerText = "⏳ ZeroGPU သို့ ချိတ်ဆက်၍ အသံဖန်တီးနေပါသည်... စောင့်ပေးပါ...";
+
+    try {
+        const client = await window.GradioClient.connect("nlopro/clone-burmese-tts");
+        const result = await client.predict(endpoint, payload);
+
+        const audioUrl = result.data[0].url;
+        audioOut.src = audioUrl;
+        audioOut.style.display = "block";
+        status.innerText = "✅ အသံထုတ်လုပ်မှု အောင်မြင်ပါသည်!";
+    } catch (e) {
+        console.error(e);
+        status.innerText = "❌ အမှားဖြစ်သွားပါသည်: " + (e.message || "ပြန်လည်ကြိုးစားကြည့်ပါ");
+    } finally {
+        btn.disabled = false;
+    }
+}
+</script>
+</body>
+</html>
