@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="my,en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#06080e">
+<title>AI Studio Suite - Central Hub</title>
+
+<style>
+:root {
+  --bg: #06080e;
+  --panel: rgba(14, 18, 28, 0.75);
+  --panel-hover: rgba(22, 28, 44, 0.85);
+  --border: rgba(45, 58, 85, 0.65);
+  --border-glow: rgba(32, 215, 255, 0.5);
+  --text: #f5f7fb;
+  --muted: #8e9bb2;
+  --cyan: #20d7ff;
+  --accent-pink: #ff5572;
+  --accent-gold: #ffbe3b;
+  --accent-green: #2bd576;
+  --shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0; padding: 0;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+html, body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, "Pyidaungsu", "Noto Sans Myanmar", "Segoe UI", sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Glowing Dynamic Background Animations */
+.bgCanvasWrap {
+  position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden;
+}
+.glowOrb {
+  position: absolute; border-radius: 50%; filter: blur(90px); opacity: 0.22;
+  animation: floatOrb 18s ease-in-out infinite alternate;
+}
+.orb1 { width: 380px; height: 380px; background: #ff5572; top: -80px; left: -100px; }
+.orb2 { width: 420px; height: 420px; background: #7657ff; bottom: -100px; right: -80px; animation-duration: 22s; }
+.orb3 { width: 320px; height: 320px; background: #20d7ff; top: 40%; left: 55%; animation-duration: 15s; }
+
+@keyframes floatOrb {
+  0% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(40px, 60px) scale(1.1); }
+  100% { transform: translate(-30px, 30px) scale(0.95); }
+}
+
+/* Background Grid Overlay */
+.bgGrid {
+  position: absolute; inset: 0;
+  background-image: 
+    linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+  background-size: 38px 38px;
+  mask-image: radial-gradient(circle at 50% 50%, black 40%, transparent 85%);
+  -webkit-mask-image: radial-gradient(circle at 50% 50%, black 40%, transparent 85%);
+}
+
+.mainContainer {
+  position: relative; z-index: 10;
+  max-width: 1180px; margin: 0 auto;
+  padding: 32px 20px 48px 20px;
+  width: 100%; flex: 1;
+  display: flex; flex-direction: column;
+}
+
+/* Header Area */
+.appHeader {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 42px;
+}
+.brandLogo {
+  display: flex; align-items: center; gap: 12px;
+}
+.logoSpark {
+  width: 38px; height: 38px; border-radius: 12px;
+  background: linear-gradient(135deg, #7657ff, #20d7ff);
+  display: grid; place-items: center; font-size: 19px;
+  box-shadow: 0 0 20px rgba(118, 87, 255, 0.5);
+  animation: pulseGlow 3s ease-in-out infinite alternate;
+}
+@keyframes pulseGlow {
+  from { box-shadow: 0 0 16px rgba(118, 87, 255, 0.4); }
+  to { box-shadow: 0 0 28px rgba(32, 215, 255, 0.7); }
+}
+.brandText h1 {
+  font-size: 17px; font-weight: 800; letter-spacing: 0.5px;
+  background: linear-gradient(135deg, #ffffff, #c5d3f0);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.brandText p {
+  font-size: 10px; color: var(--muted); font-weight: 600; letter-spacing: 0.3px;
+}
+
+.systemStatusPill {
+  display: flex; align-items: center; gap: 8px;
+  background: rgba(14, 20, 32, 0.85); border: 1px solid rgba(43, 213, 118, 0.3);
+  padding: 6px 14px; border-radius: 99px; font-size: 11px; font-weight: 700; color: #d0fae5;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3); backdrop-filter: blur(12px);
+}
+.pulseDot {
+  width: 7px; height: 7px; border-radius: 50%; background: var(--accent-green);
+  box-shadow: 0 0 10px var(--accent-green); animation: blink 1.8s infinite;
+}
+@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+/* Hero Showcase */
+.heroSection {
+  text-align: center; margin-bottom: 46px; max-width: 680px; margin-left: auto; margin-right: auto;
+}
+.heroBadge {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(118, 87, 255, 0.12); border: 1px solid rgba(118, 87, 255, 0.35);
+  color: var(--cyan); font-size: 10.5px; font-weight: 700;
+  padding: 5px 14px; border-radius: 99px; margin-bottom: 16px;
+  text-transform: uppercase; letter-spacing: 0.8px;
+}
+.heroTitle {
+  font-size: 32px; font-weight: 850; line-height: 1.35; margin-bottom: 12px;
+  background: linear-gradient(135deg, #ffffff 40%, #8ca4d8 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.heroSub {
+  font-size: 13.5px; color: var(--muted); line-height: 1.6;
+}
+
+/* 3-Cards Dashboard Grid */
+.studioGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 22px;
+  margin-bottom: 24px;
+}
+
+.studioCard {
+  position: relative;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  padding: 26px 22px;
+  display: flex; flex-direction: column;
+  text-decoration: none; color: inherit;
+  backdrop-filter: blur(20px);
+  box-shadow: var(--shadow);
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+}
+
+.studioCard::before {
+  content: ""; position: absolute; inset: 0;
+  border-radius: 24px; padding: 1.5px;
+  background: linear-gradient(135deg, transparent, rgba(255, 255, 255, 0.08), transparent);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude;
+  pointer-events: none;
+}
+
+.studioCard:hover {
+  transform: translateY(-8px);
+  background: var(--panel-hover);
+  border-color: rgba(255, 255, 255, 0.22);
+}
+
+/* Card Themes */
+.cardRecap:hover {
+  border-color: rgba(255, 85, 114, 0.6);
+  box-shadow: 0 16px 42px rgba(255, 85, 114, 0.25);
+}
+.cardStory:hover {
+  border-color: rgba(255, 190, 59, 0.6);
+  box-shadow: 0 16px 42px rgba(255, 190, 59, 0.22);
+}
+.cardVideo:hover {
+  border-color: rgba(43, 213, 118, 0.6);
+  box-shadow: 0 16px 42px rgba(43, 213, 118, 0.22);
+}
+
+.cardTopRow {
+  display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;
+}
+.cardIcon {
+  width: 52px; height: 52px; border-radius: 16px;
+  display: grid; place-items: center; font-size: 24px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+.iconRecap { background: linear-gradient(135deg, #ff5572, #ff7e40); }
+.iconStory { background: linear-gradient(135deg, #ffbe3b, #ff5572); }
+.iconVideo { background: linear-gradient(135deg, #2bd576, #20d7ff); }
+
+.cardPill {
+  font-size: 10px; font-weight: 700; padding: 4px 10px; border-radius: 99px;
+  text-transform: uppercase; letter-spacing: 0.6px;
+}
+.pillRecap { background: rgba(255, 85, 114, 0.15); color: #ff8ca0; border: 1px solid rgba(255, 85, 114, 0.3); }
+.pillStory { background: rgba(255, 190, 59, 0.15); color: #ffd678; border: 1px solid rgba(255, 190, 59, 0.3); }
+.pillVideo { background: rgba(43, 213, 118, 0.15); color: #6ee7b7; border: 1px solid rgba(43, 213, 118, 0.3); }
+
+.cardTitle {
+  font-size: 19px; font-weight: 800; margin-bottom: 8px; color: #fff;
+}
+.cardDesc {
+  font-size: 12.5px; color: var(--muted); line-height: 1.55; margin-bottom: 22px; flex: 1;
+}
+
+.cardFeaturesList {
+  display: flex; flex-direction: column; gap: 7px; margin-bottom: 24px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06); padding-top: 16px;
+}
+.featureItem {
+  display: flex; align-items: center; gap: 8px; font-size: 11px; color: #cfd8e8; font-weight: 500;
+}
+.featureDot {
+  width: 5px; height: 5px; border-radius: 50%; background: var(--cyan);
+}
+
+.cardLaunchBtn {
+  display: flex; align-items: center; justify-content: space-between;
+  width: 100%; padding: 11px 16px; border-radius: 14px;
+  background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border);
+  font-size: 12.5px; font-weight: 700; color: #fff;
+  transition: all 0.2s ease;
+}
+.studioCard:hover .cardLaunchBtn {
+  background: #ffffff; color: #080a10; border-color: #ffffff;
+  box-shadow: 0 6px 20px rgba(255, 255, 255, 0.3);
+}
+
+/* Footer Area */
+.appFooter {
+  text-align: center; margin-top: auto; padding-top: 36px;
+  font-size: 11.5px; color: rgba(142, 155, 178, 0.6);
+}
+
+/* Responsive adjustments */
+@media (max-width: 960px) {
+  .studioGrid { grid-template-columns: 1fr; gap: 16px; }
+  .heroTitle { font-size: 26px; }
+  .heroSection { margin-bottom: 32px; }
+  .appHeader { margin-bottom: 30px; }
+}
+</style>
+
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#07090e">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="AI Studio">
+<link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/1179/1179069.png">
+
+<script>
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      const swCode = `
+        self.addEventListener('install', e => self.skipWaiting());
+        self.addEventListener('activate', e => self.clients.claim());
+        self.addEventListener('fetch', e => e.respondWith(fetch(e.request)));
+      `;
+      const blob = new Blob([swCode], { type: "application/javascript" });
+      navigator.serviceWorker.register(URL.createObjectURL(blob))
+        .catch(() => {});
+    });
+  }
+</script>
+
+</head>
+<body>
+
+<!-- Ambient Glow & Animated Background -->
+<div class="bgCanvasWrap">
+  <div class="glowOrb orb1"></div>
+  <div class="glowOrb orb2"></div>
+  <div class="glowOrb orb3"></div>
+  <div class="bgGrid"></div>
+</div>
+
+<div class="mainContainer">
+
+  <!-- Header -->
+  <header class="appHeader">
+    <div class="brandLogo">
+      <div class="logoSpark">✦</div>
+      <div class="brandText">
+        <h1>AI STUDIO PRO</h1>
+        <p>MODULAR AI MEDIA SUITE</p>
+      </div>
+    </div>
+
+    <div class="systemStatusPill">
+      <span class="pulseDot"></span>
+      <span>Cloudflare AI Online</span>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="heroSection">
+    <div class="heroBadge">✨ All-in-One Creation Platform</div>
+    <h2 class="heroTitle">ဖန်တီးလိုသော AI Studio ကို ရွေးချယ်ပါ</h2>
+    <p class="heroSub">
+      ရုပ်ရှင်ဇာတ်လမ်းပြောများ၊ AI ပုံပြင်ရေးသားခြင်းနှင့် အသံ/စာတန်းထိုးပါဝင်သော ဗီဒီယိုဖန်တီးမှုများကို အောက်ပါ Studio များမှတစ်ဆင့် တိုက်ရိုက် စတင်နိုင်ပါသည်။
+    </p>
+  </section>
+
+  <!-- 3 Studio Cards Grid -->
+  <div class="studioGrid">
+
+    <!-- Card 1: Movie Recaps -->
+    <a href="movie-recaps.html" class="studioCard cardRecap">
+      <div class="cardTopRow">
+        <div class="cardIcon iconRecap">🎬</div>
+        <span class="cardPill pillRecap">Narrative Voice</span>
+      </div>
+      <h3 class="cardTitle">Movie Recaps</h3>
+      <p class="cardDesc">
+        ရုပ်ရှင်ဗီဒီယိုမှ စကားပြောများကို Whisper ဖြင့် ဖမ်းယူပြီး ဟာသ၊ စိတ်လှုပ်ရှား၊ သရဲ Mood အလိုက် မြန်မာဇာတ်ကြောင်းပြောနှင့် AI အသံ ထည့်သွင်းပေးသည့် စနစ်။
+      </p>
+      <div class="cardFeaturesList">
+        <div class="featureItem"><span class="featureDot"></span> Whisper Turbo Transcription</div>
+        <div class="featureItem"><span class="featureDot"></span> 4-Mood Gemini Narrative Script</div>
+        <div class="featureItem"><span class="featureDot"></span> Smart Background Audio Ducking</div>
+      </div>
+      <div class="cardLaunchBtn">
+        <span>Launch Studio</span>
+        <span>➔</span>
+      </div>
+    </a>
+
+    <!-- Card 2: Story Maker -->
+    <a href="story-maker.html" class="studioCard cardStory">
+      <div class="cardTopRow">
+        <div class="cardIcon iconStory">✍️</div>
+        <span class="cardPill pillStory">AI Scripting</span>
+      </div>
+      <h3 class="cardTitle">Story Maker</h3>
+      <p class="cardDesc">
+        ခေါင်းစဉ်တစ်ခု ရိုက်ထည့်ရုံဖြင့် ၁ မှ ၅ မိနစ်စာ ဇာတ်လမ်းဇာတ်ကွက်၊ အခန်းလိုက် မြန်မာစကားပြောစာသားများနှင့် ရုပ်ပုံဆွဲရန် Image Prompts များ ထုတ်လုပ်ပေးသည့် စနစ်။
+      </p>
+      <div class="cardFeaturesList">
+        <div class="featureItem"><span class="featureDot" style="background:var(--accent-gold)"></span> 1 / 3 / 5 Mins Video Duration</div>
+        <div class="featureItem"><span class="featureDot" style="background:var(--accent-gold)"></span> တစ်ပိုင်းတည်း သို့မဟုတ် ဇာတ်လမ်းတွဲ</div>
+        <div class="featureItem"><span class="featureDot" style="background:var(--accent-gold)"></span> Cinematic Visual Prompts</div>
+      </div>
+      <div class="cardLaunchBtn">
+        <span>Launch Studio</span>
+        <span>➔</span>
+      </div>
+    </a>
+
+    <!-- Card 3: Story to Video -->
+    <a href="story-to-video.html" class="studioCard cardVideo">
+      <div class="cardTopRow">
+        <div class="cardIcon iconVideo">🎥</div>
+        <span class="cardPill pillVideo">Slideshow Studio</span>
+      </div>
+      <h3 class="cardTitle">Story to Video</h3>
+      <p class="cardDesc">
+        ထွက်ရှိလာသော ဇာတ်လမ်းများကို AI ပုံရိပ် Slideshow၊ Ken Burns Zoom ကာတွန်းလှုပ်ရှားမှု၊ မြန်မာစကားပြောအသံနှင့် စာတန်းထိုး Full Video ထုတ်လုပ်ပေးသည့် စနစ်။
+      </p>
+      <div class="cardFeaturesList">
+        <div class="featureItem"><span class="featureDot" style="background:var(--accent-green)"></span> 9:16 (Shorts) & 16:9 (Landscape)</div>
+        <div class="featureItem"><span class="featureDot" style="background:var(--accent-green)"></span> Auto AI Image & Myanmar Voice</div>
+        <div class="featureItem"><span class="featureDot" style="background:var(--accent-green)"></span> Hardsub Video Direct Export</div>
+      </div>
+      <div class="cardLaunchBtn">
+        <span>Launch Studio</span>
+        <span>➔</span>
+      </div>
+    </a>
+
+  </div>
+
+  <!-- Footer -->
+  <footer class="appFooter">
+    <p>AI Studio Suite • Powered by Cloudflare Workers, Whisper & Gemini</p>
+  </footer>
+
+</div>
+
+<script>
+// Backend Connectivity Check (Worker status ping)
+const WORKER_URL = "https://ai-studio-mm.nainelinoo-14tpro.workers.dev";
+
+window.onload = function() {
+  fetch(WORKER_URL + "/")
+    .then(r => r.json())
+    .then(data => {
+      const pill = document.querySelector(".systemStatusPill span:last-child");
+      if (pill && data.ok) {
+        pill.textContent = "AI Backend Ready";
+      }
+    })
+    .catch(() => {
+      const dot = document.querySelector(".pulseDot");
+      const pill = document.querySelector(".systemStatusPill span:last-child");
+      if (dot) dot.style.background = "#ffbe3b";
+      if (pill) pill.textContent = "Local Standalone";
+    });
+};
+</script>
+</body>
+</html>
