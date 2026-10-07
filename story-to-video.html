@@ -174,56 +174,60 @@ canvas#videoCanvas { width: 100%; height: 100%; object-fit: contain; display: bl
 
 .sceneList { display: flex; flex-direction: column; gap: 10px; max-height: 640px; overflow-y: auto; padding-right: 4px; }
 
+/* SCENE CARD LAYOUT (16:9 နှင့် 9:16 အချိုးအစား နှစ်မျိုးလုံး အံဝင်ခွင်ကျဖြစ်စေရန်) */
 .sceneCard {
   background: #090c14; border: 1px solid var(--border);
-  border-radius: 12px; padding: 10px; display: grid; grid-template-columns: 80px minmax(0, 1fr); gap: 10px;
-  overflow: hidden;
+  border-radius: 12px; padding: 10px; display: flex; gap: 12px;
+  align-items: flex-start; min-height: 90px;
 }
 .sceneCard.activePlaying { border-color: var(--accent); background: rgba(43, 213, 118, 0.08); }
 
 .sceneImgThumbBox {
-  width: 80px; aspect-ratio: 16/9; background: #121724; border-radius: 8px;
+  width: 85px; aspect-ratio: 16/9; background: #121724; border-radius: 8px;
   border: 1px dashed var(--border-light); display: flex; flex-direction: column;
   align-items: center; justify-content: center; position: relative; overflow: hidden;
-  cursor: pointer; flex-shrink: 0;
+  cursor: pointer; flex-shrink: 0; min-height: 48px;
 }
-.sceneImgThumbBox.portrait { aspect-ratio: 9/16; }
-.sceneImgThumbBox img { width: 100%; height: 100%; object-fit: cover; display: none; }
-.sceneImgThumbBox span { font-size: 18px; opacity: 0.6; }
-.sceneImgThumbBox small { font-size: 8px; color: var(--muted); margin-top: 2px; }
+.sceneImgThumbBox.portrait { width: 60px; aspect-ratio: 9/16; min-height: 95px; }
+.sceneImgThumbBox img { width: 100%; height: 100%; object-fit: cover; display: none; position: absolute; inset: 0; }
+.sceneImgThumbBox span { font-size: 20px; line-height: 1; display: block; color: var(--cyan); }
+.sceneImgThumbBox small { font-size: 9px; color: var(--muted); margin-top: 3px; font-weight: 700; display: block; }
 
 .sceneInfoCol { 
   display: flex; 
   flex-direction: column; 
   justify-content: flex-start; 
-  gap: 6px; 
+  gap: 8px; 
+  flex: 1;
   min-width: 0; 
-  overflow: visible; 
 }
 
 .sceneHeaderRow { 
   display: flex; 
   justify-content: space-between; 
   align-items: center; 
-  gap: 4px; 
+  gap: 6px; 
+  width: 100%;
 }
 
 .sceneBadge { 
-  font-size: 10.5px; 
+  font-size: 11px; 
   font-weight: 800; 
   color: var(--accent); 
   white-space: nowrap; 
 }
 
+/* မြန်မာစာသား ပီသစွာ ပေါ်စေရန် */
 .sceneScriptText { 
-  font-size: 12px; 
-  color: #fff; 
+  font-size: 12.5px; 
+  color: #f5f7fb; 
   line-height: 1.6; 
   word-break: break-word; 
   user-select: text;
   display: block;
 }
 
+/* PROMPT ROW */
 .scenePromptRow { 
   display: flex; 
   align-items: center; 
@@ -238,7 +242,7 @@ canvas#videoCanvas { width: 100%; height: 100%; object-fit: contain; display: bl
   color: var(--cyan); 
   font-family: ui-monospace, monospace;
   background: #060910; 
-  padding: 4px 6px; 
+  padding: 4px 8px; 
   border-radius: 6px;
   white-space: nowrap; 
   overflow: hidden; 
@@ -251,15 +255,16 @@ canvas#videoCanvas { width: 100%; height: 100%; object-fit: contain; display: bl
 .copyBtn {
   background: #141a27; 
   border: 1px solid var(--border-light); 
-  color: var(--muted);
+  color: #d0d7e5;
   border-radius: 6px; 
-  padding: 3px 6px; 
-  font-size: 9.5px; 
+  padding: 3px 8px; 
+  font-size: 10px; 
   cursor: pointer; 
   flex-shrink: 0;
   display: inline-flex; 
   align-items: center; 
-  gap: 2px;
+  gap: 3px;
+  font-weight: 600;
 }
 .copyBtn:hover { color: #fff; border-color: var(--accent); }
 
@@ -750,9 +755,9 @@ function renderSceneList() {
       <div class="sceneInfoCol">
         <div class="sceneHeaderRow">
           <span class="sceneBadge">SCENE #${idx+1} (${sceneDurations[idx]?.toFixed(1)}s)</span>
-          <div style="display:flex;gap:3px;flex-shrink:0;">
-            <button onclick="generateSingleAIImage(${idx})" style="padding:2px 5px;font-size:9px;color:var(--accent)" title="Auto Draw AI Image">🎨 AI Gen</button>
-            <button onclick="playSingleSceneAudio(${idx})" style="padding:2px 5px;font-size:9px">🔊 Play</button>
+          <div style="display:flex;gap:4px;flex-shrink:0;">
+            <button onclick="generateSingleAIImage(${idx})" style="padding:3px 7px;font-size:9.5px;color:var(--accent)" title="Auto Draw AI Image">🎨 AI Gen</button>
+            <button onclick="playSingleSceneAudio(${idx})" style="padding:3px 7px;font-size:9.5px">🔊 Play</button>
           </div>
         </div>
 
