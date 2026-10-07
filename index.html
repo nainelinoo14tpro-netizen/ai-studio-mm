@@ -19,6 +19,7 @@
   --accent-pink: #ff5572;
   --accent-gold: #ffbe3b;
   --accent-green: #2bd576;
+  --accent-purple: #a855f7;
   --shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
 }
 
@@ -136,10 +137,10 @@ html, body {
   font-size: 13.5px; color: var(--muted); line-height: 1.6;
 }
 
-/* 3-Cards Dashboard Grid */
+/* Dashboard Grid (Auto fit for 4 items) */
 .studioGrid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: 22px;
   margin-bottom: 24px;
 }
@@ -186,6 +187,10 @@ html, body {
   border-color: rgba(43, 213, 118, 0.6);
   box-shadow: 0 16px 42px rgba(43, 213, 118, 0.22);
 }
+.cardVoice:hover {
+  border-color: rgba(168, 85, 247, 0.6);
+  box-shadow: 0 16px 42px rgba(168, 85, 247, 0.25);
+}
 
 .cardTopRow {
   display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;
@@ -198,6 +203,7 @@ html, body {
 .iconRecap { background: linear-gradient(135deg, #ff5572, #ff7e40); }
 .iconStory { background: linear-gradient(135deg, #ffbe3b, #ff5572); }
 .iconVideo { background: linear-gradient(135deg, #2bd576, #20d7ff); }
+.iconVoice { background: linear-gradient(135deg, #a855f7, #6366f1); }
 
 .cardPill {
   font-size: 10px; font-weight: 700; padding: 4px 10px; border-radius: 99px;
@@ -206,6 +212,7 @@ html, body {
 .pillRecap { background: rgba(255, 85, 114, 0.15); color: #ff8ca0; border: 1px solid rgba(255, 85, 114, 0.3); }
 .pillStory { background: rgba(255, 190, 59, 0.15); color: #ffd678; border: 1px solid rgba(255, 190, 59, 0.3); }
 .pillVideo { background: rgba(43, 213, 118, 0.15); color: #6ee7b7; border: 1px solid rgba(43, 213, 118, 0.3); }
+.pillVoice { background: rgba(168, 85, 247, 0.15); color: #d8b4fe; border: 1px solid rgba(168, 85, 247, 0.3); }
 
 .cardTitle {
   font-size: 19px; font-weight: 800; margin-bottom: 8px; color: #fff;
@@ -245,7 +252,6 @@ html, body {
 
 /* Responsive adjustments */
 @media (max-width: 960px) {
-  .studioGrid { grid-template-columns: 1fr; gap: 16px; }
   .heroTitle { font-size: 26px; }
   .heroSection { margin-bottom: 32px; }
   .appHeader { margin-bottom: 30px; }
@@ -305,55 +311,47 @@ html, body {
 
   <!-- Hero Section -->
   <section class="heroSection">
-    <div class="heroBadge">✨ All-in-One Creation Platform</div>
-    <h2 class="heroTitle">ဖန်တီးလိုသော AI Studio ကို ရွေးချယ်ပါ</h2>
-    <p class="heroSub">
-      ရုပ်ရှင်ဇာတ်လမ်းပြောများ၊ AI ပုံပြင်ရေးသားခြင်းနှင့် အသံ/စာတန်းထိုးပါဝင်သော ဗီဒီယိုဖန်တီးမှုများကို အောက်ပါ Studio များမှတစ်ဆင့် တိုက်ရိုက် စတင်နိုင်ပါသည်။
-    </p>
+    <div class="heroBadge">✨ All-in-One Creation</div>
+    <h2 class="heroTitle">Next-Gen AI Media Studio</h2>
+    <p class="heroSub">ဖန်တီးမှုအသစ်များအတွက် ဇာတ်လမ်း၊ ဗီဒီယိုနှင့် အသံတုဖန်တီးနိုင်သော AI ကိရိယာများ</p>
   </section>
 
-  <!-- 3 Studio Cards Grid -->
+  <!-- Studio Cards Grid -->
   <div class="studioGrid">
 
     <!-- Card 1: Movie Recaps -->
     <a href="movie-recaps.html" class="studioCard cardRecap">
       <div class="cardTopRow">
         <div class="cardIcon iconRecap">🎬</div>
-        <span class="cardPill pillRecap">Narrative Voice</span>
+        <span class="cardPill pillRecap">Story Recap</span>
       </div>
       <h3 class="cardTitle">Movie Recaps</h3>
-      <p class="cardDesc">
-        ရုပ်ရှင်ဗီဒီယိုမှ စကားပြောများကို Whisper ဖြင့် ဖမ်းယူပြီး ဟာသ၊ စိတ်လှုပ်ရှား၊ သရဲ Mood အလိုက် မြန်မာဇာတ်ကြောင်းပြောနှင့် AI အသံ ထည့်သွင်းပေးသည့် စနစ်။
-      </p>
+      <p class="cardDesc">ရုပ်ရှင်အကျဉ်းချုပ်ဇာတ်လမ်းများကို စိတ်ဝင်စားဖွယ် ဖန်တီးပေးခြင်း။</p>
       <div class="cardFeaturesList">
-        <div class="featureItem"><span class="featureDot"></span> Whisper Turbo Transcription</div>
-        <div class="featureItem"><span class="featureDot"></span> 4-Mood Gemini Narrative Script</div>
-        <div class="featureItem"><span class="featureDot"></span> Smart Background Audio Ducking</div>
+        <div class="featureItem"><span class="featureDot"></span> အခန်းဆက် ဇာတ်ညွှန်းခွဲထုတ်ခြင်း</div>
+        <div class="featureItem"><span class="featureDot"></span> အသံသွင်းရန် အဆင်သင့် Script ရရှိခြင်း</div>
       </div>
       <div class="cardLaunchBtn">
-        <span>Launch Studio</span>
-        <span>➔</span>
+        <span>စတင်ဖန်တီးမည်</span>
+        <span>→</span>
       </div>
     </a>
 
     <!-- Card 2: Story Maker -->
     <a href="story-maker.html" class="studioCard cardStory">
       <div class="cardTopRow">
-        <div class="cardIcon iconStory">✍️</div>
-        <span class="cardPill pillStory">AI Scripting</span>
+        <div class="cardIcon iconStory">📖</div>
+        <span class="cardPill pillStory">Story Engine</span>
       </div>
       <h3 class="cardTitle">Story Maker</h3>
-      <p class="cardDesc">
-        ခေါင်းစဉ်တစ်ခု ရိုက်ထည့်ရုံဖြင့် ၁ မှ ၅ မိနစ်စာ ဇာတ်လမ်းဇာတ်ကွက်၊ အခန်းလိုက် မြန်မာစကားပြောစာသားများနှင့် ရုပ်ပုံဆွဲရန် Image Prompts များ ထုတ်လုပ်ပေးသည့် စနစ်။
-      </p>
+      <p class="cardDesc">စိတ်ကူးယဉ်နှင့် ထူးခြားဆန်းကြယ် ဇာတ်လမ်းများကို အလွယ်တကူ ရေးသားခြင်း။</p>
       <div class="cardFeaturesList">
-        <div class="featureItem"><span class="featureDot" style="background:var(--accent-gold)"></span> 1 / 3 / 5 Mins Video Duration</div>
-        <div class="featureItem"><span class="featureDot" style="background:var(--accent-gold)"></span> တစ်ပိုင်းတည်း သို့မဟုတ် ဇာတ်လမ်းတွဲ</div>
-        <div class="featureItem"><span class="featureDot" style="background:var(--accent-gold)"></span> Cinematic Visual Prompts</div>
+        <div class="featureItem"><span class="featureDot"></span> ရသစုံ စာပေအမျိုးအစားများ</div>
+        <div class="featureItem"><span class="featureDot"></span> စိတ်ဝင်စားဖွယ် အလှည့်အပြောင်းများ</div>
       </div>
       <div class="cardLaunchBtn">
-        <span>Launch Studio</span>
-        <span>➔</span>
+        <span>စတင်ဖန်တီးမည်</span>
+        <span>→</span>
       </div>
     </a>
 
@@ -361,20 +359,35 @@ html, body {
     <a href="story-to-video.html" class="studioCard cardVideo">
       <div class="cardTopRow">
         <div class="cardIcon iconVideo">🎥</div>
-        <span class="cardPill pillVideo">Slideshow Studio</span>
+        <span class="cardPill pillVideo">Visual AI</span>
       </div>
       <h3 class="cardTitle">Story to Video</h3>
-      <p class="cardDesc">
-        ထွက်ရှိလာသော ဇာတ်လမ်းများကို AI ပုံရိပ် Slideshow၊ Ken Burns Zoom ကာတွန်းလှုပ်ရှားမှု၊ မြန်မာစကားပြောအသံနှင့် စာတန်းထိုး Full Video ထုတ်လုပ်ပေးသည့် စနစ်။
-      </p>
+      <p class="cardDesc">စာသားဇာတ်လမ်းများမှ ရုပ်ပုံနှင့် ဗီဒီယို Prompts များ ထုတ်ယူခြင်း။</p>
       <div class="cardFeaturesList">
-        <div class="featureItem"><span class="featureDot" style="background:var(--accent-green)"></span> 9:16 (Shorts) & 16:9 (Landscape)</div>
-        <div class="featureItem"><span class="featureDot" style="background:var(--accent-green)"></span> Auto AI Image & Myanmar Voice</div>
-        <div class="featureItem"><span class="featureDot" style="background:var(--accent-green)"></span> Hardsub Video Direct Export</div>
+        <div class="featureItem"><span class="featureDot"></span> Midjourney/Flux Visual Prompts</div>
+        <div class="featureItem"><span class="featureDot"></span> Timeline Video Scenes</div>
       </div>
       <div class="cardLaunchBtn">
-        <span>Launch Studio</span>
-        <span>➔</span>
+        <span>စတင်ဖန်တီးမည်</span>
+        <span>→</span>
+      </div>
+    </a>
+
+    <!-- Card 4: Voice Clone / Myanmar TTS (New Feature) -->
+    <a href="voice-clone.html" class="studioCard cardVoice">
+      <div class="cardTopRow">
+        <div class="cardIcon iconVoice">🎙️</div>
+        <span class="cardPill pillVoice">Voice AI</span>
+      </div>
+      <h3 class="cardTitle">Voice Clone & TTS</h3>
+      <p class="cardDesc">VoxCPM2 အသုံးပြုထားသော မြန်မာစကားပြောနှင့် အသံတုပခြင်း (Voice Cloning)။</p>
+      <div class="cardFeaturesList">
+        <div class="featureItem"><span class="featureDot"></span> သဘာဝကျသော မြန်မာအသံ Styles</div>
+        <div class="featureItem"><span class="featureDot"></span> ကိုယ်ပိုင်အသံနမူနာဖြင့် Voice Cloning</div>
+      </div>
+      <div class="cardLaunchBtn">
+        <span>စတင်ဖန်တီးမည်</span>
+        <span>→</span>
       </div>
     </a>
 
@@ -382,31 +395,10 @@ html, body {
 
   <!-- Footer -->
   <footer class="appFooter">
-    <p>AI Studio Suite • Powered by Cloudflare Workers, Whisper & Gemini</p>
+    <p>© 2026 AI Studio Pro • Powered by Hugging Face & Vercel</p>
   </footer>
 
 </div>
 
-<script>
-// Backend Connectivity Check (Worker status ping)
-const WORKER_URL = "https://ai-studio-mm.nainelinoo-14tpro.workers.dev";
-
-window.onload = function() {
-  fetch(WORKER_URL + "/")
-    .then(r => r.json())
-    .then(data => {
-      const pill = document.querySelector(".systemStatusPill span:last-child");
-      if (pill && data.ok) {
-        pill.textContent = "AI Backend Ready";
-      }
-    })
-    .catch(() => {
-      const dot = document.querySelector(".pulseDot");
-      const pill = document.querySelector(".systemStatusPill span:last-child");
-      if (dot) dot.style.background = "#ffbe3b";
-      if (pill) pill.textContent = "Local Standalone";
-    });
-};
-</script>
 </body>
 </html>
