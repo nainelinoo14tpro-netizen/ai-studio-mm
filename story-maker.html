@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html lang="my,en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#07090e">
+<title>Story Maker Studio Pro</title>
+
+<style>
+:root {
+  --bg: #07090e;
+  --panel: #0e121b;
+  --panel2: #141a27;
+  --panel3: #1a2234;
+  --border: #232c3f;
+  --border-light: #34415c;
+  --text: #f5f7fb;
+  --muted: #8e9bb2;
+  --accent: #ffbe3b;
+  --accent-hover: #f5b027;
+  --cyan: #20d7ff;
+  --green: #2bd576;
+  --red: #ff5572;
+  --shadow: 0 16px 44px rgba(0,0,0,0.42);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+* { 
+  box-sizing: border-box; 
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+input, textarea { user-select: text; }
+
+html, body {
+  margin: 0; padding: 0; background: var(--bg); color: var(--text);
+  font-family: system-ui, -apple-system, "Pyidaungsu", "Noto Sans Myanmar", "Segoe UI", sans-serif;
+  line-height: 1.5; overflow-x: hidden;
+}
+
+body { min-height: 100vh; }
+button, input, textarea, select { font: inherit; }
+
+button {
+  cursor: pointer; color: var(--text); background: var(--panel2);
+  border: 1px solid var(--border); border-radius: 10px;
+  padding: 8px 12px; font-weight: 600; font-size: 12px;
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  transition: all 0.15s ease;
+}
+button:hover { border-color: var(--border-light); background: var(--panel3); }
+button:active { transform: scale(0.97); }
+
+.primary {
+  background: linear-gradient(135deg, #ffbe3b, #ff7e40);
+  border: 0; color: #0a0d14; font-weight: 800;
+  box-shadow: 0 4px 14px rgba(255, 190, 59, 0.35);
+}
+.primary:hover { opacity: 0.94; }
+.primary:disabled, button:disabled { opacity: 0.55; cursor: not-allowed; filter: saturate(0.8); }
+
+.secondaryBtn { background: #151d2f; border-color: #2b3954; color: var(--cyan); }
+.secondaryBtn:hover { background: #1c2740; }
+.secondaryBtn.active { border-color: var(--accent); background: rgba(255, 190, 59, 0.18); color: var(--accent); }
+.voiceBtn.active { border-color: var(--cyan); background: rgba(32, 215, 255, 0.2); color: #fff; }
+
+.sendVideoBtn {
+  background: linear-gradient(135deg, #2bd576, #20d7ff);
+  border: 0; color: #07090e; font-weight: 800;
+  box-shadow: 0 4px 16px rgba(43, 213, 118, 0.35);
+}
+.sendVideoBtn:hover { opacity: 0.94; }
+
+.danger { color: #ff8297; border-color: rgba(255, 85, 114, 0.28); }
+.danger:hover { background: rgba(255, 85, 114, 0.12); }
+
+.btnSpinner {
+  width: 14px; height: 14px;
+  border: 2px solid rgba(0, 0, 0, 0.35);
+  border-top-color: #000; border-radius: 50%;
+  animation: spin 0.75s linear infinite; display: inline-block;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.appHeader {
+  position: sticky; top: 0; z-index: 60; height: 50px; padding: 0 14px;
+  display: flex; align-items: center; justify-content: space-between;
+  background: rgba(7, 9, 14, 0.96); backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border); flex-shrink: 0;
+}
+.brand { display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 14px; }
+.logo {
+  width: 30px; height: 30px; border-radius: 8px; display: grid; place-items: center;
+  background: linear-gradient(135deg, #ffbe3b, #ff5572);
+  box-shadow: 0 4px 18px rgba(255, 190, 59, 0.35); font-size: 15px; color: #0a0d14;
+}
+.brand small { display: block; color: var(--muted); font-size: 8.5px; font-weight: 500; }
+.headerBtns { display: flex; gap: 5px; align-items: center; }
+.iconBtn { width: 32px; height: 32px; padding: 0; border-radius: 8px; font-size: 13px; }
+
+/* Dashboard Hub Modal */
+.appMenuBackdrop {
+  position: fixed; inset: 0; background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(6px); z-index: 500; display: none;
+  align-items: flex-start; justify-content: center; padding: 60px 14px 14px 14px;
+}
+.appMenuBackdrop.show { display: flex; }
+.appMenuSheet {
+  background: #0f1422; border: 1px solid var(--border-light);
+  border-radius: 18px; padding: 16px; width: 100%; max-width: 440px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.85); animation: dropMenu 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes dropMenu {
+  from { opacity: 0; transform: translateY(-12px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.appMenuHead {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border);
+}
+.appTileGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.appTileCard {
+  background: #141a29; border: 1px solid var(--border);
+  border-radius: 14px; padding: 12px 10px; text-decoration: none;
+  display: flex; flex-direction: column; align-items: center; text-align: center;
+  transition: all 0.15s ease;
+}
+.appTileCard:hover, .appTileCard:active {
+  background: #1c253b; border-color: var(--cyan); transform: translateY(-2px);
+}
+.appTileCard.activeTool {
+  border-color: var(--accent); background: rgba(255, 190, 59, 0.16);
+  box-shadow: 0 0 12px rgba(255, 190, 59, 0.3);
+}
+.appTileIcon {
+  width: 40px; height: 40px; border-radius: 11px;
+  display: grid; place-items: center; font-size: 20px; margin-bottom: 8px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+}
+.appTileName { font-size: 12px; font-weight: 700; color: #fff; margin-bottom: 3px; }
+.appTileDesc { font-size: 9.5px; color: var(--muted); line-height: 1.25; }
+
+.toast {
+  position: fixed; left: 50%; top: 58px; transform: translateX(-50%) translateY(-20px);
+  z-index: 1000; background: rgba(20, 27, 42, 0.96); border: 1px solid var(--border-light);
+  padding: 8px 18px; border-radius: 12px; box-shadow: 0 12px 32px rgba(0,0,0,0.6);
+  opacity: 0; transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1); font-size: 11.5px;
+  font-weight: 600; pointer-events: none; white-space: nowrap; backdrop-filter: blur(10px);
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+.container { max-width: 1400px; margin: auto; padding: 12px; }
+
+.card {
+  background: linear-gradient(180deg, #111521, #0c0f17);
+  border: 1px solid var(--border); border-radius: 16px; overflow: hidden;
+  box-shadow: var(--shadow); margin-bottom: 14px;
+}
+.cardHead {
+  padding: 12px 16px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+}
+.title { font-weight: 750; font-size: 13.5px; display: flex; align-items: center; gap: 6px; }
+.body { padding: 14px 16px; }
+
+.field { margin-bottom: 12px; }
+.field label {
+  display: block; font-size: 10.5px; color: var(--muted); font-weight: 700; margin-bottom: 5px;
+}
+.inputField, .selectField, textarea.inputField {
+  width: 100%; background: #080b12; border: 1px solid var(--border);
+  color: #fff; border-radius: 10px; padding: 10px 12px; font-size: 13px; outline: 0;
+  transition: border-color 0.15s ease;
+}
+.inputField:focus, .selectField:focus { border-color: var(--accent); }
+
+.gridRow { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+.tagGroup { display: flex; flex-wrap: wrap; gap: 6px; }
+.tagBtn {
+  background: #111624; border: 1px solid var(--border);
+  border-radius: 8px; padding: 6px 10px; font-size: 11px; font-weight: 600; color: #d0d7e5;
+}
+.tagBtn.active {
+  border-color: var(--accent); background: rgba(255, 190, 59, 0.15); color: var(--accent);
+}
+
+/* Episode Separator Header */
+.epDivider {
+  background: linear-gradient(90deg, rgba(255, 190, 59, 0.18), transparent);
+  border-left: 3px solid var(--accent);
+  padding: 6px 12px; border-radius: 6px;
+  font-size: 11px; font-weight: 800; color: #fff;
+  display: flex; align-items: center; justify-content: space-between;
+  margin-top: 8px; margin-bottom: 4px;
+}
+
+.sceneList { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; max-height: 640px; overflow-y: auto; padding-right: 4px; }
+.sceneCard {
+  background: #090c14; border: 1px solid var(--border);
+  border-radius: 14px; padding: 12px; transition: border-color 0.2s ease;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.sceneCard:hover { border-color: var(--border-light); }
+.sceneCardHead {
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 11px; font-weight: 800; color: var(--accent);
+}
+.sceneCardBtns { display: flex; gap: 4px; align-items: center; }
+
+.sceneTextMM {
+  width: 100%; background: #0c101a; border: 1px solid var(--border);
+  border-radius: 8px; padding: 8px 10px; font-size: 13px; line-height: 1.45; color: #fff;
+  resize: vertical; min-height: 56px; outline: 0;
+}
+.sceneTextMM:focus { border-color: var(--cyan); }
+
+.scenePromptEN {
+  width: 100%; background: #060910; border: 1px solid #1a2234;
+  border-radius: 8px; padding: 7px 10px; font-size: 11.5px; line-height: 1.35; color: var(--cyan);
+  font-family: ui-monospace, monospace; resize: vertical; min-height: 48px; outline: 0;
+}
+.scenePromptEN:focus { border-color: var(--accent); }
+
+.actionToolBar {
+  display: flex; gap: 8px; justify-content: space-between; align-items: center;
+  background: #0a0d17; border: 1px solid var(--border); border-radius: 12px; padding: 10px 14px;
+  margin-top: 14px; flex-wrap: wrap;
+}
+
+/* Error Diagnostic Modal */
+.errorModalSheet {
+  background: #190e14; border: 1.5px solid var(--red);
+  border-radius: 18px; padding: 18px; width: 100%; max-width: 440px;
+  box-shadow: 0 16px 40px rgba(255, 85, 114, 0.4);
+}
+.errorModalHead { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.errorModalMsg {
+  background: #090306; border: 1px solid rgba(255,85,114,0.3); border-radius: 10px;
+  padding: 10px; font-size: 11px; color: #ffccd5; font-family: ui-monospace, monospace;
+  white-space: pre-wrap; word-break: break-word; max-height: 180px; overflow-y: auto;
+}
+
+@media(min-width: 900px) {
+  .appBodyGrid {
+    display: grid; grid-template-columns: 420px 1fr; gap: 16px; align-items: start;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<header class="appHeader">
+  <div class="brand">
+    <div class="logo">✍️</div>
+    <div>
+      Story Maker Studio
+      <small>AI Script & Image Prompts</small>
+    </div>
+  </div>
+  <div class="headerBtns">
+    <button class="iconBtn" onclick="toggleAppMenu()" title="All Studios" style="background:rgba(255,190,59,0.22);border-color:var(--accent);color:#fff">▦</button>
+    <button class="iconBtn" onclick="undo()" title="Undo">↶</button>
+    <button class="iconBtn" onclick="redo()" title="Redo">↷</button>
+    <button class="iconBtn" onclick="saveStoryToLocal()" title="Save Story">💾</button>
+  </div>
+</header>
+
+<!-- DASHBOARD TILE GRID MODAL -->
+<div class="appMenuBackdrop" id="appMenuBackdrop" onclick="toggleAppMenu(event)">
+  <div class="appMenuSheet" onclick="event.stopPropagation()">
+    <div class="appMenuHead">
+      <div style="font-weight:800;font-size:13px;color:#fff;display:flex;align-items:center;gap:6px">
+        <span style="color:var(--cyan)">✦</span> AI Studio Apps Hub
+      </div>
+      <button onclick="toggleAppMenu()" style="padding:4px 8px;font-size:11px">✕</button>
+    </div>
+    <div class="appTileGrid">
+      <a href="movie-recaps.html" class="appTileCard">
+        <div class="appTileIcon" style="background:linear-gradient(135deg, #ff5572, #ff7e40)">🎬</div>
+        <div class="appTileName">Movie Recaps</div>
+        <div class="appTileDesc">ဇာတ်ကြောင်းပြော & မြန်မာ Voice</div>
+      </a>
+      <a href="story-maker.html" class="appTileCard activeTool">
+        <div class="appTileIcon" style="background:linear-gradient(135deg, #ffbe3b, #ff5572)">✍️</div>
+        <div class="appTileName">Story Maker</div>
+        <div class="appTileDesc">ခေါင်းစဉ်ဖြင့် AI ဇာတ်လမ်းရေး</div>
+      </a>
+      <a href="story-to-video.html" class="appTileCard">
+        <div class="appTileIcon" style="background:linear-gradient(135deg, #2bd576, #20d7ff)">🎥</div>
+        <div class="appTileName">Story to Video</div>
+        <div class="appTileDesc">Photo Slideshow & Subtitles</div>
+      </a>
+      <a href="index.html" class="appTileCard">
+        <div class="appTileIcon" style="background:linear-gradient(135deg, #7657ff, #20d7ff)">🏠</div>
+        <div class="appTileName">Main Hub</div>
+        <div class="appTileDesc">ပင်မစာမျက်နှာ Dashboard သို့</div>
+      </a>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- ERROR DIAGNOSTIC MODAL -->
+<div class="appMenuBackdrop" id="errorModalBackdrop" onclick="closeErrorModal()">
+  <div class="errorModalSheet" onclick="event.stopPropagation()">
+    <div class="errorModalHead">
+      <span style="font-weight:800;font-size:13px;color:var(--red)">❌ Process Error Diagnostics</span>
+      <button onclick="closeErrorModal()" style="padding:3px 7px;font-size:11px">✕</button>
+    </div>
+    <p style="font-size:11px;color:#ffccd5;margin:0 0 8px 0">အောက်ပါ အကြောင်းရင်းကြောင့် ရပ်တန့်သွားပါသည် -</p>
+    <div class="errorModalMsg" id="errorModalMsgText"></div>
+    <div style="display:flex;justify-content:flex-end;margin-top:10px">
+      <button class="primary" onclick="closeErrorModal()" style="background:#ff5572;color:#fff">နားလည်ပါပြီ</button>
+    </div>
+  </div>
+</div>
+
+<main class="container">
+  <div class="appBodyGrid">
+    
+    <!-- LEFT PANEL: GENERATOR CONFIGURATION -->
+    <div class="card">
+      <div class="cardHead">
+        <div class="title">✨ AI Story Studio Setup</div>
+        <button onclick="testMyanmarVoice()" style="font-size:10px;padding:3px 8px;color:var(--cyan);border-color:#2b3954">🔊 Test Voice</button>
+      </div>
+      <div class="body">
+        
+        <div class="field">
+          <label>📝 STORY TOPIC / TITLE (ခေါင်းစဉ် သို့မဟုတ် အကြောင်းအရာ)</label>
+          <input type="text" class="inputField" id="topicInput" placeholder="ဥပမာ - တောနက်ထဲက ထူးဆန်းသောအိမ်ကြီး" value="တောနက်ထဲက ထူးဆန်းသောအိမ်ကြီး">
+        </div>
+
+        <div class="field">
+          <label>🎭 STORY GENRE (ဇာတ်လမ်း အမျိုးအစား)</label>
+          <div class="tagGroup">
+            <button class="tagBtn active" id="catHorror" onclick="setCategory('horror')">👻 သရဲ/သည်းထိတ်ရင်ဖို</button>
+            <button class="tagBtn" id="catAdventure" onclick="setCategory('adventure')">🗺️ စွန့်စားခန်း</button>
+            <button class="tagBtn" id="catFantasy" onclick="setCategory('fantasy')">🧙‍♂️ ပုံပြင်/ဒဏ္ဍာရီ</button>
+            <button class="tagBtn" id="catComedy" onclick="setCategory('comedy')">😂 ဟာသ</button>
+            <button class="tagBtn" id="catDrama" onclick="setCategory('drama')">💔 ဘဝသရုပ်ဖော်/ဒရာမာ</button>
+            <button class="tagBtn" id="catScifi" onclick="setCategory('scifi')">🚀 သိပ္ပံ/Sci-Fi</button>
+          </div>
+        </div>
+
+        <!-- FORMAT SELECTION: SINGLE OR SERIES -->
+        <div class="field">
+          <label>📖 STORY FORMAT (ဇာတ်လမ်း ပုံစံ)</label>
+          <div class="tagGroup">
+            <button class="tagBtn" id="typeSingle" onclick="setType('single')">✓ တစ်ပိုင်းတည်းပြီး (Single)</button>
+            <button class="tagBtn active" id="typeSeries" onclick="setType('series')">🔗 ဇာတ်လမ်းတွဲ (Series)</button>
+          </div>
+        </div>
+
+        <!-- DYNAMIC CONTROL: SINGLE DURATION VS SERIES EPISODES -->
+        <div class="field" id="singleDurationBox" style="display:none">
+          <label>⏱️ SINGLE VIDEO DURATION (ကြာချိန်)</label>
+          <div class="tagGroup">
+            <button class="tagBtn active" id="dur1" onclick="setDuration(1)">⚡ 1 Min (8 Scenes)</button>
+            <button class="tagBtn" id="dur3" onclick="setDuration(3)">⏱️ 3 Mins (20 Scenes)</button>
+            <button class="tagBtn" id="dur5" onclick="setDuration(5)">🎬 5 Mins (32 Scenes)</button>
+          </div>
+        </div>
+
+        <!-- SERIES EPISODE SELECTOR: 2 Ep မှ 6 Ep အထိ ရွေးချယ်မှု -->
+        <div class="field" id="seriesEpisodesBox">
+          <label style="color:var(--accent)">📺 SERIES EPISODES (၁ မိနစ် ၁ ပိုင်းနှုန်းဖြင့် အပိုင်း ရွေးချယ်မှု)</label>
+          <div class="tagGroup">
+            <button class="tagBtn" id="ep2" onclick="setEpisodes(2)">⚡ 2 Ep (2 Mins)</button>
+            <button class="tagBtn" id="ep3" onclick="setEpisodes(3)">⏱️ 3 Ep (3 Mins)</button>
+            <button class="tagBtn" id="ep4" onclick="setEpisodes(4)">🎬 4 Ep (4 Mins)</button>
+            <button class="tagBtn" id="ep5" onclick="setEpisodes(5)">🔥 5 Ep (5 Mins)</button>
+            <button class="tagBtn active" id="ep6" onclick="setEpisodes(6)">🌟 6 Ep (6 Mins)</button>
+          </div>
+          <small style="font-size:10px;color:var(--muted);margin-top:4px;display:block">
+            * Ep 1 မှ Ep 6 အထိ အပိုင်းအားလုံးကို cliffhanger အချိတ်အဆက်များဖြင့် တစ်ခါတည်း ရေးပေးပါမည်။
+          </small>
+        </div>
+
+        <div class="field">
+          <label>🎨 VISUAL ART STYLE (ရုပ်ပုံဒီဇိုင်း စတိုင်လ်)</label>
+          <select class="selectField" id="artStyleSelect">
+            <option value="Vintage 35mm film photograph, grainy texture, retro color grade" selected>📸 Vintage 35mm Analog Film</option>
+            <option value="Cinematic photorealistic 8k, dramatic lighting, ultra-detailed">🎬 Cinematic Photorealistic 8K</option>
+            <option value="3D Pixar Disney style animation, vibrant colors, expressive characters">🎨 3D Animation / Pixar Disney Style</option>
+            <option value="Dark fantasy oil painting, mysterious atmosphere, moody lighting">🌌 Dark Fantasy Oil Painting</option>
+            <option value="Classic 90s vintage anime aesthetic, detailed background, hand-drawn look">⛩️ 90s Vintage Anime Style</option>
+            <option value="Futuristic cyberpunk concept art, glowing neon lights, dark moody rain">🌆 Cyberpunk Sci-Fi Concept Art</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>🗣️ AI VOICE ACTOR (ကြိုတင်နားထောင်မည့် အသံ)</label>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+            <button class="voiceBtn active" id="voiceThiha" onclick="setVoice('my-MM-ThihaNeural')">👨 သီဟ (ကျားအသံ)</button>
+            <button class="voiceBtn" id="voiceNilar" onclick="setVoice('my-MM-NilarNeural')">👩 နီလာ (မအသံ)</button>
+          </div>
+        </div>
+
+        <button class="primary" id="generateBtn" style="width:100%;padding:13px;margin-top:6px" onclick="generateStory()">
+          <span class="btnSpinner" id="btnSpinner" style="display:none"></span>
+          <span id="btnText">✨ Generate All Episodes & Scenes</span>
+        </button>
+
+      </div>
+    </div>
+
+    <!-- RIGHT PANEL: TIMELINE VIEWER WITH EPISODE TABS -->
+    <div class="card">
+      <div class="cardHead">
+        <div class="title">
+          🎬 Story Timeline <span id="sceneCountBadge" style="font-size:11px;color:var(--muted)"></span>
+        </div>
+        <div style="display:flex;gap:5px">
+          <button class="secondaryBtn" onclick="addNewScene()" style="padding:4px 8px;font-size:10.5px">+ Add Scene</button>
+          <button onclick="copyAllStoryText()" style="padding:4px 8px;font-size:10.5px">📋 Copy Script</button>
+          <button onclick="exportStoryJSON()" style="padding:4px 8px;font-size:10.5px">💾 Export JSON</button>
+        </div>
+      </div>
+      <div class="body">
+        
+        <!-- EPISODE FILTER BAR -->
+        <div id="episodeFilterBar" style="display:none;margin-bottom:10px">
+          <div class="tagGroup" id="episodeFilterTags">
+            <!-- Dynamically populated episode filter pills -->
+          </div>
+        </div>
+
+        <div class="sceneList" id="sceneList">
+          <div style="text-align:center;padding:50px 10px;color:var(--muted);font-size:12.5px">
+            ✍️ ခေါင်းစဉ်နှင့် အပိုင်းအရေအတွက် ရွေးချယ်ပြီး <b>"Generate All Episodes & Scenes"</b> ခလုတ်ကို နှိပ်လိုက်ပါက<br>
+            အပိုင်းအလိုက် မြန်မာစကားပြောများနှင့် Image Prompts များ ဤနေရာတွင် စုံလင်စွာ ပေါ်လာပါမည်။
+          </div>
+        </div>
+
+        <div class="actionToolBar" id="actionToolBar" style="display:none">
+          <div style="font-size:11.5px;color:var(--muted)">
+            ဇာတ်လမ်း အဆင်သင့်ဖြစ်ပါက Video ဖန်တီးရန် Slideshow Studio သို့ တိုက်ရိုက် ပို့နိုင်ပါသည် -
+          </div>
+          <button class="sendVideoBtn" onclick="sendToVideoStudio()" style="padding:10px 18px">
+            🚀 Send to Video Studio ➔
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<script>
+const WORKER_URL = "https://ai-studio-mm.nainelinoo-14tpro.workers.dev";
+
+let scenes = [];
+let history = [];
+let future = [];
+let selectedCategory = "horror";
+let selectedDuration = 1;
+let selectedType = "series"; // Default: ဇာတ်လမ်းတွဲ
+let selectedEpisodes = 6;    // Default: 6 Episodes (6 Mins)
+let selectedVoice = "my-MM-ThihaNeural";
+let activeEpFilter = 0;      // 0 = All Episodes
+let isGenerating = false;
+let currentPlayingAudio = null;
+
+function toast(msg) {
+  const x = document.getElementById("toast");
+  x.textContent = msg; x.classList.add("show");
+  clearTimeout(window.__toast);
+  window.__toast = setTimeout(() => x.classList.remove("show"), 2800);
+}
+
+function toggleAppMenu(e) {
+  if (e && e.target !== document.getElementById("appMenuBackdrop") && e.target !== document.getElementById("appMenuBackdrop").querySelector("button")) return;
+  document.getElementById("appMenuBackdrop").classList.toggle("show");
+}
+
+function showErrorModal(errorTitle, errorDetail) {
+  document.getElementById("errorModalMsgText").textContent = `[${errorTitle}]\n${errorDetail}`;
+  document.getElementById("errorModalBackdrop").classList.add("show");
+}
+
+function closeErrorModal() {
+  document.getElementById("errorModalBackdrop").classList.remove("show");
+}
+
+function setCategory(cat) {
+  selectedCategory = cat;
+  document.querySelectorAll(".tagGroup button[id^='cat']").forEach(b => b.classList.remove("active"));
+  const target = document.getElementById("cat" + cat.charAt(0).toUpperCase() + cat.slice(1));
+  if (target) target.classList.add("active");
+}
+
+function setDuration(dur) {
+  selectedDuration = dur;
+  document.querySelectorAll("#singleDurationBox button").forEach(b => b.classList.remove("active"));
+  const target = document.getElementById("dur" + dur);
+  if (target) target.classList.add("active");
+}
+
+function setEpisodes(ep) {
+  selectedEpisodes = Number(ep);
+  document.querySelectorAll("#seriesEpisodesBox button").forEach(b => b.classList.remove("active"));
+  const target = document.getElementById("ep" + ep);
+  if (target) target.classList.add("active");
+  toast(`Selected: ${ep} Episodes (${ep} Mins)`);
+}
+
+function setType(type) {
+  selectedType = type;
+  document.getElementById("typeSingle").classList.toggle("active", type === "single");
+  document.getElementById("typeSeries").classList.toggle("active", type === "series");
+
+  document.getElementById("singleDurationBox").style.display = type === "single" ? "block" : "none";
+  document.getElementById("seriesEpisodesBox").style.display = type === "series" ? "block" : "none";
+
+  const btnText = document.getElementById("btnText");
+  btnText.textContent = type === "series" 
+    ? `✨ Generate All (${selectedEpisodes} Episodes) & Scenes`
+    : "✨ Generate AI Story & Scenes";
+}
+
+function setVoice(v) {
+  selectedVoice = v;
+  document.getElementById("voiceThiha").classList.toggle("active", v.includes("Thiha"));
+  document.getElementById("voiceNilar").classList.toggle("active", v.includes("Nilar"));
+  toast(`Voice: ${v.includes("Thiha") ? "သီဟ (ကျား)" : "နီလာ (မ)"}`);
+}
+
+function saveHistory() {
+  history.push(JSON.stringify(scenes));
+  if (history.length > 30) history.shift();
+  future = [];
+}
+function undo() {
+  if (!history.length) { toast("Nothing to undo"); return; }
+  future.push(JSON.stringify(scenes));
+  scenes = JSON.parse(history.pop());
+  renderScenes();
+  toast("Undo performed");
+}
+function redo() {
+  if (!future.length) { toast("Nothing to redo"); return; }
+  history.push(JSON.stringify(scenes));
+  scenes = JSON.parse(future.pop());
+  renderScenes();
+  toast("Redo performed");
+}
+
+/* ==========================================================================
+   DUAL-ENGINE TTS FOR PREVIEW
+   ========================================================================== */
+async function getSecMsGecClient() {
+  const unixSeconds = Math.floor(Date.now() / 1000);
+  const fileTimeSeconds = BigInt(unixSeconds) + 11644473600n;
+  let ticks = fileTimeSeconds * 10000000n;
+  ticks -= (ticks % 3000000000n);
+  const strToHash = ticks.toString() + "6A5AA1D4EAFF4E9FB37E23D68491D6F4";
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(strToHash));
+  return Array.from(new Uint8Array(digest))
+    .map(b => b.toString(16).padStart(2, "0"))
+    .join("")
+    .toUpperCase();
+}
+
+async function generateEdgeSpeechInBrowser(text, voice) {
+  const connectionId = crypto.randomUUID().replace(/-/g, "");
+  const secMsGec = await getSecMsGecClient();
+  const wsUrl = `wss://speech.platform.bing.com/consumer/speech/synthesize/readaloud/edge/v1?TrustedClientToken=6A5AA1D4EAFF4E9FB37E23D68491D6F4&Sec-MS-GEC=${secMsGec}&Sec-MS-GEC-Version=1-131.0.2903.86&ConnectionId=${connectionId}`;
+
+  return new Promise((resolve, reject) => {
+    let ws;
+    try { ws = new WebSocket(wsUrl); } catch (e) { return reject(e); }
+    ws.binaryType = "arraybuffer";
+
+    const audioChunks = [];
+    let isDone = false;
+
+    const timer = setTimeout(() => {
+      if (!isDone) {
+        isDone = true;
+        try { ws.close(); } catch (e) {}
+        reject(new Error("Browser TTS Timeout"));
+      }
+    }, 12000);
+
+    ws.onopen = () => {
+      const dateStr = new Date().toString();
+      const reqId = crypto.randomUUID().replace(/-/g, "");
+      const cleanText = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+      const ssml = `<speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis' xmlns:mstts='http://www.w3.org/2001/mstts' xml:lang='my-MM'><voice name='${voice}'><prosody pitch='+0Hz' rate='+0%'>${cleanText}</prosody></voice></speak>`;
+
+      ws.send(`X-Timestamp:${dateStr}\r\nContent-Type:application/json; charset=utf-8\r\nPath:speech.config\r\n\r\n{"context":{"synthesis":{"audio":{"metadataoptions":{"sentenceBoundaryEnabled":"false","wordBoundaryEnabled":"false"},"outputFormat":"audio-24khz-48kbitrate-mono-mp3"}}}}`);
+      ws.send(`X-RequestId:${reqId}\r\nContent-Type:application/ssml+xml\r\nX-Timestamp:${dateStr}\r\nPath:ssml\r\n\r\n${ssml}`);
+    };
+
+    ws.onmessage = (event) => {
+      if (typeof event.data === "string" && event.data.includes("Path:turn.end")) {
+        if (!isDone) {
+          isDone = true;
+          clearTimeout(timer);
+          try { ws.close(); } catch (e) {}
+          if (audioChunks.length === 0) reject(new Error("No audio chunks"));
+          else resolve(URL.createObjectURL(new Blob(audioChunks, { type: "audio/mpeg" })));
+        }
+      } else if (event.data instanceof ArrayBuffer) {
+        const view = new DataView(event.data);
+        if (event.data.byteLength > 2) {
+          const headerLen = view.getUint16(0, false);
+          if (event.data.byteLength > headerLen + 2) {
+            const headerText = new TextDecoder().decode(event.data.slice(2, headerLen + 2));
+            if (headerText.includes("Path:audio")) {
+              audioChunks.push(event.data.slice(headerLen + 2));
+            }
+          }
+        }
+      }
+    };
+
+    ws.onerror = () => { if (!isDone) { isDone = true; clearTimeout(timer); reject(new Error("WebSocket Error")); } };
+  });
+}
+
+async function fetchMyanmarAudio(text, voice) {
+  try {
+    const res = await fetch(WORKER_URL + "/tts", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text, voice, rate: "+0%" })
+    });
+    if (res.ok) {
+      const blob = await res.blob();
+      if (blob.size > 200) return URL.createObjectURL(blob);
+    }
+  } catch (e) {
+    console.warn("Worker TTS fallback to browser engine:", e);
+  }
+  return await generateEdgeSpeechInBrowser(text, voice);
+}
+
+async function testMyanmarVoice() {
+  toast("Testing AI voice...");
+  try {
+    const url = await fetchMyanmarAudio("မင်္ဂလာပါခင်ဗျာ။ ဇာတ်လမ်းတွဲ အသံစနစ် ကောင်းမွန်စွာ အလုပ်လုပ်နေပါပြီ။", selectedVoice);
+    if (currentPlayingAudio) currentPlayingAudio.pause();
+    currentPlayingAudio = new Audio(url);
+    currentPlayingAudio.play();
+    toast("🔊 Voice Playing!");
+  } catch(e) {
+    showErrorModal("Voice Test Error", e.message);
+  }
+}
+
+async function playSceneVoice(idx) {
+  const s = scenes[idx];
+  if (!s || !s.text_mm) return;
+  toast(`Playing Ep ${s.episode || 1} • Scene ${s.scene} voice...`);
+  try {
+    const url = await fetchMyanmarAudio(s.text_mm, selectedVoice);
+    if (currentPlayingAudio) currentPlayingAudio.pause();
+    currentPlayingAudio = new Audio(url);
+    currentPlayingAudio.play();
+  } catch(e) {
+    toast("Voice error: " + e.message);
+  }
+}
+
+/* ==========================================================================
+   MULTI-EPISODE AI STORY PIPELINE
+   ========================================================================== */
+async function generateStory() {
+  const topic = document.getElementById("topicInput").value.trim();
+  if (!topic) { toast("Please enter a story title/topic"); return; }
+  if (isGenerating) return;
+
+  isGenerating = true;
+  saveHistory();
+
+  const btn = document.getElementById("generateBtn");
+  const spinner = document.getElementById("btnSpinner");
+  const btnText = document.getElementById("btnText");
+  const artStyle = document.getElementById("artStyleSelect").value;
+
+  btn.disabled = true;
+  spinner.style.display = "inline-block";
+  btnText.textContent = selectedType === "series" 
+    ? `Writing ${selectedEpisodes} Episodes in one go...`
+    : "Writing Story & Prompts...";
+
+  try {
+    const res = await fetch(WORKER_URL + "/story", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        topic: topic,
+        duration: selectedDuration,
+        type: selectedType,
+        category: selectedCategory,
+        episodes: selectedType === "series" ? selectedEpisodes : 1 // 2 to 6 Episodes
+      })
+    });
+
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(errData.error || `Server HTTP ${res.status}`);
+    }
+
+    const data = await res.json();
+    let rawScenes = data.story || [];
+
+    if (!rawScenes.length) throw new Error("No scenes generated. Please try again.");
+
+    // Formatting & Episode Mapping
+    scenes = rawScenes.map((s, idx) => ({
+      episode: Number(s.episode) || 1,
+      scene: Number(s.scene) || (idx + 1),
+      text_mm: s.text_mm || "ဇာတ်ကြောင်းပြော...",
+      image_prompt_en: `${s.image_prompt_en || "Cinematic visual"}, ${artStyle}`
+    }));
+
+    activeEpFilter = 0; // Show all
+    setupEpisodeFilters();
+    renderScenes();
+    saveStoryToLocal();
+    document.getElementById("actionToolBar").style.display = "flex";
+    toast(`🎉 Generated ${scenes.length} scenes across all episodes!`);
+
+  } catch(err) {
+    console.error(err);
+    showErrorModal("Story Generation Error", err.message);
+  } finally {
+    isGenerating = false;
+    btn.disabled = false;
+    spinner.style.display = "none";
+    btnText.textContent = selectedType === "series" 
+      ? `✨ Generate All (${selectedEpisodes} Episodes) & Scenes`
+      : "✨ Generate AI Story & Scenes";
+  }
+}
+
+function setupEpisodeFilters() {
+  const container = document.getElementById("episodeFilterTags");
+  const bar = document.getElementById("episodeFilterBar");
+  
+  const episodesSet = [...new Set(scenes.map(s => s.episode || 1))].sort((a,b)=>a-b);
+  if (episodesSet.length <= 1) {
+    bar.style.display = "none";
+    return;
+  }
+
+  bar.style.display = "block";
+  let html = `<button class="tagBtn ${activeEpFilter===0?'active':''}" onclick="filterByEpisode(0)">All Episodes (${scenes.length})</button>`;
+  episodesSet.forEach(ep => {
+    const count = scenes.filter(s => s.episode === ep).length;
+    html += `<button class="tagBtn ${activeEpFilter===ep?'active':''}" onclick="filterByEpisode(${ep})">Ep ${ep} (${count})</button>`;
+  });
+  container.innerHTML = html;
+}
+
+function filterByEpisode(ep) {
+  activeEpFilter = ep;
+  setupEpisodeFilters();
+  renderScenes();
+}
+
+function renderScenes() {
+  const list = document.getElementById("sceneList");
+  const badge = document.getElementById("sceneCountBadge");
+  badge.textContent = scenes.length ? `(${scenes.length} Scenes Total)` : "";
+
+  if (!scenes.length) {
+    list.innerHTML = `<div style="text-align:center;padding:50px 10px;color:var(--muted);font-size:12.5px">No scenes available. Click "+ Add Scene" to begin.</div>`;
+    return;
+  }
+
+  const filtered = activeEpFilter === 0 ? scenes : scenes.filter(s => (s.episode || 1) === activeEpFilter);
+
+  let outputHTML = "";
+  let currentEpisodeHeader = null;
+
+  filtered.forEach((s) => {
+    const realIdx = scenes.indexOf(s);
+    const epNum = s.episode || 1;
+
+    // အပိုင်းခွဲခြားသည့် Divider Header
+    if (activeEpFilter === 0 && epNum !== currentEpisodeHeader) {
+      currentEpisodeHeader = epNum;
+      outputHTML += `
+        <div class="epDivider">
+          <span>📺 EPISODE ${epNum} (အပိုင်း ${epNum})</span>
+          <span style="font-size:9.5px;color:var(--accent)">1 MINUTE</span>
+        </div>`;
+    }
+
+    outputHTML += `
+    <div class="sceneCard" id="sceneCard-${realIdx}">
+      <div class="sceneCardHead">
+        <span>🎬 EP ${epNum} • SCENE ${s.scene}</span>
+        <div class="sceneCardBtns">
+          <button onclick="playSceneVoice(${realIdx})" style="padding:2px 7px;font-size:10px" title="Listen voice">🔊 Play</button>
+          <button onclick="copySinglePrompt(${realIdx})" style="padding:2px 7px;font-size:10px;color:var(--cyan)" title="Copy English prompt">📋 Prompt</button>
+          <button onclick="moveScene(${realIdx}, -1)" style="padding:2px 6px;font-size:10px" title="Move Up">▲</button>
+          <button onclick="moveScene(${realIdx}, 1)" style="padding:2px 6px;font-size:10px" title="Move Down">▼</button>
+          <button class="danger" onclick="deleteScene(${realIdx})" style="padding:2px 6px;font-size:10px" title="Delete">✕</button>
+        </div>
+      </div>
+
+      <div>
+        <label style="font-size:9.5px;color:var(--muted);font-weight:700">မြန်မာဇာတ်ကြောင်းပြော (NARRATION SCRIPT)</label>
+        <textarea class="sceneTextMM" oninput="updateSceneText(${realIdx}, 'text_mm', this.value)">${esc(s.text_mm)}</textarea>
+      </div>
+
+      <div>
+        <label style="font-size:9.5px;color:var(--cyan);font-weight:700">🎨 AI IMAGE PROMPT (ENGLISH)</label>
+        <textarea class="scenePromptEN" oninput="updateSceneText(${realIdx}, 'image_prompt_en', this.value)">${esc(s.image_prompt_en)}</textarea>
+      </div>
+    </div>`;
+  });
+
+  list.innerHTML = outputHTML;
+}
+
+function esc(v) {
+  return String(v ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+function updateSceneText(idx, field, val) {
+  if (scenes[idx]) scenes[idx][field] = val;
+}
+
+function deleteScene(idx) {
+  saveHistory();
+  scenes.splice(idx, 1);
+  setupEpisodeFilters();
+  renderScenes();
+  toast("Scene deleted");
+}
+
+function addNewScene() {
+  saveHistory();
+  const artStyle = document.getElementById("artStyleSelect").value;
+  const lastEp = scenes.length ? (scenes[scenes.length - 1].episode || 1) : 1;
+  const lastSceneInEp = scenes.filter(s => s.episode === lastEp).length;
+
+  scenes.push({
+    episode: lastEp,
+    scene: lastSceneInEp + 1,
+    text_mm: "ဇာတ်ကြောင်းပြော အသစ်...",
+    image_prompt_en: `Atmospheric storytelling scene, ${artStyle}`
+  });
+
+  setupEpisodeFilters();
+  renderScenes();
+  document.getElementById("actionToolBar").style.display = "flex";
+  toast("Scene added");
+}
+
+function moveScene(idx, dir) {
+  const target = idx + dir;
+  if (target < 0 || target >= scenes.length) return;
+  saveHistory();
+  const temp = scenes[idx];
+  scenes[idx] = scenes[target];
+  scenes[target] = temp;
+  renderScenes();
+}
+
+function copySinglePrompt(idx) {
+  const p = scenes[idx]?.image_prompt_en;
+  if (!p) return;
+  navigator.clipboard.writeText(p).then(() => {
+    toast(`Copied Ep ${scenes[idx].episode || 1} Scene ${scenes[idx].scene} Prompt!`);
+  }).catch(() => toast("Failed to copy"));
+}
+
+function copyAllStoryText() {
+  if (!scenes.length) { toast("No story script to copy"); return; }
+  let full = `=== ${document.getElementById("topicInput").value} ===\n\n`;
+  let currentEp = null;
+
+  scenes.forEach(s => {
+    if (s.episode !== currentEp) {
+      currentEp = s.episode;
+      full += `\n=====================\n📺 EPISODE ${currentEp}\n=====================\n\n`;
+    }
+    full += `[Scene ${s.scene}]\n${s.text_mm}\n(Prompt: ${s.image_prompt_en})\n\n`;
+  });
+
+  navigator.clipboard.writeText(full).then(() => {
+    toast("Full Series Script copied to clipboard!");
+  }).catch(() => toast("Failed to copy"));
+}
+
+function exportStoryJSON() {
+  if (!scenes.length) { toast("No story to export"); return; }
+  const blob = new Blob([JSON.stringify(scenes, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `story-series-${Date.now()}.json`;
+  a.click();
+  toast("Series JSON downloaded!");
+}
+
+function saveStoryToLocal() {
+  if (!scenes.length) return;
+  const bundle = {
+    topic: document.getElementById("topicInput").value,
+    category: selectedCategory,
+    duration: selectedDuration,
+    type: selectedType,
+    episodes: selectedEpisodes,
+    artStyle: document.getElementById("artStyleSelect").value,
+    scenes: scenes,
+    savedAt: Date.now()
+  };
+  localStorage.setItem("current_ai_story", JSON.stringify(bundle));
+  localStorage.setItem("shared_story_scenes", JSON.stringify(scenes));
+  toast("Series saved successfully!");
+}
+
+function loadStoryFromLocal() {
+  try {
+    const raw = localStorage.getItem("current_ai_story");
+    if (!raw) return;
+    const bundle = JSON.parse(raw);
+    if (bundle.topic) document.getElementById("topicInput").value = bundle.topic;
+    if (bundle.category) setCategory(bundle.category);
+    if (bundle.duration) setDuration(bundle.duration);
+    if (bundle.type) setType(bundle.type);
+    if (bundle.episodes) setEpisodes(bundle.episodes);
+    if (bundle.artStyle) document.getElementById("artStyleSelect").value = bundle.artStyle;
+    if (bundle.scenes && bundle.scenes.length) {
+      scenes = bundle.scenes;
+      setupEpisodeFilters();
+      renderScenes();
+      document.getElementById("actionToolBar").style.display = "flex";
+    }
+  } catch(e){}
+}
+
+function sendToVideoStudio() {
+  if (!scenes.length) { toast("Generate a story first"); return; }
+  saveStoryToLocal();
+  toast("Sending series to Story-to-Video Studio...");
+  setTimeout(() => {
+    window.location.href = "story-to-video.html";
+  }, 500);
+}
+
+window.onload = function() {
+  setType("series"); // Default to series as requested
+  setEpisodes(6);
+  loadStoryFromLocal();
+};
+</script>
+</body>
+</html>
