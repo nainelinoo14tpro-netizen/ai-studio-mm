@@ -149,6 +149,19 @@ button:active { transform: scale(0.97); }
 }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
+/* Comprehensive Diagnostics Error Modal */
+.errorModalSheet {
+  background: #190e14; border: 1.5px solid var(--accent);
+  border-radius: 18px; padding: 18px; width: 100%; max-width: 460px;
+  box-shadow: 0 16px 40px rgba(255, 85, 114, 0.4);
+}
+.errorModalHead { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.errorModalMsg {
+  background: #090306; border: 1px solid rgba(255,85,114,0.3); border-radius: 10px;
+  padding: 10px; font-size: 11px; color: #ffccd5; font-family: ui-monospace, monospace;
+  white-space: pre-wrap; word-break: break-word; max-height: 220px; overflow-y: auto;
+}
+
 .container { max-width: 1400px; margin: auto; padding: 8px 12px; }
 
 .steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 8px; flex-shrink: 0; }
@@ -187,7 +200,7 @@ button:active { transform: scale(0.97); }
   position: relative; background: #020406; aspect-ratio: 16/9;
   display: flex; align-items: center; justify-content: center;
   overflow: hidden; border: 2px dashed transparent; transition: border-color 0.2s ease;
-  user-select: none; cursor: pointer;
+  user-select: none;
 }
 .videoBox.drag { border-color: var(--accent); background: rgba(255, 85, 114, 0.12); }
 video { width: 100%; height: 100%; display: none; object-fit: contain; background: #000; pointer-events: none; }
@@ -215,6 +228,68 @@ video { width: 100%; height: 100%; display: none; object-fit: contain; backgroun
 }
 .modeBadge.show { display: flex; }
 
+/* Video Overlays (Logo, Title, Blur) */
+.videoLogoOverlay {
+  position: absolute; top: 12px; left: 12px; z-index: 26;
+  max-width: 70px; max-height: 40px; display: none; pointer-events: none;
+}
+
+.videoTitleOverlay {
+  position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
+  z-index: 26; background: rgba(0,0,0,0.6); padding: 3px 12px; border-radius: 6px;
+  color: #fff; font-size: 13px; font-weight: 800; display: none; text-shadow: 0 2px 4px #000;
+}
+
+.videoBlurBox {
+  position: absolute; bottom: 12%; left: 10%; width: 80%; height: 28px;
+  backdrop-filter: blur(8px); background: rgba(0,0,0,0.55);
+  border: 1px dashed rgba(255,255,255,0.2); border-radius: 6px; z-index: 24;
+  display: none; cursor: move;
+}
+
+/* Touch & Drag Subtitle Container */
+.overlay {
+  position: absolute; left: 50%; top: 82%; transform: translate(-50%, -50%);
+  display: flex; flex-direction: column; align-items: center;
+  z-index: 30; cursor: move; touch-action: none; max-width: 90%;
+}
+.overlayInner {
+  position: relative; display: inline-flex; flex-direction: column;
+  padding: 5px 12px; border-radius: 8px; text-align: center; word-break: break-word; line-height: 1.35;
+  background: rgba(0, 0, 0, 0.5); box-shadow: 0 4px 18px rgba(0,0,0,0.4);
+  transition: border-color 0.15s ease; border: 1.5px dashed transparent;
+  min-width: 40px; max-width: 100%;
+}
+.overlay.dragging .overlayInner {
+  border-color: var(--cyan);
+}
+.overlayTarget {
+  font-size: 17px; font-weight: 700; pointer-events: none; color: #ffffff;
+}
+
+/* Video Seek Bar */
+.videoControlBar {
+  position: absolute; bottom: 0; left: 0; right: 0; z-index: 36;
+  background: linear-gradient(180deg, transparent, rgba(5, 7, 12, 0.95));
+  padding: 8px 12px; display: flex; align-items: center; gap: 8px;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.videoBox:hover .videoControlBar,
+.videoControlBar.show { opacity: 1; pointer-events: auto; }
+
+.vCtrlBtn {
+  background: rgba(255, 255, 255, 0.16); border: 0; color: #fff;
+  border-radius: 7px; padding: 5px 9px; font-size: 11px; font-weight: 700;
+}
+.vCtrlBtn:hover { background: rgba(255, 255, 255, 0.32); }
+.vTimeText {
+  font-size: 10px; font-family: ui-monospace, monospace; color: #d0d7e5; min-width: 36px; text-align: center;
+}
+.vSeekBar {
+  flex: 1; accent-color: var(--cyan); height: 6px; border-radius: 3px; cursor: pointer; margin: 0 4px;
+}
+
 /* LOCKED SHIELD DURING GENERATION */
 .videoLockOverlay {
   position: absolute; inset: 0; z-index: 45;
@@ -239,44 +314,6 @@ video { width: 100%; height: 100%; display: none; object-fit: contain; backgroun
   border-radius: 99px; transition: width 0.25s ease;
 }
 .lockPercentText { font-size: 14px; font-weight: 800; color: var(--cyan); font-family: ui-monospace, monospace; }
-
-.videoControlBar {
-  position: absolute; bottom: 0; left: 0; right: 0; z-index: 36;
-  background: linear-gradient(180deg, transparent, rgba(5, 7, 12, 0.95));
-  padding: 8px 12px; display: flex; align-items: center; gap: 8px;
-  opacity: 0; pointer-events: none;
-  transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.videoBox:hover .videoControlBar,
-.videoControlBar.show { opacity: 1; pointer-events: auto; }
-
-.vCtrlBtn {
-  background: rgba(255, 255, 255, 0.16); border: 0; color: #fff;
-  border-radius: 7px; padding: 5px 9px; font-size: 11px; font-weight: 700;
-}
-.vCtrlBtn:hover { background: rgba(255, 255, 255, 0.32); }
-.vTimeText {
-  font-size: 10px; font-family: ui-monospace, monospace; color: #d0d7e5; min-width: 36px; text-align: center;
-}
-.vSeekBar {
-  flex: 1; accent-color: var(--cyan); height: 6px; border-radius: 3px; cursor: pointer; margin: 0 4px;
-}
-
-.overlay {
-  position: absolute; left: 50%; top: 82%; transform: translate(-50%, -50%);
-  display: flex; flex-direction: column; align-items: center;
-  z-index: 25; cursor: move; touch-action: none; max-width: 86%;
-}
-.overlayInner {
-  position: relative; display: inline-flex; flex-direction: column;
-  padding: 5px 12px; border-radius: 8px; text-align: center; word-break: break-word; line-height: 1.35;
-  background: rgba(0, 0, 0, 0.5); box-shadow: 0 4px 18px rgba(0,0,0,0.4);
-  transition: all 0.15s ease; border: 1.5px dashed transparent;
-  min-width: 40px; max-width: 100%;
-}
-.overlayTarget {
-  font-size: 17px; font-weight: 700; pointer-events: none; color: #ffffff;
-}
 
 .body { padding: 12px 14px; }
 
@@ -357,18 +394,6 @@ video { width: 100%; height: 100%; display: none; object-fit: contain; backgroun
   display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; margin-bottom: 12px;
 }
 
-.errorModalSheet {
-  background: #190e14; border: 1.5px solid var(--accent);
-  border-radius: 18px; padding: 18px; width: 100%; max-width: 440px;
-  box-shadow: 0 16px 40px rgba(255, 85, 114, 0.4);
-}
-.errorModalHead { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-.errorModalMsg {
-  background: #090306; border: 1px solid rgba(255,85,114,0.3); border-radius: 10px;
-  padding: 10px; font-size: 11px; color: #ffccd5; font-family: ui-monospace, monospace;
-  white-space: pre-wrap; word-break: break-word; max-height: 180px; overflow-y: auto;
-}
-
 .bottomNav {
   position: fixed; left: 10px; right: 10px; bottom: calc(8px + var(--safe-bottom));
   z-index: 90; display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px;
@@ -424,7 +449,7 @@ video { width: 100%; height: 100%; display: none; object-fit: contain; backgroun
   </div>
 </header>
 
-<!-- DASHBOARD TILE GRID MODAL (BACKGROUND PERSISTENCE VIA target="_blank") -->
+<!-- DASHBOARD TILE GRID MODAL -->
 <div class="appMenuBackdrop" id="appMenuBackdrop" onclick="toggleAppMenu(event)">
   <div class="appMenuSheet" onclick="event.stopPropagation()">
     <div class="appMenuHead">
@@ -465,16 +490,17 @@ video { width: 100%; height: 100%; display: none; object-fit: contain; backgroun
 
 <div class="toast" id="toast"></div>
 
-<!-- ERROR MODAL -->
+<!-- COMPREHENSIVE RAW ERROR DIAGNOSTICS MODAL -->
 <div class="appMenuBackdrop" id="errorModalBackdrop" onclick="closeErrorModal()">
   <div class="errorModalSheet" onclick="event.stopPropagation()">
     <div class="errorModalHead">
-      <span style="font-weight:800;font-size:13px;color:var(--accent)" id="errorModalTitle">❌ Process Error Diagnostics</span>
+      <span style="font-weight:800;font-size:13px;color:var(--accent)" id="errorModalTitle">❌ Server / ZeroGPU Error Diagnostics</span>
       <button onclick="closeErrorModal()" style="padding:3px 7px;font-size:11px">✕</button>
     </div>
-    <p style="font-size:11px;color:#ffccd5;margin:0 0 8px 0" id="errorModalSubtitle">အောက်ပါ အကြောင်းရင်းကြောင့် ရပ်တန့်သွားပါသည် -</p>
+    <p style="font-size:11px;color:#ffccd5;margin:0 0 6px 0" id="errorModalSubtitle">အမှားဖြစ်ရသည့် အကြောင်းရင်း (Raw Response Trace):</p>
     <div class="errorModalMsg" id="errorModalMsgText"></div>
-    <div style="display:flex;justify-content:flex-end;margin-top:10px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px">
+      <button class="secondaryBtn" onclick="copyErrorDetails()" style="font-size:10px">📋 Copy Error Log</button>
       <button class="primary" onclick="closeErrorModal()">နားလည်ပါပြီ</button>
     </div>
   </div>
@@ -505,9 +531,21 @@ video { width: 100%; height: 100%; display: none; object-fit: contain; backgroun
             <span>●</span> <span>🎬 RECAP MODE: ဇာတ်ကြောင်းပြော အသင့်ဖြစ်ပါပြီ</span>
           </div>
 
+          <!-- Video Overlays: Logo, Title & Blur Box -->
+          <img id="videoLogoOverlay" class="videoLogoOverlay" alt="Logo">
+          <div id="videoTitleOverlay" class="videoTitleOverlay">MOVIE TITLE</div>
+          <div id="videoBlurBox" class="videoBlurBox"></div>
+
           <div class="videoFloatingTools" id="videoFloatingTools" style="display:none">
             <button id="soundToggleBtn" onclick="toggleMute(event)" title="Toggle Sound">🔊 Unmuted</button>
             <button onclick="triggerFileInput(true)" title="Choose another video">🔄 Change Video</button>
+          </div>
+
+          <!-- Touch & Drag Subtitles Container -->
+          <div class="overlay" id="overlay">
+            <div class="overlayInner" id="overlayInner">
+              <span class="overlayTarget" id="overlayTarget"></span>
+            </div>
           </div>
 
           <!-- Video Seek Bar -->
@@ -519,12 +557,6 @@ video { width: 100%; height: 100%; display: none; object-fit: contain; backgroun
                    oninput="onSeekInput(event)" onchange="onSeekChange(event)">
             <span class="vTimeText" id="vDurTime">00:00</span>
             <button class="vCtrlBtn" onclick="skipVideo(5, event)" title="Forward 5s">5s ⏩</button>
-          </div>
-
-          <div class="overlay" id="overlay">
-            <div class="overlayInner" id="overlayInner">
-              <span class="overlayTarget" id="overlayTarget"></span>
-            </div>
           </div>
 
           <!-- LOCKED SHIELD & WORKING PROGRESS -->
@@ -697,17 +729,52 @@ video { width: 100%; height: 100%; display: none; object-fit: contain; backgroun
           <div class="sliderPairRow">
             <div class="sliderField">
               <label>Subtitle X (%): <span class="val" id="posXVal">50%</span></label>
-              <input id="posX" type="range" min="5" max="95" value="50" oninput="applySubtitlePosition()">
+              <input id="posX" type="range" min="5" max="95" value="50" oninput="applySubtitlePositionFromSlider()">
             </div>
             <div class="sliderField">
               <label>Subtitle Y (%): <span class="val" id="posYVal">82%</span></label>
-              <input id="posY" type="range" min="5" max="95" value="82" oninput="applySubtitlePosition()">
+              <input id="posY" type="range" min="5" max="95" value="82" oninput="applySubtitlePositionFromSlider()">
             </div>
           </div>
 
-          <div class="sliderField">
+          <div class="sliderField" style="margin-bottom:14px">
             <label>Font Size (စာလုံးအရွယ်အစား): <span class="val" id="sizeVal">17 px</span></label>
             <input id="size" type="range" min="11" max="44" value="17" oninput="applySubtitleStyle()">
+          </div>
+
+          <p style="font-size:10px;color:var(--cyan);margin:0 0 12px 0">
+            🖐️ <b>Tip:</b> Subtitle စာသားကို Video ပေါ်တွင် Screen Touch ဖြင့်လည်း စိတ်ကြိုက် ဆွဲရွှေ့နိုင်ပါသည်!
+          </p>
+
+          <hr style="border:0;border-top:1px solid var(--border);margin:14px 0">
+
+          <!-- NEW FEATURES: LOGO, TITLE, BLUR OVERLAYS -->
+          <div style="font-size:11px;font-weight:700;color:#fff;margin-bottom:8px">🖼️ VIDEO BRANDING & OVERLAYS</div>
+          
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <!-- Add Upload Logo -->
+            <div style="background:#090d16;padding:8px;border-radius:10px;border:1px solid var(--border)">
+              <label style="font-size:10px;color:var(--muted);display:block;margin-bottom:4px">🏷️ Add Channel Logo (PNG/Watermark):</label>
+              <input type="file" id="logoUploadInput" accept="image/*" onchange="handleLogoUpload(event)" style="font-size:10px">
+              <button onclick="removeLogo()" style="font-size:9.5px;padding:2px 6px;margin-top:4px">Remove Logo</button>
+            </div>
+
+            <!-- Add Title Text -->
+            <div style="background:#090d16;padding:8px;border-radius:10px;border:1px solid var(--border)">
+              <label style="font-size:10px;color:var(--muted);display:block;margin-bottom:4px">🔤 Add Movie Title Header (ခေါင်းစဉ်စာတန်း):</label>
+              <div style="display:flex;gap:6px">
+                <input type="text" id="movieTitleInput" placeholder="ဥပမာ- ရုပ်ရှင်အညွှန်း ဇာတ်ကားအမည်" style="flex:1;background:#141a27;border:1px solid var(--border);color:#fff;border-radius:6px;padding:4px 8px;font-size:11px" oninput="updateMovieTitle(this.value)">
+                <button onclick="toggleTitleVisibility()" style="font-size:10px;padding:4px 8px" id="titleToggleBtn">Show/Hide</button>
+              </div>
+            </div>
+
+            <!-- Add Blur Box (Watermark Remover) -->
+            <div style="background:#090d16;padding:8px;border-radius:10px;border:1px solid var(--border)">
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <label style="font-size:10px;color:var(--muted)">🌫️ Add Blur Box (နဂိုစာတန်းဟောင်း ဖုံးအုပ်ရန်):</label>
+                <button onclick="toggleBlurBox()" id="blurToggleBtn" style="font-size:10px;padding:3px 8px">Enable Blur</button>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -782,11 +849,21 @@ function toast(msg) {
   window.__toast = setTimeout(() => x.classList.remove("show"), 2800);
 }
 
-function showErrorModal(errorTitle, errorDetail, customSub = "အောက်ပါ အကြောင်းရင်းကြောင့် ရပ်တန့်သွားပါသည် -") {
+// RAW ERROR MODAL WITH TRACEABILITY
+let lastLoggedError = "";
+function showErrorModal(errorTitle, errorDetail, customSub = "အမှားဖြစ်ရသည့် အကြောင်းရင်း (Raw Response Trace):") {
+  lastLoggedError = `Title: ${errorTitle}\nDetail: ${errorDetail}`;
   document.getElementById("errorModalTitle").textContent = errorTitle;
   document.getElementById("errorModalSubtitle").textContent = customSub;
   document.getElementById("errorModalMsgText").textContent = errorDetail;
   document.getElementById("errorModalBackdrop").classList.add("show");
+}
+
+function copyErrorDetails() {
+  if (navigator.clipboard && lastLoggedError) {
+    navigator.clipboard.writeText(lastLoggedError);
+    toast("Error log copied to clipboard!");
+  }
 }
 
 function closeErrorModal() {
@@ -998,29 +1075,41 @@ async function generateEdgeSpeechInBrowser(text, voice, rate) {
   });
 }
 
-// ROUTE TO CLOUDFLARE WORKER (TEXT & STYLE ONLY - NO SEED MISMATCH)
+// ZERO-GPU VOICE CLONING (RAW ERROR TRANSPARENCY)
 async function fetchZeroGpuAudio(text, lockedStyle) {
   const currentSelect = document.getElementById("cloneVoiceStyle");
   const stylePrompt = lockedStyle || (currentSelect ? currentSelect.value : "A news anchor voice, formal and authoritative, steady pace, perfect for broadcast");
   
-  const res = await fetch(WORKER_URL + "/clone-tts", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      text: text,
-      style: stylePrompt
-    })
-  });
+  let res;
+  try {
+    res = await fetch(WORKER_URL + "/clone-tts", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        text: text,
+        style: stylePrompt
+      })
+    });
+  } catch(netErr) {
+    throw new Error(`Worker Network Connection Failed: ${netErr.message}`);
+  }
+
+  const rawText = await res.text();
+  let data;
+  try {
+    data = JSON.parse(rawText);
+  } catch(parseErr) {
+    throw new Error(`Invalid Worker JSON Response (${res.status}):\n${rawText.slice(0, 300)}`);
+  }
 
   if (!res.ok) {
-    const errData = await res.json().catch(() => ({}));
-    throw new Error(errData.error || `HTTP ${res.status}`);
+    throw new Error(data.error || `HTTP ${res.status}: ${rawText}`);
   }
 
-  const data = await res.json();
   if (!data || !data.url) {
-    throw new Error("ZeroGPU Audio data ထုတ်ယူမရရှိပါ");
+    throw new Error(`ZeroGPU Audio data ထုတ်ယူမရရှိပါ\nRaw Server Payload: ${rawText}`);
   }
+
   return data.url;
 }
 
@@ -1029,14 +1118,14 @@ async function fetchMyanmarAudio(text, voice, rate, lockedStyle) {
     try {
       return await fetchZeroGpuAudio(text, lockedStyle);
     } catch(err) {
-      console.error("ZeroGPU Error:", err);
+      console.error("ZeroGPU Detailed Error:", err);
       const errMsg = String(err?.message || err || "");
       
       if (errMsg.includes("429") || errMsg.toLowerCase().includes("exceeded your current quota") || errMsg.toLowerCase().includes("zerogpu quota")) {
         disableCloneDueToLimit("ZeroGPU နေ့စဉ်အသုံးပြုခွင့် Quota ပြည့်သွားပါသည်");
         throw new Error("ZeroGPU Quota Exceeded");
       } else {
-        throw new Error("Voice Clone ချိတ်ဆက်မှု အမှား: " + errMsg);
+        throw new Error("Voice Clone ချိတ်ဆက်မှု အမှား:\n" + errMsg);
       }
     }
   }
@@ -1141,7 +1230,7 @@ function onSeekChange(e) {
 
 videoBox.addEventListener("click", (e) => {
   if (generating) return;
-  if (e.target.closest("button") || e.target.closest("input") || e.target.closest("#overlayInner")) return;
+  if (e.target.closest("button") || e.target.closest("input") || e.target.closest("#overlay") || e.target.closest("#videoBlurBox")) return;
   togglePlayPause();
 });
 
@@ -1200,13 +1289,121 @@ function applySubtitleStyle() {
   overlayTarget.style.textShadow = `0 2px 8px rgba(0,0,0,0.8), 0 0 4px ${outlineColor}`;
 }
 
-function applySubtitlePosition() {
+function applySubtitlePositionFromSlider() {
   overlayPos.x = Number(document.getElementById("posX").value);
   overlayPos.y = Number(document.getElementById("posY").value);
   document.getElementById("posXVal").textContent = overlayPos.x + "%";
   document.getElementById("posYVal").textContent = overlayPos.y + "%";
   overlay.style.left = overlayPos.x + "%";
   overlay.style.top = overlayPos.y + "%";
+}
+
+// =====================================================
+// SCREEN TOUCH & DRAG SUBTITLE POSITIONING ENGINE
+// =====================================================
+let isDragging = false;
+let startX, startY;
+
+function initTouchDrag() {
+  const target = overlay;
+
+  function onPointerDown(e) {
+    if (generating) return;
+    isDragging = true;
+    target.classList.add("dragging");
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    startX = clientX;
+    startY = clientY;
+    e.stopPropagation();
+  }
+
+  function onPointerMove(e) {
+    if (!isDragging) return;
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    const rect = videoBox.getBoundingClientRect();
+
+    let newX = ((clientX - rect.left) / rect.width) * 100;
+    let newY = ((clientY - rect.top) / rect.height) * 100;
+
+    newX = Math.max(5, Math.min(95, newX));
+    newY = Math.max(5, Math.min(95, newY));
+
+    overlayPos.x = Math.round(newX);
+    overlayPos.y = Math.round(newY);
+
+    target.style.left = overlayPos.x + "%";
+    target.style.top = overlayPos.y + "%";
+
+    document.getElementById("posX").value = overlayPos.x;
+    document.getElementById("posY").value = overlayPos.y;
+    document.getElementById("posXVal").textContent = overlayPos.x + "%";
+    document.getElementById("posYVal").textContent = overlayPos.y + "%";
+
+    e.preventDefault();
+  }
+
+  function onPointerUp() {
+    if (isDragging) {
+      isDragging = false;
+      target.classList.remove("dragging");
+    }
+  }
+
+  target.addEventListener("mousedown", onPointerDown);
+  window.addEventListener("mousemove", onPointerMove);
+  window.addEventListener("mouseup", onPointerUp);
+
+  target.addEventListener("touchstart", onPointerDown, { passive: false });
+  window.addEventListener("touchmove", onPointerMove, { passive: false });
+  window.addEventListener("touchend", onPointerUp);
+}
+
+// =====================================================
+// NEW OVERLAY CONTROLS: LOGO, TITLE, BLUR
+// =====================================================
+function handleLogoUpload(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(evt) {
+    const logo = document.getElementById("videoLogoOverlay");
+    logo.src = evt.target.result;
+    logo.style.display = "block";
+    toast("Logo added successfully!");
+  };
+  reader.readAsDataURL(file);
+}
+
+function removeLogo() {
+  const logo = document.getElementById("videoLogoOverlay");
+  logo.style.display = "none";
+  logo.src = "";
+  document.getElementById("logoUploadInput").value = "";
+  toast("Logo removed");
+}
+
+function updateMovieTitle(val) {
+  const t = document.getElementById("videoTitleOverlay");
+  t.textContent = val.trim() || "MOVIE TITLE";
+  t.style.display = val.trim() ? "block" : "none";
+}
+
+function toggleTitleVisibility() {
+  const t = document.getElementById("videoTitleOverlay");
+  const isShown = t.style.display !== "none" && t.style.display !== "";
+  t.style.display = isShown ? "none" : "block";
+  toast(isShown ? "Title hidden" : "Title visible");
+}
+
+function toggleBlurBox() {
+  const b = document.getElementById("videoBlurBox");
+  const btn = document.getElementById("blurToggleBtn");
+  const isShown = b.style.display === "block";
+  b.style.display = isShown ? "none" : "block";
+  btn.textContent = isShown ? "Enable Blur" : "Disable Blur";
+  toast(isShown ? "Blur box removed" : "Blur box added (Drag to place)");
 }
 
 /* ==========================================================================
@@ -1253,8 +1450,8 @@ async function generateRecapScriptOnly() {
 
     const r1 = await fetch(WORKER_URL + "/transcribe", { method: "POST", body: fd });
     if (!r1.ok) {
-      const errData = await r1.json().catch(() => ({}));
-      throw new Error(`[Whisper Transcribe Error]: ${errData.error || r1.statusText}`);
+      const errText = await r1.text();
+      throw new Error(`[Whisper Transcribe Error HTTP ${r1.status}]: ${errText}`);
     }
 
     const d1 = await r1.json();
@@ -1279,8 +1476,8 @@ async function generateRecapScriptOnly() {
     });
 
     if (!recapReq.ok) {
-      const errData = await recapReq.json().catch(() => ({}));
-      throw new Error(`[Gemini Recap Error]: ${errData.error || recapReq.statusText}`);
+      const errText = await recapReq.text();
+      throw new Error(`[Gemini Recap Error HTTP ${recapReq.status}]: ${errText}`);
     }
 
     const recapData = await recapReq.json();
@@ -1593,7 +1790,8 @@ function redo() { if (generating) return; toast("Redo"); }
 window.onload = function() {
   updateAudioLevels();
   applySubtitleStyle();
-  applySubtitlePosition();
+  applySubtitlePositionFromSlider();
+  initTouchDrag();
   fetch(WORKER_URL + "/").catch(e => console.warn("Backend ping error:", e));
 };
 </script>
