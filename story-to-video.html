@@ -174,7 +174,6 @@ canvas#videoCanvas { width: 100%; height: 100%; object-fit: contain; display: bl
 
 .sceneList { display: flex; flex-direction: column; gap: 10px; max-height: 640px; overflow-y: auto; padding-right: 4px; }
 
-/* SCENE CARD MOBILE FIX: overflow-hidden & min-width:0 */
 .sceneCard {
   background: #090c14; border: 1px solid var(--border);
   border-radius: 12px; padding: 10px; display: grid; grid-template-columns: 80px minmax(0, 1fr); gap: 10px;
@@ -193,23 +192,74 @@ canvas#videoCanvas { width: 100%; height: 100%; object-fit: contain; display: bl
 .sceneImgThumbBox span { font-size: 18px; opacity: 0.6; }
 .sceneImgThumbBox small { font-size: 8px; color: var(--muted); margin-top: 2px; }
 
-.sceneInfoCol { display: flex; flex-direction: column; justify-content: space-between; gap: 5px; min-width: 0; overflow: hidden; }
-.sceneHeaderRow { display: flex; justify-content: space-between; align-items: center; gap: 4px; }
-.sceneBadge { font-size: 10.5px; font-weight: 800; color: var(--accent); white-space: nowrap; }
-.sceneScriptText { font-size: 12px; color: #fff; line-height: 1.35; word-break: break-word; }
-
-/* PROMPT ROW FLEXIBLE FOR MOBILE */
-.scenePromptRow { display: flex; align-items: center; gap: 4px; width: 100%; min-width: 0; }
-.scenePromptBox {
-  font-size: 9px; color: var(--cyan); font-family: ui-monospace, monospace;
-  background: #060910; padding: 3px 5px; border-radius: 6px;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  flex: 1; min-width: 0;
+.sceneInfoCol { 
+  display: flex; 
+  flex-direction: column; 
+  justify-content: flex-start; 
+  gap: 6px; 
+  min-width: 0; 
+  overflow: visible; 
 }
+
+.sceneHeaderRow { 
+  display: flex; 
+  justify-content: space-between; 
+  align-items: center; 
+  gap: 4px; 
+}
+
+.sceneBadge { 
+  font-size: 10.5px; 
+  font-weight: 800; 
+  color: var(--accent); 
+  white-space: nowrap; 
+}
+
+.sceneScriptText { 
+  font-size: 12px; 
+  color: #fff; 
+  line-height: 1.6; 
+  word-break: break-word; 
+  user-select: text;
+  display: block;
+}
+
+.scenePromptRow { 
+  display: flex; 
+  align-items: center; 
+  gap: 6px; 
+  width: 100%; 
+  min-width: 0; 
+  margin-top: 2px;
+}
+
+.scenePromptBox {
+  font-size: 9.5px; 
+  color: var(--cyan); 
+  font-family: ui-monospace, monospace;
+  background: #060910; 
+  padding: 4px 6px; 
+  border-radius: 6px;
+  white-space: nowrap; 
+  overflow: hidden; 
+  text-overflow: ellipsis;
+  flex: 1; 
+  min-width: 0;
+  display: block;
+}
+
 .copyBtn {
-  background: #141a27; border: 1px solid var(--border-light); color: var(--muted);
-  border-radius: 6px; padding: 3px 6px; font-size: 9.5px; cursor: pointer; flex-shrink: 0;
-  display: inline-flex; align-items: center; gap: 2px;
+  background: #141a27; 
+  border: 1px solid var(--border-light); 
+  color: var(--muted);
+  border-radius: 6px; 
+  padding: 3px 6px; 
+  font-size: 9.5px; 
+  cursor: pointer; 
+  flex-shrink: 0;
+  display: inline-flex; 
+  align-items: center; 
+  gap: 2px;
 }
 .copyBtn:hover { color: #fff; border-color: var(--accent); }
 
@@ -253,7 +303,6 @@ canvas#videoCanvas { width: 100%; height: 100%; object-fit: contain; display: bl
   </div>
 </header>
 
-<!-- APP MENU MODAL: VOICE CLONE HTML ပါဝင်စေခြင်း -->
 <div class="appMenuBackdrop" id="appMenuBackdrop" onclick="toggleAppMenu(event)" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);backdrop-filter:blur(6px);z-index:9999;align-items:flex-start;justify-content:center;padding:60px 14px 14px 14px;">
   <div class="appMenuSheet" onclick="event.stopPropagation()" style="background:#0f1422;border:1px solid #34415c;border-radius:18px;padding:16px;width:100%;max-width:440px;box-shadow:0 20px 50px rgba(0,0,0,0.8);max-height:85vh;overflow-y:auto;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
@@ -298,7 +347,6 @@ canvas#videoCanvas { width: 100%; height: 100%; object-fit: contain; display: bl
   <div class="appBodyGrid">
     
     <div>
-      <!-- VIDEO CANVAS BOX -->
       <div class="card" style="margin-bottom:10px" id="videoPreviewCard">
         <div class="cardHead no-cursor">
           <div class="title">🎬 Real-Time Video Preview</div>
@@ -330,7 +378,6 @@ canvas#videoCanvas { width: 100%; height: 100%; object-fit: contain; display: bl
             </div>
           </div>
 
-          <!-- GENERATE VOICES & EXPORT BUTTONS -->
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px">
             <button class="primary" onclick="generateAllVoices()" id="genVoicesBtn">
               <span class="btnSpinner" id="voiceSpinner" style="display:none"></span>
@@ -343,7 +390,6 @@ canvas#videoCanvas { width: 100%; height: 100%; object-fit: contain; display: bl
         </div>
       </div>
 
-      <!-- 1. SUBTITLE & AUDIO STUDIO -->
       <div class="card" style="margin-bottom:10px">
         <div class="cardHead" onclick="toggleCard('subAudioBody', 'subAudioChev')">
           <div class="title">🎨 Subtitle & Audio Studio</div>
@@ -392,7 +438,6 @@ canvas#videoCanvas { width: 100%; height: 100%; object-fit: contain; display: bl
         </div>
       </div>
 
-      <!-- 2. AI IMAGE ENGINE SETTINGS -->
       <div class="card" style="margin-bottom:10px">
         <div class="cardHead" onclick="toggleCard('engineBody', 'engineChev')">
           <div class="title">⚙️ AI Image Engine Settings</div>
@@ -411,7 +456,6 @@ canvas#videoCanvas { width: 100%; height: 100%; object-fit: contain; display: bl
         </div>
       </div>
 
-      <!-- 3. VIDEO TITLE & CHANNEL LOGO -->
       <div class="card" style="margin-bottom:10px">
         <div class="cardHead" onclick="toggleCard('titleLogoBody', 'titleLogoChev')">
           <div class="title">🏷️ Video Title & Channel Logo</div>
@@ -471,7 +515,6 @@ canvas#videoCanvas { width: 100%; height: 100%; object-fit: contain; display: bl
       </div>
     </div>
 
-    <!-- TIMELINE LIST -->
     <div class="card">
       <div class="cardHead no-cursor">
         <div class="title">
@@ -713,10 +756,10 @@ function renderSceneList() {
           </div>
         </div>
 
-        <div class="sceneScriptText">${s.text_mm}</div>
+        <div class="sceneScriptText">${s.text_mm || ''}</div>
         
         <div class="scenePromptRow">
-          <div class="scenePromptBox" title="${s.image_prompt_en}">🎨 ${s.image_prompt_en}</div>
+          <div class="scenePromptBox" title="${s.image_prompt_en || ''}">🎨 ${s.image_prompt_en || ''}</div>
           <button class="copyBtn" onclick="copyPrompt('${encodeURIComponent(s.image_prompt_en || '').replace(/'/g, "%27")}')">📋 Copy</button>
         </div>
       </div>
@@ -724,9 +767,6 @@ function renderSceneList() {
   `).join("");
 }
 
-/* ==========================================================================
-   HYBRID AI IMAGE FETCHER
-   ========================================================================== */
 async function fetchClientDirectImage(rawPrompt, sceneIndex) {
   const isLandscape = currentAspect === "16/9";
   const w = isLandscape ? 1024 : 576;
@@ -934,9 +974,6 @@ function handleLogoUpload(e) {
   img.src = URL.createObjectURL(f);
 }
 
-/* ==========================================================================
-   GENERATE ALL VOICES (မူရင်းစနစ်အတိုင်း ၁၀၀% မပြောင်းလဲဘဲ ထိန်းသိမ်းထားသည်)
-   ========================================================================== */
 async function generateAllVoices() {
   if (!currentScenes.length) return;
   const btn = document.getElementById("genVoicesBtn");
@@ -1173,9 +1210,6 @@ function togglePlayPause() {
   else startPlayback();
 }
 
-/* ==========================================================================
-   SAFE PLAYBACK LOOP (မူရင်းဖိုင်အတိုင်း)
-   ========================================================================== */
 function startPlayback() {
   if (!currentScenes.length) return;
 
