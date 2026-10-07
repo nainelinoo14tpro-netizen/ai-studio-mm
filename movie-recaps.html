@@ -416,7 +416,6 @@ video { width: 100%; height: 100%; display: none; object-fit: contain; backgroun
     </div>
   </div>
   <div class="headerBtns">
-    <!-- Menu button အမြဲနှိပ်လို့ရအောင် ထားရှိပါသည် -->
     <button class="iconBtn" id="menuHubBtn" onclick="toggleAppMenu()" title="All Studios" style="background:rgba(255,85,114,0.25);border-color:var(--accent);color:#fff">▦</button>
     <button class="iconBtn" onclick="undo()" title="Undo">↶</button>
     <button class="iconBtn" onclick="redo()" title="Redo">↷</button>
@@ -557,6 +556,7 @@ video { width: 100%; height: 100%; display: none; object-fit: contain; backgroun
             </div>
           </div>
           <div style="display:flex;gap:5px">
+            <button onclick="testMyanmarVoice()" style="font-size:10px;padding:4px 8px;color:var(--cyan);border-color:#2b3954">🔊 Test Voice</button>
             <button onclick="triggerFileInput(true)" style="font-size:10px;padding:4px 8px;color:var(--cyan);border-color:#2b3954">🔄 Change Video</button>
           </div>
         </div>
@@ -575,7 +575,7 @@ video { width: 100%; height: 100%; display: none; object-fit: contain; backgroun
             </div>
           </div>
 
-          <!-- PRIMARY ACTION: ONLY GENERATE SCRIPT FIRST -->
+          <!-- PRIMARY ACTION: GENERATE SCRIPT FIRST -->
           <div style="margin-top:14px">
             <button class="primary" id="generateScriptBtn" style="width:100%;padding:12px" onclick="generateRecapScriptOnly()">
               <span class="btnSpinner" id="btnSpinner" style="display:none"></span>
@@ -588,7 +588,7 @@ video { width: 100%; height: 100%; display: none; object-fit: contain; backgroun
 
           <hr style="border:0;border-top:1px solid var(--border);margin:14px 0">
 
-          <!-- VOICE SELECTION & PRODUCTION CENTER (POST-SCRIPT) -->
+          <!-- VOICE SELECTION & PRODUCTION CENTER -->
           <div style="margin-bottom:12px">
             <label style="font-size:10px;color:var(--muted);font-weight:700;display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
               <span>🗣️ AI VOICE SETTINGS (အသံရွေးချယ်ပြီး အသံသွင်းရန်)</span>
@@ -998,17 +998,17 @@ async function generateEdgeSpeechInBrowser(text, voice, rate) {
   });
 }
 
-// ROUTE TO CLOUDFLARE WORKER FOR TOKEN-AUTHENTICATED VOICE CLONING (WITH SEED LOCK)
+// ROUTE TO CLOUDFLARE WORKER (TEXT & STYLE ONLY - NO SEED MISMATCH)
 async function fetchZeroGpuAudio(text, lockedStyle) {
-  const stylePrompt = lockedStyle || document.getElementById("cloneVoiceStyle")?.value || "A news anchor voice, formal and authoritative, steady pace, perfect for broadcast";
+  const currentSelect = document.getElementById("cloneVoiceStyle");
+  const stylePrompt = lockedStyle || (currentSelect ? currentSelect.value : "A news anchor voice, formal and authoritative, steady pace, perfect for broadcast");
   
   const res = await fetch(WORKER_URL + "/clone-tts", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       text: text,
-      style: stylePrompt,
-      seed: 42
+      style: stylePrompt
     })
   });
 
@@ -1019,7 +1019,7 @@ async function fetchZeroGpuAudio(text, lockedStyle) {
 
   const data = await res.json();
   if (!data || !data.url) {
-    throw new Error("Worker မှ အသံဖိုင် URL မရရှိပါ");
+    throw new Error("ZeroGPU Audio data ထုတ်ယူမရရှိပါ");
   }
   return data.url;
 }
@@ -1067,13 +1067,15 @@ async function testMyanmarVoice() {
   try {
     const spd = document.getElementById("voiceSpeed").value;
     const rateStr = (spd >= 0 ? "+" : "") + spd + "%";
-    const curStyle = document.getElementById("cloneVoiceStyle")?.value;
+    const currentStyle = document.getElementById("cloneVoiceStyle")?.value;
+
     const audioUrl = await fetchMyanmarAudio(
       "မင်္ဂလာပါခင်ဗျာ။ ရုပ်ရှင်ဇာတ်ကြောင်းပြော အသံစနစ် ကောင်းမွန်စွာ အလုပ်လုပ်နေပါပြီ။",
       selectedVoice,
       rateStr,
-      curStyle
+      currentStyle
     );
+
     const aud = new Audio(audioUrl);
     aud.play();
     toast("🔊 Myanmar Voice Playing!");
@@ -1214,7 +1216,6 @@ async function generateRecapScriptOnly() {
   if (generating) return;
   if (!file) { toast("Please upload a movie video first"); return; }
 
-  // Video Loading Box သို့ Smooth Auto-Scroll တင်ခြင်း
   const targetBox = document.getElementById("videoBox");
   if (targetBox) {
     targetBox.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -1225,7 +1226,6 @@ async function generateRecapScriptOnly() {
   videoLockOverlay.classList.add("active");
   setLockProgress(5, "🚀 စတင်လုပ်ဆောင်နေပါသည်...", "ဗီဒီယို ဖိုင်ကို စစ်ဆေးနေပါသည်...");
 
-  // Menu button မှလွဲ၍ အခြား controls များကို disable လုပ်ခြင်း
   document.querySelectorAll("button, select, input").forEach(el => {
     if (el.id !== "menuHubBtn" && !el.closest("#errorModalBackdrop") && !el.closest("#appMenuBackdrop")) {
       el.disabled = true;
@@ -1243,7 +1243,6 @@ async function generateRecapScriptOnly() {
   render();
 
   try {
-    // STAGE 1: WHISPER TRANSCRIBE
     setStatus("busy", "Stage 1/2: Whisper Transcribing...");
     step("Upload", "done"); 
     step("Whisper", "active");
@@ -1264,7 +1263,6 @@ async function generateRecapScriptOnly() {
 
     const totalVideoDuration = Math.round(video.duration || (rawSegments[rawSegments.length - 1].end || 60));
 
-    // STAGE 2: GEMINI RECAP SCRIPT
     setLockProgress(65, "✨ ဇာတ်ကြောင်းပြော Script ရေးနေပါသည်...", `စကားပြော ${rawSegments.length} ခု တွေ့ရှိပြီး ဗီဒီယိုအဆုံး (${totalVideoDuration}s) ထိ ဖြန့်ခွဲရေးနေပါသည်...`);
     step("Whisper", "done");
     step("Recap", "active");
@@ -1305,7 +1303,6 @@ async function generateRecapScriptOnly() {
     videoLockOverlay.classList.remove("active");
     toast("🎉 Script ရေးပြီးပါပြီ! စာသားများကို လိုသလို ပြင်ဆင်နိုင်ပါပြီ။");
 
-    // Script Editor Tab သို့ အလိုအလျောက် ရွှေ့ပြောင်းပေးခြင်း
     const editorTabBtn = document.querySelectorAll(".bottomNav button")[1];
     if (editorTabBtn) switchTab('tabEditor', editorTabBtn);
 
@@ -1487,7 +1484,6 @@ async function playSingleVoice(id) {
   const sub = subs.find(s => s.id === id);
   if (!sub) return;
 
-  // အကယ်၍ အသံဖိုင် မထုတ်ရသေးပါက ထိုတစ်ကြောင်းတည်းအတွက် ချက်ချင်းထုတ်ပေးခြင်း
   if (!audioMap.has(sub.id)) {
     toast(`Generating voice for line #${id}...`);
     try {
@@ -1555,7 +1551,6 @@ function editScriptText(id, text) {
   const x = subs.find(a => a.id === id);
   if (!x) return;
   x.mm = text;
-  // စာသားပြင်လိုက်ပါက နဂိုအသံဟောင်းကို ဖျက်ပြီး ပြန်ထုတ်ယူရန် အသင့်ပြင်ခြင်း
   audioMap.delete(id);
 }
 
