@@ -31,7 +31,7 @@
   user-select: none;
 }
 
-input, textarea { user-select: text; }
+input, textarea, select { user-select: text; }
 
 html, body {
   margin: 0; padding: 0; background: var(--bg); color: var(--text);
@@ -58,7 +58,7 @@ button:active { transform: scale(0.97); }
   box-shadow: 0 4px 14px rgba(255, 85, 114, 0.35);
 }
 .primary:hover { opacity: 0.94; }
-.primary:disabled, button:disabled { opacity: 0.55; cursor: not-allowed; filter: saturate(0.8); }
+.primary:disabled, button:disabled { opacity: 0.45; cursor: not-allowed; filter: saturate(0.6); }
 
 .secondaryBtn { background: #151d2f; border-color: #2b3954; color: var(--cyan); }
 .secondaryBtn:hover { background: #1c2740; }
@@ -419,7 +419,7 @@ video { width: 100%; height: 100%; display: none; object-fit: contain; backgroun
   </div>
 </header>
 
-<!-- DASHBOARD TILE GRID MODAL -->
+<!-- DASHBOARD TILE GRID MODAL (VOICE CLONE INCLUDED) -->
 <div class="appMenuBackdrop" id="appMenuBackdrop" onclick="toggleAppMenu(event)">
   <div class="appMenuSheet" onclick="event.stopPropagation()">
     <div class="appMenuHead">
@@ -444,7 +444,12 @@ video { width: 100%; height: 100%; display: none; object-fit: contain; backgroun
         <div class="appTileName">Story to Video</div>
         <div class="appTileDesc">Photo Slideshow & Subtitles</div>
       </a>
-      <a href="index.html" class="appTileCard">
+      <a href="voice-clone.html" class="appTileCard">
+        <div class="appTileIcon" style="background:linear-gradient(135deg, #a855f7, #6366f1)">🎙️</div>
+        <div class="appTileName">Voice Clone</div>
+        <div class="appTileDesc">မြန်မာ TTS & Voice Clone</div>
+      </a>
+      <a href="index.html" class="appTileCard" style="grid-column: span 2;">
         <div class="appTileIcon" style="background:linear-gradient(135deg, #7657ff, #20d7ff)">🏠</div>
         <div class="appTileName">Main Hub</div>
         <div class="appTileDesc">ပင်မစာမျက်နှာ Dashboard သို့</div>
@@ -459,10 +464,10 @@ video { width: 100%; height: 100%; display: none; object-fit: contain; backgroun
 <div class="appMenuBackdrop" id="errorModalBackdrop" onclick="closeErrorModal()">
   <div class="errorModalSheet" onclick="event.stopPropagation()">
     <div class="errorModalHead">
-      <span style="font-weight:800;font-size:13px;color:var(--accent)">❌ Process Error Diagnostics</span>
+      <span style="font-weight:800;font-size:13px;color:var(--accent)" id="errorModalTitle">❌ Process Error Diagnostics</span>
       <button onclick="closeErrorModal()" style="padding:3px 7px;font-size:11px">✕</button>
     </div>
-    <p style="font-size:11px;color:#ffccd5;margin:0 0 8px 0">အောက်ပါ အကြောင်းရင်းကြောင့် ရပ်တန့်သွားပါသည် -</p>
+    <p style="font-size:11px;color:#ffccd5;margin:0 0 8px 0" id="errorModalSubtitle">အောက်ပါ အကြောင်းရင်းကြောင့် ရပ်တန့်သွားပါသည် -</p>
     <div class="errorModalMsg" id="errorModalMsgText"></div>
     <div style="display:flex;justify-content:flex-end;margin-top:10px">
       <button class="primary" onclick="closeErrorModal()">နားလည်ပါပြီ</button>
@@ -546,7 +551,7 @@ video { width: 100%; height: 100%; display: none; object-fit: contain; backgroun
             </div>
           </div>
           <div style="display:flex;gap:5px">
-            <button onclick="testMyanmarVoice()" style="font-size:10px;padding:4px 8px;color:var(--cyan);border-color:#2b3954">🔊 Test AI Voice</button>
+            <button onclick="testMyanmarVoice()" style="font-size:10px;padding:4px 8px;color:var(--cyan);border-color:#2b3954">🔊 Test Voice</button>
             <button onclick="triggerFileInput(true)" style="font-size:10px;padding:4px 8px;color:var(--cyan);border-color:#2b3954">🔄 Change Video</button>
           </div>
         </div>
@@ -565,13 +570,27 @@ video { width: 100%; height: 100%; display: none; object-fit: contain; backgroun
             </div>
           </div>
 
+          <!-- VOICE SELECTION INCLUDING ZERO-GPU CLONE -->
           <div style="margin-bottom:12px">
-            <label style="font-size:10px;color:var(--muted);font-weight:700;display:block;margin-bottom:4px">
-              🗣️ AI VOICE CHARACTER (အသံရွေးချယ်မှု)
+            <label style="font-size:10px;color:var(--muted);font-weight:700;display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+              <span>🗣️ AI VOICE CHARACTER (အသံရွေးချယ်မှု)</span>
+              <span id="cloneQuotaBadge" style="font-size:9px;color:var(--cyan)">ZeroGPU Voice Ready</span>
             </label>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
-              <button class="voiceBtn active" id="voiceThiha" onclick="setVoice('my-MM-ThihaNeural')">👨 သီဟ (ကျားအသံ)</button>
-              <button class="voiceBtn" id="voiceNilar" onclick="setVoice('my-MM-NilarNeural')">👩 နီလာ (မအသံ)</button>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1.2fr;gap:6px">
+              <button class="voiceBtn active" id="voiceThiha" onclick="setVoice('my-MM-ThihaNeural')">👨 သီဟ (ကျား)</button>
+              <button class="voiceBtn" id="voiceNilar" onclick="setVoice('my-MM-NilarNeural')">👩 နီလာ (မ)</button>
+              <button class="voiceBtn" id="voiceClone" onclick="setVoice('zero-gpu-clone')" style="background:rgba(168,85,247,0.15);border-color:rgba(168,85,247,0.4)">🎙️ Voice Clone</button>
+            </div>
+
+            <!-- ZeroGPU Style Selection Dropdown -->
+            <div id="cloneStyleRow" style="display:none;margin-top:8px;background:#090d16;padding:8px;border-radius:10px;border:1px solid var(--border)">
+              <label style="font-size:10px;color:var(--muted);display:block;margin-bottom:4px">Voice Clone စတိုင် ရွေးချယ်ပါ:</label>
+              <select id="cloneVoiceStyle" style="width:100%;padding:6px;background:#141a27;border:1px solid var(--border);color:#fff;border-radius:6px;font-size:11px">
+                <option value="A news anchor voice, formal and authoritative, steady pace, perfect for broadcast">📰 သတင်း/ဇာတ်ကြောင်းပြော (Authoritative Anchor)</option>
+                <option value="A storyteller voice, dramatic and expressive, slow pace, rich and warm tone">📖 ရသစုံ ပုံပြင်/ဇာတ်လမ်းပြောသူအသံ (Storyteller)</option>
+                <option value="A young male voice, calm and clear, medium pace, deep tone">🧑 လူငယ်အမျိုးသားအသံ (ကြည်လင်ပြတ်သား)</option>
+                <option value="A young female voice, crystal clear, professional and articulate, confident tone">👩 လူငယ်အမျိုးသမီးအသံ (ရှင်းလင်းတက်ကြွ)</option>
+              </select>
             </div>
           </div>
 
@@ -711,6 +730,7 @@ let lastActiveSubId = null;
 let recapTone = "narrator";
 let selectedVoice = "my-MM-ThihaNeural";
 let overlayPos = { x: 50, y: 82 };
+let isCloneDisabledByLimit = false;
 
 const video = document.getElementById("video");
 const videoBox = document.getElementById("videoBox");
@@ -744,8 +764,10 @@ function toast(msg) {
   window.__toast = setTimeout(() => x.classList.remove("show"), 2800);
 }
 
-function showErrorModal(errorTitle, errorDetail) {
-  document.getElementById("errorModalMsgText").textContent = `[${errorTitle}]\n${errorDetail}`;
+function showErrorModal(errorTitle, errorDetail, customSub = "အောက်ပါ အကြောင်းရင်းကြောင့် ရပ်တန့်သွားပါသည် -") {
+  document.getElementById("errorModalTitle").textContent = errorTitle;
+  document.getElementById("errorModalSubtitle").textContent = customSub;
+  document.getElementById("errorModalMsgText").textContent = errorDetail;
   document.getElementById("errorModalBackdrop").classList.add("show");
 }
 
@@ -782,10 +804,47 @@ function setRecapTone(tone) {
 }
 
 function setVoice(v) {
+  if (v === 'zero-gpu-clone' && isCloneDisabledByLimit) {
+    showErrorModal(
+      "⚠️ Voice Clone ကန့်သတ်ချက် (Limit Reached)",
+      "ZeroGPU အသုံးပြုခွင့် Quota ပြည့်သွားသဖြင့် Voice Clone ကို ခေတ္တပိတ်ထားပါသည်။ ကျေးဇူးပြု၍ မူရင်းအသံ (သီဟ သို့မဟုတ် နီလာ) ကိုသာ ရွေးချယ်အသုံးပြုပေးပါခင်ဗျာ။",
+      "အသိပေးချက် -"
+    );
+    return;
+  }
+
   selectedVoice = v;
   document.getElementById("voiceThiha").classList.toggle("active", v.includes("Thiha"));
   document.getElementById("voiceNilar").classList.toggle("active", v.includes("Nilar"));
-  toast(`Voice: ${v.includes("Thiha") ? "သီဟ (ကျား)" : "နီလာ (မ)"}`);
+  document.getElementById("voiceClone").classList.toggle("active", v === 'zero-gpu-clone');
+  document.getElementById("cloneStyleRow").style.display = v === 'zero-gpu-clone' ? 'block' : 'none';
+
+  if (v === 'zero-gpu-clone') {
+    toast("Voice: 🎙️ ZeroGPU Voice Clone");
+  } else {
+    toast(`Voice: ${v.includes("Thiha") ? "သီဟ (ကျား)" : "နီလာ (မ)"}`);
+  }
+}
+
+function disableCloneDueToLimit(reason) {
+  isCloneDisabledByLimit = true;
+  const cloneBtn = document.getElementById("voiceClone");
+  cloneBtn.disabled = true;
+  cloneBtn.classList.remove("active");
+  cloneBtn.style.opacity = "0.4";
+  cloneBtn.style.cursor = "not-allowed";
+  document.getElementById("cloneQuotaBadge").textContent = "❌ Limit Exceeded";
+  document.getElementById("cloneQuotaBadge").style.color = "var(--accent)";
+  document.getElementById("cloneStyleRow").style.display = 'none';
+
+  // Fallback to default voice Thiha
+  setVoice("my-MM-ThihaNeural");
+
+  showErrorModal(
+    "⚠️ Voice Clone Limit ပြည့်သွားပါပြီ",
+    `အကြောင်းရင်း: ${reason}\n\nVoice Clone ၏ ZeroGPU Quota ကန့်သတ်ချက် ပြည့်သွားပါသဖြင့် Voice Clone အား ခေတ္တ ပိတ်ထားလိုက်ပါပြီ။ မူရင်းအသံ (သီဟ) သို့ အလိုအလျောက် ပြောင်းလဲပေးထားပါသည်။`,
+    "ကျေးဇူးပြု၍ အောက်ပါအချက်ကို သတိပြုပေးပါ -"
+  );
 }
 
 function toggleMute(e) {
@@ -818,7 +877,7 @@ function setLockProgress(pct, title, desc) {
 }
 
 // =====================================================
-// DUAL-ENGINE MYANMAR TTS GENERATOR (WORKER + DIRECT BROWSER FALLBACK)
+// DUAL-ENGINE MYANMAR TTS & ZEROGPU CLONE GENERATOR
 // =====================================================
 async function getSecMsGecClient() {
   const unixSeconds = Math.floor(Date.now() / 1000);
@@ -920,7 +979,50 @@ async function generateEdgeSpeechInBrowser(text, voice, rate) {
   });
 }
 
+// ROUTE TO CLOUDFLARE WORKER FOR TOKEN-AUTHENTICATED VOICE CLONING
+async function fetchZeroGpuAudio(text) {
+  const stylePrompt = document.getElementById("cloneVoiceStyle")?.value || "A news anchor voice, formal and authoritative, steady pace, perfect for broadcast";
+  
+  const res = await fetch(WORKER_URL + "/clone-tts", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      text: text,
+      style: stylePrompt
+    })
+  });
+
+  if (!res.ok) {
+    const errData = await res.json().catch(() => ({}));
+    throw new Error(errData.error || `HTTP ${res.status}`);
+  }
+
+  const data = await res.json();
+  if (!data || !data.url) {
+    throw new Error("Worker မှ အသံဖိုင် URL မရရှိပါ");
+  }
+  return data.url;
+}
+
 async function fetchMyanmarAudio(text, voice, rate) {
+  if (voice === 'zero-gpu-clone') {
+    try {
+      return await fetchZeroGpuAudio(text);
+    } catch(err) {
+      console.error("ZeroGPU Error:", err);
+      const errMsg = String(err?.message || err || "");
+      
+      // Quota Limit ပြည့်သည့်အခါမှသာ Limit ပိတ်မည်
+      if (errMsg.includes("429") || errMsg.toLowerCase().includes("exceeded your current quota") || errMsg.toLowerCase().includes("zerogpu quota")) {
+        disableCloneDueToLimit("ZeroGPU နေ့စဉ်အသုံးပြုခွင့် Quota ပြည့်သွားပါသည်");
+        throw new Error("ZeroGPU Quota Exceeded");
+      } else {
+        throw new Error("Voice Clone ချိတ်ဆက်မှု အမှား: " + errMsg);
+      }
+    }
+  }
+
+  // Edge TTS Generator (Worker & Direct Browser Fallback)
   try {
     const res = await fetch(WORKER_URL + "/tts", {
       method: "POST",
@@ -941,7 +1043,7 @@ async function fetchMyanmarAudio(text, voice, rate) {
 }
 
 async function testMyanmarVoice() {
-  toast("Testing Myanmar AI voice...");
+  toast("Testing AI voice...");
   try {
     const spd = document.getElementById("voiceSpeed").value;
     const rateStr = (spd >= 0 ? "+" : "") + spd + "%";
@@ -954,7 +1056,9 @@ async function testMyanmarVoice() {
     aud.play();
     toast("🔊 Myanmar Voice Playing!");
   } catch(e) {
-    showErrorModal("Voice Test Error", e.message);
+    if (!isCloneDisabledByLimit) {
+      showErrorModal("Voice Test Diagnostics", e.message);
+    }
   }
 }
 
@@ -1082,7 +1186,7 @@ function applySubtitlePosition() {
 }
 
 /* ==========================================================================
-   MOVIE RECAP PIPELINE (FULL DURATION COVERAGE & TTS DELAY)
+   MOVIE RECAP PIPELINE
    ========================================================================== */
 async function generateRecapPipeline() {
   if (generating) return;
@@ -1118,7 +1222,6 @@ async function generateRecapPipeline() {
     const rawSegments = d1.segments || [];
     if (!rawSegments.length) throw new Error("ဗီဒီယိုထဲတွင် စကားပြောအသံ မတွေ့ရှိပါ။");
 
-    // ဗီဒီယို ကြာချိန် အပြည့်အစုံကို ရယူခြင်း
     const totalVideoDuration = Math.round(video.duration || (rawSegments[rawSegments.length - 1].end || 60));
 
     setLockProgress(32, "✨ ဇာတ်ကြောင်းပြော Script ရေးနေပါသည်...", `စကားပြော ${rawSegments.length} ခု တွေ့ရှိပြီး ဗီဒီယိုအဆုံး (${totalVideoDuration}s) ထိ ဖြန့်ခွဲရေးနေပါသည်...`);
@@ -1132,7 +1235,7 @@ async function generateRecapPipeline() {
       body: JSON.stringify({
         segments: rawSegments.map(s => ({ start: s.start, end: s.end, text: s.text })),
         tone: recapTone,
-        duration: totalVideoDuration // ဗီဒီယိုအဆုံးထိ ဖြန့်ကျက်နိုင်ရန် ကြာချိန် ပေးပို့ခြင်း
+        duration: totalVideoDuration
       })
     });
 
@@ -1154,7 +1257,7 @@ async function generateRecapPipeline() {
     step("Recap", "done");
     render();
 
-    // STAGE 3: SYNTHESIZE MYANMAR VOICEOVER (WITH SAFE CONNECTION DELAY)
+    // STAGE 3: SYNTHESIZE VOICEOVER
     setStatus("busy", `Stage 3/3: Synthesizing Voiceover (${subs.length} lines)...`);
     step("Ready", "active");
 
@@ -1177,36 +1280,45 @@ async function generateRecapPipeline() {
         }
       } catch (err) {
         console.warn(`Line #${line.id} voice generation skipped:`, err);
+        if (isCloneDisabledByLimit) {
+          break;
+        }
       }
 
-      // Connection မပြုတ်ကျစေရန် Delay အနည်းငယ် ပေးခြင်း
       await new Promise(r => setTimeout(r, 120));
     }
 
-    setLockProgress(100, "🎉 ပြီးစီးပါပြီ!", "ဗီဒီယိုနှင့် မြန်မာအသံကို ပေါင်းစပ်ချိတ်ဆက်နေပါသည်...");
-    await new Promise(r => setTimeout(r, 600));
+    if (!isCloneDisabledByLimit) {
+      setLockProgress(100, "🎉 ပြီးစီးပါပြီ!", "ဗီဒီယိုနှင့် မြန်မာအသံကို ပေါင်းစပ်ချိတ်ဆက်နေပါသည်...");
+      await new Promise(r => setTimeout(r, 600));
 
-    step("Ready", "done");
-    setStatus("ready", `Recap Ready (${subs.length} lines, ${audioMap.size} voices)`);
+      step("Ready", "done");
+      setStatus("ready", `Recap Ready (${subs.length} lines, ${audioMap.size} voices)`);
 
-    videoLockOverlay.classList.remove("active");
-    modeBadge.classList.add("show");
+      videoLockOverlay.classList.remove("active");
+      modeBadge.classList.add("show");
 
-    // AUTO-START PLAYBACK WITH MYANMAR VOICEOVER
-    video.currentTime = 0;
-    updateAudioLevels();
-    video.play().then(() => {
-      vPlayBtn.textContent = "⏸";
-      showControlsBriefly();
-    }).catch(() => {});
+      video.currentTime = 0;
+      updateAudioLevels();
+      video.play().then(() => {
+        vPlayBtn.textContent = "⏸";
+        showControlsBriefly();
+      }).catch(() => {});
 
-    toast("🎉 Recap Video အသင့်ဖြစ်ပါပြီ! မြန်မာစကားပြောဖြင့် စတင်ဖွင့်နေပါသည်...");
+      toast("🎉 Recap Video အသင့်ဖြစ်ပါပြီ! မြန်မာစကားပြောဖြင့် စတင်ဖွင့်နေပါသည်...");
+    } else {
+      videoLockOverlay.classList.remove("active");
+      step("Ready", "warn");
+      setStatus("ready", "Voice Clone Limit! မူရင်းအသံဖြင့် ပြန်လည် Generate လုပ်ပေးပါ");
+    }
 
   } catch(err) {
     console.error(err);
     videoLockOverlay.classList.remove("active");
     setStatus("error", "Error occurred");
-    showErrorModal("အဆင့်တွင် အမှားဖြစ်ပေါ်ပါသည်", err.message);
+    if (!isCloneDisabledByLimit) {
+      showErrorModal("အဆင့်တွင် အမှားဖြစ်ပေါ်ပါသည်", err.message);
+    }
   } finally {
     generating = false;
     btn.disabled = false; spinner.style.display = "none"; btnText.textContent = "✨ Generate Script & Voice";
