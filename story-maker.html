@@ -241,6 +241,26 @@ button:active { transform: scale(0.97); }
   margin-top: 14px; flex-wrap: wrap;
 }
 
+/* PROGRESS BAR BOX */
+.genProgressBox {
+  display: none; background: #0b0f19; border: 1px solid var(--border-light);
+  border-radius: 14px; padding: 14px; margin-bottom: 14px;
+  box-shadow: 0 10px 24px rgba(0,0,0,0.5);
+}
+.genProgressHead {
+  display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;
+}
+.animTrack {
+  width: 100%; height: 9px; background: #121826;
+  border-radius: 99px; overflow: hidden; position: relative;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.8);
+}
+.animBarFill {
+  height: 100%; width: 0%;
+  background: linear-gradient(90deg, #ffbe3b, #ff7e40, #2bd576);
+  border-radius: 99px; transition: width 0.3s ease;
+}
+
 .errorModalSheet {
   background: #190e14; border: 1.5px solid var(--red);
   border-radius: 18px; padding: 18px; width: 100%; max-width: 440px;
@@ -272,10 +292,10 @@ button:active { transform: scale(0.97); }
     </div>
   </div>
   <div class="headerBtns">
-    <button class="iconBtn" onclick="toggleAppMenu()" title="All Studios" style="background:rgba(255,190,59,0.22);border-color:var(--accent);color:#fff">▦</button>
-    <button class="iconBtn" onclick="undo()" title="Undo">↶</button>
-    <button class="iconBtn" onclick="redo()" title="Redo">↷</button>
-    <button class="iconBtn" onclick="saveStoryToLocal()" title="Save Story">💾</button>
+    <button class="iconBtn" id="mainMenuBtn" onclick="toggleAppMenu()" title="All Studios" style="background:rgba(255,190,59,0.22);border-color:var(--accent);color:#fff">▦</button>
+    <button class="iconBtn lockable" onclick="undo()" title="Undo">↶</button>
+    <button class="iconBtn lockable" onclick="redo()" title="Redo">↷</button>
+    <button class="iconBtn lockable" onclick="saveStoryToLocal()" title="Save Story">💾</button>
   </div>
 </header>
 
@@ -336,101 +356,118 @@ button:active { transform: scale(0.97); }
 <main class="container">
   <div class="appBodyGrid">
     
-    <div class="card">
-      <div class="cardHead" onclick="toggleCard('setupBody', 'setupChev')">
-        <div class="title">✨ AI Story Studio Setup</div>
-        <div style="display:flex;align-items:center;gap:6px">
-          <button onclick="event.stopPropagation(); testMyanmarVoice();" style="font-size:10px;padding:3px 8px;color:var(--cyan);border-color:#2b3954">🔊 Test Voice</button>
-          <span class="chevron" id="setupChev">▲</span>
+    <div>
+      <div class="card" id="topicCard" style="margin-bottom:10px">
+        <div class="body" style="padding:14px">
+          <label style="display:block;font-size:11px;color:var(--accent);font-weight:800;margin-bottom:6px">
+            📝 STORY TOPIC / TITLE (ခေါင်းစဉ် သို့မဟုတ် အကြောင်းအရာ)
+          </label>
+          <input type="text" class="inputField lockable" id="topicInput" placeholder="ဥပမာ - တောနက်ထဲက ထူးဆန်းသောအိမ်ကြီး" value="ကျော်ကြီး၏ ချစ်တတ်မှု">
         </div>
       </div>
-      <div class="body" id="setupBody">
-        
-        <div class="field">
-          <label>📝 STORY TOPIC / TITLE (ခေါင်းစဉ် သို့မဟုတ် အကြောင်းအရာ)</label>
-          <input type="text" class="inputField" id="topicInput" placeholder="ဥပမာ - တောနက်ထဲက ထူးဆန်းသောအိမ်ကြီး" value="တောနက်ထဲက ထူးဆန်းသောအိမ်ကြီး">
-        </div>
 
-        <div class="field">
-          <label>🎭 STORY GENRE (ဇာတ်လမ်း အမျိုးအစား)</label>
-          <div class="tagGroup">
-            <button class="tagBtn active" id="catHorror" onclick="setCategory('horror')">👻 သရဲ/သည်းထိတ်ရင်ဖို</button>
-            <button class="tagBtn" id="catAdventure" onclick="setCategory('adventure')">🗺️ စွန့်စားခန်း</button>
-            <button class="tagBtn" id="catFantasy" onclick="setCategory('fantasy')">🧙‍♂️ ပုံပြင်/ဒဏ္ဍာရီ</button>
-            <button class="tagBtn" id="catComedy" onclick="setCategory('comedy')">😂 ဟာသ</button>
-            <button class="tagBtn" id="catDrama" onclick="setCategory('drama')">💔 ဘဝသရုပ်ဖော်/ဒရာမာ</button>
-            <button class="tagBtn" id="catScifi" onclick="setCategory('scifi')">🚀 သိပ္ပံ/Sci-Fi</button>
+      <div class="genProgressBox" id="genProgressBox">
+        <div class="genProgressHead">
+          <span style="font-size:12px;font-weight:800;color:#fff" id="genProgressStatus">✨ Initializing Story Pipeline...</span>
+          <span style="font-size:12px;font-weight:800;color:var(--accent);font-family:ui-monospace" id="genProgressPercent">0%</span>
+        </div>
+        <div class="animTrack">
+          <div class="animBarFill" id="genProgressBar"></div>
+        </div>
+        <div style="font-size:10px;color:var(--muted);margin-top:6px" id="genProgressDesc">AI engine connecting...</div>
+      </div>
+
+      <div class="card">
+        <div class="cardHead" onclick="toggleCard('setupBody', 'setupChev')">
+          <div class="title">⚙️ Story Settings & Voice Studio</div>
+          <div style="display:flex;align-items:center;gap:6px">
+            <button class="lockable" onclick="event.stopPropagation(); testMyanmarVoice();" style="font-size:10px;padding:3px 8px;color:var(--cyan);border-color:#2b3954">🔊 Test Voice</button>
+            <span class="chevron" id="setupChev">▲</span>
           </div>
         </div>
+        <div class="body" id="setupBody">
 
-        <div class="field">
-          <label>📖 STORY FORMAT (ဇာတ်လမ်း ပုံစံ)</label>
-          <div class="tagGroup">
-            <button class="tagBtn" id="typeSingle" onclick="setType('single')">✓ တစ်ပိုင်းတည်းပြီး (Single)</button>
-            <button class="tagBtn active" id="typeSeries" onclick="setType('series')">🔗 ဇာတ်လမ်းတွဲ (Series)</button>
+          <div class="field">
+            <label>🎭 STORY GENRE (ဇာတ်လမ်း အမျိုးအစား)</label>
+            <div class="tagGroup">
+              <button class="tagBtn lockable" id="catHorror" onclick="setCategory('horror')">👻 သရဲ/သည်းထိတ်ရင်ဖို</button>
+              <button class="tagBtn lockable" id="catAdventure" onclick="setCategory('adventure')">🗺️ စွန့်စားခန်း</button>
+              <button class="tagBtn lockable" id="catFantasy" onclick="setCategory('fantasy')">🧙‍♂️ ပုံပြင်/ဒဏ္ဍာရီ</button>
+              <button class="tagBtn lockable active" id="catComedy" onclick="setCategory('comedy')">😂 ဟာသ</button>
+              <button class="tagBtn lockable" id="catDrama" onclick="setCategory('drama')">💔 ဘဝသရုပ်ဖော်/ဒရာမာ</button>
+              <button class="tagBtn lockable" id="catScifi" onclick="setCategory('scifi')">🚀 သိပ္ပံ/Sci-Fi</button>
+            </div>
           </div>
-        </div>
 
-        <div class="field" id="singleDurationBox" style="display:none">
-          <label>⏱️ SINGLE VIDEO DURATION (ကြာချိန်)</label>
-          <div class="tagGroup">
-            <button class="tagBtn active" id="dur1" onclick="setDuration(1)">⚡ 1 Min (8 Scenes)</button>
-            <button class="tagBtn" id="dur3" onclick="setDuration(3)">⏱️ 3 Mins (20 Scenes)</button>
-            <button class="tagBtn" id="dur5" onclick="setDuration(5)">🎬 5 Mins (32 Scenes)</button>
+          <div class="field">
+            <label>📖 STORY FORMAT (ဇာတ်လမ်း ပုံစံ)</label>
+            <div class="tagGroup">
+              <button class="tagBtn lockable" id="typeSingle" onclick="setType('single')">✓ တစ်ပိုင်းတည်းပြီး (Single)</button>
+              <button class="tagBtn lockable active" id="typeSeries" onclick="setType('series')">🔗 ဇာတ်လမ်းတွဲ (Series)</button>
+            </div>
           </div>
-        </div>
 
-        <div class="field" id="seriesEpisodesBox">
-          <label style="color:var(--accent)">📺 SERIES EPISODES (၁ မိနစ် ၁ ပိုင်းနှုန်းဖြင့် အပိုင်း ရွေးချယ်မှု)</label>
-          <div class="tagGroup">
-            <button class="tagBtn" id="ep2" onclick="setEpisodes(2)">⚡ 2 Ep (2 Mins)</button>
-            <button class="tagBtn" id="ep3" onclick="setEpisodes(3)">⏱️ 3 Ep (3 Mins)</button>
-            <button class="tagBtn" id="ep4" onclick="setEpisodes(4)">🎬 4 Ep (4 Mins)</button>
-            <button class="tagBtn" id="ep5" onclick="setEpisodes(5)">🔥 5 Ep (5 Mins)</button>
-            <button class="tagBtn active" id="ep6" onclick="setEpisodes(6)">🌟 6 Ep (6 Mins)</button>
+          <div class="field" id="singleDurationBox" style="display:none">
+            <label>⏱️ SINGLE VIDEO DURATION (ကြာချိန်)</label>
+            <div class="tagGroup">
+              <button class="tagBtn lockable active" id="dur1" onclick="setDuration(1)">⚡ 1 Min (8 Scenes)</button>
+              <button class="tagBtn lockable" id="dur3" onclick="setDuration(3)">⏱️ 3 Mins (20 Scenes)</button>
+              <button class="tagBtn lockable" id="dur5" onclick="setDuration(5)">🎬 5 Mins (32 Scenes)</button>
+            </div>
           </div>
-          <small style="font-size:10px;color:var(--muted);margin-top:4px;display:block">
-            * Ep 1 မှ Ep 6 အထိ အပိုင်းအားလုံးကို cliffhanger အချိတ်အဆက်များဖြင့် တစ်ခါတည်း ရေးပေးပါမည်။
-          </small>
-        </div>
 
-        <div class="field">
-          <label>🎨 VISUAL ART STYLE (ရုပ်ပုံဒီဇိုင်း စတိုင်လ်)</label>
-          <select class="selectField" id="artStyleSelect">
-            <option value="Vintage 35mm film photograph, grainy texture, retro color grade" selected>📸 Vintage 35mm Analog Film</option>
-            <option value="Cinematic photorealistic 8k, dramatic lighting, ultra-detailed">🎬 Cinematic Photorealistic 8K</option>
-            <option value="3D Pixar Disney style animation, vibrant colors, expressive characters">🎨 3D Animation / Pixar Disney Style</option>
-            <option value="Dark fantasy oil painting, mysterious atmosphere, moody lighting">🌌 Dark Fantasy Oil Painting</option>
-            <option value="Classic 90s vintage anime aesthetic, detailed background, hand-drawn look">⛩️ 90s Vintage Anime Style</option>
-            <option value="Futuristic cyberpunk concept art, glowing neon lights, dark moody rain">🌆 Cyberpunk Sci-Fi Concept Art</option>
-          </select>
-        </div>
-
-        <div class="field">
-          <label>🗣️ AI VOICE ACTOR (ကြိုတင်နားထောင်မည့် အသံ)</label>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
-            <button class="voiceBtn active" id="voiceThiha" onclick="setVoice('my-MM-ThihaNeural')">👨 သီဟ (ကျားအသံ)</button>
-            <button class="voiceBtn" id="voiceNilar" onclick="setVoice('my-MM-NilarNeural')">👩 နီလာ (မအသံ)</button>
+          <div class="field" id="seriesEpisodesBox">
+            <label style="color:var(--accent)">📺 SERIES EPISODES (၁ မိနစ် ၁ ပိုင်းနှုန်းဖြင့် အပိုင်း ရွေးချယ်မှု)</label>
+            <div class="tagGroup">
+              <button class="tagBtn lockable" id="ep2" onclick="setEpisodes(2)">⚡ 2 Ep (2 Mins)</button>
+              <button class="tagBtn lockable" id="ep3" onclick="setEpisodes(3)">⏱️ 3 Ep (3 Mins)</button>
+              <button class="tagBtn lockable" id="ep4" onclick="setEpisodes(4)">🎬 4 Ep (4 Mins)</button>
+              <button class="tagBtn lockable" id="ep5" onclick="setEpisodes(5)">🔥 5 Ep (5 Mins)</button>
+              <button class="tagBtn lockable active" id="ep6" onclick="setEpisodes(6)">🌟 6 Ep (6 Mins)</button>
+            </div>
+            <small style="font-size:10px;color:var(--muted);margin-top:4px;display:block">
+              * Ep 1 မှ Ep 6 အထိ အပိုင်းအားလုံးကို cliffhanger အချိတ်အဆက်များဖြင့် တစ်ခါတည်း ရေးပေးပါမည်။
+            </small>
           </div>
+
+          <div class="field">
+            <label>🎨 VISUAL ART STYLE (ရုပ်ပုံဒီဇိုင်း စတိုင်လ်)</label>
+            <select class="selectField lockable" id="artStyleSelect">
+              <option value="Vintage 35mm film photograph, grainy texture, retro color grade">📸 Vintage 35mm Analog Film</option>
+              <option value="Cinematic photorealistic 8k, dramatic lighting, ultra-detailed">🎬 Cinematic Photorealistic 8K</option>
+              <option value="3D Pixar Disney style animation, vibrant colors, expressive characters" selected>🎨 3D Animation / Pixar Disney Style</option>
+              <option value="Dark fantasy oil painting, mysterious atmosphere, moody lighting">🌌 Dark Fantasy Oil Painting</option>
+              <option value="Classic 90s vintage anime aesthetic, detailed background, hand-drawn look">⛩️ 90s Vintage Anime Style</option>
+              <option value="Futuristic cyberpunk concept art, glowing neon lights, dark moody rain">🌆 Cyberpunk Sci-Fi Concept Art</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label>🗣️ AI VOICE ACTOR (ကြိုတင်နားထောင်မည့် အသံ)</label>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+              <button class="voiceBtn lockable active" id="voiceThiha" onclick="setVoice('my-MM-ThihaNeural')">👨 သီဟ (ကျားအသံ)</button>
+              <button class="voiceBtn lockable" id="voiceNilar" onclick="setVoice('my-MM-NilarNeural')">👩 နီလာ (မအသံ)</button>
+            </div>
+          </div>
+
+          <button class="primary" id="generateBtn" style="width:100%;padding:13px;margin-top:6px" onclick="generateStory()">
+            <span class="btnSpinner" id="btnSpinner" style="display:none"></span>
+            <span id="btnText">✨ Generate All (6 Episodes) & Scenes</span>
+          </button>
+
         </div>
-
-        <button class="primary" id="generateBtn" style="width:100%;padding:13px;margin-top:6px" onclick="generateStory()">
-          <span class="btnSpinner" id="btnSpinner" style="display:none"></span>
-          <span id="btnText">✨ Generate All Episodes & Scenes</span>
-        </button>
-
       </div>
     </div>
 
-    <div class="card">
+    <div class="card" id="timelineCard">
       <div class="cardHead no-cursor">
         <div class="title">
           🎬 Story Timeline <span id="sceneCountBadge" style="font-size:11px;color:var(--muted)"></span>
         </div>
         <div style="display:flex;gap:5px">
-          <button class="secondaryBtn" onclick="addNewScene()" style="padding:4px 8px;font-size:10.5px">+ Add Scene</button>
-          <button onclick="copyAllStoryText()" style="padding:4px 8px;font-size:10.5px">📋 Copy Script</button>
-          <button onclick="exportStoryJSON()" style="padding:4px 8px;font-size:10.5px">💾 Export JSON</button>
+          <button class="secondaryBtn lockable" onclick="addNewScene()" style="padding:4px 8px;font-size:10.5px">+ Add Scene</button>
+          <button class="lockable" onclick="copyAllStoryText()" style="padding:4px 8px;font-size:10.5px">📋 Copy Script</button>
+          <button class="lockable" onclick="exportStoryJSON()" style="padding:4px 8px;font-size:10.5px">💾 Export JSON</button>
         </div>
       </div>
       <div class="body">
@@ -450,7 +487,7 @@ button:active { transform: scale(0.97); }
           <div style="font-size:11.5px;color:var(--muted)">
             ဇာတ်လမ်း အဆင်သင့်ဖြစ်ပါက Video ဖန်တီးရန် Slideshow Studio သို့ တိုက်ရိုက် ပို့နိုင်ပါသည် -
           </div>
-          <button class="sendVideoBtn" onclick="sendToVideoStudio()" style="padding:10px 18px">
+          <button class="sendVideoBtn" id="sendVideoBtn" onclick="sendToVideoStudio()" style="padding:10px 18px">
             🚀 Send to Video Studio ➔
           </button>
         </div>
@@ -467,7 +504,7 @@ const WORKER_URL = "https://ai-studio-mm.nainelinoo-14tpro.workers.dev";
 let scenes = [];
 let history = [];
 let future = [];
-let selectedCategory = "horror";
+let selectedCategory = "comedy";
 let selectedDuration = 1;
 let selectedType = "series";
 let selectedEpisodes = 6;
@@ -494,6 +531,30 @@ function toast(msg) {
 function toggleAppMenu(e) {
   if (e && e.target !== document.getElementById("appMenuBackdrop") && e.target !== document.getElementById("appMenuBackdrop").querySelector("button")) return;
   document.getElementById("appMenuBackdrop").classList.toggle("show");
+}
+
+function setUiLocked(locked) {
+  document.querySelectorAll(".lockable").forEach(el => {
+    el.disabled = locked;
+    if (locked) el.style.pointerEvents = "none";
+    else el.style.pointerEvents = "auto";
+  });
+  const genBtn = document.getElementById("generateBtn");
+  if (genBtn) genBtn.disabled = locked;
+}
+
+function updateProgress(percent, status, desc) {
+  const box = document.getElementById("genProgressBox");
+  box.style.display = "block";
+  const p = Math.min(100, Math.max(0, Math.round(percent)));
+  document.getElementById("genProgressBar").style.width = p + "%";
+  document.getElementById("genProgressPercent").textContent = p + "%";
+  if (status) document.getElementById("genProgressStatus").textContent = status;
+  if (desc) document.getElementById("genProgressDesc").textContent = desc;
+}
+
+function hideProgress() {
+  document.getElementById("genProgressBox").style.display = "none";
 }
 
 function showErrorModal(errorTitle, errorDetail) {
@@ -690,17 +751,26 @@ async function generateStory() {
 
   isGenerating = true;
   saveHistory();
+  setUiLocked(true);
 
-  const btn = document.getElementById("generateBtn");
+  const progBox = document.getElementById("genProgressBox");
+  progBox.scrollIntoView({ behavior: "smooth", block: "center" });
+
   const spinner = document.getElementById("btnSpinner");
   const btnText = document.getElementById("btnText");
   const artStyle = document.getElementById("artStyleSelect").value;
 
-  btn.disabled = true;
   spinner.style.display = "inline-block";
-  btnText.textContent = selectedType === "series" 
-    ? `Writing ${selectedEpisodes} Episodes in one go...`
-    : "Writing Story & Prompts...";
+  btnText.textContent = "Connecting to Story Engine...";
+
+  updateProgress(15, "Connecting AI...", "Prompting story structure...");
+
+  const progInterval = setInterval(() => {
+    const cur = parseInt(document.getElementById("genProgressPercent").textContent) || 15;
+    if (cur < 82) {
+      updateProgress(cur + 8, "Structuring Multi-Episode Scenes...", `Drafting ${selectedType === "series" ? selectedEpisodes + " Episodes" : "1 Episode"} cliffhangers...`);
+    }
+  }, 1400);
 
   try {
     const res = await fetch(WORKER_URL + "/story", {
@@ -715,10 +785,14 @@ async function generateStory() {
       })
     });
 
+    clearInterval(progInterval);
+
     if (!res.ok) {
       const errData = await res.json().catch(() => ({}));
       throw new Error(errData.error || `Server HTTP ${res.status}`);
     }
+
+    updateProgress(90, "Translating & Formatting...", "Finalizing script and prompts...");
 
     const data = await res.json();
     let rawScenes = data.story || [];
@@ -732,19 +806,30 @@ async function generateStory() {
       image_prompt_en: `${s.image_prompt_en || "Cinematic visual"}, ${artStyle}`
     }));
 
+    updateProgress(100, "Done!", "All scenes created successfully!");
+    await new Promise(r => setTimeout(r, 450));
+
     activeEpFilter = 0;
     setupEpisodeFilters();
     renderScenes();
     saveStoryToLocal();
-    document.getElementById("actionToolBar").style.display = "flex";
+
+    const toolBar = document.getElementById("actionToolBar");
+    toolBar.style.display = "flex";
     toast(`🎉 Generated ${scenes.length} scenes across all episodes!`);
 
+    setTimeout(() => {
+      toolBar.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 300);
+
   } catch(err) {
+    clearInterval(progInterval);
     console.error(err);
     showErrorModal("Story Generation Error", err.message);
   } finally {
     isGenerating = false;
-    btn.disabled = false;
+    setUiLocked(false);
+    hideProgress();
     spinner.style.display = "none";
     btnText.textContent = selectedType === "series" 
       ? `✨ Generate All (${selectedEpisodes} Episodes) & Scenes`
@@ -763,10 +848,10 @@ function setupEpisodeFilters() {
   }
 
   bar.style.display = "block";
-  let html = `<button class="tagBtn ${activeEpFilter===0?'active':''}" onclick="filterByEpisode(0)">All Episodes (${scenes.length})</button>`;
+  let html = `<button class="tagBtn lockable ${activeEpFilter===0?'active':''}" onclick="filterByEpisode(0)">All Episodes (${scenes.length})</button>`;
   episodesSet.forEach(ep => {
     const count = scenes.filter(s => s.episode === ep).length;
-    html += `<button class="tagBtn ${activeEpFilter===ep?'active':''}" onclick="filterByEpisode(${ep})">Ep ${ep} (${count})</button>`;
+    html += `<button class="tagBtn lockable ${activeEpFilter===ep?'active':''}" onclick="filterByEpisode(${ep})">Ep ${ep} (${count})</button>`;
   });
   container.innerHTML = html;
 }
@@ -810,22 +895,22 @@ function renderScenes() {
       <div class="sceneCardHead">
         <span class="sceneHeadTitle">🎬 EP ${epNum} • SCENE ${s.scene}</span>
         <div class="sceneCardBtns">
-          <button onclick="playSceneVoice(${realIdx})" title="Listen voice">🔊 Play</button>
-          <button onclick="copySinglePrompt(${realIdx})" style="color:var(--cyan)" title="Copy English prompt">📋 Prompt</button>
-          <button onclick="moveScene(${realIdx}, -1)" title="Move Up">▲</button>
-          <button onclick="moveScene(${realIdx}, 1)" title="Move Down">▼</button>
-          <button class="danger" onclick="deleteScene(${realIdx})" title="Delete">✕</button>
+          <button class="lockable" onclick="playSceneVoice(${realIdx})" title="Listen voice">🔊 Play</button>
+          <button class="lockable" onclick="copySinglePrompt(${realIdx})" style="color:var(--cyan)" title="Copy English prompt">📋 Prompt</button>
+          <button class="lockable" onclick="moveScene(${realIdx}, -1)" title="Move Up">▲</button>
+          <button class="lockable" onclick="moveScene(${realIdx}, 1)" title="Move Down">▼</button>
+          <button class="danger lockable" onclick="deleteScene(${realIdx})" title="Delete">✕</button>
         </div>
       </div>
 
       <div>
         <label style="font-size:9.5px;color:var(--muted);font-weight:700">မြန်မာဇာတ်ကြောင်းပြော (NARRATION SCRIPT)</label>
-        <textarea class="sceneTextMM" oninput="updateSceneText(${realIdx}, 'text_mm', this.value)">${esc(s.text_mm)}</textarea>
+        <textarea class="sceneTextMM lockable" oninput="updateSceneText(${realIdx}, 'text_mm', this.value)">${esc(s.text_mm)}</textarea>
       </div>
 
       <div>
         <label style="font-size:9.5px;color:var(--cyan);font-weight:700">🎨 AI IMAGE PROMPT (ENGLISH)</label>
-        <textarea class="scenePromptEN" oninput="updateSceneText(${realIdx}, 'image_prompt_en', this.value)">${esc(s.image_prompt_en)}</textarea>
+        <textarea class="scenePromptEN lockable" oninput="updateSceneText(${realIdx}, 'image_prompt_en', this.value)">${esc(s.image_prompt_en)}</textarea>
       </div>
     </div>`;
   });
