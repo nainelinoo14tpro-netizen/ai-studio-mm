@@ -176,10 +176,14 @@ canvas#videoCanvas { width: 100%; height: 100%; object-fit: contain; display: bl
 
 .sceneCard {
   background: #090c14; border: 1px solid var(--border);
-  border-radius: 12px; padding: 10px; display: flex; gap: 10px;
-  align-items: center; width: 100%; box-sizing: border-box;
+  border-radius: 12px; padding: 10px; display: flex; flex-direction: column;
+  gap: 8px; width: 100%; box-sizing: border-box;
 }
 .sceneCard.activePlaying { border-color: var(--accent); background: rgba(43, 213, 118, 0.08); }
+
+.sceneCardMainRow {
+  display: flex; gap: 10px; align-items: center; width: 100%;
+}
 
 .sceneImgThumbBox {
   width: 76px; height: 76px; background: #121724; border-radius: 8px;
@@ -243,6 +247,18 @@ canvas#videoCanvas { width: 100%; height: 100%; object-fit: contain; display: bl
   border-radius: 6px; padding: 3px 6px; font-size: 9px; cursor: pointer; flex-shrink: 0;
 }
 .copyBtn:hover { color: #fff; border-color: var(--accent); }
+
+/* SRT EDIT ACCORDION SECTION */
+.srtEditPanel {
+  display: none; background: #06080e; border: 1px solid var(--border);
+  border-radius: 8px; padding: 8px; width: 100%; margin-top: 4px;
+}
+.srtEditPanel.open { display: block; }
+.srtTextarea {
+  width: 100%; background: #0d121c; border: 1px solid var(--border);
+  color: #fff; border-radius: 6px; padding: 6px 8px; font-size: 11px;
+  resize: vertical; min-height: 55px; outline: none; line-height: 1.4;
+}
 
 .settingGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
 .field label { display: block; font-size: 10px; color: var(--muted); margin-bottom: 4px; font-weight: 700; }
@@ -714,6 +730,20 @@ function copyPrompt(text) {
   });
 }
 
+function toggleSrtEdit(idx) {
+  const panel = document.getElementById(`srtPanel-${idx}`);
+  if (panel) panel.classList.toggle("open");
+}
+
+function updateSceneSrtText(idx, val) {
+  if (currentScenes[idx]) {
+    currentScenes[idx].text_mm = val;
+    const txtEl = document.getElementById(`sceneText-${idx}`);
+    if (txtEl) txtEl.textContent = val.replace(/\n+/g, " ");
+    drawCurrentFrame();
+  }
+}
+
 function renderSceneList() {
   const list = document.getElementById("sceneList");
   document.getElementById("sceneCountBadge").textContent = `(Ep ${activeEpisode}: ${currentScenes.length} Scenes)`;
@@ -721,32 +751,43 @@ function renderSceneList() {
 
   list.innerHTML = currentScenes.map((s, idx) => `
     <div class="sceneCard" id="sceneCard-${idx}">
-      <div class="sceneImgThumbBox ${isPortrait ? 'portrait' : ''}" onclick="triggerSceneImgUpload(${idx})">
-        <img id="thumb-${idx}" alt="Scene ${idx+1}">
-        <span id="emptyIcon-${idx}">📷</span>
-        <small id="emptyText-${idx}">Upload</small>
-        <input type="file" id="sceneFileInput-${idx}" accept="image/*,video/*" hidden onchange="handleSingleImgUpload(${idx}, event)">
+      <div class="sceneCardMainRow">
+        <div class="sceneImgThumbBox ${isPortrait ? 'portrait' : ''}" onclick="triggerSceneImgUpload(${idx})">
+          <img id="thumb-${idx}" alt="Scene ${idx+1}">
+          <span id="emptyIcon-${idx}">📷</span>
+          <small id="emptyText-${idx}">Upload</small>
+          <input type="file" id="sceneFileInput-${idx}" accept="image/*,video/*" hidden onchange="handleSingleImgUpload(${idx}, event)">
+        </div>
+
+        <div class="sceneInfoCol">
+          <div class="sceneHeaderRow">
+            <span class="sceneBadge">SCENE #${idx+1} (${sceneDurations[idx]?.toFixed(1)}s)</span>
+            <div class="sceneHeaderBtns">
+              <button onclick="toggleSrtEdit(${idx})" style="color:var(--cyan);font-size:9px">📝 SRT</button>
+              <button onclick="generateSingleAIImage(${idx})" style="color:var(--accent)" title="Auto Draw AI Image">🎨 AI Gen</button>
+              <button onclick="playSingleSceneAudio(${idx})">🔊 Play</button>
+            </div>
+          </div>
+
+          <div class="sceneScriptScrollBox">
+            <div class="sceneScriptText" id="sceneText-${idx}">${(s.text_mm || '').replace(/\n+/g, " ")}</div>
+          </div>
+          
+          <div class="scenePromptRow">
+            <div class="scenePromptScrollBox">
+              <div class="scenePromptBox" title="${s.image_prompt_en || ''}">🎨 ${s.image_prompt_en || ''}</div>
+            </div>
+            <button class="copyBtn" onclick="copyPrompt('${encodeURIComponent(s.image_prompt_en || '').replace(/'/g, "%27")}')">📋 Copy</button>
+          </div>
+        </div>
       </div>
 
-      <div class="sceneInfoCol">
-        <div class="sceneHeaderRow">
-          <span class="sceneBadge">SCENE #${idx+1} (${sceneDurations[idx]?.toFixed(1)}s)</span>
-          <div class="sceneHeaderBtns">
-            <button onclick="generateSingleAIImage(${idx})" style="color:var(--accent)" title="Auto Draw AI Image">🎨 AI Gen</button>
-            <button onclick="playSingleSceneAudio(${idx})">🔊 Play</button>
-          </div>
+      <div class="srtEditPanel" id="srtPanel-${idx}">
+        <div style="font-size:9.5px;color:var(--muted);margin-bottom:4px;display:flex;justify-content:space-between">
+          <span>✏️ SRT Subtitle Split (စာကြောင်းတိုခွဲရန် Enter ခေါက်ပါ)</span>
+          <span style="color:var(--accent);cursor:pointer" onclick="toggleSrtEdit(${idx})">Done ✓</span>
         </div>
-
-        <div class="sceneScriptScrollBox">
-          <div class="sceneScriptText">${s.text_mm || ''}</div>
-        </div>
-        
-        <div class="scenePromptRow">
-          <div class="scenePromptScrollBox">
-            <div class="scenePromptBox" title="${s.image_prompt_en || ''}">🎨 ${s.image_prompt_en || ''}</div>
-          </div>
-          <button class="copyBtn" onclick="copyPrompt('${encodeURIComponent(s.image_prompt_en || '').replace(/'/g, "%27")}')">📋 Copy</button>
-        </div>
+        <textarea class="srtTextarea" oninput="updateSceneSrtText(${idx}, this.value)">${s.text_mm || ''}</textarea>
       </div>
     </div>
   `).join("");
@@ -977,7 +1018,7 @@ async function generateAllVoices() {
       const res = await fetch(WORKER_URL + "/tts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: s.text_mm, voice: selectedVoice, rate: "+0%" })
+        body: JSON.stringify({ text: (s.text_mm || '').replace(/\n+/g, " "), voice: selectedVoice, rate: "+0%" })
       });
 
       if (res.ok) {
@@ -1163,7 +1204,22 @@ function drawCurrentFrame() {
     ctx.font = `bold ${fontSize}px "Pyidaungsu", "Noto Sans Myanmar", sans-serif`;
     ctx.textAlign = "center"; ctx.textBaseline = "middle";
 
-    const words = current.scene.text_mm.split(" ");
+    let activeSubText = current.scene.text_mm.trim();
+    if (activeSubText.includes("\n")) {
+      const parts = activeSubText.split("\n").map(p => p.trim()).filter(Boolean);
+      const chunkIdx = Math.min(parts.length - 1, Math.floor((current.sceneTime / current.sceneDur) * parts.length));
+      activeSubText = parts[chunkIdx] || parts[0];
+    } else {
+      const words = activeSubText.split(" ").filter(Boolean);
+      if (words.length > 9) {
+        const chunkSize = 8;
+        const totalChunks = Math.ceil(words.length / chunkSize);
+        const chunkIdx = Math.min(totalChunks - 1, Math.floor((current.sceneTime / current.sceneDur) * totalChunks));
+        activeSubText = words.slice(chunkIdx * chunkSize, (chunkIdx + 1) * chunkSize).join(" ");
+      }
+    }
+
+    const words = activeSubText.split(" ");
     let line = ""; const lines = [];
     const maxW = canvas.width * 0.85;
 
