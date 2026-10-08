@@ -762,7 +762,7 @@ function selectEpisode(ep) {
   currentScenes = allScenes.filter(s => (s.episode || 1) === ep);
   if (!currentScenes.length) currentScenes = allScenes;
 
-  // Default initial duration set dynamically between 8.0s ~ 9.0s
+  // Natural Initial Duration (8.5s)
   sceneDurations = currentScenes.map(() => 8.5);
   audioBuffers.clear();
   rawAudioBlobs.clear();
@@ -842,7 +842,6 @@ function handleCustomAudioUpload(e) {
     const sceneCount = currentScenes.length;
     if (!sceneCount) { toast("No scenes available"); return; }
 
-    // Dynamic scale: adapts according to full audio duration
     const perSceneDur = fileDuration / sceneCount;
     for (let i = 0; i < sceneCount; i++) {
       sceneDurations[i] = perSceneDur;
@@ -861,7 +860,7 @@ function handleCustomAudioUpload(e) {
   };
 }
 
-// Full Episode Merged Audio Download Function
+// Download Episode Full Voice
 async function downloadAllEpisodeAudio() {
   if (!currentScenes.length || !audioBuffers.size) {
     toast("အရင်ဆုံး '🎙️ Generate Voices' ခလုတ်ဖြင့် အသံများ ထုတ်ပေးပါ");
@@ -902,7 +901,6 @@ async function downloadAllEpisodeAudio() {
       }
     }
 
-    // Convert AudioBuffer to WAV
     const wavBlob = bufferToWaveBlob(mergedBuffer, totalSamples);
     const downloadUrl = URL.createObjectURL(wavBlob);
     const a = document.createElement("a");
@@ -1211,29 +1209,87 @@ function handleLogoUpload(e) {
   img.src = URL.createObjectURL(f);
 }
 
-// Full Audio-Driven Dynamic Duration Adjustment
+// Auto Burmese Text Splitter into 8s - 10s chunks (approx 20 - 24 words)
+function splitBurmeseIntoChunks(text) {
+  const rawClean = (text || '').replace(/\r/g, '').trim();
+  if (!rawClean) return [];
+
+  // If already split by newlines, respect existing chunks
+  const lineSplits = rawClean.split(/\n+/).map(l => l.trim()).filter(Boolean);
+  const finalChunks = [];
+
+  for (const line of lineSplits) {
+    const words = line.split(" ").filter(Boolean);
+    // Ideal TTS pace: ~2.5 words per sec. 22 words = ~8.8s
+    if (words.length <= 25) {
+      finalChunks.push(line);
+    } else {
+      let temp = [];
+      for (let w of words) {
+        temp.push(w);
+        if (temp.length >= 22) {
+          finalChunks.push(temp.join(" "));
+          temp = [];
+        }
+      }
+      if (temp.length > 0) {
+        if (temp.length < 8 && finalChunks.length > 0) {
+          finalChunks[finalChunks.length - 1] += " " + temp.join(" ");
+        } else {
+          finalChunks.push(temp.join(" "));
+        }
+      }
+    }
+  }
+  return finalChunks.length ? finalChunks : [rawClean];
+}
+
+// Smart Voice Pipeline: Auto-chunks long text and regenerates dynamic scenes
 async function generateAllVoices() {
   if (!currentScenes.length) return;
   const btn = document.getElementById("genVoicesBtn");
   const spinner = document.getElementById("voiceSpinner");
   btn.disabled = true; spinner.style.display = "inline-block";
 
-  showProgressBar("🎙️ Generating Myanmar Voices...", "Connecting to Edge TTS...");
+  showProgressBar("🎙️ Processing & Generating Voices...", "Auto-chunking 8s~10s audio units...");
 
   const params = getVoiceAudioParams();
+  
+  // STEP 1: Break existing scenes down into 8s-10s sub-chunks
+  const expandedScenes = [];
+  for (let s of currentScenes) {
+    const chunks = splitBurmeseIntoChunks(s.text_mm);
+    chunks.forEach((chunkText, cIdx) => {
+      expandedScenes.push({
+        episode: s.episode || activeEpisode,
+        text_mm: chunkText,
+        image_prompt_en: s.image_prompt_en || "Cinematic scene"
+      });
+    });
+  }
+
+  // STEP 2: Dynamically adapt scenes timeline based on actual audio units
+  currentScenes = expandedScenes.map((s, idx) => ({
+    ...s,
+    scene: idx + 1
+  }));
+
+  const newAudioBuffers = new Map();
+  const newRawBlobs = new Map();
+  const newDurations = [];
   const total = currentScenes.length;
 
   for (let i = 0; i < total; i++) {
     const s = currentScenes[i];
     const pct = (i / total) * 100;
-    updateProgressBar(pct, `Synthesizing Voice ${i+1}/${total}: "${s.text_mm.slice(0, 18)}..."`);
+    updateProgressBar(pct, `Synthesizing Audio Clip ${i+1}/${total}: "${s.text_mm.slice(0, 18)}..."`);
 
     try {
       const res = await fetch(WORKER_URL + "/tts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
-          text: (s.text_mm || '').replace(/\n+/g, " "), 
+          text: s.text_mm, 
           voice: selectedVoice, 
           rate: params.rate,
           pitch: params.pitch
@@ -1243,17 +1299,16 @@ async function generateAllVoices() {
       if (res.ok) {
         const blob = await res.blob();
         if (blob.size > 200) {
-          rawAudioBlobs.set(i, blob);
+          newRawBlobs.set(i, blob);
           const aud = new Audio(URL.createObjectURL(blob));
           await new Promise((resolve) => {
             let done = false;
             const fallbackTimer = setTimeout(() => {
               if (!done) {
                 done = true;
-                // Fallback estimate
-                const estWords = (s.text_mm || '').split(" ").filter(Boolean).length;
-                sceneDurations[i] = Math.max(8.0, Math.min(10.5, estWords * 0.22 + 4.5));
-                audioBuffers.set(i, aud);
+                const estWords = s.text_mm.split(" ").filter(Boolean).length;
+                newDurations[i] = Math.max(8.0, Math.min(10.5, estWords * 0.22 + 4.5));
+                newAudioBuffers.set(i, aud);
                 resolve();
               }
             }, 2500);
@@ -1262,10 +1317,10 @@ async function generateAllVoices() {
               if (!done) {
                 done = true;
                 clearTimeout(fallbackTimer);
-                // Exact Audio Sync: Scene duration matches actual audio playback + short breathing room
-                const exactDur = aud.duration || 8.0;
-                sceneDurations[i] = exactDur + 0.35;
-                audioBuffers.set(i, aud);
+                // Zero skipping: exact natural audio length + brief transition margin
+                const exactDur = aud.duration || 8.5;
+                newDurations[i] = exactDur + 0.35;
+                newAudioBuffers.set(i, aud);
                 resolve();
               }
             };
@@ -1281,19 +1336,24 @@ async function generateAllVoices() {
       }
     } catch(e) {}
 
-    updateProgressBar(((i + 1) / total) * 100, `Completed Voice ${i+1}/${total}`);
-    await new Promise(r => setTimeout(r, 150));
+    updateProgressBar(((i + 1) / total) * 100, `Completed Clip ${i+1}/${total}`);
+    await new Promise(r => setTimeout(r, 120));
   }
+
+  // Update states with perfectly synced dynamic scene collection
+  audioBuffers = newAudioBuffers;
+  rawAudioBlobs = newRawBlobs;
+  sceneDurations = newDurations;
 
   calculateTotalDuration();
   renderSceneList();
 
-  updateProgressBar(100, "All voices completed!");
+  updateProgressBar(100, "All voices completed and synchronized!");
   await new Promise(r => setTimeout(r, 400));
   hideProgressBar();
 
   btn.disabled = false; spinner.style.display = "none";
-  toast(`🎉 Finished voices! Total Duration: ${formatTime(totalDuration)}`);
+  toast(`🎉 Dynamic Scenes Adapted: ${currentScenes.length} Scenes (${formatTime(totalDuration)})`);
 }
 
 function playSingleSceneAudio(idx) {
@@ -1432,7 +1492,7 @@ function drawCurrentFrame() {
     if (lPos === "top-right") { lx = canvas.width - lw - pad; ly = pad; }
     else if (lPos === "top-left") { lx = pad; ly = pad; }
     else if (lPos === "bottom-right") { lx = canvas.width - lw - pad; ly = canvas.height - lh - pad; }
-    else if (lPos === "bottom-left") { lx = pad; ly = canvas.height - lh - pad; }
+    else if (lPos === "bottom-left") { lx = pad; ly = pad; }
 
     ctx.save();
     ctx.globalAlpha = lOpacity;
@@ -1632,7 +1692,6 @@ async function exportFullVideo() {
     ...dest.stream.getAudioTracks()
   ]);
 
-  // Support for direct MP4 containers across mobile and modern desktop
   let mimeType = "video/mp4;codecs=avc1,mp4a.40.2";
   if (!MediaRecorder.isTypeSupported(mimeType)) {
     mimeType = MediaRecorder.isTypeSupported("video/mp4") ? "video/mp4" : "video/webm;codecs=vp9,opus";
