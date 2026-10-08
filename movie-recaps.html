@@ -1096,7 +1096,9 @@ async function fetchZeroGpuAudio(text, lockedStyle) {
 
   try {
     if (!gradioClientInstance) {
-      gradioClientInstance = await window.GradioClient.connect("nlopro/clone-burmese-tts");
+      gradioClientInstance = await window.GradioClient.connect("nlopro/clone-burmese-tts", {
+  hf_token: "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"
+});
     }
 
     const result = await gradioClientInstance.predict("/prompt_voice", {
