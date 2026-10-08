@@ -415,28 +415,30 @@ button:active { transform: scale(0.97); }
             <label>⏱️ SINGLE VIDEO DURATION (ကြာချိန်)</label>
             <div class="tagGroup">
               <button class="tagBtn lockable active" id="dur1" onclick="setDuration(1)">⚡ 1 Min (8 Scenes)</button>
+              <button class="tagBtn lockable" id="dur2" onclick="setDuration(2)">⚡ 2 Mins (15 Scenes)</button>
               <button class="tagBtn lockable" id="dur3" onclick="setDuration(3)">⏱️ 3 Mins (20 Scenes)</button>
               <button class="tagBtn lockable" id="dur5" onclick="setDuration(5)">🎬 5 Mins (32 Scenes)</button>
             </div>
           </div>
 
           <div class="field" id="seriesEpisodesBox">
-            <label style="color:var(--accent)">📺 SERIES EPISODES (၁ မိနစ် ၁ ပိုင်းနှုန်းဖြင့် အပိုင်း ရွေးချယ်မှု)</label>
+            <label style="color:var(--accent)">📺 SERIES EPISODES (၁ ပိုင်းလျှင် ၂ မိနစ် / ၁၅ Scenes နှုန်းဖြင့် အပိုင်း ရွေးချယ်မှု)</label>
             <div class="tagGroup">
-              <button class="tagBtn lockable" id="ep2" onclick="setEpisodes(2)">⚡ 2 Ep (2 Mins)</button>
-              <button class="tagBtn lockable" id="ep3" onclick="setEpisodes(3)">⏱️ 3 Ep (3 Mins)</button>
-              <button class="tagBtn lockable" id="ep4" onclick="setEpisodes(4)">🎬 4 Ep (4 Mins)</button>
-              <button class="tagBtn lockable" id="ep5" onclick="setEpisodes(5)">🔥 5 Ep (5 Mins)</button>
-              <button class="tagBtn lockable active" id="ep6" onclick="setEpisodes(6)">🌟 6 Ep (6 Mins)</button>
+              <button class="tagBtn lockable" id="ep2" onclick="setEpisodes(2)">⚡ 2 Ep (4 Mins / 30 Scenes)</button>
+              <button class="tagBtn lockable" id="ep3" onclick="setEpisodes(3)">⏱️ 3 Ep (6 Mins / 45 Scenes)</button>
+              <button class="tagBtn lockable" id="ep4" onclick="setEpisodes(4)">🎬 4 Ep (8 Mins / 60 Scenes)</button>
+              <button class="tagBtn lockable" id="ep5" onclick="setEpisodes(5)">🔥 5 Ep (10 Mins / 75 Scenes)</button>
+              <button class="tagBtn lockable active" id="ep6" onclick="setEpisodes(6)">🌟 6 Ep (12 Mins / 90 Scenes)</button>
             </div>
             <small style="font-size:10px;color:var(--muted);margin-top:4px;display:block">
-              * Ep 1 မှ Ep 6 အထိ အပိုင်းအားလုံးကို cliffhanger အချိတ်အဆက်များဖြင့် တစ်ခါတည်း ရေးပေးပါမည်။
+              * Ep 1 မှ Ep 6 အထိ အပိုင်းအားလုံးကို တစ်ပိုင်းလျှင် ၁၅ ခန်း (၂ မိနစ်စာ) ဖြင့် cliffhanger အချိတ်အဆက်များ ထည့်သွင်း ရေးပေးပါမည်။
             </small>
           </div>
 
           <div class="field">
             <label>🎨 VISUAL ART STYLE (ရုပ်ပုံဒီဇိုင်း စတိုင်လ်)</label>
             <select class="selectField lockable" id="artStyleSelect">
+              <option value="Authentic 1993 Myanmar retro nostalgic film photography, Yangon vintage aesthetic, traditional Burmese context, warm Kodacolor tone, realistic film grain, 8k">🇲🇲 1990s Vintage Myanmar Film Style (၁၉၉၃ မြန်မာရုပ်ရှင်)</option>
               <option value="Vintage 35mm film photograph, grainy texture, retro color grade">📸 Vintage 35mm Analog Film</option>
               <option value="Cinematic photorealistic 8k, dramatic lighting, ultra-detailed">🎬 Cinematic Photorealistic 8K</option>
               <option value="3D Pixar Disney style animation, vibrant colors, expressive characters" selected>🎨 3D Animation / Pixar Disney Style</option>
@@ -601,7 +603,9 @@ function setEpisodes(ep) {
   document.querySelectorAll("#seriesEpisodesBox button").forEach(b => b.classList.remove("active"));
   const target = document.getElementById("ep" + ep);
   if (target) target.classList.add("active");
-  toast(`Selected: ${ep} Episodes (${ep} Mins)`);
+  const totalMins = ep * 2;
+  const totalScenes = ep * 15;
+  toast(`Selected: ${ep} Episodes (${totalMins} Mins / ${totalScenes} Scenes)`);
 }
 
 function setType(type) {
@@ -784,7 +788,7 @@ async function generateStory() {
   const progInterval = setInterval(() => {
     const cur = parseInt(document.getElementById("genProgressPercent").textContent) || 15;
     if (cur < 82) {
-      updateProgress(cur + 8, "Structuring Multi-Episode Scenes...", `Drafting ${selectedType === "series" ? selectedEpisodes + " Episodes" : "1 Episode"} cliffhangers...`);
+      updateProgress(cur + 8, "Structuring Multi-Episode Scenes...", `Drafting ${selectedType === "series" ? selectedEpisodes + " Episodes (15 scenes/ep)" : "1 Episode"} cliffhangers...`);
     }
   }, 1400);
 
@@ -902,7 +906,7 @@ function renderScenes() {
       outputHTML += `
         <div class="epDivider">
           <span>📺 EPISODE ${epNum} (အပိုင်း ${epNum})</span>
-          <span style="font-size:9.5px;color:var(--accent)">1 MINUTE</span>
+          <span style="font-size:9.5px;color:var(--accent)">2 MINUTES</span>
         </div>`;
     }
 
