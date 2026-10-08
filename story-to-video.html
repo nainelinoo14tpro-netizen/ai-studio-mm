@@ -64,6 +64,12 @@ button:active { transform: scale(0.97); }
   box-shadow: 0 4px 14px rgba(255, 85, 114, 0.35);
 }
 
+.customToolBtn {
+  background: #121826; border: 1px solid var(--border-light);
+  color: #fff; font-weight: 700; font-size: 11.5px;
+}
+.customToolBtn:hover { background: #1a2336; border-color: var(--cyan); }
+
 .btnSpinner {
   width: 13px; height: 13px;
   border: 2px solid rgba(0,0,0,0.3); border-top-color: #000;
@@ -248,7 +254,6 @@ canvas#videoCanvas { width: 100%; height: 100%; object-fit: contain; display: bl
 }
 .copyBtn:hover { color: #fff; border-color: var(--accent); }
 
-/* SRT EDIT ACCORDION SECTION */
 .srtEditPanel {
   display: none; background: #06080e; border: 1px solid var(--border);
   border-radius: 8px; padding: 8px; width: 100%; margin-top: 4px;
@@ -384,6 +389,16 @@ canvas#videoCanvas { width: 100%; height: 100%; object-fit: contain; display: bl
               🎬 Export Video (.mp4)
             </button>
           </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
+            <input type="file" id="customAudioInput" accept="audio/*" hidden onchange="handleCustomAudioUpload(event)">
+            <button class="customToolBtn" onclick="document.getElementById('customAudioInput').click()">
+              🎵 Add Audio File
+            </button>
+            <button class="customToolBtn" onclick="copyFullScriptForTTS()">
+              📋 Copy Script (TTS)
+            </button>
+          </div>
         </div>
       </div>
 
@@ -425,11 +440,29 @@ canvas#videoCanvas { width: 100%; height: 100%; object-fit: contain; display: bl
               </select>
             </div>
             <div class="field">
-              <label>AI Voice Actor</label>
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px">
-                <button class="voiceBtn active" id="vThiha" onclick="setVoice('my-MM-ThihaNeural')">👨 သီဟ</button>
-                <button class="voiceBtn" id="vNilar" onclick="setVoice('my-MM-NilarNeural')">👩 နီလာ</button>
-              </div>
+              <label>Video Transition</label>
+              <select id="transitionSelect" onchange="drawCurrentFrame()">
+                <option value="fade" selected>✨ Smooth Crossfade (၀.၅ စက္ကန့်)</option>
+                <option value="none">🔒 Direct Cut (None)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="field" style="margin-bottom:10px">
+            <label>AI Voice Actor (ကျား/မ)</label>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+              <button class="voiceBtn active" id="vThiha" onclick="setVoice('my-MM-ThihaNeural')">👨 သီဟ (ကျား)</button>
+              <button class="voiceBtn" id="vNilar" onclick="setVoice('my-MM-NilarNeural')">👩 နီလာ (မ)</button>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>AI Voice Emotion / Mood (အသံစတိုင်လ် ဇာတ်ကောင်)</label>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+              <button class="voiceBtn active" id="moodNormal" onclick="setVoiceMood('normal')">😐 ပုံမှန် Normal</button>
+              <button class="voiceBtn" id="moodHorror" onclick="setVoiceMood('horror')">👻 သရဲ/သည်းထိတ်</button>
+              <button class="voiceBtn" id="moodComedy" onclick="setVoiceMood('comedy')">😂 ဟာသ/သွက်လက်</button>
+              <button class="voiceBtn" id="moodMystery" onclick="setVoiceMood('mystery')">🔮 ထူးဆန်း/ဒဏ္ဍာရီ</button>
             </div>
           </div>
         </div>
@@ -558,6 +591,7 @@ let logoImageObj = null;
 
 let currentAspect = "16/9"; 
 let selectedVoice = "my-MM-ThihaNeural";
+let selectedVoiceMood = "normal";
 let activeEpisode = 1;
 
 let isPlaying = false;
@@ -628,7 +662,25 @@ function setVoice(v) {
   selectedVoice = v;
   document.getElementById("vThiha").classList.toggle("active", v.includes("Thiha"));
   document.getElementById("vNilar").classList.toggle("active", v.includes("Nilar"));
-  toast(`Selected Voice: ${v.includes("Thiha") ? "သီဟ" : "နီလာ"}`);
+  toast(`Selected Actor: ${v.includes("Thiha") ? "သီဟ (ကျား)" : "နီလာ (မ)"}`);
+}
+
+function setVoiceMood(mood) {
+  selectedVoiceMood = mood;
+  document.getElementById("moodNormal").classList.toggle("active", mood === "normal");
+  document.getElementById("moodHorror").classList.toggle("active", mood === "horror");
+  document.getElementById("moodComedy").classList.toggle("active", mood === "comedy");
+  document.getElementById("moodMystery").classList.toggle("active", mood === "mystery");
+
+  const moodNames = { normal: "ပုံမှန်", horror: "သရဲ/သည်းထိတ်", comedy: "ဟာသ/သွက်လက်", mystery: "ထူးဆန်း/ဒဏ္ဍာရီ" };
+  toast(`Voice Mood: ${moodNames[mood]}`);
+}
+
+function getVoiceAudioParams() {
+  if (selectedVoiceMood === "horror") return { rate: "-8%", pitch: "-15Hz" };
+  if (selectedVoiceMood === "comedy") return { rate: "+10%", pitch: "+20Hz" };
+  if (selectedVoiceMood === "mystery") return { rate: "-4%", pitch: "-8Hz" };
+  return { rate: "+0%", pitch: "+0Hz" };
 }
 
 function setAspectRatio(ratio) {
@@ -742,6 +794,64 @@ function updateSceneSrtText(idx, val) {
     if (txtEl) txtEl.textContent = val.replace(/\n+/g, " ");
     drawCurrentFrame();
   }
+}
+
+function copyFullScriptForTTS() {
+  if (!currentScenes.length) { toast("No script found to copy"); return; }
+  const totalMins = (totalDuration / 60).toFixed(1);
+  let scriptOutput = `[STORY SCRIPT - EPISODE ${activeEpisode} (Duration: ~${totalMins} Mins)]\n\n`;
+
+  currentScenes.forEach((s, idx) => {
+    const cleanText = (s.text_mm || '').trim().replace(/\n+/g, " ");
+    scriptOutput += `${idx + 1}. ${cleanText}\n\n`;
+  });
+
+  navigator.clipboard.writeText(scriptOutput.trim()).then(() => {
+    toast("📋 Copied Burmese Script for TTS!");
+  }).catch(() => {
+    const el = document.createElement("textarea");
+    el.value = scriptOutput.trim(); document.body.appendChild(el);
+    el.select(); document.execCommand("copy");
+    document.body.removeChild(el);
+    toast("📋 Copied Script!");
+  });
+}
+
+function handleCustomAudioUpload(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const audioUrl = URL.createObjectURL(file);
+  const tempAudio = new Audio(audioUrl);
+
+  toast("🎵 Loading audio file...");
+
+  tempAudio.onloadedmetadata = () => {
+    const fileDuration = tempAudio.duration;
+    if (!fileDuration || isNaN(fileDuration)) {
+      toast("Could not read audio duration");
+      return;
+    }
+
+    const sceneCount = currentScenes.length;
+    if (!sceneCount) { toast("No scenes available"); return; }
+
+    const perSceneDur = Math.max(2.5, fileDuration / sceneCount);
+    for (let i = 0; i < sceneCount; i++) {
+      sceneDurations[i] = perSceneDur;
+      const sceneAudio = new Audio(audioUrl);
+      audioBuffers.set(i, sceneAudio);
+    }
+
+    calculateTotalDuration();
+    renderSceneList();
+    drawCurrentFrame();
+    toast(`🎵 Applied audio! Total Duration: ${formatTime(fileDuration)}`);
+  };
+
+  tempAudio.onerror = () => {
+    toast("Failed to load audio file");
+  };
 }
 
 function renderSceneList() {
@@ -1008,7 +1118,9 @@ async function generateAllVoices() {
 
   showProgressBar("🎙️ Generating Myanmar Voices...", "Connecting to Edge TTS...");
 
+  const params = getVoiceAudioParams();
   const total = currentScenes.length;
+
   for (let i = 0; i < total; i++) {
     const s = currentScenes[i];
     const pct = (i / total) * 100;
@@ -1018,7 +1130,12 @@ async function generateAllVoices() {
       const res = await fetch(WORKER_URL + "/tts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: (s.text_mm || '').replace(/\n+/g, " "), voice: selectedVoice, rate: "+0%" })
+        body: JSON.stringify({ 
+          text: (s.text_mm || '').replace(/\n+/g, " "), 
+          voice: selectedVoice, 
+          rate: params.rate,
+          pitch: params.pitch
+        })
       });
 
       if (res.ok) {
@@ -1098,6 +1215,47 @@ function getSceneAtTime(t) {
   return { index: currentScenes.length - 1, scene: currentScenes[currentScenes.length - 1], sceneTime: 0, sceneDur: 4.5 };
 }
 
+function renderMediaFrame(media, sceneTime, sceneDur, sceneIdx, alpha = 1.0) {
+  if (!media) return;
+  const motionMode = document.getElementById("motionSelect").value;
+  const isVid = (media instanceof HTMLVideoElement);
+
+  if (isVid && media.duration) {
+    const vTime = sceneTime % media.duration;
+    if (Math.abs(media.currentTime - vTime) > 0.3) {
+      media.currentTime = vTime;
+    }
+  }
+
+  const progress = Math.min(1, Math.max(0, sceneTime / sceneDur));
+  let scale = motionMode === "slow" ? 1.0 + (progress * 0.08) : (motionMode === "medium" ? 1.05 + (progress * 0.15) : 1.0);
+  let panY = motionMode === "none" ? 0 : progress * 20;
+
+  if (isVid) { scale = 1.0; panY = 0; }
+
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.translate(canvas.width / 2, canvas.height / 2);
+  ctx.scale(scale, scale);
+  ctx.translate(-canvas.width / 2, -canvas.height / 2 + (sceneIdx % 2 === 0 ? -panY : panY));
+
+  const mW = isVid ? (media.videoWidth || 1280) : media.width;
+  const mH = isVid ? (media.videoHeight || 720) : media.height;
+  const imgAspect = mW / mH;
+  const canAspect = canvas.width / canvas.height;
+  let drawW, drawH, drawX, drawY;
+
+  if (imgAspect > canAspect) {
+    drawH = canvas.height; drawW = canvas.height * imgAspect;
+    drawX = (canvas.width - drawW) / 2; drawY = 0;
+  } else {
+    drawW = canvas.width; drawH = canvas.width / imgAspect;
+    drawX = 0; drawY = (canvas.height - drawH) / 2;
+  }
+  ctx.drawImage(media, drawX, drawY, drawW, drawH);
+  ctx.restore();
+}
+
 function drawCurrentFrame() {
   ctx.fillStyle = "#000000";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -1105,43 +1263,24 @@ function drawCurrentFrame() {
 
   const current = getSceneAtTime(currentTime);
   const media = imageObjects.get(current.index);
-  const motionMode = document.getElementById("motionSelect").value;
+  const transMode = document.getElementById("transitionSelect") ? document.getElementById("transitionSelect").value : "fade";
+
+  const timeLeft = current.sceneDur - current.sceneTime;
+  const isTransitioning = (transMode === "fade" && timeLeft < 0.5 && current.index < currentScenes.length - 1);
 
   if (media) {
-    const isVid = (media instanceof HTMLVideoElement);
-    if (isVid && media.duration) {
-      const vTime = current.sceneTime % media.duration;
-      if (Math.abs(media.currentTime - vTime) > 0.3) {
-        media.currentTime = vTime;
+    if (isTransitioning) {
+      const nextMedia = imageObjects.get(current.index + 1);
+      const nextDur = sceneDurations[current.index + 1] || 4.5;
+      const transProgress = (0.5 - timeLeft) / 0.5;
+
+      renderMediaFrame(media, current.sceneTime, current.sceneDur, current.index, 1.0 - transProgress);
+      if (nextMedia) {
+        renderMediaFrame(nextMedia, 0.05, nextDur, current.index + 1, transProgress);
       }
-    }
-
-    const progress = Math.min(1, Math.max(0, current.sceneTime / current.sceneDur));
-    let scale = motionMode === "slow" ? 1.0 + (progress * 0.08) : (motionMode === "medium" ? 1.05 + (progress * 0.15) : 1.0);
-    let panY = motionMode === "none" ? 0 : progress * 20;
-
-    if (isVid) { scale = 1.0; panY = 0; }
-
-    ctx.save();
-    ctx.translate(canvas.width / 2, canvas.height / 2);
-    ctx.scale(scale, scale);
-    ctx.translate(-canvas.width / 2, -canvas.height / 2 + (current.index % 2 === 0 ? -panY : panY));
-
-    const mW = isVid ? (media.videoWidth || 1280) : media.width;
-    const mH = isVid ? (media.videoHeight || 720) : media.height;
-    const imgAspect = mW / mH;
-    const canAspect = canvas.width / canvas.height;
-    let drawW, drawH, drawX, drawY;
-
-    if (imgAspect > canAspect) {
-      drawH = canvas.height; drawW = canvas.height * imgAspect;
-      drawX = (canvas.width - drawW) / 2; drawY = 0;
     } else {
-      drawW = canvas.width; drawH = canvas.width / imgAspect;
-      drawX = 0; drawY = (canvas.height - drawH) / 2;
+      renderMediaFrame(media, current.sceneTime, current.sceneDur, current.index, 1.0);
     }
-    ctx.drawImage(media, drawX, drawY, drawW, drawH);
-    ctx.restore();
   } else {
     ctx.fillStyle = "#090d16"; ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.fillStyle = "#2bd576"; ctx.font = "bold 28px sans-serif"; ctx.textAlign = "center";
