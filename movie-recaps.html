@@ -1084,34 +1084,46 @@ async function generateEdgeSpeechInBrowser(text, voice, rate) {
   });
 }
 
-// ZERO-GPU VOICE CLONING (DIRECT GRADIO CLIENT CONNECTION - NO WORKER ERROR)
+// ZERO-GPU VOICE CLONING (FETCH VIA AUTHENTICATED WORKER)
 async function fetchZeroGpuAudio(text, lockedStyle) {
   const currentSelect = document.getElementById("cloneVoiceStyle");
   const stylePrompt = lockedStyle || (currentSelect ? currentSelect.value : "A news anchor voice, formal and authoritative, steady pace, perfect for broadcast");
-
-  if (!window.GradioClient) {
-    throw new Error("Gradio Client Library load မဖြစ်သေးပါ။ အင်တာနက် ချိတ်ဆက်မှုကို စစ်ဆေးပြီး Refresh လုပ်ပေးပါ။");
-  }
-
+  
+  let res;
   try {
-    if (!gradioClientInstance) {
-      gradioClientInstance = await window.GradioClient.connect("nlopro/clone-burmese-tts");
-    }
-
-    const result = await gradioClientInstance.predict("/prompt_voice", {
-      text_input: text,
-      style_prompt: stylePrompt
+    res = await fetch(WORKER_URL + "/clone-tts", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        text: text,
+        style: stylePrompt
+      })
     });
-
-    if (!result || !result.data || !result.data[0] || !result.data[0].url) {
-      throw new Error("ZeroGPU Audio data ထုတ်ယူမရရှိပါ (Server မှ အသံဖိုင် URL ပြန်မပို့ပါ)");
-    }
-
-    return result.data[0].url;
-  } catch (err) {
-    gradioClientInstance = null;
-    throw err;
+  } catch(netErr) {
+    throw new Error(`Worker Network Connection Failed: ${netErr.message}`);
   }
+
+  const rawText = await res.text();
+  let data;
+  try {
+    data = JSON.parse(rawText);
+  } catch(parseErr) {
+    throw new Error(`Invalid Worker Response: ${rawText.slice(0, 200)}`);
+  }
+
+  if (!res.ok) {
+    throw new Error(data.error || `HTTP ${res.status}: ${rawText}`);
+  }
+
+  // Response ထဲက Audio URL ကို format အမျိုးမျိုး စစ်ဆေးပြီး ဆွဲထုတ်ခြင်း
+  let audioUrl = data.url || (data.data && data.data[0] ? (data.data[0].url || data.data[0]) : null);
+
+  if (!audioUrl) {
+    throw new Error(`Audio URL မရရှိပါ: ${rawText.slice(0, 200)}`);
+  }
+
+  return audioUrl;
+}
 }
 
 async function fetchMyanmarAudio(text, voice, rate, lockedStyle) {
