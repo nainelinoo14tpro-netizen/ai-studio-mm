@@ -459,10 +459,16 @@ canvas#videoCanvas { width: 100%; height: 100%; object-fit: contain; display: bl
             <div class="field">
               <label>Video Transition</label>
               <select id="transitionSelect" onchange="drawCurrentFrame()">
-                <option value="fade" selected>✨ Smooth Crossfade (၀.၅ စက္ကန့်)</option>
+                <option value="fade" selected>✨ Smooth Crossfade</option>
                 <option value="none">🔒 Direct Cut (None)</option>
               </select>
             </div>
+          </div>
+
+          <!-- Transition Duration Slider (0.05s to 1.0s) -->
+          <div class="field" style="margin-bottom:10px">
+            <label>Transition Duration: <span id="transDurVal" style="color:var(--accent);font-weight:800">0.45s</span> (0.05s Direct မှ 1.0s Smooth ထိ)</label>
+            <input id="transDuration" type="range" min="0.05" max="1.0" step="0.05" value="0.45" oninput="document.getElementById('transDurVal').textContent=this.value+'s'; drawCurrentFrame()">
           </div>
 
           <div class="field" style="margin-bottom:10px">
@@ -691,6 +697,11 @@ let animFrameId = null;
 let lastTimestamp = 0;
 let lastPlayedSceneIdx = -1;
 
+// Web Audio API Context & Gain Node for Boosted Audio Preview
+let previewAudioCtx = null;
+let previewGainNode = null;
+let previewAudioSources = new Map();
+
 const canvas = document.getElementById("videoCanvas");
 const ctx = canvas.getContext("2d");
 const canvasControls = document.getElementById("canvasControls");
@@ -704,6 +715,20 @@ const animBarFill = document.getElementById("animBarFill");
 const progPercentText = document.getElementById("progPercentText");
 const progTitle = document.getElementById("progTitle");
 const progDesc = document.getElementById("progDesc");
+
+function initPreviewAudioSystem() {
+  if (!previewAudioCtx) {
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    previewAudioCtx = new AudioContextClass();
+    previewGainNode = previewAudioCtx.createGain();
+    // 1.8x Volume Gain Booster for crystal clear loud voice
+    previewGainNode.gain.value = 1.75;
+    previewGainNode.connect(previewAudioCtx.destination);
+  }
+  if (previewAudioCtx.state === 'suspended') {
+    previewAudioCtx.resume();
+  }
+}
 
 function toggleCard(bodyId, chevId) {
   const b = document.getElementById(bodyId);
@@ -767,10 +792,10 @@ function setVoiceMood(mood) {
 }
 
 function getVoiceAudioParams() {
-  if (selectedVoiceMood === "horror") return { rate: "-8%", pitch: "-15Hz" };
-  if (selectedVoiceMood === "comedy") return { rate: "+10%", pitch: "+20Hz" };
-  if (selectedVoiceMood === "mystery") return { rate: "-4%", pitch: "-8Hz" };
-  return { rate: "+0%", pitch: "+0Hz" };
+  if (selectedVoiceMood === "horror") return { rate: "-8%", pitch: "-15Hz", volume: "+50%" };
+  if (selectedVoiceMood === "comedy") return { rate: "+10%", pitch: "+20Hz", volume: "+50%" };
+  if (selectedVoiceMood === "mystery") return { rate: "-4%", pitch: "-8Hz", volume: "+50%" };
+  return { rate: "+0%", pitch: "+0Hz", volume: "+50%" };
 }
 
 function setAspectRatio(ratio) {
@@ -1062,7 +1087,7 @@ async function downloadAllEpisodeAudio() {
     return;
   }
 
-  toast("🎵 Processing audio file for download...");
+  toast("🎵 Processing boosted audio file for download...");
   try {
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     const audioDataBuffers = [];
@@ -1091,7 +1116,11 @@ async function downloadAllEpisodeAudio() {
       let offset = 0;
       const channelData = mergedBuffer.getChannelData(channel);
       for (const b of audioDataBuffers) {
-        channelData.set(b.getChannelData(Math.min(channel, b.numberOfChannels - 1)), offset);
+        const srcData = b.getChannelData(Math.min(channel, b.numberOfChannels - 1));
+        // Apply 1.7x boost gain during file concatenation
+        for (let j = 0; j < srcData.length; j++) {
+          channelData[offset + j] = Math.max(-1.0, Math.min(1.0, srcData[j] * 1.7));
+        }
         offset += b.length;
       }
     }
@@ -1102,7 +1131,7 @@ async function downloadAllEpisodeAudio() {
     a.href = downloadUrl;
     a.download = `voice-ep${activeEpisode}-${Date.now()}.wav`;
     a.click();
-    toast("🎉 Downloaded Full Episode Audio!");
+    toast("🎉 Downloaded Full Boosted Audio!");
     audioCtx.close();
   } catch(e) {
     console.error(e);
@@ -1404,14 +1433,14 @@ function handleLogoUpload(e) {
   img.src = URL.createObjectURL(f);
 }
 
-// Generate Voices using Dynamic Audio Length
+// Generate Voices using Dynamic Audio Length + Volume Boost (+50%)
 async function generateAllVoices() {
   if (!currentScenes.length) return;
   const btn = document.getElementById("genVoicesBtn");
   const spinner = document.getElementById("voiceSpinner");
   btn.disabled = true; spinner.style.display = "inline-block";
 
-  showProgressBar("🎙️ Generating Myanmar Voices...", "Connecting to Edge TTS...");
+  showProgressBar("🎙️ Generating Boosted Myanmar Voices...", "Connecting to Edge TTS with Volume Boost...");
 
   const params = getVoiceAudioParams();
   const total = currentScenes.length;
@@ -1429,7 +1458,8 @@ async function generateAllVoices() {
           text: (s.text_mm || '').replace(/\n+/g, " "), 
           voice: selectedVoice, 
           rate: params.rate,
-          pitch: params.pitch
+          pitch: params.pitch,
+          volume: params.volume // +50% Volume Boost
         })
       });
 
@@ -1479,7 +1509,7 @@ async function generateAllVoices() {
   calculateTotalDuration();
   renderSceneList();
 
-  updateProgressBar(100, "All voices completed!");
+  updateProgressBar(100, "All voices completed with high volume boost!");
   await new Promise(r => setTimeout(r, 400));
   hideProgressBar();
 
@@ -1488,9 +1518,20 @@ async function generateAllVoices() {
 }
 
 function playSingleSceneAudio(idx) {
+  initPreviewAudioSystem();
   audioBuffers.forEach(a => { a.pause(); a.currentTime = 0; });
   const aud = audioBuffers.get(idx);
-  if (aud) { aud.currentTime = 0; aud.play(); }
+  if (aud) {
+    if (!previewAudioSources.has(aud)) {
+      try {
+        const track = previewAudioCtx.createMediaElementSource(aud);
+        track.connect(previewGainNode);
+        previewAudioSources.set(aud, track);
+      } catch(e){}
+    }
+    aud.currentTime = 0; 
+    aud.play(); 
+  }
   else { toast("Please generate voice first."); }
 }
 
@@ -1562,15 +1603,18 @@ function drawCurrentFrame() {
   const current = getSceneAtTime(currentTime);
   const media = imageObjects.get(current.index);
   const transMode = document.getElementById("transitionSelect") ? document.getElementById("transitionSelect").value : "fade";
+  
+  // Dynamic user-customizable transition duration (0.05s to 1.0s)
+  const customTransDur = parseFloat(document.getElementById("transDuration")?.value) || 0.45;
 
   const timeLeft = current.sceneDur - current.sceneTime;
-  const isTransitioning = (transMode === "fade" && timeLeft < 0.5 && current.index < currentScenes.length - 1);
+  const isTransitioning = (transMode === "fade" && timeLeft < customTransDur && current.index < currentScenes.length - 1);
 
   if (media) {
     if (isTransitioning) {
       const nextMedia = imageObjects.get(current.index + 1);
       const nextDur = sceneDurations[current.index + 1] || 8.5;
-      const transProgress = (0.5 - timeLeft) / 0.5;
+      const transProgress = (customTransDur - timeLeft) / customTransDur;
 
       renderMediaFrame(media, current.sceneTime, current.sceneDur, current.index, 1.0 - transProgress);
       if (nextMedia) {
@@ -1728,6 +1772,7 @@ function togglePlayPause() {
 
 function startPlayback() {
   if (!currentScenes.length) return;
+  initPreviewAudioSystem();
 
   audioBuffers.forEach(a => {
     a.pause();
@@ -1748,6 +1793,13 @@ function startPlayback() {
 
   const currentAud = audioBuffers.get(current.index);
   if (currentAud) {
+    if (!previewAudioSources.has(currentAud)) {
+      try {
+        const track = previewAudioCtx.createMediaElementSource(currentAud);
+        track.connect(previewGainNode);
+        previewAudioSources.set(currentAud, track);
+      } catch(e){}
+    }
     currentAud.currentTime = Math.min(currentAud.duration || current.sceneTime, current.sceneTime);
     currentAud.play().catch(() => {});
   }
@@ -1806,6 +1858,13 @@ function playbackLoop(now) {
     lastPlayedSceneIdx = current.index;
     const aud = audioBuffers.get(current.index);
     if (aud) {
+      if (!previewAudioSources.has(aud)) {
+        try {
+          const track = previewAudioCtx.createMediaElementSource(aud);
+          track.connect(previewGainNode);
+          previewAudioSources.set(aud, track);
+        } catch(e){}
+      }
       aud.currentTime = 0;
       aud.play().catch(() => {});
     }
@@ -1841,12 +1900,12 @@ function formatTime(s) {
   return `${String(m).padStart(2, "0")}:${String(sec).padStart(2, "0")}`;
 }
 
-// Guaranteed MP4 Format Video Export
+// Guaranteed MP4 Format Video Export with Audio Boost Gain
 async function exportFullVideo() {
   if (!currentScenes.length) { toast("No scenes to export"); return; }
   pausePlayback();
 
-  showProgressBar("🔥 Rendering MP4 Video...", `Compositing for ${currentAspect}...`);
+  showProgressBar("🔥 Rendering MP4 Video...", `Compositing for ${currentAspect} with Loud Audio Boost...`);
 
   const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   const dest = audioCtx.createMediaStreamDestination();
@@ -1895,7 +1954,13 @@ async function exportFullVideo() {
         const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
         const source = audioCtx.createBufferSource();
         source.buffer = audioBuffer;
-        source.connect(dest);
+
+        // Apply 1.7x boost during video export
+        const exportGainNode = audioCtx.createGain();
+        exportGainNode.gain.value = 1.7;
+        source.connect(exportGainNode);
+        exportGainNode.connect(dest);
+
         source.start(audioCtx.currentTime);
       } catch(e) {}
     }
