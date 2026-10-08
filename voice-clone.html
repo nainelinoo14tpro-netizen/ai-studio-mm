@@ -11,6 +11,7 @@
   --bg: #07090e;
   --panel: #0e121b;
   --panel2: #141a27;
+  --panel3: #1a2234;
   --border: #232c3f;
   --border-light: #34415c;
   --text: #f5f7fb;
@@ -38,6 +39,56 @@ body {
   background: linear-gradient(135deg, var(--accent), #7657ff); font-size: 15px; color: #000;
 }
 
+.headerBtns { display: flex; gap: 6px; align-items: center; }
+.iconBtn {
+  width: 32px; height: 32px; padding: 0; border-radius: 8px; font-size: 13px;
+  background: var(--panel2); border: 1px solid var(--border); color: var(--text);
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+}
+
+/* AI Studio Apps Hub Modal */
+.appMenuBackdrop {
+  position: fixed; inset: 0; background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(6px); z-index: 500; display: none;
+  align-items: flex-start; justify-content: center; padding: 60px 14px 14px 14px;
+}
+.appMenuBackdrop.show { display: flex; }
+.appMenuSheet {
+  background: #0f1422; border: 1px solid var(--border-light);
+  border-radius: 18px; padding: 16px; width: 100%; max-width: 440px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.85); animation: dropMenu 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  max-height: 85vh; overflow-y: auto;
+}
+@keyframes dropMenu {
+  from { opacity: 0; transform: translateY(-12px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.appMenuHead {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border);
+}
+.appTileGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.appTileCard {
+  background: #141a29; border: 1px solid var(--border);
+  border-radius: 14px; padding: 12px 10px; text-decoration: none;
+  display: flex; flex-direction: column; align-items: center; text-align: center;
+  transition: all 0.15s ease;
+}
+.appTileCard:hover, .appTileCard:active {
+  background: #1c253b; border-color: var(--accent); transform: translateY(-2px);
+}
+.appTileCard.activeTool {
+  border-color: var(--accent); background: rgba(32, 215, 255, 0.16);
+  box-shadow: 0 0 12px rgba(32, 215, 255, 0.3);
+}
+.appTileIcon {
+  width: 40px; height: 40px; border-radius: 11px;
+  display: grid; place-items: center; font-size: 20px; margin-bottom: 8px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+}
+.appTileName { font-size: 12px; font-weight: 700; color: #fff; margin-bottom: 3px; }
+.appTileDesc { font-size: 9.5px; color: var(--muted); line-height: 1.25; }
+
 .container { max-width: 650px; margin: auto; padding: 14px; }
 
 .card {
@@ -45,6 +96,13 @@ body {
   border-radius: 14px; padding: 14px; margin-bottom: 14px;
 }
 .cardTitle { font-size: 12.5px; font-weight: 800; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+
+.selectField, .inputField {
+  width: 100%; background: #080b12; border: 1px solid var(--border);
+  color: #fff; border-radius: 8px; padding: 9px 10px; font-size: 12px;
+  outline: none; margin-bottom: 8px;
+}
+.selectField:focus, .inputField:focus { border-color: var(--accent); }
 
 .uploadBox {
   border: 1.5px dashed var(--border-light); border-radius: 10px;
@@ -56,20 +114,14 @@ body {
 
 .audioPlayer { width: 100%; margin-top: 6px; display: none; }
 
-.inputField {
-  width: 100%; background: #080b12; border: 1px solid var(--border);
-  color: #fff; border-radius: 8px; padding: 8px 10px; font-size: 11.5px;
-  font-family: ui-monospace, monospace; outline: none; margin-bottom: 8px;
-}
-
 button {
-  width: 100%; cursor: pointer; color: #fff; background: var(--panel2);
-  border: 1px solid var(--border); border-radius: 10px; padding: 12px;
-  font-weight: 700; font-size: 13px; display: flex; align-items: center; justify-content: center; gap: 8px;
+  cursor: pointer; color: #fff; background: var(--panel2);
+  border: 1px solid var(--border); border-radius: 10px; padding: 10px;
+  font-weight: 700; font-size: 12px;
 }
 .convertBtn {
-  background: linear-gradient(135deg, var(--accent), #7657ff);
-  border: 0; color: #000; font-weight: 800;
+  width: 100%; background: linear-gradient(135deg, var(--accent), #7657ff);
+  border: 0; color: #000; font-weight: 800; font-size: 13px; padding: 12px;
 }
 .convertBtn:disabled { opacity: 0.5; cursor: not-allowed; }
 
@@ -86,7 +138,6 @@ button {
 }
 </style>
 
-<!-- Gradio Client JS Module -->
 <script type="module">
   import { Client } from "https://cdn.jsdelivr.net/npm/@gradio/client/dist/index.min.js";
   window.GradioClient = Client;
@@ -103,19 +154,72 @@ button {
       <small style="display:block;font-size:9px;color:var(--muted)">Free Gradio API Voice Conversion</small>
     </div>
   </div>
-  <a href="story-to-video.html" style="font-size:11px;color:var(--accent);text-decoration:none">➔ Story to Video</a>
+  <div class="headerBtns">
+    <button class="iconBtn" onclick="toggleAppMenu()" title="All Studios" style="background:rgba(32,215,255,0.22);border-color:var(--accent);color:#fff">▦</button>
+    <a href="story-to-video.html" style="font-size:11px;color:var(--accent);text-decoration:none;padding:6px 10px;border-radius:8px;border:1px solid var(--border);background:var(--panel2)">➔ Story to Video</a>
+  </div>
 </header>
+
+<!-- DASHBOARD TILE GRID MODAL -->
+<div class="appMenuBackdrop" id="appMenuBackdrop" onclick="toggleAppMenu(event)">
+  <div class="appMenuSheet" onclick="event.stopPropagation()">
+    <div class="appMenuHead">
+      <div style="font-weight:800;font-size:13px;color:#fff;display:flex;align-items:center;gap:6px">
+        <span style="color:var(--accent)">✦</span> AI Studio Apps Hub
+      </div>
+      <button onclick="toggleAppMenu()" style="padding:4px 8px;font-size:11px">✕</button>
+    </div>
+    <div class="appTileGrid">
+      <a href="movie-recaps.html" class="appTileCard">
+        <div class="appTileIcon" style="background:linear-gradient(135deg, #ff5572, #ff7e40)">🎬</div>
+        <div class="appTileName">Movie Recaps</div>
+        <div class="appTileDesc">ဇာတ်ကြောင်းပြော & မြန်မာ Voice</div>
+      </a>
+      <a href="story-maker.html" class="appTileCard">
+        <div class="appTileIcon" style="background:linear-gradient(135deg, #ffbe3b, #ff5572)">✍️</div>
+        <div class="appTileName">Story Maker</div>
+        <div class="appTileDesc">ခေါင်းစဉ်ဖြင့် AI ဇာတ်လမ်းရေး</div>
+      </a>
+      <a href="voice-clone.html" class="appTileCard activeTool">
+        <div class="appTileIcon" style="background:linear-gradient(135deg, #20d7ff, #7657ff)">🎙️</div>
+        <div class="appTileName">Voice Clone</div>
+        <div class="appTileDesc">ကိုယ်ပိုင်အသံ AI အဖြစ်ပြောင်း</div>
+      </a>
+      <a href="story-to-video.html" class="appTileCard">
+        <div class="appTileIcon" style="background:linear-gradient(135deg, #2bd576, #20d7ff)">🎥</div>
+        <div class="appTileName">Story to Video</div>
+        <div class="appTileDesc">Photo Slideshow & Subtitles</div>
+      </a>
+      <a href="index.html" class="appTileCard" style="grid-column: span 2;">
+        <div class="appTileIcon" style="background:linear-gradient(135deg, #7657ff, #20d7ff)">🏠</div>
+        <div class="appTileName">Main Hub</div>
+        <div class="appTileDesc">ပင်မစာမျက်နှာ Dashboard သို့</div>
+      </a>
+    </div>
+  </div>
+</div>
 
 <div class="toast" id="toast"></div>
 
 <main class="container">
 
-  <!-- HF Space Endpoint Setup -->
+  <!-- HF Space Endpoint Dropdown Box -->
   <div class="card">
-    <div class="cardTitle">⚙️ Hugging Face Space Endpoint</div>
-    <label style="font-size:10px;color:var(--muted);display:block;margin-bottom:4px">GRADIO SPACE ID (အခမဲ့ Public RVC Space)</label>
-    <input type="text" class="inputField" id="spaceIdInput" value="QuickW/Free-RVC-Voice-Conversion" placeholder="username/space-name">
-    <small style="font-size:9.5px;color:var(--muted);display:block">* Hugging Face ပေါ်ရှိ မည်သည့် Public RVC/Voice Space ID ကိုမဆို လွတ်လပ်စွာ ပြောင်းလဲချိတ်ဆက်နိုင်ပါသည်။</small>
+    <div class="cardTitle">⚙️ Hugging Face Space Endpoint (AI Model ရွေးချယ်မှု)</div>
+    <label style="font-size:10px;color:var(--muted);display:block;margin-bottom:4px">SELECT GRADIO VOICE SPACE (အလုပ်လုပ်နိုင်သော Space များ)</label>
+    
+    <select class="selectField" id="spaceSelect" onchange="handleSpaceSelectChange(this.value)">
+      <option value="QuickW/Free-RVC-Voice-Conversion" selected>⚡ QuickW/Free-RVC-Voice-Conversion (Fastest RVC)</option>
+      <option value="yeyuan/Voice-Conversion-WebUI">🎙️ yeyuan/Voice-Conversion-WebUI (High Quality)</option>
+      <option value="mrfakename/E2-F5-TTS">🤖 mrfakename/E2-F5-TTS (Zero-Shot Clone)</option>
+      <option value="custom">✏️ Enter Custom Space ID (စိတ်ကြိုက် ထည့်သွင်းရန်)</option>
+    </select>
+
+    <div id="customSpaceBox" style="display:none;margin-top:4px">
+      <input type="text" class="inputField" id="spaceIdInput" value="QuickW/Free-RVC-Voice-Conversion" placeholder="username/space-name">
+    </div>
+    
+    <small style="font-size:9.5px;color:var(--muted);display:block">* အဆင်မပြေပါက Dropdown မှ အခြား Space တစ်ခုသို့ ပြောင်းလဲစမ်းသပ်နိုင်ပါသည်။</small>
   </div>
 
   <!-- Step 1: Target Voice -->
@@ -153,7 +257,7 @@ button {
   <div class="card" id="resultCard" style="display:none;margin-top:14px;border-color:var(--green)">
     <div class="cardTitle" style="color:var(--green)">🎉 အသံပြောင်းလဲပြီးစီးမှု (Converted Voice)</div>
     <audio id="outputPlayer" controls style="width:100%;margin-bottom:10px"></audio>
-    <button onclick="downloadConvertedAudio()" style="background:#121826;color:var(--green);border-color:var(--green)">
+    <button onclick="downloadConvertedAudio()" style="background:#121826;color:var(--green);border-color:var(--green);width:100%">
       💾 Download Audio (.wav)
     </button>
   </div>
@@ -165,10 +269,27 @@ let refBlob = null;
 let srcBlob = null;
 let outputBlobUrl = null;
 
+function toggleAppMenu(e) {
+  if (e && e.target !== document.getElementById("appMenuBackdrop") && e.target !== document.getElementById("appMenuBackdrop").querySelector("button")) return;
+  document.getElementById("appMenuBackdrop").classList.toggle("show");
+}
+
 function toast(msg) {
   const t = document.getElementById("toast");
   t.textContent = msg; t.style.display = "block";
   setTimeout(() => t.style.display = "none", 2500);
+}
+
+function handleSpaceSelectChange(val) {
+  const customBox = document.getElementById("customSpaceBox");
+  const input = document.getElementById("spaceIdInput");
+  if (val === "custom") {
+    customBox.style.display = "block";
+    input.focus();
+  } else {
+    customBox.style.display = "none";
+    input.value = val;
+  }
 }
 
 function handleAudioSelect(e, type) {
@@ -195,7 +316,11 @@ async function startVoiceConversion() {
     return;
   }
 
-  const spaceId = document.getElementById("spaceIdInput").value.trim();
+  const selectVal = document.getElementById("spaceSelect").value;
+  const spaceId = selectVal === "custom" 
+    ? document.getElementById("spaceIdInput").value.trim() 
+    : selectVal;
+
   const btn = document.getElementById("convertBtn");
   const status = document.getElementById("statusBox");
   const resultCard = document.getElementById("resultCard");
@@ -203,23 +328,20 @@ async function startVoiceConversion() {
   btn.disabled = true;
   status.style.display = "block";
   resultCard.style.display = "none";
-  status.textContent = "⏳ Hugging Face Gradio Engine ချိတ်ဆက်နေပါသည်...";
+  status.textContent = `⏳ Hugging Face (${spaceId}) ချိတ်ဆက်နေပါသည်...`;
 
   try {
     if (!window.GradioClient) {
-      throw new Error("Gradio Client module load မဖြစ်သေးပါ။ အင်တာနက် ချိတ်ဆက်မှု စစ်ဆေးပါ။");
+      throw new Error("Gradio Client module load မဖြစ်သေးပါ။ အင်တာနက် လိုင်း စစ်ဆေးပါ။");
     }
 
-    // Connect to Gradio Space
     const app = await window.GradioClient.connect(spaceId);
-    status.textContent = "🎙️ AI Voice Conversion လုပ်ဆောင်နေပါသည် (စက္ကန့် ၃၀ ခန့် ကြာနိုင်ပါသည်)...";
+    status.textContent = "🎙️ AI Voice Conversion လုပ်ဆောင်နေပါသည် (ခဏစောင့်ဆိုင်းပေးပါ)...";
 
-    // Call predict endpoint
-    // မှတ်ချက် - ရွေးချယ်ထားသော Space ၏ Gradio API function name (/predict သို့မဟုတ် /infer) ပေါ် မူတည်ပါသည်
     const result = await app.predict("/predict", [
-      srcBlob, // ပြောင်းမည့်အသံ
-      refBlob, // ကိုယ်ပိုင်အသံနမူနာ
-      0        // Pitch shift (ပုံမှန် 0)
+      srcBlob,
+      refBlob,
+      0
     ]);
 
     if (result && result.data) {
