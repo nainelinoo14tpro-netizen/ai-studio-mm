@@ -152,7 +152,7 @@ button {
     <div class="logo">🎙️</div>
     <div>
       VoxCPM2 Myanmar Voice Studio
-      <small style="display:block;font-size:9px;color:var(--muted)">Hugging Face ZeroGPU AI Clone</small>
+      <small style="display:block;font-size:9px;color:var(--muted)">Voice AI Clone</small>
     </div>
   </div>
   <div class="headerBtns">
@@ -302,7 +302,9 @@ async function generateClonedVoice() {
       throw new Error("Gradio Client module load မဖြစ်သေးပါ။ အင်တာနက် စစ်ဆေးပါ။");
     }
 
-    const app = await window.GradioClient.connect(SPACE_ID);
+    const app = await window.GradioClient.connect(SPACE_ID, {
+  hf_token: "hf_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" // မိမိ၏ HF Read Token ထည့်ပါ
+});
     status.textContent = "🎙️ AI အသံ ထုတ်ယူနေပါသည် (ခဏ စောင့်ဆိုင်းပေးပါ)...";
 
     const result = await app.predict("/clone", {
