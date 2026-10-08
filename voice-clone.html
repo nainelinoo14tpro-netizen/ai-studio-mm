@@ -46,7 +46,6 @@ body {
   cursor: pointer; display: flex; align-items: center; justify-content: center;
 }
 
-/* AI Studio Apps Hub Modal */
 .appMenuBackdrop {
   position: fixed; inset: 0; background: rgba(0, 0, 0, 0.75);
   backdrop-filter: blur(6px); z-index: 500; display: none;
@@ -160,7 +159,6 @@ button {
   </div>
 </header>
 
-<!-- DASHBOARD TILE GRID MODAL -->
 <div class="appMenuBackdrop" id="appMenuBackdrop" onclick="toggleAppMenu(event)">
   <div class="appMenuSheet" onclick="event.stopPropagation()">
     <div class="appMenuHead">
@@ -203,26 +201,25 @@ button {
 
 <main class="container">
 
-  <!-- HF Space Endpoint Dropdown Box -->
   <div class="card">
     <div class="cardTitle">⚙️ Hugging Face Space Endpoint (AI Model ရွေးချယ်မှု)</div>
-    <label style="font-size:10px;color:var(--muted);display:block;margin-bottom:4px">SELECT GRADIO VOICE SPACE (အလုပ်လုပ်နိုင်သော Space များ)</label>
+    <label style="font-size:10px;color:var(--muted);display:block;margin-bottom:4px">SELECT ACTIVE GRADIO SPACE</label>
     
     <select class="selectField" id="spaceSelect" onchange="handleSpaceSelectChange(this.value)">
-      <option value="QuickW/Free-RVC-Voice-Conversion" selected>⚡ QuickW/Free-RVC-Voice-Conversion (Fastest RVC)</option>
-      <option value="yeyuan/Voice-Conversion-WebUI">🎙️ yeyuan/Voice-Conversion-WebUI (High Quality)</option>
-      <option value="mrfakename/E2-F5-TTS">🤖 mrfakename/E2-F5-TTS (Zero-Shot Clone)</option>
-      <option value="custom">✏️ Enter Custom Space ID (စိတ်ကြိုက် ထည့်သွင်းရန်)</option>
+      <option value="r3gm/RVC_HF" selected>⚡ r3gm/RVC_HF (Public Online RVC)</option>
+      <option value="SayanoAI/RVC-Studio">🎙️ SayanoAI/RVC-Studio (Public)</option>
+      <option value="Politrees/RVC_HF">🔥 Politrees/RVC_HF (Stable)</option>
+      <option value="custom">✏️ Enter Custom Space ID</option>
     </select>
 
     <div id="customSpaceBox" style="display:none;margin-top:4px">
-      <input type="text" class="inputField" id="spaceIdInput" value="QuickW/Free-RVC-Voice-Conversion" placeholder="username/space-name">
+      <input type="text" class="inputField" id="spaceIdInput" value="r3gm/RVC_HF" placeholder="username/space-name">
     </div>
-    
-    <small style="font-size:9.5px;color:var(--muted);display:block">* အဆင်မပြေပါက Dropdown မှ အခြား Space တစ်ခုသို့ ပြောင်းလဲစမ်းသပ်နိုင်ပါသည်။</small>
+
+    <label style="font-size:10px;color:var(--muted);display:block;margin-top:6px;margin-bottom:4px">HF ACCESS TOKEN (Option - 401 Error ရှောင်ရန် Free Token)</label>
+    <input type="password" class="inputField" id="hfTokenInput" placeholder="hf_xxxxxxxxxxxxxxxxxxxx (လွတ်ထားခဲ့နိုင်သည်)">
   </div>
 
-  <!-- Step 1: Target Voice -->
   <div class="card">
     <div class="cardTitle">👤 အဆင့် ၁ - မိမိကိုယ်ပိုင်အသံနမူနာ (Reference Voice)</div>
     <div class="uploadBox" onclick="document.getElementById('refAudioInput').click()">
@@ -234,7 +231,6 @@ button {
     <audio id="refPlayer" controls class="audioPlayer"></audio>
   </div>
 
-  <!-- Step 2: Source Speech -->
   <div class="card">
     <div class="cardTitle">📢 အဆင့် ၂ - မူရင်း စကားပြောအသံဖိုင် (Source Audio)</div>
     <div class="uploadBox" onclick="document.getElementById('srcAudioInput').click()">
@@ -246,14 +242,12 @@ button {
     <audio id="srcPlayer" controls class="audioPlayer"></audio>
   </div>
 
-  <!-- Action -->
   <button class="convertBtn" id="convertBtn" onclick="startVoiceConversion()">
     ✨ Convert to My Voice (Clone ပြုလုပ်မည်)
   </button>
 
   <div class="statusBox" id="statusBox"></div>
 
-  <!-- Output Result -->
   <div class="card" id="resultCard" style="display:none;margin-top:14px;border-color:var(--green)">
     <div class="cardTitle" style="color:var(--green)">🎉 အသံပြောင်းလဲပြီးစီးမှု (Converted Voice)</div>
     <audio id="outputPlayer" controls style="width:100%;margin-bottom:10px"></audio>
@@ -321,6 +315,8 @@ async function startVoiceConversion() {
     ? document.getElementById("spaceIdInput").value.trim() 
     : selectVal;
 
+  const hfToken = document.getElementById("hfTokenInput").value.trim();
+
   const btn = document.getElementById("convertBtn");
   const status = document.getElementById("statusBox");
   const resultCard = document.getElementById("resultCard");
@@ -335,18 +331,32 @@ async function startVoiceConversion() {
       throw new Error("Gradio Client module load မဖြစ်သေးပါ။ အင်တာနက် လိုင်း စစ်ဆေးပါ။");
     }
 
-    const app = await window.GradioClient.connect(spaceId);
-    status.textContent = "🎙️ AI Voice Conversion လုပ်ဆောင်နေပါသည် (ခဏစောင့်ဆိုင်းပေးပါ)...";
+    const connectOptions = {};
+    if (hfToken) {
+      connectOptions.hf_token = hfToken;
+    }
 
-    const result = await app.predict("/predict", [
-      srcBlob,
-      refBlob,
-      0
-    ]);
+    const app = await window.GradioClient.connect(spaceId, connectOptions);
+    status.textContent = "🎙️ AI Voice Conversion လုပ်ဆောင်နေပါသည် (Queue စောင့်ဆိုင်းနေပါသည်)...";
+
+    let result;
+    try {
+      result = await app.predict(0, [
+        srcBlob,
+        refBlob,
+        0
+      ]);
+    } catch(errPredict) {
+      result = await app.predict("/predict", [
+        srcBlob,
+        refBlob,
+        0
+      ]);
+    }
 
     if (result && result.data) {
       const outputData = result.data[0];
-      outputBlobUrl = typeof outputData === 'string' ? outputData : outputData.url;
+      outputBlobUrl = typeof outputData === 'string' ? outputData : (outputData.url || outputData.path);
 
       const player = document.getElementById("outputPlayer");
       player.src = outputBlobUrl;
