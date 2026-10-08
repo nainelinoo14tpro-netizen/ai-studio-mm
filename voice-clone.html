@@ -1,247 +1,258 @@
 <!DOCTYPE html>
-<html lang="my">
+<html lang="my,en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Voice Clone & Myanmar TTS - AI Studio MM</title>
-    <!-- Gradio Client JS Library -->
-    <script type="module">
-        import { Client } from "https://cdn.jsdelivr.net/npm/@gradio/client/dist/index.min.js";
-        window.GradioClient = Client;
-    </script>
-    <style>
-        :root {
-            --bg: #090d16;
-            --panel: #131a29;
-            --border: #232d42;
-            --cyan: #38bdf8;
-            --text: #f1f5f9;
-            --muted: #94a3b8;
-        }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-        body { background: var(--bg); color: var(--text); min-height: 100vh; padding: 20px; display: flex; justify-content: center; align-items: flex-start; }
-        
-        .container { background: var(--panel); border: 1px solid var(--border); border-radius: 20px; width: 100%; max-width: 520px; padding: 22px; box-shadow: 0 10px 30px rgba(0,0,0,0.6); position: relative; margin-top: 15px; }
-        
-        /* Top Navigation Bar */
-        .top-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
-        .back-link { color: var(--cyan); text-decoration: none; font-size: 13.5px; display: flex; align-items: center; gap: 6px; }
-        .menu-trigger-btn { background: rgba(255, 255, 255, 0.06); border: 1px solid var(--border); color: #fff; border-radius: 10px; padding: 7px 12px; font-size: 12px; display: flex; align-items: center; gap: 6px; cursor: pointer; transition: 0.2s; }
-        .menu-trigger-btn:hover { background: rgba(255, 255, 255, 0.12); }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#07090e">
+<title>AI Voice Clone Studio Pro</title>
 
-        h1 { font-size: 20px; margin-bottom: 16px; color: var(--cyan); display: flex; align-items: center; gap: 8px; }
-        
-        .mode-tabs { display: flex; gap: 10px; margin-bottom: 18px; border-bottom: 1px solid var(--border); padding-bottom: 12px; }
-        .tab-btn { background: transparent; border: none; color: var(--muted); font-size: 13.5px; font-weight: bold; cursor: pointer; padding: 8px 14px; border-radius: 8px; transition: 0.2s; }
-        .tab-btn.active { color: #fff; background: #0284c7; }
+<style>
+:root {
+  --bg: #07090e;
+  --panel: #0e121b;
+  --panel2: #141a27;
+  --border: #232c3f;
+  --border-light: #34415c;
+  --text: #f5f7fb;
+  --muted: #8e9bb2;
+  --accent: #20d7ff;
+  --green: #2bd576;
+  --gold: #ffbe3b;
+  --red: #ff5572;
+}
 
-        label { display: block; font-size: 13px; color: var(--muted); margin: 12px 0 6px; }
-        input[type="file"], select, textarea { width: 100%; background: #090d16; border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; color: #fff; font-size: 14px; outline: none; }
-        input:focus, select:focus, textarea:focus { border-color: var(--cyan); }
-        textarea { height: 110px; resize: vertical; }
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+body {
+  margin: 0; padding: 0; background: var(--bg); color: var(--text);
+  font-family: system-ui, -apple-system, "Pyidaungsu", "Noto Sans Myanmar", sans-serif;
+  line-height: 1.5; min-height: 100vh;
+}
 
-        .btn-gen { width: 100%; margin-top: 20px; padding: 13px; border-radius: 10px; border: none; background: #0284c7; color: #fff; font-size: 15px; font-weight: bold; cursor: pointer; transition: 0.2s; }
-        .btn-gen:hover { background: #0369a1; }
-        .btn-gen:disabled { background: #475569; cursor: not-allowed; }
+.appHeader {
+  height: 50px; padding: 0 14px; display: flex; align-items: center; justify-content: space-between;
+  background: rgba(7, 9, 14, 0.96); border-bottom: 1px solid var(--border);
+}
+.brand { display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 14px; }
+.logo {
+  width: 30px; height: 30px; border-radius: 8px; display: grid; place-items: center;
+  background: linear-gradient(135deg, var(--accent), #7657ff); font-size: 15px; color: #000;
+}
 
-        .status-box { margin-top: 15px; font-size: 13px; color: var(--cyan); text-align: center; }
-        audio { width: 100%; margin-top: 16px; border-radius: 8px; }
+.container { max-width: 650px; margin: auto; padding: 14px; }
 
-        /* ================= POPUP MODAL MENU ================= */
-        .modal-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(8px); display: none; justify-content: center; align-items: center; z-index: 1000; padding: 16px; }
-        .modal-box { background: #111827; border: 1px solid #283548; border-radius: 20px; width: 100%; max-width: 440px; padding: 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.8); }
-        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 12px; }
-        .modal-title { font-size: 15px; font-weight: 700; color: #38bdf8; display: flex; align-items: center; gap: 8px; }
-        .close-btn { background: rgba(255, 255, 255, 0.08); border: none; color: #fff; width: 28px; height: 28px; border-radius: 50%; font-size: 16px; cursor: pointer; display: flex; justify-content: center; align-items: center; }
-        
-        .apps-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        .app-item { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 14px; padding: 14px; text-decoration: none; color: inherit; text-align: center; display: flex; flex-direction: column; align-items: center; transition: 0.2s; }
-        .app-item:hover { background: rgba(255, 255, 255, 0.08); transform: translateY(-3px); }
-        .app-icon { width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; font-size: 22px; margin-bottom: 10px; }
-        .icon-recap { background: linear-gradient(135deg, #ff5572, #ff7e40); }
-        .icon-story { background: linear-gradient(135deg, #ffbe3b, #ff5572); }
-        .icon-video { background: linear-gradient(135deg, #2bd576, #20d7ff); }
-        .icon-home { background: linear-gradient(135deg, #6366f1, #a855f7); }
-        
-        .app-name { font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 3px; }
-        .app-desc { font-size: 10.5px; color: var(--muted); }
-    </style>
+.card {
+  background: var(--panel); border: 1px solid var(--border);
+  border-radius: 14px; padding: 14px; margin-bottom: 14px;
+}
+.cardTitle { font-size: 12.5px; font-weight: 800; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+
+.uploadBox {
+  border: 1.5px dashed var(--border-light); border-radius: 10px;
+  padding: 16px; text-align: center; background: #080b12; cursor: pointer;
+  margin-bottom: 10px; transition: border-color 0.2s;
+}
+.uploadBox:hover { border-color: var(--accent); }
+.uploadBox p { margin: 4px 0 0; font-size: 11px; color: var(--muted); }
+
+.audioPlayer { width: 100%; margin-top: 6px; display: none; }
+
+.inputField {
+  width: 100%; background: #080b12; border: 1px solid var(--border);
+  color: #fff; border-radius: 8px; padding: 8px 10px; font-size: 11.5px;
+  font-family: ui-monospace, monospace; outline: none; margin-bottom: 8px;
+}
+
+button {
+  width: 100%; cursor: pointer; color: #fff; background: var(--panel2);
+  border: 1px solid var(--border); border-radius: 10px; padding: 12px;
+  font-weight: 700; font-size: 13px; display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.convertBtn {
+  background: linear-gradient(135deg, var(--accent), #7657ff);
+  border: 0; color: #000; font-weight: 800;
+}
+.convertBtn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.statusBox {
+  background: #080c14; border: 1px solid var(--border); border-radius: 8px;
+  padding: 10px; font-size: 11.5px; color: var(--muted); text-align: center;
+  display: none; margin-top: 10px;
+}
+
+.toast {
+  position: fixed; left: 50%; top: 60px; transform: translateX(-50%);
+  background: var(--panel2); border: 1px solid var(--border-light);
+  padding: 8px 16px; border-radius: 20px; font-size: 11.5px; display: none; z-index: 100;
+}
+</style>
+
+<!-- Gradio Client JS Module -->
+<script type="module">
+  import { Client } from "https://cdn.jsdelivr.net/npm/@gradio/client/dist/index.min.js";
+  window.GradioClient = Client;
+</script>
 </head>
+
 <body>
 
-<div class="container">
-    <div class="top-nav">
-        <a href="index.html" class="back-link">← ပင်မစာမျက်နှာသို့ ပြန်သွားမည်</a>
-        <button class="menu-trigger-btn" onclick="openMenu()">✦ AI Apps Menu</button>
+<header class="appHeader">
+  <div class="brand">
+    <div class="logo">🎙️</div>
+    <div>
+      AI Voice Clone Studio
+      <small style="display:block;font-size:9px;color:var(--muted)">Free Gradio API Voice Conversion</small>
     </div>
+  </div>
+  <a href="story-to-video.html" style="font-size:11px;color:var(--accent);text-decoration:none">➔ Story to Video</a>
+</header>
 
-    <h1>🎙️ Voice Clone & Myanmar TTS</h1>
+<div class="toast" id="toast"></div>
 
-    <div class="mode-tabs">
-        <button type="button" class="tab-btn active" id="tabClone" onclick="switchMode('clone')">🎤 Voice Clone</button>
-        <button type="button" class="tab-btn" id="tabPrompt" onclick="switchMode('prompt')">✨ AI Voice Styles</button>
+<main class="container">
+
+  <!-- HF Space Endpoint Setup -->
+  <div class="card">
+    <div class="cardTitle">⚙️ Hugging Face Space Endpoint</div>
+    <label style="font-size:10px;color:var(--muted);display:block;margin-bottom:4px">GRADIO SPACE ID (အခမဲ့ Public RVC Space)</label>
+    <input type="text" class="inputField" id="spaceIdInput" value="QuickW/Free-RVC-Voice-Conversion" placeholder="username/space-name">
+    <small style="font-size:9.5px;color:var(--muted);display:block">* Hugging Face ပေါ်ရှိ မည်သည့် Public RVC/Voice Space ID ကိုမဆို လွတ်လပ်စွာ ပြောင်းလဲချိတ်ဆက်နိုင်ပါသည်။</small>
+  </div>
+
+  <!-- Step 1: Target Voice -->
+  <div class="card">
+    <div class="cardTitle">👤 အဆင့် ၁ - မိမိကိုယ်ပိုင်အသံနမူနာ (Reference Voice)</div>
+    <div class="uploadBox" onclick="document.getElementById('refAudioInput').click()">
+      <div style="font-size:24px">🎙️</div>
+      <b style="font-size:12px;color:var(--accent)" id="refText">မိမိအသံဖိုင် တင်ပါ (၁၅-၃၀ စက္ကန့်)</b>
+      <p>Clear, noise-free microphone recording (MP3 / WAV)</p>
     </div>
+    <input type="file" id="refAudioInput" accept="audio/*" hidden onchange="handleAudioSelect(event, 'ref')">
+    <audio id="refPlayer" controls class="audioPlayer"></audio>
+  </div>
 
-    <label>ပြောစေလိုသော မြန်မာ/အင်္ဂလိပ် စာသား (Text):</label>
-    <textarea id="ttsText" placeholder="ဒီနေရာမှာ အသံထွက်စေလိုသော စာသားကို ရိုက်ထည့်ပါ..."></textarea>
-
-    <!-- Voice Clone Section -->
-    <div id="cloneSection">
-        <label>Clone လုပ်မည့် အသံဖိုင် (Audio Reference):</label>
-        <input type="file" id="audioFile" accept="audio/*">
-
-        <label>အသံဖိုင်ထဲမှ မူရင်းပြောစကား (Reference Text):</label>
-        <textarea id="refText" style="height: 65px;" placeholder="တင်ထားသော အသံဖိုင်ထဲတွင် ပြောထားသည့် စာသားကို အတိအကျ ထည့်ပါ..."></textarea>
+  <!-- Step 2: Source Speech -->
+  <div class="card">
+    <div class="cardTitle">📢 အဆင့် ၂ - မူရင်း စကားပြောအသံဖိုင် (Source Audio)</div>
+    <div class="uploadBox" onclick="document.getElementById('srcAudioInput').click()">
+      <div style="font-size:24px">🔊</div>
+      <b style="font-size:12px;color:var(--green)" id="srcText">ပြောင်းလဲလိုသော စကားပြောဖိုင် တင်ပါ</b>
+      <p>Story Maker / Video Studio မှ ထွက်လာသော မြန်မာ TTS အသံဖိုင်</p>
     </div>
+    <input type="file" id="srcAudioInput" accept="audio/*" hidden onchange="handleAudioSelect(event, 'src')">
+    <audio id="srcPlayer" controls class="audioPlayer"></audio>
+  </div>
 
-    <!-- AI Styles Section -->
-    <div id="promptSection" style="display: none;">
-        <label>အသံစတိုင် ရွေးချယ်ပါ (Voice Style):</label>
-        <select id="voiceStyle">
-            <option value="A young male voice, calm and clear, medium pace, deep tone">🧑 လူငယ်အမျိုးသားသံ (တည်ငြိမ်ပြတ်သား)</option>
-            <option value="A young female voice, crystal clear, professional and articulate, confident tone">👩 လူငယ်အမျိုးသမီးသံ (ကြည်လင်ပြတ်သား)</option>
-            <option value="A news anchor voice, formal and authoritative, steady pace, perfect for broadcast">📰 သတင်းကြေညာသူအသံ (လေးနက်တည်ငြိမ်)</option>
-            <option value="A storyteller voice, dramatic and expressive, slow pace, rich and warm tone">📖 ပုံပြင်/ဇာတ်လမ်းပြောသူအသံ (ရသစုံ)</option>
-            <option value="A cheerful host voice, energetic and friendly, fast pace, bright and engaging">😄 ရွှင်လန်းတက်ကြွသော တင်ဆက်သူအသံ</option>
-        </select>
-    </div>
+  <!-- Action -->
+  <button class="convertBtn" id="convertBtn" onclick="startVoiceConversion()">
+    ✨ Convert to My Voice (Clone ပြုလုပ်မည်)
+  </button>
 
-    <button id="genBtn" class="btn-gen" onclick="generateVoice()">Generate Voice</button>
+  <div class="statusBox" id="statusBox"></div>
 
-    <div id="status" class="status-box"></div>
-    <audio id="audioOut" controls style="display: none;"></audio>
-</div>
+  <!-- Output Result -->
+  <div class="card" id="resultCard" style="display:none;margin-top:14px;border-color:var(--green)">
+    <div class="cardTitle" style="color:var(--green)">🎉 အသံပြောင်းလဲပြီးစီးမှု (Converted Voice)</div>
+    <audio id="outputPlayer" controls style="width:100%;margin-bottom:10px"></audio>
+    <button onclick="downloadConvertedAudio()" style="background:#121826;color:var(--green);border-color:var(--green)">
+      💾 Download Audio (.wav)
+    </button>
+  </div>
 
-<!-- ================= AI STUDIO APPS MODAL ================= -->
-<div class="modal-overlay" id="menuModal" onclick="closeMenuOnOutside(event)">
-    <div class="modal-box">
-        <div class="modal-header">
-            <div class="modal-title">✦ AI Studio Apps</div>
-            <button class="close-btn" onclick="closeMenu()">✕</button>
-        </div>
-        <div class="apps-grid">
-            <a href="movie-recaps.html" class="app-item">
-                <div class="app-icon icon-recap">🎬</div>
-                <div class="app-name">Movie Recaps</div>
-                <div class="app-desc">ဇာတ်ကြောင်းပြော & မြန်မာ Voice</div>
-            </a>
-            <a href="story-maker.html" class="app-item">
-                <div class="app-icon icon-story">📝</div>
-                <div class="app-name">Story Maker</div>
-                <div class="app-desc">ခေါင်းစဉ်ဖြင့် AI ဇာတ်လမ်းရေး</div>
-            </a>
-            <a href="story-to-video.html" class="app-item">
-                <div class="app-icon icon-video">🎥</div>
-                <div class="app-name">Story to Video</div>
-                <div class="app-desc">Photo Slideshow & Prompts</div>
-            </a>
-                        <a href="voice-clone.html" class="app-item" style="border: 1px solid rgba(168, 85, 247, 0.4); background: rgba(168, 85, 247, 0.08);">
-                <div class="app-icon" style="background: linear-gradient(135deg, #a855f7, #6366f1);">🎙️</div>
-                <div class="app-name">Voice Clone</div>
-                <div class="app-desc">မြန်မာ TTS & Voice Clone</div>
-            </a>
-
-            <a href="index.html" class="app-item" style="grid-column: span 2;">
-
-                <div class="app-icon icon-home">🏠</div>
-                <div class="app-name">Main Hub</div>
-                <div class="app-desc">ပင်မစာမျက်နှာ Dashboard သို့</div>
-            </a>
-        </div>
-    </div>
-</div>
+</main>
 
 <script>
-let currentMode = 'clone';
+let refBlob = null;
+let srcBlob = null;
+let outputBlobUrl = null;
 
-// Page စတင်ဖွင့်ချိန်တွင် တခြား Page များ (Story Maker / Movie Recaps) မှ ပို့လိုက်သော Text ပါလာပါက Auto-fill ဖြည့်ပေးခြင်း
-window.addEventListener("DOMContentLoaded", () => {
-    const passedText = localStorage.getItem("transfer_script_text");
-    if (passedText) {
-        document.getElementById('ttsText').value = passedText;
-        localStorage.removeItem("transfer_script_text"); // တခါသုံးပြီး ရှင်းထုတ်ခြင်း
+function toast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg; t.style.display = "block";
+  setTimeout(() => t.style.display = "none", 2500);
+}
+
+function handleAudioSelect(e, type) {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const url = URL.createObjectURL(file);
+  if (type === 'ref') {
+    refBlob = file;
+    document.getElementById("refText").textContent = `✓ ${file.name}`;
+    const p = document.getElementById("refPlayer");
+    p.src = url; p.style.display = "block";
+  } else {
+    srcBlob = file;
+    document.getElementById("srcText").textContent = `✓ ${file.name}`;
+    const p = document.getElementById("srcPlayer");
+    p.src = url; p.style.display = "block";
+  }
+}
+
+async function startVoiceConversion() {
+  if (!refBlob || !srcBlob) {
+    toast("ဖိုင် (၂) မျိုးလုံးကို အရင်တင်ပေးပါခင်ဗျာ");
+    return;
+  }
+
+  const spaceId = document.getElementById("spaceIdInput").value.trim();
+  const btn = document.getElementById("convertBtn");
+  const status = document.getElementById("statusBox");
+  const resultCard = document.getElementById("resultCard");
+
+  btn.disabled = true;
+  status.style.display = "block";
+  resultCard.style.display = "none";
+  status.textContent = "⏳ Hugging Face Gradio Engine ချိတ်ဆက်နေပါသည်...";
+
+  try {
+    if (!window.GradioClient) {
+      throw new Error("Gradio Client module load မဖြစ်သေးပါ။ အင်တာနက် ချိတ်ဆက်မှု စစ်ဆေးပါ။");
     }
-});
 
-function openMenu() {
-    document.getElementById('menuModal').style.display = 'flex';
-}
-function closeMenu() {
-    document.getElementById('menuModal').style.display = 'none';
-}
-function closeMenuOnOutside(e) {
-    if (e.target.id === 'menuModal') closeMenu();
-}
+    // Connect to Gradio Space
+    const app = await window.GradioClient.connect(spaceId);
+    status.textContent = "🎙️ AI Voice Conversion လုပ်ဆောင်နေပါသည် (စက္ကန့် ၃၀ ခန့် ကြာနိုင်ပါသည်)...";
 
-function switchMode(mode) {
-    currentMode = mode;
-    document.getElementById('cloneSection').style.display = mode === 'clone' ? 'block' : 'none';
-    document.getElementById('promptSection').style.display = mode === 'prompt' ? 'block' : 'none';
-    document.getElementById('tabClone').className = mode === 'clone' ? 'tab-btn active' : 'tab-btn';
-    document.getElementById('tabPrompt').className = mode === 'prompt' ? 'tab-btn active' : 'tab-btn';
-}
+    // Call predict endpoint
+    // မှတ်ချက် - ရွေးချယ်ထားသော Space ၏ Gradio API function name (/predict သို့မဟုတ် /infer) ပေါ် မူတည်ပါသည်
+    const result = await app.predict("/predict", [
+      srcBlob, // ပြောင်းမည့်အသံ
+      refBlob, // ကိုယ်ပိုင်အသံနမူနာ
+      0        // Pitch shift (ပုံမှန် 0)
+    ]);
 
-async function generateVoice() {
-    const text = document.getElementById('ttsText').value.trim();
-    const status = document.getElementById('status');
-    const audioOut = document.getElementById('audioOut');
-    const btn = document.getElementById('genBtn');
+    if (result && result.data) {
+      const outputData = result.data[0];
+      outputBlobUrl = typeof outputData === 'string' ? outputData : outputData.url;
 
-    if (!text) {
-        alert("ကျေးဇူးပြု၍ ပြောစေလိုသော စာသား ရိုက်ထည့်ပါ");
-        return;
-    }
-
-    let payload = {};
-    let endpoint = "";
-
-    if (currentMode === 'clone') {
-        const file = document.getElementById('audioFile').files[0];
-        const refText = document.getElementById('refText').value.trim();
-
-        if (!file) {
-            alert("Clone ပြုလုပ်ရန် နမူနာ အသံဖိုင် တင်ပေးပါ");
-            return;
-        }
-        if (!refText) {
-            alert("အသံဖိုင်ထဲတွင် ပါဝင်သော မူရင်းစာသား (Reference Text) ကို ထည့်ပေးပါ");
-            return;
-        }
-
-        endpoint = "/clone";
-        payload = {
-            text_input: text,
-            uploaded_audio: file,
-            reference_text: refText
-        };
+      const player = document.getElementById("outputPlayer");
+      player.src = outputBlobUrl;
+      resultCard.style.display = "block";
+      status.style.display = "none";
+      toast("🎉 အသံပြောင်းလဲခြင်း ပြီးမြောက်ပါပြီ!");
     } else {
-        const style = document.getElementById('voiceStyle').value;
-        endpoint = "/prompt_voice";
-        payload = {
-            text_input: text,
-            style_prompt: style
-        };
+      throw new Error("အသံဖိုင် ထွက်မလာပါ။ Space ပြောင်းလဲ စမ်းသပ်ကြည့်ပါ။");
     }
 
-    btn.disabled = true;
-    audioOut.style.display = "none";
-    status.innerText = "⏳ ZeroGPU သို့ ချိတ်ဆက်၍ အသံဖန်တီးနေပါသည်... စောင့်ပေးပါ...";
+  } catch (err) {
+    console.error(err);
+    status.style.display = "block";
+    status.textContent = `❌ Error: ${err.message}`;
+    toast("Conversion မအောင်မြင်ပါ");
+  } finally {
+    btn.disabled = false;
+  }
+}
 
-    try {
-        const client = await window.GradioClient.connect("nlopro/clone-burmese-tts");
-        const result = await client.predict(endpoint, payload);
-
-        const audioUrl = result.data[0].url;
-        audioOut.src = audioUrl;
-        audioOut.style.display = "block";
-        status.innerText = "✅ အသံထုတ်လုပ်မှု အောင်မြင်ပါသည်!";
-    } catch (e) {
-        console.error(e);
-        status.innerText = "❌ အမှားဖြစ်သွားပါသည်: " + (e.message || "ပြန်လည်ကြိုးစားကြည့်ပါ");
-    } finally {
-        btn.disabled = false;
-    }
+function downloadConvertedAudio() {
+  if (!outputBlobUrl) return;
+  const a = document.createElement("a");
+  a.href = outputBlobUrl;
+  a.download = `voice-clone-${Date.now()}.wav`;
+  a.click();
 }
 </script>
+
 </body>
 </html>
