@@ -11,7 +11,6 @@
   --bg: #07090e;
   --panel: #0e121b;
   --panel2: #141a27;
-  --panel3: #1a2234;
   --border: #232c3f;
   --border-light: #34415c;
   --text: #f5f7fb;
@@ -46,7 +45,6 @@ body {
   cursor: pointer; display: flex; align-items: center; justify-content: center;
 }
 
-/* AI Studio Apps Hub Modal */
 .appMenuBackdrop {
   position: fixed; inset: 0; background: rgba(0, 0, 0, 0.75);
   backdrop-filter: blur(6px); z-index: 500; display: none;
@@ -152,7 +150,7 @@ button {
     <div class="logo">🎙️</div>
     <div>
       VoxCPM2 Myanmar Voice Studio
-      <small style="display:block;font-size:9px;color:var(--muted)">Voice AI Clone</small>
+      <small style="display:block;font-size:9px;color:var(--muted)">Hugging Face ZeroGPU AI Clone</small>
     </div>
   </div>
   <div class="headerBtns">
@@ -203,6 +201,14 @@ button {
 
 <main class="container">
 
+  <!-- Token Authorization Box -->
+  <div class="card" style="border-color:var(--accent)">
+    <div class="cardTitle" style="color:var(--accent)">🔑 Hugging Face ZeroGPU Access Token</div>
+    <label style="font-size:10px;color:var(--muted);display:block;margin-bottom:4px">ZeroGPU Quota အပြည့်အဝရရှိရန် မိမိ၏ Token (hf_...) ထည့်ပါ</label>
+    <input type="password" class="inputField" id="hfTokenInput" placeholder="hf_xxxxxxxxxxxxxxxxxxxx" onchange="saveHfToken(this.value)">
+    <small style="font-size:9.5px;color:var(--muted);display:block">* တစ်ကြိမ်သာ ထည့်ထားပေးရမည်ဖြစ်ပြီး ဖုန်းထဲတွင် Auto မှတ်ထားပေးပါမည်။</small>
+  </div>
+
   <!-- Step 1: Text Input -->
   <div class="card">
     <div class="cardTitle">📝 ပြောစေလိုသော မြန်မာစာသား (Text Input)</div>
@@ -223,7 +229,7 @@ button {
     <audio id="refPlayer" controls class="audioPlayer" style="margin-bottom:10px"></audio>
 
     <label style="font-size:10px;color:var(--muted);display:block;margin-bottom:4px">📝 REFERENCE TEXT (အထက်ပါအသံဖိုင်ထဲမှာ ပြောထားသော စကားလုံး အတိအကျ)</label>
-    <input type="text" class="inputField" id="refTextInput" placeholder="ဥပမာ - မင်္ဂလာပါ ကျွန်တော့်နာမည်ကတော့...">
+    <input type="text" class="inputField" id="refTextInput" placeholder="ဥပမာ - ဟဲလို နေကောင်းလား">
   </div>
 
   <!-- Action -->
@@ -260,6 +266,10 @@ function toast(msg) {
   setTimeout(() => t.style.display = "none", 2500);
 }
 
+function saveHfToken(val) {
+  if (val) localStorage.setItem("saved_hf_token", val.trim());
+}
+
 function handleAudioSelect(e) {
   const file = e.target.files[0];
   if (!file) return;
@@ -274,6 +284,7 @@ function handleAudioSelect(e) {
 async function generateClonedVoice() {
   const textInput = document.getElementById("textInput").value.trim();
   const refText = document.getElementById("refTextInput").value.trim();
+  const hfToken = document.getElementById("hfTokenInput").value.trim();
 
   if (!textInput) {
     toast("ပြောစေလိုသော စာသားကို ရိုက်ထည့်ပေးပါ");
@@ -295,17 +306,20 @@ async function generateClonedVoice() {
   btn.disabled = true;
   status.style.display = "block";
   resultCard.style.display = "none";
-  status.textContent = `⏳ Hugging Face (${SPACE_ID}) ချိတ်ဆက်နေပါသည်...`;
+  status.textContent = `⏳ Hugging Face Token ဖြင့် ချိတ်ဆက်နေပါသည်...`;
 
   try {
     if (!window.GradioClient) {
       throw new Error("Gradio Client module load မဖြစ်သေးပါ။ အင်တာနက် စစ်ဆေးပါ။");
     }
 
-    const app = await window.GradioClient.connect(SPACE_ID, {
-  hf_token: "hf_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" // မိမိ၏ HF Read Token ထည့်ပါ
-});
-    status.textContent = "🎙️ AI အသံ ထုတ်ယူနေပါသည် (ခဏ စောင့်ဆိုင်းပေးပါ)...";
+    const connectOptions = {};
+    if (hfToken) {
+      connectOptions.hf_token = hfToken;
+    }
+
+    const app = await window.GradioClient.connect(SPACE_ID, connectOptions);
+    status.textContent = "🎙️ ZeroGPU ပေါ်တွင် မြန်မာ AI အသံ ထုတ်ယူနေပါသည် (ခဏ စောင့်ဆိုင်းပေးပါ)...";
 
     const result = await app.predict("/clone", {
       text_input: textInput,
@@ -343,6 +357,13 @@ function downloadConvertedAudio() {
   a.download = `myanmar-voice-clone-${Date.now()}.wav`;
   a.click();
 }
+
+window.onload = function() {
+  const saved = localStorage.getItem("saved_hf_token");
+  if (saved) {
+    document.getElementById("hfTokenInput").value = saved;
+  }
+};
 </script>
 
 </body>
