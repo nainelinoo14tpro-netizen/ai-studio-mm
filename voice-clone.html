@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
 <meta name="theme-color" content="#07090e">
-<title>AI Voice Clone Studio Pro</title>
+<title>VoxCPM2 Myanmar AI Voice Studio</title>
 
 <style>
 :root {
@@ -46,6 +46,7 @@ body {
   cursor: pointer; display: flex; align-items: center; justify-content: center;
 }
 
+/* AI Studio Apps Hub Modal */
 .appMenuBackdrop {
   position: fixed; inset: 0; background: rgba(0, 0, 0, 0.75);
   backdrop-filter: blur(6px); z-index: 500; display: none;
@@ -96,17 +97,18 @@ body {
 }
 .cardTitle { font-size: 12.5px; font-weight: 800; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
 
-.selectField, .inputField {
+.textareaField, .inputField {
   width: 100%; background: #080b12; border: 1px solid var(--border);
-  color: #fff; border-radius: 8px; padding: 9px 10px; font-size: 12px;
-  outline: none; margin-bottom: 8px;
+  color: #fff; border-radius: 8px; padding: 9px 10px; font-size: 12.5px;
+  outline: none; line-height: 1.5;
 }
-.selectField:focus, .inputField:focus { border-color: var(--accent); }
+.textareaField { min-height: 80px; resize: vertical; }
+.textareaField:focus, .inputField:focus { border-color: var(--accent); }
 
 .uploadBox {
   border: 1.5px dashed var(--border-light); border-radius: 10px;
   padding: 16px; text-align: center; background: #080b12; cursor: pointer;
-  margin-bottom: 10px; transition: border-color 0.2s;
+  margin-bottom: 8px; transition: border-color 0.2s;
 }
 .uploadBox:hover { border-color: var(--accent); }
 .uploadBox p { margin: 4px 0 0; font-size: 11px; color: var(--muted); }
@@ -149,8 +151,8 @@ button {
   <div class="brand">
     <div class="logo">🎙️</div>
     <div>
-      AI Voice Clone Studio
-      <small style="display:block;font-size:9px;color:var(--muted)">Free Gradio API Voice Conversion</small>
+      VoxCPM2 Myanmar Voice Studio
+      <small style="display:block;font-size:9px;color:var(--muted)">Hugging Face ZeroGPU AI Clone</small>
     </div>
   </div>
   <div class="headerBtns">
@@ -201,55 +203,39 @@ button {
 
 <main class="container">
 
+  <!-- Step 1: Text Input -->
   <div class="card">
-    <div class="cardTitle">⚙️ Hugging Face Space Endpoint (AI Model ရွေးချယ်မှု)</div>
-    <label style="font-size:10px;color:var(--muted);display:block;margin-bottom:4px">SELECT ACTIVE GRADIO SPACE</label>
+    <div class="cardTitle">📝 ပြောစေလိုသော မြန်မာစာသား (Text Input)</div>
+    <textarea class="textareaField" id="textInput" placeholder="ဒီနေရာမှာ အသံထွက်စေလိုသော စာသားကို ရိုက်ထည့်ပါ..."></textarea>
+  </div>
+
+  <!-- Step 2: Reference Audio & Text -->
+  <div class="card">
+    <div class="cardTitle">🎙️ မိမိအသံနမူနာ (Reference Voice & Text)</div>
     
-    <select class="selectField" id="spaceSelect" onchange="handleSpaceSelectChange(this.value)">
-      <option value="r3gm/RVC_HF" selected>⚡ r3gm/RVC_HF (Public Online RVC)</option>
-      <option value="SayanoAI/RVC-Studio">🎙️ SayanoAI/RVC-Studio (Public)</option>
-      <option value="Politrees/RVC_HF">🔥 Politrees/RVC_HF (Stable)</option>
-      <option value="custom">✏️ Enter Custom Space ID</option>
-    </select>
-
-    <div id="customSpaceBox" style="display:none;margin-top:4px">
-      <input type="text" class="inputField" id="spaceIdInput" value="r3gm/RVC_HF" placeholder="username/space-name">
-    </div>
-
-    <label style="font-size:10px;color:var(--muted);display:block;margin-top:6px;margin-bottom:4px">HF ACCESS TOKEN (Option - 401 Error ရှောင်ရန် Free Token)</label>
-    <input type="password" class="inputField" id="hfTokenInput" placeholder="hf_xxxxxxxxxxxxxxxxxxxx (လွတ်ထားခဲ့နိုင်သည်)">
-  </div>
-
-  <div class="card">
-    <div class="cardTitle">👤 အဆင့် ၁ - မိမိကိုယ်ပိုင်အသံနမူနာ (Reference Voice)</div>
+    <label style="font-size:10px;color:var(--muted);display:block;margin-bottom:4px">🎵 REFERENCE အသံဖိုင် တင်ပါ (WAV / MP3)</label>
     <div class="uploadBox" onclick="document.getElementById('refAudioInput').click()">
-      <div style="font-size:24px">🎙️</div>
-      <b style="font-size:12px;color:var(--accent)" id="refText">မိမိအသံဖိုင် တင်ပါ (၁၅-၃၀ စက္ကန့်)</b>
-      <p>Clear, noise-free microphone recording (MP3 / WAV)</p>
+      <div style="font-size:22px">📁</div>
+      <b style="font-size:12px;color:var(--accent)" id="refAudioText">Click to Upload Audio</b>
+      <p>ဆူညံသံကင်းစင်သော မိမိအသံဖိုင်တို (၅-၁၅ စက္ကန့်)</p>
     </div>
-    <input type="file" id="refAudioInput" accept="audio/*" hidden onchange="handleAudioSelect(event, 'ref')">
-    <audio id="refPlayer" controls class="audioPlayer"></audio>
+    <input type="file" id="refAudioInput" accept="audio/*" hidden onchange="handleAudioSelect(event)">
+    <audio id="refPlayer" controls class="audioPlayer" style="margin-bottom:10px"></audio>
+
+    <label style="font-size:10px;color:var(--muted);display:block;margin-bottom:4px">📝 REFERENCE TEXT (အထက်ပါအသံဖိုင်ထဲမှာ ပြောထားသော စကားလုံး အတိအကျ)</label>
+    <input type="text" class="inputField" id="refTextInput" placeholder="ဥပမာ - မင်္ဂလာပါ ကျွန်တော့်နာမည်ကတော့...">
   </div>
 
-  <div class="card">
-    <div class="cardTitle">📢 အဆင့် ၂ - မူရင်း စကားပြောအသံဖိုင် (Source Audio)</div>
-    <div class="uploadBox" onclick="document.getElementById('srcAudioInput').click()">
-      <div style="font-size:24px">🔊</div>
-      <b style="font-size:12px;color:var(--green)" id="srcText">ပြောင်းလဲလိုသော စကားပြောဖိုင် တင်ပါ</b>
-      <p>Story Maker / Video Studio မှ ထွက်လာသော မြန်မာ TTS အသံဖိုင်</p>
-    </div>
-    <input type="file" id="srcAudioInput" accept="audio/*" hidden onchange="handleAudioSelect(event, 'src')">
-    <audio id="srcPlayer" controls class="audioPlayer"></audio>
-  </div>
-
-  <button class="convertBtn" id="convertBtn" onclick="startVoiceConversion()">
-    ✨ Convert to My Voice (Clone ပြုလုပ်မည်)
+  <!-- Action -->
+  <button class="convertBtn" id="generateBtn" onclick="generateClonedVoice()">
+    ✨ Generate Cloned Voice (အသံထုတ်ယူမည်)
   </button>
 
   <div class="statusBox" id="statusBox"></div>
 
+  <!-- Output Result -->
   <div class="card" id="resultCard" style="display:none;margin-top:14px;border-color:var(--green)">
-    <div class="cardTitle" style="color:var(--green)">🎉 အသံပြောင်းလဲပြီးစီးမှု (Converted Voice)</div>
+    <div class="cardTitle" style="color:var(--green)">🎧 ထွက်ပေါ်လာမည့် အသံ (Cloned Audio)</div>
     <audio id="outputPlayer" controls style="width:100%;margin-bottom:10px"></audio>
     <button onclick="downloadConvertedAudio()" style="background:#121826;color:var(--green);border-color:var(--green);width:100%">
       💾 Download Audio (.wav)
@@ -259,9 +245,9 @@ button {
 </main>
 
 <script>
-let refBlob = null;
-let srcBlob = null;
-let outputBlobUrl = null;
+const SPACE_ID = "nlopro/clone-burmese-tts";
+let refAudioFile = null;
+let outputAudioUrl = null;
 
 function toggleAppMenu(e) {
   if (e && e.target !== document.getElementById("appMenuBackdrop") && e.target !== document.getElementById("appMenuBackdrop").querySelector("button")) return;
@@ -274,114 +260,85 @@ function toast(msg) {
   setTimeout(() => t.style.display = "none", 2500);
 }
 
-function handleSpaceSelectChange(val) {
-  const customBox = document.getElementById("customSpaceBox");
-  const input = document.getElementById("spaceIdInput");
-  if (val === "custom") {
-    customBox.style.display = "block";
-    input.focus();
-  } else {
-    customBox.style.display = "none";
-    input.value = val;
-  }
-}
-
-function handleAudioSelect(e, type) {
+function handleAudioSelect(e) {
   const file = e.target.files[0];
   if (!file) return;
 
-  const url = URL.createObjectURL(file);
-  if (type === 'ref') {
-    refBlob = file;
-    document.getElementById("refText").textContent = `✓ ${file.name}`;
-    const p = document.getElementById("refPlayer");
-    p.src = url; p.style.display = "block";
-  } else {
-    srcBlob = file;
-    document.getElementById("srcText").textContent = `✓ ${file.name}`;
-    const p = document.getElementById("srcPlayer");
-    p.src = url; p.style.display = "block";
-  }
+  refAudioFile = file;
+  document.getElementById("refAudioText").textContent = `✓ ${file.name}`;
+  const p = document.getElementById("refPlayer");
+  p.src = URL.createObjectURL(file);
+  p.style.display = "block";
 }
 
-async function startVoiceConversion() {
-  if (!refBlob || !srcBlob) {
-    toast("ဖိုင် (၂) မျိုးလုံးကို အရင်တင်ပေးပါခင်ဗျာ");
+async function generateClonedVoice() {
+  const textInput = document.getElementById("textInput").value.trim();
+  const refText = document.getElementById("refTextInput").value.trim();
+
+  if (!textInput) {
+    toast("ပြောစေလိုသော စာသားကို ရိုက်ထည့်ပေးပါ");
+    return;
+  }
+  if (!refAudioFile) {
+    toast("Reference အသံဖိုင် တင်ပေးပါ");
+    return;
+  }
+  if (!refText) {
+    toast("အသံဖိုင်ထဲက စာသားကို ရိုက်ထည့်ပေးပါ");
     return;
   }
 
-  const selectVal = document.getElementById("spaceSelect").value;
-  const spaceId = selectVal === "custom" 
-    ? document.getElementById("spaceIdInput").value.trim() 
-    : selectVal;
-
-  const hfToken = document.getElementById("hfTokenInput").value.trim();
-
-  const btn = document.getElementById("convertBtn");
+  const btn = document.getElementById("generateBtn");
   const status = document.getElementById("statusBox");
   const resultCard = document.getElementById("resultCard");
 
   btn.disabled = true;
   status.style.display = "block";
   resultCard.style.display = "none";
-  status.textContent = `⏳ Hugging Face (${spaceId}) ချိတ်ဆက်နေပါသည်...`;
+  status.textContent = `⏳ Hugging Face (${SPACE_ID}) ချိတ်ဆက်နေပါသည်...`;
 
   try {
     if (!window.GradioClient) {
-      throw new Error("Gradio Client module load မဖြစ်သေးပါ။ အင်တာနက် လိုင်း စစ်ဆေးပါ။");
+      throw new Error("Gradio Client module load မဖြစ်သေးပါ။ အင်တာနက် စစ်ဆေးပါ။");
     }
 
-    const connectOptions = {};
-    if (hfToken) {
-      connectOptions.hf_token = hfToken;
-    }
+    const app = await window.GradioClient.connect(SPACE_ID);
+    status.textContent = "🎙️ AI အသံ ထုတ်ယူနေပါသည် (ခဏ စောင့်ဆိုင်းပေးပါ)...";
 
-    const app = await window.GradioClient.connect(spaceId, connectOptions);
-    status.textContent = "🎙️ AI Voice Conversion လုပ်ဆောင်နေပါသည် (Queue စောင့်ဆိုင်းနေပါသည်)...";
+    const result = await app.predict("/clone", {
+      text_input: textInput,
+      uploaded_audio: refAudioFile,
+      reference_text: refText
+    });
 
-    let result;
-    try {
-      result = await app.predict(0, [
-        srcBlob,
-        refBlob,
-        0
-      ]);
-    } catch(errPredict) {
-      result = await app.predict("/predict", [
-        srcBlob,
-        refBlob,
-        0
-      ]);
-    }
-
-    if (result && result.data) {
-      const outputData = result.data[0];
-      outputBlobUrl = typeof outputData === 'string' ? outputData : (outputData.url || outputData.path);
+    if (result && result.data && result.data[0]) {
+      const audioData = result.data[0];
+      outputAudioUrl = typeof audioData === 'string' ? audioData : (audioData.url || audioData.path);
 
       const player = document.getElementById("outputPlayer");
-      player.src = outputBlobUrl;
+      player.src = outputAudioUrl;
       resultCard.style.display = "block";
       status.style.display = "none";
-      toast("🎉 အသံပြောင်းလဲခြင်း ပြီးမြောက်ပါပြီ!");
+      toast("🎉 အသံထွက်ပေါ်လာပါပြီ!");
     } else {
-      throw new Error("အသံဖိုင် ထွက်မလာပါ။ Space ပြောင်းလဲ စမ်းသပ်ကြည့်ပါ။");
+      throw new Error("အသံဖိုင် ထွက်မလာပါ။ ထပ်မံ ကြိုးစားကြည့်ပါ။");
     }
 
   } catch (err) {
     console.error(err);
     status.style.display = "block";
     status.textContent = `❌ Error: ${err.message}`;
-    toast("Conversion မအောင်မြင်ပါ");
+    toast("လုပ်ဆောင်ချက် မအောင်မြင်ပါ");
   } finally {
     btn.disabled = false;
   }
 }
 
 function downloadConvertedAudio() {
-  if (!outputBlobUrl) return;
+  if (!outputAudioUrl) return;
   const a = document.createElement("a");
-  a.href = outputBlobUrl;
-  a.download = `voice-clone-${Date.now()}.wav`;
+  a.href = outputAudioUrl;
+  a.download = `myanmar-voice-clone-${Date.now()}.wav`;
   a.click();
 }
 </script>
