@@ -178,6 +178,20 @@ canvas#videoCanvas { width: 100%; height: 100%; object-fit: contain; display: bl
 }
 @keyframes shimmer { 0% { background-position: 100% 0; } 100% { background-position: -100% 0; } }
 
+/* Alert Banner For Long Scene Splits */
+.splitAlertBanner {
+  background: rgba(255, 190, 59, 0.12); border: 1px solid var(--gold);
+  border-radius: 12px; padding: 10px 12px; margin-bottom: 12px;
+  display: none; align-items: center; justify-content: space-between; gap: 8px;
+}
+.splitAlertBanner.show { display: flex; }
+.splitAlertText { font-size: 11px; color: #ffebc2; font-weight: 600; line-height: 1.4; }
+.splitActionBtn {
+  background: linear-gradient(135deg, #ffbe3b, #ff7e40);
+  border: 0; color: #000; font-weight: 800; font-size: 10.5px;
+  padding: 6px 12px; border-radius: 8px; flex-shrink: 0;
+}
+
 .sceneList { display: flex; flex-direction: column; gap: 10px; max-height: 640px; overflow-y: auto; padding-right: 2px; }
 
 .sceneCard {
@@ -565,6 +579,18 @@ canvas#videoCanvas { width: 100%; height: 100%; object-fit: contain; display: bl
       </div>
 
       <div class="body">
+        
+        <!-- Long Script Detection & Split Warning Banner -->
+        <div class="splitAlertBanner" id="splitAlertBanner">
+          <div class="splitAlertText">
+            ⚠️ <b>သတိပေးချက် -</b> အချို့သော Scene များတွင် စာသားများလွန်းနေပါသည် (၁၅~၂၀ စက္ကန့် ဖြစ်နိုင်ပါသည်)။<br>
+            အသံနှင့် စာတန်းထိုး မလွဲစေရန် ၈~၁၀ စက္ကန့်စာ အပိုင်းများအဖြစ် ခွဲထုတ်လိုက်ပါ။
+          </div>
+          <button class="splitActionBtn" onclick="executeAutoSceneSplitting()">
+            ⚡ Auto Split into 8s-10s Scenes
+          </button>
+        </div>
+
         <div id="epTabBox" style="margin-bottom:12px;display:none">
           <label style="font-size:10px;color:var(--muted);font-weight:700;display:block;margin-bottom:4px">📺 SELECT EPISODE TO RENDER</label>
           <div class="tagGroup" id="epTabGroup"></div>
@@ -736,6 +762,7 @@ function loadSampleStory() {
   selectEpisode(1);
 }
 
+// Dynamic Episode Tabs (No fixed 15 lock)
 function setupEpisodeTabs() {
   const episodes = [...new Set(allScenes.map(s => s.episode || 1))].sort((a,b)=>a-b);
   const box = document.getElementById("epTabBox");
@@ -747,11 +774,14 @@ function setupEpisodeTabs() {
   }
 
   box.style.display = "block";
-  container.innerHTML = episodes.map(ep => `
-    <button class="tagBtn ${ep===activeEpisode?'active':''}" onclick="selectEpisode(${ep})">
-      Episode ${ep} (${allScenes.filter(s=>s.episode===ep).length})
-    </button>
-  `).join("");
+  container.innerHTML = episodes.map(ep => {
+    const epScenesCount = allScenes.filter(s => (s.episode || 1) === ep).length;
+    return `
+      <button class="tagBtn ${ep===activeEpisode?'active':''}" onclick="selectEpisode(${ep})">
+        Episode ${ep} (${epScenesCount})
+      </button>
+    `;
+  }).join("");
 }
 
 function selectEpisode(ep) {
@@ -762,16 +792,125 @@ function selectEpisode(ep) {
   currentScenes = allScenes.filter(s => (s.episode || 1) === ep);
   if (!currentScenes.length) currentScenes = allScenes;
 
-  // Natural Initial Duration (8.5s)
+  // Default duration
   sceneDurations = currentScenes.map(() => 8.5);
   audioBuffers.clear();
   rawAudioBlobs.clear();
   imageObjects.clear();
   currentTime = 0;
   lastPlayedSceneIdx = -1;
+
+  checkScenesForLongText();
   calculateTotalDuration();
   renderSceneList();
   drawCurrentFrame();
+}
+
+// Long text detection for 8s-10s boundaries
+function checkScenesForLongText() {
+  const banner = document.getElementById("splitAlertBanner");
+  let hasLongScene = false;
+
+  for (let s of currentScenes) {
+    const words = (s.text_mm || '').trim().split(" ").filter(Boolean);
+    // Over ~24 words typically exceeds 10 seconds in Burmese TTS
+    if (words.length > 25 || (s.text_mm && s.text_mm.length > 95)) {
+      hasLongScene = true;
+      break;
+    }
+  }
+
+  if (hasLongScene) {
+    banner.classList.add("show");
+  } else {
+    banner.classList.remove("show");
+  }
+}
+
+// Intelligent Burmese Sentence Splitting into natural 8s-10s pieces (Without losing words)
+function splitBurmeseIntoNaturalChunks(text) {
+  const clean = (text || '').trim();
+  if (!clean) return [];
+
+  // Split by natural Burmese sentence boundaries (။)
+  let initialParts = clean.split("။").map(p => p.trim()).filter(Boolean);
+  if (initialParts.length === 0) initialParts = [clean];
+
+  const chunks = [];
+
+  for (let part of initialParts) {
+    const words = part.split(" ").filter(Boolean);
+    if (words.length <= 25) {
+      chunks.push(part + (clean.includes("။") ? "။" : ""));
+    } else {
+      let temp = [];
+      for (let w of words) {
+        temp.push(w);
+        if (temp.length >= 20) {
+          chunks.push(temp.join(" "));
+          temp = [];
+        }
+      }
+      if (temp.length > 0) {
+        if (temp.length < 7 && chunks.length > 0) {
+          chunks[chunks.length - 1] += " " + temp.join(" ");
+        } else {
+          chunks.push(temp.join(" "));
+        }
+      }
+    }
+  }
+
+  return chunks.length ? chunks : [clean];
+}
+
+// User-Triggered Auto Scene Splitting
+function executeAutoSceneSplitting() {
+  toast("⚡ Scene များကို ၈~၁၀ စက္ကန့်စာ အပိုင်းများအဖြစ် ခွဲထုတ်နေပါသည်...");
+
+  const newlyFormedScenes = [];
+
+  for (let s of currentScenes) {
+    const chunks = splitBurmeseIntoNaturalChunks(s.text_mm);
+
+    if (chunks.length <= 1) {
+      newlyFormedScenes.push({
+        ...s,
+        episode: s.episode || activeEpisode
+      });
+    } else {
+      chunks.forEach((cText, cIdx) => {
+        newlyFormedScenes.push({
+          episode: s.episode || activeEpisode,
+          text_mm: cText,
+          image_prompt_en: s.image_prompt_en || "Cinematic storytelling scene"
+        });
+      });
+    }
+  }
+
+  // Assign fresh chronological scene numbers
+  currentScenes = newlyFormedScenes.map((s, idx) => ({
+    ...s,
+    scene: idx + 1
+  }));
+
+  // Synchronize global allScenes collection
+  allScenes = allScenes.filter(s => (s.episode || 1) !== activeEpisode).concat(currentScenes);
+
+  sceneDurations = currentScenes.map(() => 8.5);
+  audioBuffers.clear();
+  rawAudioBlobs.clear();
+  imageObjects.clear();
+
+  document.getElementById("splitAlertBanner").classList.remove("show");
+
+  setupEpisodeTabs();
+  calculateTotalDuration();
+  renderSceneList();
+  drawCurrentFrame();
+
+  toast(`🎉 အောင်မြင်ပါသည်! Scene စုစုပေါင်း (${currentScenes.length}) ခန်းအဖြစ် ခွဲထုတ်ပြီးပါပြီ။`);
 }
 
 function copyPrompt(text) {
@@ -798,6 +937,7 @@ function updateSceneSrtText(idx, val) {
     currentScenes[idx].text_mm = val;
     const txtEl = document.getElementById(`sceneText-${idx}`);
     if (txtEl) txtEl.textContent = val.replace(/\n+/g, " ");
+    checkScenesForLongText();
     drawCurrentFrame();
   }
 }
@@ -860,7 +1000,7 @@ function handleCustomAudioUpload(e) {
   };
 }
 
-// Download Episode Full Voice
+// Download Merged Episode Audio File
 async function downloadAllEpisodeAudio() {
   if (!currentScenes.length || !audioBuffers.size) {
     toast("အရင်ဆုံး '🎙️ Generate Voices' ခလုတ်ဖြင့် အသံများ ထုတ်ပေးပါ");
@@ -1209,87 +1349,29 @@ function handleLogoUpload(e) {
   img.src = URL.createObjectURL(f);
 }
 
-// Auto Burmese Text Splitter into 8s - 10s chunks (approx 20 - 24 words)
-function splitBurmeseIntoChunks(text) {
-  const rawClean = (text || '').replace(/\r/g, '').trim();
-  if (!rawClean) return [];
-
-  // If already split by newlines, respect existing chunks
-  const lineSplits = rawClean.split(/\n+/).map(l => l.trim()).filter(Boolean);
-  const finalChunks = [];
-
-  for (const line of lineSplits) {
-    const words = line.split(" ").filter(Boolean);
-    // Ideal TTS pace: ~2.5 words per sec. 22 words = ~8.8s
-    if (words.length <= 25) {
-      finalChunks.push(line);
-    } else {
-      let temp = [];
-      for (let w of words) {
-        temp.push(w);
-        if (temp.length >= 22) {
-          finalChunks.push(temp.join(" "));
-          temp = [];
-        }
-      }
-      if (temp.length > 0) {
-        if (temp.length < 8 && finalChunks.length > 0) {
-          finalChunks[finalChunks.length - 1] += " " + temp.join(" ");
-        } else {
-          finalChunks.push(temp.join(" "));
-        }
-      }
-    }
-  }
-  return finalChunks.length ? finalChunks : [rawClean];
-}
-
-// Smart Voice Pipeline: Auto-chunks long text and regenerates dynamic scenes
+// Generate Voices using Dynamic Audio Length
 async function generateAllVoices() {
   if (!currentScenes.length) return;
   const btn = document.getElementById("genVoicesBtn");
   const spinner = document.getElementById("voiceSpinner");
   btn.disabled = true; spinner.style.display = "inline-block";
 
-  showProgressBar("🎙️ Processing & Generating Voices...", "Auto-chunking 8s~10s audio units...");
+  showProgressBar("🎙️ Generating Myanmar Voices...", "Connecting to Edge TTS...");
 
   const params = getVoiceAudioParams();
-  
-  // STEP 1: Break existing scenes down into 8s-10s sub-chunks
-  const expandedScenes = [];
-  for (let s of currentScenes) {
-    const chunks = splitBurmeseIntoChunks(s.text_mm);
-    chunks.forEach((chunkText, cIdx) => {
-      expandedScenes.push({
-        episode: s.episode || activeEpisode,
-        text_mm: chunkText,
-        image_prompt_en: s.image_prompt_en || "Cinematic scene"
-      });
-    });
-  }
-
-  // STEP 2: Dynamically adapt scenes timeline based on actual audio units
-  currentScenes = expandedScenes.map((s, idx) => ({
-    ...s,
-    scene: idx + 1
-  }));
-
-  const newAudioBuffers = new Map();
-  const newRawBlobs = new Map();
-  const newDurations = [];
   const total = currentScenes.length;
 
   for (let i = 0; i < total; i++) {
     const s = currentScenes[i];
     const pct = (i / total) * 100;
-    updateProgressBar(pct, `Synthesizing Audio Clip ${i+1}/${total}: "${s.text_mm.slice(0, 18)}..."`);
+    updateProgressBar(pct, `Synthesizing Voice ${i+1}/${total}: "${s.text_mm.slice(0, 18)}..."`);
 
     try {
       const res = await fetch(WORKER_URL + "/tts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
-          text: s.text_mm, 
+          text: (s.text_mm || '').replace(/\n+/g, " "), 
           voice: selectedVoice, 
           rate: params.rate,
           pitch: params.pitch
@@ -1299,16 +1381,16 @@ async function generateAllVoices() {
       if (res.ok) {
         const blob = await res.blob();
         if (blob.size > 200) {
-          newRawBlobs.set(i, blob);
+          rawAudioBlobs.set(i, blob);
           const aud = new Audio(URL.createObjectURL(blob));
           await new Promise((resolve) => {
             let done = false;
             const fallbackTimer = setTimeout(() => {
               if (!done) {
                 done = true;
-                const estWords = s.text_mm.split(" ").filter(Boolean).length;
-                newDurations[i] = Math.max(8.0, Math.min(10.5, estWords * 0.22 + 4.5));
-                newAudioBuffers.set(i, aud);
+                const estWords = (s.text_mm || '').split(" ").filter(Boolean).length;
+                sceneDurations[i] = Math.max(8.0, Math.min(10.5, estWords * 0.22 + 4.5));
+                audioBuffers.set(i, aud);
                 resolve();
               }
             }, 2500);
@@ -1317,10 +1399,10 @@ async function generateAllVoices() {
               if (!done) {
                 done = true;
                 clearTimeout(fallbackTimer);
-                // Zero skipping: exact natural audio length + brief transition margin
-                const exactDur = aud.duration || 8.5;
-                newDurations[i] = exactDur + 0.35;
-                newAudioBuffers.set(i, aud);
+                // Exact Audio Sync: Duration matches voice with zero skipping
+                const exactDur = aud.duration || 8.0;
+                sceneDurations[i] = exactDur + 0.35;
+                audioBuffers.set(i, aud);
                 resolve();
               }
             };
@@ -1336,24 +1418,19 @@ async function generateAllVoices() {
       }
     } catch(e) {}
 
-    updateProgressBar(((i + 1) / total) * 100, `Completed Clip ${i+1}/${total}`);
+    updateProgressBar(((i + 1) / total) * 100, `Completed Voice ${i+1}/${total}`);
     await new Promise(r => setTimeout(r, 120));
   }
-
-  // Update states with perfectly synced dynamic scene collection
-  audioBuffers = newAudioBuffers;
-  rawAudioBlobs = newRawBlobs;
-  sceneDurations = newDurations;
 
   calculateTotalDuration();
   renderSceneList();
 
-  updateProgressBar(100, "All voices completed and synchronized!");
+  updateProgressBar(100, "All voices completed!");
   await new Promise(r => setTimeout(r, 400));
   hideProgressBar();
 
   btn.disabled = false; spinner.style.display = "none";
-  toast(`🎉 Dynamic Scenes Adapted: ${currentScenes.length} Scenes (${formatTime(totalDuration)})`);
+  toast(`🎉 Finished voices! Total Duration: ${formatTime(totalDuration)}`);
 }
 
 function playSingleSceneAudio(idx) {
@@ -1492,7 +1569,7 @@ function drawCurrentFrame() {
     if (lPos === "top-right") { lx = canvas.width - lw - pad; ly = pad; }
     else if (lPos === "top-left") { lx = pad; ly = pad; }
     else if (lPos === "bottom-right") { lx = canvas.width - lw - pad; ly = canvas.height - lh - pad; }
-    else if (lPos === "bottom-left") { lx = pad; ly = pad; }
+    else if (lPos === "bottom-left") { lx = pad; ly = canvas.height - lh - pad; }
 
     ctx.save();
     ctx.globalAlpha = lOpacity;
@@ -1500,7 +1577,7 @@ function drawCurrentFrame() {
     ctx.restore();
   }
 
-  // Exact Subtitle Synced with Speech
+  // Precision Subtitle Synced with Speech Time
   if (current.scene && current.scene.text_mm) {
     const textColor = document.getElementById("subColor").value;
     const outlineColor = document.getElementById("subOutline").value;
