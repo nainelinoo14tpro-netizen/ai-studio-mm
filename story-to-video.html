@@ -503,14 +503,17 @@ canvas#videoCanvas { width: 100%; height: 100%; object-fit: contain; display: bl
         </div>
       </div>
 
+      <!-- Video Title & Custom Text Control Studio -->
       <div class="card" style="margin-bottom:10px">
         <div class="cardHead" onclick="toggleCard('titleLogoBody', 'titleLogoChev')">
-          <div class="title">🏷️ Video Title & Channel Logo</div>
+          <div class="title">🏷️ Video Title, Custom Text & Logo</div>
           <span class="chevron" id="titleLogoChev">▲</span>
         </div>
         <div class="body" id="titleLogoBody">
+          
+          <!-- 1. Video Title Text Controls -->
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-            <label style="font-size:10px;color:var(--muted);font-weight:700">📝 VIDEO TITLE TEXT (ဗီဒီယို ခေါင်းစဉ်)</label>
+            <label style="font-size:10px;color:var(--gold);font-weight:800">📝 VIDEO TITLE TEXT (ခေါင်းစဉ်စာသား)</label>
             <label style="font-size:10px;display:flex;align-items:center;gap:4px;cursor:pointer">
               <input type="checkbox" id="showTitleCheck" checked onchange="drawCurrentFrame()"> Show Title
             </label>
@@ -522,14 +525,71 @@ canvas#videoCanvas { width: 100%; height: 100%; object-fit: contain; display: bl
           <div class="settingGrid">
             <div class="field">
               <label>Title Size: <span id="titleSizeVal" style="color:var(--cyan)">28px</span></label>
-              <input id="titleSize" type="range" min="16" max="48" value="28" oninput="document.getElementById('titleSizeVal').textContent=this.value+'px'; drawCurrentFrame()">
+              <input id="titleSize" type="range" min="16" max="54" value="28" oninput="document.getElementById('titleSizeVal').textContent=this.value+'px'; drawCurrentFrame()">
             </div>
             <div class="field">
-              <label>Title Color</label>
+              <label>Title Text Color</label>
               <input id="titleColor" type="color" value="#ffbe3b" oninput="drawCurrentFrame()">
             </div>
           </div>
 
+          <div class="settingGrid">
+            <div class="field">
+              <label>Title Outline Color</label>
+              <input id="titleOutline" type="color" value="#000000" oninput="drawCurrentFrame()">
+            </div>
+            <div class="field">
+              <label>X Pos (ဘယ်/ညာ %): <span id="titleXVal" style="color:var(--cyan)">50%</span></label>
+              <input id="titleX" type="range" min="10" max="90" value="50" oninput="document.getElementById('titleXVal').textContent=this.value+'%'; drawCurrentFrame()">
+            </div>
+          </div>
+
+          <div class="field" style="margin-bottom:12px">
+            <label>Y Pos (အပေါ်/အောက် %): <span id="titleYVal" style="color:var(--cyan)">8%</span></label>
+            <input id="titleY" type="range" min="4" max="95" value="8" oninput="document.getElementById('titleYVal').textContent=this.value+'%'; drawCurrentFrame()">
+          </div>
+
+          <!-- 2. Extra Add Text (Custom Floating Text) -->
+          <div style="border-top:1px dashed var(--border-light);padding-top:10px;margin-top:8px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+              <label style="font-size:10px;color:var(--cyan);font-weight:800">➕ EXTRA ADD TEXT (နောက်ထပ် စာတန်းထည့်ရန်)</label>
+              <label style="font-size:10px;display:flex;align-items:center;gap:4px;cursor:pointer">
+                <input type="checkbox" id="showExtraTextCheck" onchange="drawCurrentFrame()"> Enable Extra Text
+              </label>
+            </div>
+            <div class="field" style="margin-bottom:8px">
+              <input type="text" id="extraTextInput" placeholder="ဥပမာ - @mychannel သို့မဟုတ် အပိုင်း (၁)" value="အပိုင်း (၁)" oninput="drawCurrentFrame()">
+            </div>
+
+            <div class="settingGrid">
+              <div class="field">
+                <label>Text Size: <span id="extraSizeVal" style="color:var(--cyan)">20px</span></label>
+                <input id="extraSize" type="range" min="12" max="44" value="20" oninput="document.getElementById('extraSizeVal').textContent=this.value+'px'; drawCurrentFrame()">
+              </div>
+              <div class="field">
+                <label>Text Color</label>
+                <input id="extraColor" type="color" value="#20d7ff" oninput="drawCurrentFrame()">
+              </div>
+            </div>
+
+            <div class="settingGrid">
+              <div class="field">
+                <label>Outline Color</label>
+                <input id="extraOutline" type="color" value="#000000" oninput="drawCurrentFrame()">
+              </div>
+              <div class="field">
+                <label>X Pos (ဘယ်/ညာ %): <span id="extraXVal" style="color:var(--cyan)">50%</span></label>
+                <input id="extraX" type="range" min="10" max="90" value="50" oninput="document.getElementById('extraXVal').textContent=this.value+'%'; drawCurrentFrame()">
+              </div>
+            </div>
+
+            <div class="field" style="margin-bottom:12px">
+              <label>Y Pos (အပေါ်/အောက် %): <span id="extraYVal" style="color:var(--cyan)">16%</span></label>
+              <input id="extraY" type="range" min="4" max="95" value="16" oninput="document.getElementById('extraYVal').textContent=this.value+'%'; drawCurrentFrame()">
+            </div>
+          </div>
+
+          <!-- 3. Channel Logo / Watermark -->
           <div style="border-top:1px solid var(--border);padding-top:10px;margin-top:6px">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
               <label style="font-size:10px;color:var(--muted);font-weight:700">🛡️ CHANNEL LOGO / WATERMARK</label>
@@ -792,7 +852,6 @@ function selectEpisode(ep) {
   currentScenes = allScenes.filter(s => (s.episode || 1) === ep);
   if (!currentScenes.length) currentScenes = allScenes;
 
-  // Default duration
   sceneDurations = currentScenes.map(() => 8.5);
   audioBuffers.clear();
   rawAudioBlobs.clear();
@@ -813,7 +872,6 @@ function checkScenesForLongText() {
 
   for (let s of currentScenes) {
     const words = (s.text_mm || '').trim().split(" ").filter(Boolean);
-    // Over ~24 words typically exceeds 10 seconds in Burmese TTS
     if (words.length > 25 || (s.text_mm && s.text_mm.length > 95)) {
       hasLongScene = true;
       break;
@@ -832,7 +890,6 @@ function splitBurmeseIntoNaturalChunks(text) {
   const clean = (text || '').trim();
   if (!clean) return [];
 
-  // Split by natural Burmese sentence boundaries (။)
   let initialParts = clean.split("။").map(p => p.trim()).filter(Boolean);
   if (initialParts.length === 0) initialParts = [clean];
 
@@ -889,13 +946,11 @@ function executeAutoSceneSplitting() {
     }
   }
 
-  // Assign fresh chronological scene numbers
   currentScenes = newlyFormedScenes.map((s, idx) => ({
     ...s,
     scene: idx + 1
   }));
 
-  // Synchronize global allScenes collection
   allScenes = allScenes.filter(s => (s.episode || 1) !== activeEpisode).concat(currentScenes);
 
   sceneDurations = currentScenes.map(() => 8.5);
@@ -1399,7 +1454,6 @@ async function generateAllVoices() {
               if (!done) {
                 done = true;
                 clearTimeout(fallbackTimer);
-                // Exact Audio Sync: Duration matches voice with zero skipping
                 const exactDur = aud.duration || 8.0;
                 sceneDurations[i] = exactDur + 0.35;
                 audioBuffers.set(i, aud);
@@ -1533,28 +1587,61 @@ function drawCurrentFrame() {
     ctx.fillText(`Ratio: ${currentAspect} • Click 'Auto Gen All Images'`, canvas.width / 2, canvas.height / 2 + 20);
   }
 
+  // 1. Video Title Rendering (Free Move X/Y & Colors)
   const showTitle = document.getElementById("showTitleCheck").checked;
   const titleText = document.getElementById("videoTitleInput").value.trim();
   if (showTitle && titleText) {
     const titleSize = parseInt(document.getElementById("titleSize").value) || 28;
     const titleColor = document.getElementById("titleColor").value;
+    const titleOutline = document.getElementById("titleOutline").value;
+    const titleXPercent = (parseInt(document.getElementById("titleX").value) || 50) / 100;
+    const titleYPercent = (parseInt(document.getElementById("titleY").value) || 8) / 100;
 
     ctx.save();
     ctx.font = `bold ${titleSize}px "Pyidaungsu", "Noto Sans Myanmar", sans-serif`;
     ctx.textAlign = "center";
-    ctx.textBaseline = "top";
+    ctx.textBaseline = "middle";
 
-    const topY = canvas.height * 0.05;
+    const drawX = canvas.width * titleXPercent;
+    const drawY = canvas.height * titleYPercent;
 
-    ctx.strokeStyle = "#000000";
+    ctx.strokeStyle = titleOutline;
     ctx.lineWidth = Math.max(3, titleSize * 0.16);
-    ctx.strokeText(titleText, canvas.width / 2, topY);
+    ctx.strokeText(titleText, drawX, drawY);
 
     ctx.fillStyle = titleColor;
-    ctx.fillText(titleText, canvas.width / 2, topY);
+    ctx.fillText(titleText, drawX, drawY);
     ctx.restore();
   }
 
+  // 2. Extra Add Text Rendering (Free Move X/Y & Colors)
+  const showExtra = document.getElementById("showExtraTextCheck").checked;
+  const extraText = document.getElementById("extraTextInput").value.trim();
+  if (showExtra && extraText) {
+    const extraSize = parseInt(document.getElementById("extraSize").value) || 20;
+    const extraColor = document.getElementById("extraColor").value;
+    const extraOutline = document.getElementById("extraOutline").value;
+    const extraXPercent = (parseInt(document.getElementById("extraX").value) || 50) / 100;
+    const extraYPercent = (parseInt(document.getElementById("extraY").value) || 16) / 100;
+
+    ctx.save();
+    ctx.font = `bold ${extraSize}px "Pyidaungsu", "Noto Sans Myanmar", sans-serif`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+
+    const drawExtraX = canvas.width * extraXPercent;
+    const drawExtraY = canvas.height * extraYPercent;
+
+    ctx.strokeStyle = extraOutline;
+    ctx.lineWidth = Math.max(3, extraSize * 0.16);
+    ctx.strokeText(extraText, drawExtraX, drawExtraY);
+
+    ctx.fillStyle = extraColor;
+    ctx.fillText(extraText, drawExtraX, drawExtraY);
+    ctx.restore();
+  }
+
+  // 3. Channel Logo Rendering
   if (logoImageObj && logoImageObj.complete) {
     const lSize = parseInt(document.getElementById("logoSize").value) || 60;
     const lOpacity = (parseInt(document.getElementById("logoOpacity").value) || 85) / 100;
@@ -1577,7 +1664,7 @@ function drawCurrentFrame() {
     ctx.restore();
   }
 
-  // Precision Subtitle Synced with Speech Time
+  // 4. Subtitle Synced with Speech Time
   if (current.scene && current.scene.text_mm) {
     const textColor = document.getElementById("subColor").value;
     const outlineColor = document.getElementById("subOutline").value;
