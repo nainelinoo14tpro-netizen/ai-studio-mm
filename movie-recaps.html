@@ -6,6 +6,12 @@
 <meta name="theme-color" content="#080a10">
 <title>Movie Recap Studio Pro</title>
 
+<!-- Gradio Client JS Library (Voice Clone ZeroGPU တိုက်ရိုက်ချိတ်ဆက်ရန်) -->
+<script type="module">
+    import { Client } from "https://cdn.jsdelivr.net/npm/@gradio/client/dist/index.min.js";
+    window.GradioClient = Client;
+</script>
+
 <style>
 :root {
   --bg: #07090e;
@@ -817,6 +823,9 @@ let selectedVoice = "my-MM-ThihaNeural";
 let overlayPos = { x: 50, y: 82 };
 let isCloneDisabledByLimit = false;
 
+// Gradio Client Instance ကို Reconnect ပြန်မလုပ်ဘဲ မြန်မြန်ဆန်ဆန် သုံးနိုင်ရန်
+let gradioClientInstance = null;
+
 const video = document.getElementById("video");
 const videoBox = document.getElementById("videoBox");
 const overlay = document.getElementById("overlay");
@@ -1075,42 +1084,34 @@ async function generateEdgeSpeechInBrowser(text, voice, rate) {
   });
 }
 
-// ZERO-GPU VOICE CLONING (RAW ERROR TRANSPARENCY)
+// ZERO-GPU VOICE CLONING (DIRECT GRADIO CLIENT CONNECTION - NO WORKER ERROR)
 async function fetchZeroGpuAudio(text, lockedStyle) {
   const currentSelect = document.getElementById("cloneVoiceStyle");
   const stylePrompt = lockedStyle || (currentSelect ? currentSelect.value : "A news anchor voice, formal and authoritative, steady pace, perfect for broadcast");
-  
-  let res;
+
+  if (!window.GradioClient) {
+    throw new Error("Gradio Client Library load မဖြစ်သေးပါ။ အင်တာနက် ချိတ်ဆက်မှုကို စစ်ဆေးပြီး Refresh လုပ်ပေးပါ။");
+  }
+
   try {
-    res = await fetch(WORKER_URL + "/clone-tts", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        text: text,
-        style: stylePrompt
-      })
+    if (!gradioClientInstance) {
+      gradioClientInstance = await window.GradioClient.connect("nlopro/clone-burmese-tts");
+    }
+
+    const result = await gradioClientInstance.predict("/prompt_voice", {
+      text_input: text,
+      style_prompt: stylePrompt
     });
-  } catch(netErr) {
-    throw new Error(`Worker Network Connection Failed: ${netErr.message}`);
-  }
 
-  const rawText = await res.text();
-  let data;
-  try {
-    data = JSON.parse(rawText);
-  } catch(parseErr) {
-    throw new Error(`Invalid Worker JSON Response (${res.status}):\n${rawText.slice(0, 300)}`);
-  }
+    if (!result || !result.data || !result.data[0] || !result.data[0].url) {
+      throw new Error("ZeroGPU Audio data ထုတ်ယူမရရှိပါ (Server မှ အသံဖိုင် URL ပြန်မပို့ပါ)");
+    }
 
-  if (!res.ok) {
-    throw new Error(data.error || `HTTP ${res.status}: ${rawText}`);
+    return result.data[0].url;
+  } catch (err) {
+    gradioClientInstance = null;
+    throw err;
   }
-
-  if (!data || !data.url) {
-    throw new Error(`ZeroGPU Audio data ထုတ်ယူမရရှိပါ\nRaw Server Payload: ${rawText}`);
-  }
-
-  return data.url;
 }
 
 async function fetchMyanmarAudio(text, voice, rate, lockedStyle) {
