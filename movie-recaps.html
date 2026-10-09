@@ -80,6 +80,13 @@ button:active { transform: scale(0.97); }
 }
 .burnBtn:hover { opacity: 0.94; }
 
+.saveBurnBtn {
+  background: linear-gradient(135deg, #2bd576, #20d7ff);
+  border: 0; color: #080a10; font-weight: 800; font-size: 13px;
+  box-shadow: 0 4px 16px rgba(43, 213, 118, 0.35);
+}
+.saveBurnBtn:hover { opacity: 0.92; }
+
 .btnSpinner {
   width: 14px; height: 14px;
   border: 2px solid rgba(255, 255, 255, 0.35);
@@ -600,6 +607,9 @@ video.anti-copyright-active {
             <div class="lockProgFill" id="lockProgFill"></div>
           </div>
           <div class="lockPercentText" id="lockPercentText">0%</div>
+          <button id="cancelExportBtnInShield" onclick="cancelExportProcessing()" style="display:none;margin-top:12px;background:rgba(255,85,114,0.3);border-color:var(--accent);color:#fff;font-size:11px;padding:6px 16px">
+            ✕ Cancel Burn (ရပ်တန့်မည်)
+          </button>
         </div>
 
         <input id="file" type="file" accept="video/mp4,video/webm,video/quicktime,video/x-matroska,video/*" hidden>
@@ -741,6 +751,17 @@ video.anti-copyright-active {
     <div class="desktopCol">
       <section class="tabPane card" id="tabStyle">
         
+        <!-- MASTER SAVE & BURN ACTION BAR -->
+        <div style="padding:10px 14px;background:#0d1424;border-bottom:1px solid var(--border);display:flex;gap:8px;align-items:center;justify-content:space-between">
+          <div>
+            <div style="font-size:11.5px;font-weight:800;color:#fff">🎨 Video Styling & Customization</div>
+            <div style="font-size:9.5px;color:var(--muted)">ချိန်ညှိပြီးပါက Burn လုပ်ပြီး သိမ်းဆည်းပါ</div>
+          </div>
+          <button class="saveBurnBtn" onclick="bakeAndSaveAllOverlays()" style="padding:8px 14px">
+            💾 Save & Burn to Video
+          </button>
+        </div>
+
         <!-- Accordion 1: Subtitle Color & Design -->
         <div class="accordionHead" onclick="toggleAccordion('accSubBody', 'accSubChev')">
           <div class="accordionTitle">🎨 1. Subtitle Studio (အရောင် & ဒီဇိုင်း)</div>
@@ -825,7 +846,6 @@ video.anti-copyright-active {
         </div>
         <div class="accordionBody" id="accBgmBody">
           
-          <!-- Master Switch Toggle for BGM (Dynamic Color Styling) -->
           <div style="display:flex;justify-content:space-between;align-items:center;background:#151d2f;border:1px solid var(--border-light);padding:8px 12px;border-radius:10px;margin-bottom:12px">
             <div>
               <span style="font-size:11px;font-weight:800;color:#fff">🔊 BGM MUSIC STATUS:</span>
@@ -934,12 +954,12 @@ video.anti-copyright-active {
           <div id="logoControlsBox" style="display:none;margin-top:8px">
             <div class="sliderPairRow">
               <div class="sliderField">
-                <label>Logo X (ဘယ်/ညာ %): <span class="val" id="lgXVal">10%</span></label>
-                <input id="lgXSlider" type="range" min="0" max="100" value="10" oninput="updateLogoProps()">
+                <label>Logo X (ဘယ်/ညာ %): <span class="val" id="lgXVal">0%</span></label>
+                <input id="lgXSlider" type="range" min="0" max="100" value="0" oninput="updateLogoProps()">
               </div>
               <div class="sliderField">
-                <label>Logo Y (အပေါ်/အောက် %): <span class="val" id="lgYVal">10%</span></label>
-                <input id="lgYSlider" type="range" min="0" max="100" value="10" oninput="updateLogoProps()">
+                <label>Logo Y (အပေါ်/အောက် %): <span class="val" id="lgYVal">0%</span></label>
+                <input id="lgYSlider" type="range" min="0" max="100" value="0" oninput="updateLogoProps()">
               </div>
             </div>
 
@@ -1022,56 +1042,27 @@ video.anti-copyright-active {
 
       </section>
 
-      <!-- Accurate Rendering & Multi-Engine Export MP4 Section -->
+      <!-- Accurate Instant Export & Download Section -->
       <section class="tabPane card" id="tabExport">
-        <div class="cardHead"><div class="title">📦 Export Center (Video Exporter)</div></div>
+        <div class="cardHead"><div class="title">📦 Export Center (Instant Download)</div></div>
         <div class="body">
           
-          <!-- Export Engine Selection -->
-          <div style="margin-bottom:12px">
-            <label style="font-size:10px;color:var(--muted);font-weight:700;display:block;margin-bottom:4px">
-              ⚙️ EXPORT ENGINE MODE (ရွေးချယ်ရန်)
-            </label>
-            <select id="exportEngineSelect" onchange="onExportEngineChange(this.value)" style="width:100%;padding:8px;background:#141a27;border:1px solid var(--border);color:#fff;border-radius:8px;font-size:11.5px;font-weight:700">
-              <option value="stream">⚡ Real-Time Stream Capture (အသင့်အတင့် အမြန်ဆုံး & အတည်ငြိမ်ဆုံး)</option>
-              <option value="wasm">🚀 Turbo Fast FFmpeg WebAssembly (PC & ဖုန်းအတိုများအတွက်)</option>
-              <option value="frame">🎯 High Quality Frame-by-Frame Composite (မူလ စံစနစ်)</option>
-            </select>
-            
-            <div id="wasmNoticeBox" style="display:none;margin-top:6px;background:rgba(255,190,59,0.12);border:1px dashed var(--gold);padding:6px 10px;border-radius:8px">
-              <span style="font-size:10px;color:var(--gold);font-weight:700">💡 ဖုန်းသမားများအတွက် အသိပေးချက်:</span>
-              <p style="margin:2px 0 0 0;font-size:9.5px;color:#fce7f3;line-height:1.35">
-                FFmpeg Wasm ကို ဖုန်းပေါ်တွင် အသုံးပြုပါက ၁၀ မိနစ်အောက် ဗီဒီယိုအတိုများအတွက်သာ သင့်တော်ပါသည်။ မိနစ် ၃၀ ရှည်လျားသော ဗီဒီယိုများတွင် ဖုန်းပူခြင်းနှင့် RAM ပြည့်ခြင်း ဖြစ်နိုင်သဖြင့် 720p ဖြင့် အသုံးပြုပေးပါ။
-              </p>
-            </div>
+          <div id="readyBurnedBadge" style="display:none;background:rgba(43,213,118,0.15);border:1px solid var(--green);padding:10px;border-radius:10px;margin-bottom:12px;text-align:center">
+            <div style="font-size:12px;font-weight:800;color:var(--green)">✅ BURNED VIDEO READY!</div>
+            <div style="font-size:10px;color:#dcfce7;margin-top:2px">စိတ်ကြိုက်အလှဆင်ထားသော ဗီဒီယိုကို Burn သိမ်းဆည်းပြီးပါပြီ</div>
           </div>
 
-          <!-- Resolution & Quality Selection -->
-          <div class="sliderPairRow" style="margin-bottom:12px">
-            <div class="sliderField">
-              <label style="font-size:10px;color:var(--muted);font-weight:700">Resolution (အရွယ်အစား):</label>
-              <select id="exportResSelect" style="padding:6px;background:#141a27;border:1px solid var(--border);color:#fff;border-radius:6px;font-size:10.5px">
-                <option value="720" selected>720p Fast HD (အကြံပြုချက်)</option>
-                <option value="1080">1080p Full HD</option>
-                <option value="480">480p Super Fast (ပေါ့ပါး)</option>
-              </select>
-            </div>
-            <div class="sliderField">
-              <label style="font-size:10px;color:var(--muted);font-weight:700">Frame Rate (FPS):</label>
-              <select id="exportFpsSelect" style="padding:6px;background:#141a27;border:1px solid var(--border);color:#fff;border-radius:6px;font-size:10.5px">
-                <option value="25" selected>25 FPS (ပုံမှန်)</option>
-                <option value="30">30 FPS (အချောမွေ့ဆုံး)</option>
-                <option value="20">20 FPS (အမြန်ဆုံး)</option>
-              </select>
-            </div>
-          </div>
-
-          <button class="burnBtn" id="exportFullBtn" style="width:100%;padding:14px" onclick="startRecapVideoBurn()">
-            🎬 Export Full Movie Recap Video (.mp4)
+          <button class="burnBtn" id="exportFullBtn" style="width:100%;padding:14px;font-size:13px" onclick="startRecapVideoBurn()">
+            ⚡ Instant Download Burned MP4
           </button>
           
-          <div id="exportStatusInfo" style="font-size:10px;color:var(--cyan);text-align:center;margin-top:8px;display:none;font-weight:700">
-            ⏳ Compositing video, voices, subtitles and BGM...
+          <div id="exportStatusInfo" style="margin-top:10px;display:none;text-align:center">
+            <div style="font-size:10.5px;color:var(--cyan);font-weight:700;margin-bottom:6px" id="exportStatusText">
+              ⏳ Processing Background Burn...
+            </div>
+            <button class="danger" onclick="cancelExportProcessing()" style="padding:6px 14px;font-size:10.5px">
+              ✕ Cancel Burn (ရပ်တန့်မည်)
+            </button>
           </div>
         </div>
       </section>
@@ -1131,7 +1122,12 @@ let isBgmPlayingPreview = false;
 let isBgmMasterEnabled = true;
 let activePresetKey = null;
 
-// Clean Direct Streaming Royalty-Free Ambient Audio Links
+// Pre-burned MP4 Blob Storage
+let preBurnedBlob = null;
+let isExportCancelled = false;
+let activeRecorderInstance = null;
+
+// Clean Direct Streaming Royalty-Free Ambient Audio Links (Fixed Emotional Sad Link)
 const PRESET_BGM_TRACKS = {
   cinematic: "https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=cinematic-time-lapse-115672.mp3",
   emotional: "https://cdn.pixabay.com/download/audio/2022/01/18/audio_d0a13f69d2.mp3?filename=ambient-piano-sad-10708.mp3",
@@ -1324,7 +1320,7 @@ function toggleBgmMasterSwitch() {
 
   if (isBgmMasterEnabled) {
     btn.textContent = "SWITCH OFF";
-    btn.style.background = "#2bd576"; // Green on
+    btn.style.background = "#2bd576";
     btn.style.color = "#07090e";
     txt.textContent = "ENABLED (ON)";
     txt.style.color = "#2bd576";
@@ -1335,7 +1331,7 @@ function toggleBgmMasterSwitch() {
     toast("BGM Music: ON 🔊");
   } else {
     btn.textContent = "SWITCH ON";
-    btn.style.background = "#475569"; // Gray off
+    btn.style.background = "#475569";
     btn.style.color = "#fff";
     txt.textContent = "DISABLED (OFF)";
     txt.style.color = "#94a3b8";
@@ -2346,6 +2342,7 @@ async function generateRecapScriptOnly() {
   video.pause();
   if (bgmAudio) bgmAudio.pause();
   videoLockOverlay.classList.add("active");
+  document.getElementById("cancelExportBtnInShield").style.display = "none";
   setLockProgress(5, "🚀 စတင်လုပ်ဆောင်နေပါသည်...", "ဗီဒီယို ဖိုင်ကို စစ်ဆေးနေပါသည်...");
 
   document.querySelectorAll("button, select, input").forEach(el => {
@@ -2458,6 +2455,7 @@ async function synthesizeAllVoiceovers() {
   video.pause();
   if (bgmAudio) bgmAudio.pause();
   videoLockOverlay.classList.add("active");
+  document.getElementById("cancelExportBtnInShield").style.display = "none";
 
   document.querySelectorAll("button, select, input").forEach(el => {
     if (el.id !== "menuHubBtn" && !el.closest("#errorModalBackdrop") && !el.closest("#appMenuBackdrop")) {
@@ -2777,48 +2775,45 @@ function addSub() {
 }
 
 // =========================================================================
-// ACCURATE MULTI-ENGINE MP4 EXPORT RENDERING ENGINE
+// ACCURATE SILENT COMPOSITING ENGINE & SAVE & BURN FLOW
 // =========================================================================
-function onExportEngineChange(engine) {
-  const box = document.getElementById("wasmNoticeBox");
-  if (box) box.style.display = (engine === "wasm") ? "block" : "none";
+function cancelExportProcessing() {
+  if (!generating && !activeRecorderInstance) return;
+  isExportCancelled = true;
+  if (activeRecorderInstance && activeRecorderInstance.state !== "inactive") {
+    try { activeRecorderInstance.stop(); } catch(e) {}
+  }
+  video.pause();
+  videoLockOverlay.classList.remove("active");
+  document.getElementById("cancelExportBtnInShield").style.display = "none";
+  document.getElementById("exportFullBtn").disabled = false;
+  document.getElementById("exportStatusInfo").style.display = "none";
+  generating = false;
+  toast("🛑 လုပ်ဆောင်မှုကို ရပ်တန့်လိုက်ပါပြီ");
 }
 
-async function startRecapVideoBurn() {
+// 1. Save and Burn into Ready Blob Cache
+async function bakeAndSaveAllOverlays() {
   if (generating) return;
   if (!video.src) { toast("Please upload video first"); return; }
-  
-  const burnBtn = document.getElementById("exportFullBtn");
-  const statusInfo = document.getElementById("exportStatusInfo");
-  const engine = document.getElementById("exportEngineSelect") ? document.getElementById("exportEngineSelect").value : "stream";
-  const targetRes = document.getElementById("exportResSelect") ? Number(document.getElementById("exportResSelect").value) : 720;
-  const targetFps = document.getElementById("exportFpsSelect") ? Number(document.getElementById("exportFpsSelect").value) : 25;
 
-  burnBtn.disabled = true;
-  statusInfo.style.display = "block";
+  isExportCancelled = false;
+  preBurnedBlob = null;
+  document.getElementById("readyBurnedBadge").style.display = "none";
 
   video.pause();
   if (bgmAudio) bgmAudio.pause();
 
   const totalDur = video.duration || 60;
   videoLockOverlay.classList.add("active");
-  
-  if (engine === "wasm") {
-    setLockProgress(0, "🚀 Turbo Wasm Exporting...", "Processing video stream with FFmpeg Wasm mode...");
-  } else if (engine === "stream") {
-    setLockProgress(0, "⚡ Fast Stream Exporting...", "Real-time recording with audio compositing...");
-  } else {
-    setLockProgress(0, "🎬 Rendering Full Recap MP4...", "Compositing video frames, voiceover, BGM and subtitles...");
-  }
+  document.getElementById("cancelExportBtnInShield").style.display = "inline-flex";
+  setLockProgress(0, "💾 Burning & Saving Overlays...", "Background composite of video, audio, titles, subtitles & blur...");
 
   const burnCanvas = document.getElementById("burnCanvas");
   const bCtx = burnCanvas.getContext("2d");
-
-  // Calculate resolution maintaining 16:9 ratio
-  let targetWidth = 1280;
-  let targetHeight = 720;
-  if (targetRes === 1080) { targetWidth = 1920; targetHeight = 1080; }
-  else if (targetRes === 480) { targetWidth = 854; targetHeight = 480; }
+  const targetWidth = 1280;
+  const targetHeight = 720;
+  const targetFps = 25;
 
   burnCanvas.width = targetWidth;
   burnCanvas.height = targetHeight;
@@ -2838,30 +2833,29 @@ async function startRecapVideoBurn() {
 
   const recorder = new MediaRecorder(combinedStream, {
     mimeType: MediaRecorder.isTypeSupported(mimeType) ? mimeType : undefined,
-    videoBitsPerSecond: targetRes === 1080 ? 6000000 : (targetRes === 720 ? 3500000 : 1800000)
+    videoBitsPerSecond: 3500000
   });
+  activeRecorderInstance = recorder;
 
   const recordedChunks = [];
   recorder.ondataavailable = e => { if (e.data.size > 0) recordedChunks.push(e.data); };
 
   recorder.onstop = () => {
     videoLockOverlay.classList.remove("active");
-    burnBtn.disabled = false;
-    statusInfo.style.display = "none";
+    document.getElementById("cancelExportBtnInShield").style.display = "none";
+    activeRecorderInstance = null;
     audioCtx.close();
 
-    const finalBlob = new Blob(recordedChunks, { type: "video/mp4" });
-    const downloadUrl = URL.createObjectURL(finalBlob);
-    const a = document.createElement("a");
-    a.href = downloadUrl;
-    a.download = `recap-export-${Date.now()}.mp4`;
-    a.click();
-    toast("🎉 MP4 Video Exported Successfully!");
+    if (isExportCancelled) return;
+
+    preBurnedBlob = new Blob(recordedChunks, { type: "video/mp4" });
+    document.getElementById("readyBurnedBadge").style.display = "block";
+    toast("🎉 Video Burn Complete! Ready for Instant Download.");
   };
 
   recorder.start();
 
-  // Connect BGM to Audio Destination if enabled
+  // Connect BGM Audio to Stream Destination
   if (bgmAudio && isBgmMasterEnabled && bgmAudio.src) {
     try {
       const bgmResp = await fetch(bgmAudio.src);
@@ -2875,12 +2869,10 @@ async function startRecapVideoBurn() {
       bgmSource.connect(bgmGain);
       bgmGain.connect(dest);
       bgmSource.start(0);
-    } catch(e) {
-      console.warn("BGM Export Audio Connect fallback:", e);
-    }
+    } catch(e) {}
   }
 
-  // Pre-schedule Voiceover Audio Lines into Audio Context
+  // Pre-schedule All Voiceover Lines
   for (let s of subs) {
     const audioUrl = audioMap.get(s.id);
     if (audioUrl) {
@@ -2891,7 +2883,7 @@ async function startRecapVideoBurn() {
         const vSource = audioCtx.createBufferSource();
         vSource.buffer = decodedVoice;
         const vGain = audioCtx.createGain();
-        vGain.gain.value = 1.6;
+        vGain.gain.value = 1.8;
         vSource.connect(vGain);
         vGain.connect(dest);
         vSource.start(s.start);
@@ -2899,29 +2891,69 @@ async function startRecapVideoBurn() {
     }
   }
 
-  // Common Drawer Function
-  function drawCanvasFrame(currentTime) {
+  // Accurate Frame Composite Function
+  const logoEl = document.getElementById("videoLogoOverlay");
+  const scaleRatio = targetWidth / 1280;
+
+  function renderFullCompositeFrame(currentTime) {
     bCtx.drawImage(video, 0, 0, burnCanvas.width, burnCanvas.height);
 
-    // Draw Glass Blur Boxes
+    // Draw Blur Boxes with Filter
     blurBoxes.forEach(b => {
       const bx = (b.x / 100) * burnCanvas.width;
       const by = (b.y / 100) * burnCanvas.height;
       const bw = (b.w / 100) * burnCanvas.width;
       const bh = (b.h / 180) * burnCanvas.height;
-      bCtx.fillStyle = "rgba(0, 0, 0, 0.4)";
+
+      bCtx.save();
+      bCtx.filter = `blur(${b.blurStrength || 14}px)`;
+      bCtx.drawImage(burnCanvas, bx, by, bw, bh, bx, by, bw, bh);
+      bCtx.filter = 'none';
+      bCtx.fillStyle = "rgba(255, 255, 255, 0.05)";
       bCtx.fillRect(bx, by, bw, bh);
+      bCtx.restore();
     });
 
-    // Draw Titles
+    // Draw Logo Overlay
+    if (logoEl && logoEl.src && logoEl.style.display !== "none") {
+      const lgW = (logoProps.size || 60) * scaleRatio * 1.5;
+      const lgH = lgW * (logoEl.naturalHeight / (logoEl.naturalWidth || 1));
+      const lgX = (logoProps.x / 100) * burnCanvas.width;
+      const lgY = (logoProps.y / 100) * burnCanvas.height;
+
+      bCtx.save();
+      bCtx.globalAlpha = (logoProps.opacity || 85) / 100;
+      bCtx.drawImage(logoEl, lgX, lgY, lgW, lgH);
+      bCtx.restore();
+    }
+
+    // Draw Title Overlays
     movieTitles.forEach(t => {
       const tx = (t.x / 100) * burnCanvas.width;
       const ty = (t.y / 100) * burnCanvas.height;
+      const tSize = (t.fontSize || 14) * scaleRatio * 1.6;
+
       bCtx.save();
-      bCtx.font = `bold ${(t.fontSize || 14) * 1.5}px "Pyidaungsu", sans-serif`;
-      bCtx.fillStyle = t.color || "#ffffff";
+      bCtx.font = `bold ${tSize}px "Pyidaungsu", sans-serif`;
       bCtx.textAlign = "center";
-      bCtx.fillText(t.text, tx, ty);
+      bCtx.textBaseline = "middle";
+
+      const textMetrics = bCtx.measureText(t.text);
+      const padX = 14 * scaleRatio;
+      const padY = 8 * scaleRatio;
+      const boxW = textMetrics.width + (padX * 2);
+      const boxH = tSize + (padY * 2);
+
+      const r = parseInt((t.bgColor || "#000000").slice(1, 3), 16) || 0;
+      const g = parseInt((t.bgColor || "#000000").slice(3, 5), 16) || 0;
+      const b = parseInt((t.bgColor || "#000000").slice(5, 7), 16) || 0;
+      bCtx.fillStyle = `rgba(${r}, ${g}, ${b}, ${(t.opacity || 65) / 100})`;
+      bCtx.fillRect(tx - boxW / 2, ty, boxW, boxH);
+
+      bCtx.fillStyle = t.color || "#ffffff";
+      bCtx.shadowColor = "#000000";
+      bCtx.shadowBlur = 4;
+      bCtx.fillText(t.text, tx, ty + boxH / 2);
       bCtx.restore();
     });
 
@@ -2930,73 +2962,107 @@ async function startRecapVideoBurn() {
     if (curSub && curSub.mm) {
       const subX = (overlayPos.x / 100) * burnCanvas.width;
       const subY = (overlayPos.y / 100) * burnCanvas.height;
-      const subSize = (Number(document.getElementById("size").value) || 17) * 1.5;
+      const baseFontSize = Number(document.getElementById("size").value) || 17;
+      const scaledSubSize = baseFontSize * scaleRatio * 1.5;
       
       bCtx.save();
-      bCtx.font = `bold ${subSize}px "Pyidaungsu", sans-serif`;
+      bCtx.font = `bold ${scaledSubSize}px "Pyidaungsu", sans-serif`;
       bCtx.textAlign = "center";
+      bCtx.textBaseline = "middle";
 
       const lines = curSub.mm.split("\n");
-      const lineHeight = subSize * 1.35;
-      const startLineY = subY - ((lines.length - 1) * lineHeight) / 2;
+      const lineHeight = scaledSubSize * 1.38;
+      const totalBlockH = lines.length * lineHeight;
+      const startLineY = subY - (totalBlockH / 2) + (lineHeight / 2);
+
+      const subBg = document.getElementById("bgColor").value || "#000000";
+      const subOp = Number(document.getElementById("boxOpacity").value) / 100;
+      const bgR = parseInt(subBg.slice(1, 3), 16) || 0;
+      const bgG = parseInt(subBg.slice(3, 5), 16) || 0;
+      const bgB = parseInt(subBg.slice(5, 7), 16) || 0;
+      
+      let maxLineWidth = 0;
+      lines.forEach(l => {
+        const w = bCtx.measureText(l.trim()).width;
+        if (w > maxLineWidth) maxLineWidth = w;
+      });
+
+      const padW = 20 * scaleRatio;
+      const padH = 10 * scaleRatio;
+      bCtx.fillStyle = `rgba(${bgR}, ${bgG}, ${bgB}, ${subOp})`;
+      bCtx.fillRect(subX - (maxLineWidth / 2) - padW, subY - (totalBlockH / 2) - padH, maxLineWidth + (padW * 2), totalBlockH + (padH * 2));
+
+      const outlineWidth = (Number(document.getElementById("outlineWidth").value) || 1.5) * scaleRatio * 1.8;
+      const outlineColor = document.getElementById("outlineColor").value || "#000000";
+      const targetColor = document.getElementById("targetColor").value || "#ffffff";
 
       lines.forEach((line, idx) => {
         const y = startLineY + (idx * lineHeight);
-        bCtx.strokeStyle = "#000000";
-        bCtx.lineWidth = 4;
+        bCtx.strokeStyle = outlineColor;
+        bCtx.lineWidth = outlineWidth;
         bCtx.strokeText(line.trim(), subX, y);
-        bCtx.fillStyle = document.getElementById("targetColor").value || "#ffffff";
+        bCtx.fillStyle = targetColor;
         bCtx.fillText(line.trim(), subX, y);
       });
       bCtx.restore();
     }
   }
 
-  // Real-Time / Fast Stream Method
-  if (engine === "stream" || engine === "wasm") {
-    video.currentTime = 0;
-    video.playbackRate = 1.0;
-    await video.play().catch(() => {});
+  // Silent Offline Rendering Loop
+  video.currentTime = 0;
+  const stepTime = 1 / targetFps;
+  let currentRenderTime = 0;
 
-    await new Promise((resolve) => {
-      const renderLoop = () => {
-        if (video.currentTime >= totalDur || video.ended) {
-          resolve();
-          return;
-        }
-        drawCanvasFrame(video.currentTime);
-        const progressPct = Math.min(99, Math.round((video.currentTime / totalDur) * 100));
-        setLockProgress(progressPct, `🎬 Exporting Video (${progressPct}%)...`, `Fast encoding at ${formatTime(video.currentTime)} / ${formatTime(totalDur)}`);
-        requestAnimationFrame(renderLoop);
-      };
-      requestAnimationFrame(renderLoop);
+  while (currentRenderTime <= totalDur) {
+    if (isExportCancelled) break;
+
+    video.currentTime = currentRenderTime;
+    await new Promise(res => {
+      video.onseeked = () => res();
+      setTimeout(res, 80);
     });
 
-    video.pause();
-  } else {
-    // Step-by-Step Frame Composite Method
-    video.currentTime = 0;
-    const stepTime = 1 / targetFps;
-    let currentRenderTime = 0;
+    renderFullCompositeFrame(currentRenderTime);
 
-    while (currentRenderTime <= totalDur) {
-      video.currentTime = currentRenderTime;
-      await new Promise(res => {
-        video.onseeked = () => res();
-        setTimeout(res, 75);
-      });
-
-      drawCanvasFrame(currentRenderTime);
-
-      currentRenderTime += stepTime;
-      const progressPct = Math.min(99, Math.round((currentRenderTime / totalDur) * 100));
-      setLockProgress(progressPct, `🎬 Rendering MP4 Video (${progressPct}%)...`, `Exporting frame at ${formatTime(currentRenderTime)} / ${formatTime(totalDur)}`);
-    }
+    currentRenderTime += stepTime;
+    const progressPct = Math.min(99, Math.round((currentRenderTime / totalDur) * 100));
+    setLockProgress(progressPct, `💾 Saving & Burning Video (${progressPct}%)...`, `Processing overlays at ${formatTime(currentRenderTime)} / ${formatTime(totalDur)}`);
   }
 
-  setLockProgress(100, "🎉 Packaging MP4 Video...", "Preparing MP4 download file...");
-  await new Promise(r => setTimeout(r, 600));
-  recorder.stop();
+  if (!isExportCancelled) {
+    setLockProgress(100, "🎉 Ready to Download!", "Saved Burned Video Cache is ready!");
+    await new Promise(r => setTimeout(r, 600));
+    recorder.stop();
+  }
+}
+
+// 2. Export / Download Burned Video
+async function startRecapVideoBurn() {
+  if (generating) return;
+  if (!video.src) { toast("Please upload video first"); return; }
+
+  // If already saved & burned, instant download
+  if (preBurnedBlob) {
+    const downloadUrl = URL.createObjectURL(preBurnedBlob);
+    const a = document.createElement("a");
+    a.href = downloadUrl;
+    a.download = `recap-burned-${Date.now()}.mp4`;
+    a.click();
+    toast("🎉 Instant Download Started!");
+    return;
+  }
+
+  // If not burned yet, burn first and auto-download
+  toast("Burn မလုပ်ရသေးသဖြင့် စတင်ပြီး Auto Download လုပ်ပေးပါမည်...");
+  await bakeAndSaveAllOverlays();
+  if (preBurnedBlob && !isExportCancelled) {
+    const downloadUrl = URL.createObjectURL(preBurnedBlob);
+    const a = document.createElement("a");
+    a.href = downloadUrl;
+    a.download = `recap-burned-${Date.now()}.mp4`;
+    a.click();
+    toast("🎉 MP4 Video Exported Successfully!");
+  }
 }
 
 function saveProject() { if (generating) return; toast("Project saved!"); }
