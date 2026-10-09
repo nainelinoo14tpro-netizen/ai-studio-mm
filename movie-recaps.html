@@ -356,7 +356,7 @@ video { width: 100%; height: 100%; display: none; object-fit: contain; backgroun
   border-color: var(--cyan); background: rgba(32, 215, 255, 0.08);
   box-shadow: 0 0 0 1.5px rgba(32, 215, 255, 0.35);
 }
-.itemTop { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+.itemTop { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; gap: 6px; flex-wrap: wrap; }
 .badge { font: 10px ui-monospace, monospace; color: #94a3b8; }
 .item.active .badge { color: var(--cyan); font-weight: 700; }
 .itemEditText {
@@ -629,7 +629,7 @@ video { width: 100%; height: 100%; display: none; object-fit: contain; backgroun
           <!-- VOICE SELECTION & PRODUCTION CENTER -->
           <div style="margin-bottom:12px">
             <label style="font-size:10px;color:var(--muted);font-weight:700;display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
-              <span>🗣️ AI VOICE SETTINGS (အသံရွေးချယ်ပြီး အသံသွင်းရန်)</span>
+              <span>🗣️ AI VOICE SETTINGS (မူလစကားပြောအသံ ရွေးချယ်မှု)</span>
               <span id="cloneQuotaBadge" style="font-size:9px;color:var(--cyan)">ZeroGPU Voice Ready</span>
             </label>
             <div style="display:grid;grid-template-columns:1fr 1fr 1.2fr;gap:6px">
@@ -823,8 +823,13 @@ let selectedVoice = "my-MM-ThihaNeural";
 let overlayPos = { x: 50, y: 82 };
 let isCloneDisabledByLimit = false;
 
-// Gradio Client Instance ကို Reconnect ပြန်မလုပ်ဘဲ မြန်မြန်ဆန်ဆန် သုံးနိုင်ရန်
+// Gradio Client Instance
 let gradioClientInstance = null;
+
+// Web Audio API Context & Gain Node for Loud Audio Voice Booster
+let voiceAudioCtx = null;
+let voiceGainNode = null;
+let activeVoiceAudioSource = null;
 
 const video = document.getElementById("video");
 const videoBox = document.getElementById("videoBox");
@@ -845,6 +850,20 @@ const lockProgFill = document.getElementById("lockProgFill");
 const lockPercentText = document.getElementById("lockPercentText");
 
 let controlHideTimer = null;
+
+function initVoiceAudioSystem() {
+  if (!voiceAudioCtx) {
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    voiceAudioCtx = new AudioContextClass();
+    voiceGainNode = voiceAudioCtx.createGain();
+    // 1.8x Volume Gain Booster for ultra-clear and loud narration
+    voiceGainNode.gain.value = 1.8;
+    voiceGainNode.connect(voiceAudioCtx.destination);
+  }
+  if (voiceAudioCtx.state === 'suspended') {
+    voiceAudioCtx.resume();
+  }
+}
 
 function toggleAppMenu(e) {
   if (e && e.target !== document.getElementById("appMenuBackdrop") && e.target !== document.getElementById("appMenuBackdrop").querySelector("button")) return;
@@ -969,7 +988,10 @@ function updateAudioLevels() {
     video.volume = vVol / 100;
   }
   if (activeVoiceAudio) {
-    activeVoiceAudio.volume = aVol / 100;
+    activeVoiceAudio.volume = Math.min(1.0, aVol / 100);
+  }
+  if (voiceGainNode) {
+    voiceGainNode.gain.value = 1.8 * (aVol / 100);
   }
 }
 
@@ -1026,7 +1048,7 @@ async function generateEdgeSpeechInBrowser(text, voice, rate) {
       const dateStr = new Date().toString();
       const reqId = crypto.randomUUID().replace(/-/g, "");
       const cleanText = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-      const ssml = `<speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis' xmlns:mstts='http://www.w3.org/2001/mstts' xml:lang='my-MM'><voice name='${voice}'><prosody pitch='+0Hz' rate='${rate}'>${cleanText}</prosody></voice></speak>`;
+      const ssml = `<speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis' xmlns:mstts='http://www.w3.org/2001/mstts' xml:lang='my-MM'><voice name='${voice}'><prosody pitch='+0Hz' rate='${rate}' volume='+50%'>${cleanText}</prosody></voice></speak>`;
 
       ws.send(`X-Timestamp:${dateStr}\r\nContent-Type:application/json; charset=utf-8\r\nPath:speech.config\r\n\r\n{"context":{"synthesis":{"audio":{"metadataoptions":{"sentenceBoundaryEnabled":"false","wordBoundaryEnabled":"false"},"outputFormat":"audio-24khz-48kbitrate-mono-mp3"}}}}`);
       ws.send(`X-RequestId:${reqId}\r\nContent-Type:application/ssml+xml\r\nX-Timestamp:${dateStr}\r\nPath:ssml\r\n\r\n${ssml}`);
@@ -1084,8 +1106,7 @@ async function generateEdgeSpeechInBrowser(text, voice, rate) {
   });
 }
 
-// ZERO-GPU VOICE CLONING (FETCH VIA AUTHENTICATED WORKER)
-// ZERO-GPU VOICE CLONING (AUTO-DETECT AUDIO FORMAT & RAW ERROR TRACE)
+// ZERO-GPU VOICE CLONING
 async function fetchZeroGpuAudio(text, lockedStyle) {
   const currentSelect = document.getElementById("cloneVoiceStyle");
   const stylePrompt = lockedStyle || (currentSelect ? currentSelect.value : "A news anchor voice, formal and authoritative, steady pace, perfect for broadcast");
@@ -1103,8 +1124,6 @@ async function fetchZeroGpuAudio(text, lockedStyle) {
       text_input: text,
       style_prompt: stylePrompt
     });
-
-    console.log("ZeroGPU Raw Result:", result);
 
     let audioUrl = null;
     if (result && result.data && result.data.length > 0) {
@@ -1126,6 +1145,7 @@ async function fetchZeroGpuAudio(text, lockedStyle) {
     throw err;
   }
 }
+
 async function fetchMyanmarAudio(text, voice, rate, lockedStyle) {
   if (voice === 'zero-gpu-clone') {
     try {
@@ -1143,12 +1163,12 @@ async function fetchMyanmarAudio(text, voice, rate, lockedStyle) {
     }
   }
 
-  // Edge TTS Generator (Worker & Direct Browser Fallback)
+  // Edge TTS Generator with volume: +50%
   try {
     const res = await fetch(WORKER_URL + "/tts", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text, voice, rate })
+      body: JSON.stringify({ text, voice, rate, volume: "+50%" })
     });
     if (res.ok) {
       const blob = await res.blob();
@@ -1178,9 +1198,12 @@ async function testMyanmarVoice() {
       currentStyle
     );
 
+    initVoiceAudioSystem();
     const aud = new Audio(audioUrl);
+    const src = voiceAudioCtx.createMediaElementSource(aud);
+    src.connect(voiceGainNode);
     aud.play();
-    toast("🔊 Myanmar Voice Playing!");
+    toast("🔊 Myanmar Voice Playing (Boosted)!");
   } catch(e) {
     if (!isCloneDisabledByLimit) {
       showErrorModal("Voice Test Diagnostics", e.message);
@@ -1193,6 +1216,7 @@ function togglePlayPause(e) {
   if (!video.src || generating) return;
 
   if (video.paused) {
+    initVoiceAudioSystem();
     video.play().then(() => {
       vPlayBtn.textContent = "⏸";
       showControlsBriefly();
@@ -1311,9 +1335,7 @@ function applySubtitlePositionFromSlider() {
   overlay.style.top = overlayPos.y + "%";
 }
 
-// =====================================================
-// SCREEN TOUCH & DRAG SUBTITLE POSITIONING ENGINE
-// =====================================================
+// Touch & Drag positioning engine
 let isDragging = false;
 let startX, startY;
 
@@ -1373,9 +1395,6 @@ function initTouchDrag() {
   window.addEventListener("touchend", onPointerUp);
 }
 
-// =====================================================
-// NEW OVERLAY CONTROLS: LOGO, TITLE, BLUR
-// =====================================================
 function handleLogoUpload(e) {
   const file = e.target.files[0];
   if (!file) return;
@@ -1500,7 +1519,8 @@ async function generateRecapScriptOnly() {
       id: i + 1,
       start: Number(g.start || (i * 4)),
       end: Number(g.end || (i * 4 + 3.8)),
-      mm: g.recap_mm || g.text || "ဇာတ်ကြောင်းပြော..."
+      mm: g.recap_mm || g.text || "ဇာတ်ကြောင်းပြော...",
+      voiceOverride: selectedVoice // Default to currently selected master voice
     }));
 
     step("Recap", "done");
@@ -1574,8 +1594,10 @@ async function synthesizeAllVoiceovers() {
         `"${line.mm.slice(0, 24)}..."`
       );
 
+      const voiceToUse = line.voiceOverride || selectedVoice;
+
       try {
-        const audioUrl = await fetchMyanmarAudio(line.mm, selectedVoice, rateStr, lockedCloneStyle);
+        const audioUrl = await fetchMyanmarAudio(line.mm, voiceToUse, rateStr, lockedCloneStyle);
         if (audioUrl) {
           audioMap.set(line.id, audioUrl);
         }
@@ -1601,10 +1623,12 @@ async function synthesizeAllVoiceovers() {
       }).catch(() => {});
 
       toast("🎉 အသံသွင်းယူပြီးပါပြီ! ဇာတ်ကြောင်းပြော ဗီဒီယိုကို စတင်ဖွင့်နေပါသည်...");
+      render();
     } else {
       videoLockOverlay.classList.remove("active");
       step("Ready", "warn");
       setStatus("ready", "Voice Clone Limit! မူရင်းအသံ (သီဟ) ဖြင့် ပြန်လည် ထုတ်ပေးပါ");
+      render();
     }
 
   } catch(err) {
@@ -1621,7 +1645,7 @@ async function synthesizeAllVoiceovers() {
   }
 }
 
-/* Audio Ducking & Narration Playback Engine */
+/* Audio Ducking & Narration Playback Engine With Web Audio Booster */
 let activeVoiceAudio = null;
 
 video.addEventListener("timeupdate", () => {
@@ -1671,6 +1695,8 @@ function playVoiceForSub(sub) {
   const url = audioMap.get(sub.id);
   if (!url) return;
 
+  initVoiceAudioSystem();
+
   if (activeVoiceAudio) {
     activeVoiceAudio.pause();
     activeVoiceAudio = null;
@@ -1679,37 +1705,70 @@ function playVoiceForSub(sub) {
   const vVol = Number(document.getElementById("videoVolume").value) / 100;
   const aVol = Number(document.getElementById("voiceVolume").value) / 100;
 
-  if (!video.muted) video.volume = Math.max(0.04, vVol * 0.4);
+  // Audio Ducking for movie background
+  if (!video.muted) video.volume = Math.max(0.04, vVol * 0.35);
 
   activeVoiceAudio = new Audio(url);
-  activeVoiceAudio.volume = aVol;
+  activeVoiceAudio.volume = Math.min(1.0, aVol);
+  
+  try {
+    const sourceNode = voiceAudioCtx.createMediaElementSource(activeVoiceAudio);
+    sourceNode.connect(voiceGainNode);
+  } catch(e) {}
+
   activeVoiceAudio.play().catch(() => {});
   activeVoiceAudio.onended = () => {
     if (!video.muted) video.volume = vVol;
   };
 }
 
+// Single Voice Line Overwrite / Re-Generate
 async function playSingleVoice(id) {
   if (generating) return;
   const sub = subs.find(s => s.id === id);
   if (!sub) return;
 
-  if (!audioMap.has(sub.id)) {
-    toast(`Generating voice for line #${id}...`);
-    try {
-      const spd = document.getElementById("voiceSpeed").value;
-      const rateStr = (spd >= 0 ? "+" : "") + spd + "%";
-      const lockedStyle = document.getElementById("cloneVoiceStyle")?.value;
-      const audioUrl = await fetchMyanmarAudio(sub.mm, selectedVoice, rateStr, lockedStyle);
-      if (audioUrl) audioMap.set(sub.id, audioUrl);
-    } catch(e) {
-      toast("Voice generation failed");
-      return;
+  const btn = document.getElementById(`btn-voice-${id}`);
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = "⏳ Rendering...";
+  }
+
+  toast(`Generating voice line #${id}...`);
+  try {
+    const spd = document.getElementById("voiceSpeed").value;
+    const rateStr = (spd >= 0 ? "+" : "") + spd + "%";
+    const lockedStyle = document.getElementById("cloneVoiceStyle")?.value;
+    const voiceToUse = sub.voiceOverride || selectedVoice;
+
+    const audioUrl = await fetchMyanmarAudio(sub.mm, voiceToUse, rateStr, lockedStyle);
+    if (audioUrl) {
+      // Overwrite and replace old voice line in audioMap
+      audioMap.set(sub.id, audioUrl);
+      toast(`🎉 Voice line #${id} updated successfully!`);
     }
+  } catch(e) {
+    toast("Voice generation failed: " + e.message);
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = "🔊 Play Voice";
+    }
+    render();
   }
 
   playVoiceForSub(sub);
-  toast(`Playing voice line #${id}`);
+}
+
+function updateLineVoiceChoice(id, newVoice) {
+  const sub = subs.find(s => s.id === id);
+  if (sub) {
+    sub.voiceOverride = newVoice;
+    // Clear old audio for this line so user can re-generate with new voice
+    audioMap.delete(id);
+    render();
+    toast(`Line #${id} voice set to: ${newVoice.includes("Thiha") ? "သီဟ (ကျား)" : (newVoice.includes("Nilar") ? "နီလာ (မ)" : "Voice Clone")}`);
+  }
 }
 
 function playAllVoiceover() {
@@ -1736,9 +1795,19 @@ function render() {
     <div class="item" id="sub-${x.id}" onclick="if(!generating){ video.currentTime = ${x.start}; video.play(); }">
       <div class="itemTop">
         <span class="badge">#${x.id} &nbsp; ${formatTime(x.start)} → ${formatTime(x.end)}</span>
-        <button onclick="event.stopPropagation(); playSingleVoice(${x.id})" style="font-size:10px;padding:3px 7px" ${generating ? 'disabled' : ''}>
-          ${audioMap.has(x.id) ? "🔊 Play Voice" : "🎙️ Create Voice"}
-        </button>
+        
+        <div style="display:flex;align-items:center;gap:5px;margin-left:auto" onclick="event.stopPropagation()">
+          <select style="background:#141a27;border:1px solid var(--border-light);color:var(--cyan);border-radius:6px;font-size:9.5px;padding:2px 4px;font-weight:700" 
+                  onchange="updateLineVoiceChoice(${x.id}, this.value)" ${generating ? 'disabled' : ''}>
+            <option value="my-MM-ThihaNeural" ${(x.voiceOverride || selectedVoice).includes("Thiha") ? "selected" : ""}>👨 သီဟ (ကျား)</option>
+            <option value="my-MM-NilarNeural" ${(x.voiceOverride || selectedVoice).includes("Nilar") ? "selected" : ""}>👩 နီလာ (မ)</option>
+            <option value="zero-gpu-clone" ${(x.voiceOverride || selectedVoice) === "zero-gpu-clone" ? "selected" : ""}>🎙️ Voice Clone</option>
+          </select>
+
+          <button id="btn-voice-${x.id}" onclick="playSingleVoice(${x.id})" style="font-size:10px;padding:3px 7px;font-weight:700" ${generating ? 'disabled' : ''}>
+            ${audioMap.has(x.id) ? "🔊 Play Voice" : "🎙️ Create Voice"}
+          </button>
+        </div>
       </div>
       <textarea class="itemEditText" onclick="event.stopPropagation()" oninput="editScriptText(${x.id}, this.value)">${x.mm}</textarea>
       <div class="timesBar" onclick="event.stopPropagation()">
@@ -1790,7 +1859,13 @@ function addSub() {
   if (generating) return;
   const last = subs[subs.length - 1];
   const start = last ? Number(last.end) : 0;
-  subs.push({ id: subs.length + 1, start, end: start + 3.0, mm: "ဇာတ်ကြောင်းပြော အသစ်..." });
+  subs.push({ 
+    id: subs.length + 1, 
+    start, 
+    end: start + 3.0, 
+    mm: "ဇာတ်ကြောင်းပြော အသစ်...",
+    voiceOverride: selectedVoice
+  });
   render(); toast("Line added");
 }
 
