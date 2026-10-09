@@ -280,6 +280,21 @@ video.anti-copyright-active {
   display: grid; place-items: center; cursor: pointer; font-weight: 800;
 }
 
+/* Touch editing handles: drag the body to move, drag a handle to resize. */
+.overlayResizeHandle,
+.overlayResizeHandle { position: absolute; width: 16px; height: 16px; border-radius: 50%; background: var(--cyan); border: 2px solid #071018; z-index: 80; touch-action: none; }
+.resizeHandle { position: absolute; width: 16px; height: 16px; border-radius: 50%; background: var(--cyan); border: 2px solid #071018; z-index: 80; touch-action: none; }
+.resizeHandle.nw { left: -9px; top: -9px; cursor: nwse-resize; }
+.resizeHandle.ne { right: -9px; top: -9px; cursor: nesw-resize; }
+.resizeHandle.sw { left: -9px; bottom: -9px; cursor: nesw-resize; }
+.resizeHandle.se { right: -9px; bottom: -9px; cursor: nwse-resize; }
+.resizeHandle.n { left: calc(50% - 8px); top: -9px; cursor: ns-resize; }
+.resizeHandle.s { left: calc(50% - 8px); bottom: -9px; cursor: ns-resize; }
+.resizeHandle.w { left: -9px; top: calc(50% - 8px); cursor: ew-resize; }
+.resizeHandle.e { right: -9px; top: calc(50% - 8px); cursor: ew-resize; }
+.videoLogoResizeHandle { position: absolute; width: 18px; height: 18px; right: -9px; bottom: -9px; border-radius: 50%; background: var(--cyan); border: 2px solid #071018; z-index: 81; touch-action: none; }
+
+
 .videoBlurBoxItem {
   position: absolute; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
   background: rgba(255, 255, 255, 0.05); border: 1.5px dashed rgba(255,255,255,0.45);
@@ -445,18 +460,20 @@ video.anti-copyright-active {
 .bottomNav button.active { background: rgba(255, 85, 114, 0.28); color: #fff; font-weight: 700; }
 
 @media(max-width: 900px) {
-  body { height: 100vh; height: 100dvh; overflow: hidden; display: flex; flex-direction: column; }
-  .container { flex: 1; display: flex; flex-direction: column; overflow: hidden; padding: 6px 10px 0 10px; width: 100%; }
+  /* Let the document scroll naturally on mobile. The previous fixed-height
+     flex layout trapped touch scrolling inside the app grid. */
+  body { min-height: 100dvh; height: auto; overflow-x: hidden; overflow-y: auto; display: block; }
+  .container { display: block; overflow: visible; padding: 6px 10px calc(76px + var(--safe-bottom)); width: 100%; }
   .appBodyGrid {
-    flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch;
-    padding-bottom: calc(76px + var(--safe-bottom)); display: block; width: 100%;
+    display: block; overflow: visible; -webkit-overflow-scrolling: touch;
+    padding-bottom: 0; width: 100%;
   }
   .toneGrid { grid-template-columns: repeat(3, 1fr); }
-  .videoBox { max-height: 205px; }
+  .videoBox { max-height: none; height: auto; }
   .tabPane { display: none; }
   .tabPane.activeTab { display: block; animation: tabFade 0.2s ease; }
   @keyframes tabFade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
-  .list { max-height: calc(100vh - 430px); }
+  .list { max-height: none; }
 }
 
 @media(min-width: 901px) {
@@ -588,6 +605,10 @@ video.anti-copyright-active {
         <div class="overlay" id="overlay">
           <div class="overlayInner" id="overlayInner">
             <span class="overlayTarget" id="overlayTarget"></span>
+            <span class="resizeHandle nw" data-resize-target="subtitle" data-resize-dir="nw"></span>
+            <span class="resizeHandle ne" data-resize-target="subtitle" data-resize-dir="ne"></span>
+            <span class="resizeHandle sw" data-resize-target="subtitle" data-resize-dir="sw"></span>
+            <span class="resizeHandle se" data-resize-target="subtitle" data-resize-dir="se"></span>
           </div>
         </div>
 
@@ -1029,7 +1050,7 @@ video.anti-copyright-active {
         <div class="cardHead"><div class="title">📦 Export Center (Video Exporter)</div></div>
         <div class="body">
           <button class="burnBtn" id="exportFullBtn" style="width:100%;padding:14px;font-size:13px;margin-bottom:10px" onclick="exportFullRecapVideo()">
-            🎬 Export Full Movie Recap Video (.mp4)
+            🎬 Export Full Movie Recap Video (.webm)
           </button>
 
           <!-- Audio & SRT Direct Download Tools -->
@@ -1698,6 +1719,14 @@ function loadVideo(f) {
     vDurTime.textContent = formatTime(video.duration || 0);
     vCurTime.textContent = "00:00";
     vSeekBar.value = 0;
+
+    // Use the uploaded video's real dimensions instead of forcing 16:9.
+    if (video.videoWidth > 0 && video.videoHeight > 0) {
+      videoBox.style.aspectRatio = `${video.videoWidth} / ${video.videoHeight}`;
+      video.dataset.sourceWidth = String(video.videoWidth);
+      video.dataset.sourceHeight = String(video.videoHeight);
+    }
+
     updateAudioLevels();
   };
 
@@ -1963,60 +1992,83 @@ function renderBlurBoxes() {
   });
 }
 
+function pointerXY(e) {
+  return { x: e.clientX, y: e.clientY };
+}
+
+function addResizeHandles(el, target, dirs = ["nw", "n", "ne", "w", "e", "sw", "s", "se"]) {
+  el.querySelectorAll(`.resizeHandle[data-resize-target="${target}"]`).forEach(x => x.remove());
+  dirs.forEach(dir => {
+    const h = document.createElement("span");
+    h.className = `resizeHandle ${dir}`;
+    h.dataset.resizeTarget = target;
+    h.dataset.resizeDir = dir;
+    el.appendChild(h);
+  });
+}
+
 function initBlurBoxDrag(el, bData) {
-  let isBoxDragging = false;
-  let grabOffsetX = 0;
-  let grabOffsetY = 0;
+  let mode = null;
+  let start = null;
+  let original = null;
 
-  function onDown(e) {
+  addResizeHandles(el, bData.id);
+
+  function begin(e) {
     if (e.target.classList.contains("blurCloseBadge")) return;
-    isBoxDragging = true;
+    const handle = e.target.closest(".resizeHandle");
+    const p = pointerXY(e);
     selectActiveBlurBox(bData.id);
-
-    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-    const boxRect = el.getBoundingClientRect();
-    const vRect = videoBox.getBoundingClientRect();
-
-    grabOffsetX = clientX - boxRect.left;
-    grabOffsetY = clientY - boxRect.top;
-
+    mode = handle ? "resize" : "move";
+    start = p;
+    original = { x: bData.x, y: bData.y, w: bData.w, h: bData.h };
+    e.preventDefault();
     e.stopPropagation();
+    el.setPointerCapture?.(e.pointerId);
   }
 
-  function onMove(e) {
-    if (!isBoxDragging) return;
-    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-    const vRect = videoBox.getBoundingClientRect();
-
-    let newPixelX = clientX - vRect.left - grabOffsetX;
-    let newPixelY = clientY - vRect.top - grabOffsetY;
-
-    let newXPercent = (newPixelX / vRect.width) * 100;
-    let newYPercent = (newPixelY / vRect.height) * 100;
-
-    bData.x = Math.max(0, Math.min(100, Math.round(newXPercent)));
-    bData.y = Math.max(0, Math.min(100, Math.round(newYPercent)));
-
+  function move(e) {
+    if (!mode) return;
+    const p = pointerXY(e);
+    const v = videoBox.getBoundingClientRect();
+    const dx = ((p.x - start.x) / v.width) * 100;
+    const dy = ((p.y - start.y) / v.height) * 100;
+    const handle = e.currentTarget?.dataset?.resizeDir || el.querySelector(".resizeHandle.active")?.dataset?.resizeDir;
+    if (mode === "move") {
+      bData.x = Math.max(0, Math.min(100 - bData.w, original.x + dx));
+      bData.y = Math.max(0, Math.min(100, original.y + dy));
+    } else {
+      const dir = el.__activeResizeDir || "se";
+      if (dir.includes("e")) bData.w = Math.max(5, Math.min(100 - original.x, original.w + dx));
+      if (dir.includes("s")) bData.h = Math.max(18, Math.min(v.height, original.h + (p.y - start.y)));
+      if (dir.includes("w")) {
+        const nx = Math.max(0, Math.min(original.x + original.w - 5, original.x + dx));
+        bData.w = original.w - (nx - original.x); bData.x = nx;
+      }
+      if (dir.includes("n")) {
+        const deltaPx = p.y - start.y;
+        const nh = Math.max(18, Math.min(v.height, original.h - deltaPx));
+        bData.y = Math.max(0, original.y + (original.h - nh) / v.height * 100);
+        bData.h = nh;
+      }
+    }
     el.style.left = bData.x + "%";
     el.style.top = bData.y + "%";
-
+    el.style.width = bData.w + "%";
+    el.style.height = bData.h + "px";
     syncActiveBlurToSliders();
     e.preventDefault();
   }
 
-  function onUp() {
-    if (isBoxDragging) isBoxDragging = false;
-  }
-
-  el.addEventListener("mousedown", onDown);
-  window.addEventListener("mousemove", onMove);
-  window.addEventListener("mouseup", onUp);
-
-  el.addEventListener("touchstart", onDown, { passive: false });
-  window.addEventListener("touchmove", onMove, { passive: false });
-  window.addEventListener("touchend", onUp);
+  function finish() { mode = null; el.__activeResizeDir = null; }
+  el.addEventListener("pointerdown", e => {
+    const handle = e.target.closest(".resizeHandle");
+    if (handle) el.__activeResizeDir = handle.dataset.resizeDir;
+    begin(e);
+  });
+  el.addEventListener("pointermove", move);
+  el.addEventListener("pointerup", finish);
+  el.addEventListener("pointercancel", finish);
 }
 
 // MULTI MOVIE TITLES STUDIO
@@ -2149,6 +2201,7 @@ function renderMovieTitles() {
     closeBtn.textContent = "✕";
     closeBtn.onclick = (e) => { e.stopPropagation(); removeMovieTitle(t.id); };
     el.appendChild(closeBtn);
+    addResizeHandles(el, t.id);
 
     initTitleDrag(el, t);
     container.appendChild(el);
@@ -2172,45 +2225,45 @@ function renderMovieTitleControls() {
 }
 
 function initTitleDrag(el, tData) {
-  let isTitleDragging = false;
+  let mode = null;
+  let start = null;
+  let original = null;
 
-  function onDown(e) {
+  function begin(e) {
     if (e.target.classList.contains("titleCloseBadge")) return;
-    isTitleDragging = true;
+    const handle = e.target.closest(".resizeHandle");
+    const p = pointerXY(e);
     selectActiveTitle(tData.id);
+    mode = handle ? "resize" : "move";
+    el.__activeResizeDir = handle?.dataset.resizeDir || null;
+    start = p;
+    original = { x: tData.x, y: tData.y, fontSize: tData.fontSize };
+    e.preventDefault();
     e.stopPropagation();
+    el.setPointerCapture?.(e.pointerId);
   }
-
-  function onMove(e) {
-    if (!isTitleDragging) return;
-    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-    const vRect = videoBox.getBoundingClientRect();
-
-    let newX = ((clientX - vRect.left) / vRect.width) * 100;
-    let newY = ((clientY - vRect.top) / vRect.height) * 100;
-
-    tData.x = Math.max(0, Math.min(100, Math.round(newX)));
-    tData.y = Math.max(0, Math.min(100, Math.round(newY)));
-
+  function move(e) {
+    if (!mode) return;
+    const p = pointerXY(e);
+    const v = videoBox.getBoundingClientRect();
+    if (mode === "move") {
+      tData.x = Math.max(0, Math.min(100, original.x + ((p.x - start.x) / v.width) * 100));
+      tData.y = Math.max(0, Math.min(100, original.y + ((p.y - start.y) / v.height) * 100));
+    } else {
+      const delta = ((p.x - start.x) + (p.y - start.y)) / 2;
+      tData.fontSize = Math.max(8, Math.min(180, original.fontSize + delta / 3));
+    }
     el.style.left = tData.x + "%";
     el.style.top = tData.y + "%";
-
+    el.style.fontSize = tData.fontSize + "px";
     syncActiveTitleToSliders();
     e.preventDefault();
   }
-
-  function onUp() {
-    if (isTitleDragging) isTitleDragging = false;
-  }
-
-  el.addEventListener("mousedown", onDown);
-  window.addEventListener("mousemove", onMove);
-  window.addEventListener("mouseup", onUp);
-
-  el.addEventListener("touchstart", onDown, { passive: false });
-  window.addEventListener("touchmove", onMove, { passive: false });
-  window.addEventListener("touchend", onUp);
+  function finish() { mode = null; el.__activeResizeDir = null; }
+  el.addEventListener("pointerdown", begin);
+  el.addEventListener("pointermove", move);
+  el.addEventListener("pointerup", finish);
+  el.addEventListener("pointercancel", finish);
 }
 
 // LOGO STUDIO CONTROLS
@@ -2222,6 +2275,7 @@ function handleLogoUpload(e) {
     const logo = document.getElementById("videoLogoOverlay");
     logo.src = evt.target.result;
     logo.style.display = "block";
+    ensureLogoResizeHandle();
     document.getElementById("logoControlsBox").style.display = "block";
     updateLogoProps();
     initLogoDrag();
@@ -2253,55 +2307,85 @@ function updateLogoProps() {
   document.getElementById("lgSizeVal").textContent = logoProps.size + "px";
   document.getElementById("lgOpVal").textContent = logoProps.opacity + "%";
 
-  logo.style.left = logoProps.x + "%";
-  logo.style.top = logoProps.y + "%";
-  logo.style.maxWidth = logoProps.size + "px";
-  logo.style.opacity = logoProps.opacity / 100;
+  updateLogoPositionOnly();
+}
+
+function ensureLogoResizeHandle() {
+  let handle = document.getElementById("videoLogoResizeHandle");
+  if (!handle) {
+    handle = document.createElement("span");
+    handle.id = "videoLogoResizeHandle";
+    handle.className = "videoLogoResizeHandle";
+    videoBox.appendChild(handle);
+    handle.addEventListener("pointerdown", beginLogoResize);
+  }
+  updateLogoResizeHandle();
+}
+
+function updateLogoResizeHandle() {
+  const logo = document.getElementById("videoLogoOverlay");
+  const handle = document.getElementById("videoLogoResizeHandle");
+  if (!logo || !handle) return;
+  handle.style.display = logo.style.display === "none" ? "none" : "block";
+  handle.style.left = `calc(${logoProps.x}% + ${Math.max(24, logoProps.size)}px - 9px)`;
+  handle.style.top = `calc(${logoProps.y}% + ${Math.max(18, logo.offsetHeight)}px - 9px)`;
 }
 
 function initLogoDrag() {
   const logo = document.getElementById("videoLogoOverlay");
-  let isDraggingLogo = false;
+  if (!logo || logo.dataset.touchReady === "1") return;
+  logo.dataset.touchReady = "1";
+  let moving = false;
+  let start = null;
+  let original = null;
+  logo.addEventListener("pointerdown", e => {
+    moving = true; start = pointerXY(e); original = { x: logoProps.x, y: logoProps.y };
+    e.preventDefault(); e.stopPropagation(); logo.setPointerCapture?.(e.pointerId);
+  });
+  logo.addEventListener("pointermove", e => {
+    if (!moving) return;
+    const p = pointerXY(e); const v = videoBox.getBoundingClientRect();
+    logoProps.x = Math.max(0, Math.min(100, original.x + ((p.x - start.x) / v.width) * 100));
+    logoProps.y = Math.max(0, Math.min(100, original.y + ((p.y - start.y) / v.height) * 100));
+    updateLogoPositionOnly(); e.preventDefault();
+  });
+  const end = () => { moving = false; };
+  logo.addEventListener("pointerup", end); logo.addEventListener("pointercancel", end);
+  ensureLogoResizeHandle();
+}
 
-  function onDown(e) {
-    isDraggingLogo = true;
-    e.stopPropagation();
-  }
+function beginLogoResize(e) {
+  const logo = document.getElementById("videoLogoOverlay");
+  if (!logo) return;
+  const start = pointerXY(e);
+  const original = Number(logoProps.size || 60);
+  const finish = () => { window.removeEventListener("pointermove", resize); window.removeEventListener("pointerup", finish); };
+  const resize = ev => {
+    const delta = ((ev.clientX - start.x) + (ev.clientY - start.y)) / 2;
+    logoProps.size = Math.max(20, Math.min(600, original + delta));
+    updateLogoPositionOnly();
+    ev.preventDefault();
+  };
+  window.addEventListener("pointermove", resize, { passive: false });
+  window.addEventListener("pointerup", finish, { once: true });
+  e.preventDefault(); e.stopPropagation();
+}
 
-  function onMove(e) {
-    if (!isDraggingLogo) return;
-    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-    const vRect = videoBox.getBoundingClientRect();
-
-    let newX = ((clientX - vRect.left) / vRect.width) * 100;
-    let newY = ((clientY - vRect.top) / vRect.height) * 100;
-
-    logoProps.x = Math.max(0, Math.min(100, Math.round(newX)));
-    logoProps.y = Math.max(0, Math.min(100, Math.round(newY)));
-
-    logo.style.left = logoProps.x + "%";
-    logo.style.top = logoProps.y + "%";
-
-    document.getElementById("lgXSlider").value = logoProps.x;
-    document.getElementById("lgYSlider").value = logoProps.y;
-    document.getElementById("lgXVal").textContent = logoProps.x + "%";
-    document.getElementById("lgYVal").textContent = logoProps.y + "%";
-
-    e.preventDefault();
-  }
-
-  function onUp() {
-    if (isDraggingLogo) isDraggingLogo = false;
-  }
-
-  logo.addEventListener("mousedown", onDown);
-  window.addEventListener("mousemove", onMove);
-  window.addEventListener("mouseup", onUp);
-
-  logo.addEventListener("touchstart", onDown, { passive: false });
-  window.addEventListener("touchmove", onMove, { passive: false });
-  window.addEventListener("touchend", onUp);
+function updateLogoPositionOnly() {
+  const logo = document.getElementById("videoLogoOverlay");
+  if (!logo) return;
+  logo.style.left = logoProps.x + "%";
+  logo.style.top = logoProps.y + "%";
+  logo.style.maxWidth = logoProps.size + "px";
+  logo.style.width = logoProps.size + "px";
+  logo.style.opacity = logoProps.opacity / 100;
+  const x = document.getElementById("lgXVal"); const y = document.getElementById("lgYVal"); const z = document.getElementById("lgSizeVal");
+  if (x) x.textContent = Math.round(logoProps.x) + "%";
+  if (y) y.textContent = Math.round(logoProps.y) + "%";
+  if (z) z.textContent = Math.round(logoProps.size) + "px";
+  const xs = document.getElementById("lgXSlider"); const ys = document.getElementById("lgYSlider"); const zs = document.getElementById("lgSizeSlider");
+  if (xs) xs.value = logoProps.x; if (ys) ys.value = logoProps.y; if (zs) zs.value = logoProps.size;
+  updateLogoResizeHandle();
 }
 
 // ANTI-COPYRIGHT VIDEO SHIELD
@@ -2740,6 +2824,25 @@ function playAllVoiceover() {
   toast("Playing recap preview...");
 }
 
+function initSubtitleResize() {
+  document.querySelectorAll('[data-resize-target="subtitle"]').forEach(handle => {
+    handle.addEventListener("pointerdown", e => {
+      const startY = e.clientY;
+      const startSize = Number(document.getElementById("size")?.value || 17);
+      const resize = ev => {
+        const next = Math.max(8, Math.min(120, startSize + (ev.clientY - startY) / 3));
+        const slider = document.getElementById("size");
+        if (slider) { slider.value = next; applySubtitleStyle(); }
+        ev.preventDefault();
+      };
+      const finish = () => { window.removeEventListener("pointermove", resize); };
+      window.addEventListener("pointermove", resize, { passive: false });
+      window.addEventListener("pointerup", finish, { once: true });
+      e.preventDefault(); e.stopPropagation();
+    });
+  });
+}
+
 function render() {
   const q = (document.getElementById("search").value || "").toLowerCase().trim();
   const list = document.getElementById("list");
@@ -2829,9 +2932,13 @@ function addSub() {
   render(); toast("Line added");
 }
 
-// HELPER: Canvas Rounded Rectangle Support
+// =========================================================================
+// REAL-TIME CANVAS EXPORT ENGINE
+// Keeps the original video frame and burns in blur, logo, titles and SRT text.
+// The browser records the composed canvas in real time as WebM.
+// =========================================================================
 function drawCanvasRoundRect(ctx, x, y, width, height, radius) {
-  radius = Math.min(radius, width / 2, height / 2);
+  radius = Math.max(0, Math.min(radius, width / 2, height / 2));
   ctx.beginPath();
   if (ctx.roundRect) {
     ctx.roundRect(x, y, width, height, radius);
@@ -2845,15 +2952,13 @@ function drawCanvasRoundRect(ctx, x, y, width, height, radius) {
   ctx.closePath();
 }
 
-// =========================================================================
-// REAL-TIME FRAME RENDERING & EXPORT ENGINES (100% PREVIEW ACCURACY)
-// =========================================================================
 function cancelExportProcessing() {
   isExportCancelled = true;
   if (activeRecorderInstance && activeRecorderInstance.state !== "inactive") {
-    try { activeRecorderInstance.stop(); } catch(e) {}
+    try { activeRecorderInstance.stop(); } catch (e) {}
   }
   video.pause();
+  if (bgmAudio) bgmAudio.pause();
   videoLockOverlay.classList.remove("active");
   document.getElementById("cancelExportBtnInShield").style.display = "none";
   document.getElementById("exportFullBtn").disabled = false;
@@ -2862,321 +2967,402 @@ function cancelExportProcessing() {
   toast("🛑 Export ရပ်တန့်လိုက်ပါပြီ");
 }
 
-// Pure Canvas Frame Drawer - 100% Matching Browser Screen Preview
 function drawCanvasBurnFrame(bCtx, burnCanvas, currTime, scaleFactor, totalDur) {
-  // 1. Draw Clean Base Movie Frame
+  // 1. Original movie frame. This is the base layer for every exported frame.
+  bCtx.save();
+  bCtx.filter = "none";
+  bCtx.globalAlpha = 1;
   bCtx.drawImage(video, 0, 0, burnCanvas.width, burnCanvas.height);
+  bCtx.restore();
 
-  // 2. Draw Multi Blur Boxes (Matching Preview 6px rounded border)
-  blurBoxes.forEach(b => {
-    const bx = (b.x / 100) * burnCanvas.width;
-    const by = (b.y / 100) * burnCanvas.height;
-    const bw = (b.w / 100) * burnCanvas.width;
-    const bh = (b.h * scaleFactor);
-    const bRad = 6 * scaleFactor;
+  // 2. Blur boxes. Convert both position and size from the UI values to canvas pixels.
+  blurBoxes.forEach(box => {
+    const bx = (Number(box.x) / 100) * burnCanvas.width;
+    const by = (Number(box.y) / 100) * burnCanvas.height;
+    const bw = (Number(box.w) / 100) * burnCanvas.width;
+    // UI stores blur height in CSS pixels, while x/y/w are percentages.
+    // Scale the pixel height exactly as the preview scales it.
+    const bh = Number(box.h || 0) * scaleFactor;
+    if (bw <= 0 || bh <= 0) return;
 
     bCtx.save();
-    drawCanvasRoundRect(bCtx, bx, by, bw, bh, bRad);
+    drawCanvasRoundRect(bCtx, bx, by, bw, bh, 6 * scaleFactor);
     bCtx.clip();
-    bCtx.filter = `blur(${Math.max(4, b.blurStrength * scaleFactor * 0.8)}px)`;
+    bCtx.filter = `blur(${Math.max(4, Number(box.blurStrength || 14) * scaleFactor * 0.8)}px)`;
     bCtx.drawImage(video, 0, 0, burnCanvas.width, burnCanvas.height);
-    bCtx.filter = 'none';
-    bCtx.fillStyle = "rgba(255, 255, 255, 0.05)";
-    bCtx.fill();
+    bCtx.filter = "none";
+    bCtx.fillStyle = "rgba(255,255,255,0.05)";
+    bCtx.fillRect(bx, by, bw, bh);
     bCtx.restore();
   });
 
-  // 3. Draw Channel Logo (Exact natural aspect ratio scale)
+  // 3. Logo.
   const logoEl = document.getElementById("videoLogoOverlay");
-  if (logoEl && logoEl.src && logoEl.style.display !== "none") {
-    const lw = (logoProps.size || 60) * scaleFactor;
-    const lh = lw * (logoEl.naturalHeight / (logoEl.naturalWidth || 1));
-    const lx = (logoProps.x / 100) * burnCanvas.width;
-    const ly = (logoProps.y / 100) * burnCanvas.height;
+  if (logoEl && logoEl.complete && logoEl.naturalWidth > 0 && logoEl.style.display !== "none") {
+    const lw = Math.max(1, Number(logoProps.size || 60) * scaleFactor);
+    const lh = lw * (logoEl.naturalHeight / Math.max(1, logoEl.naturalWidth));
+    const lx = (Number(logoProps.x || 0) / 100) * burnCanvas.width;
+    const ly = (Number(logoProps.y || 0) / 100) * burnCanvas.height;
 
     bCtx.save();
-    bCtx.globalAlpha = (logoProps.opacity ?? 85) / 100;
+    bCtx.globalAlpha = Math.max(0, Math.min(1, Number(logoProps.opacity ?? 85) / 100));
     bCtx.drawImage(logoEl, lx, ly, lw, lh);
     bCtx.restore();
   }
 
-  // 4. Draw Titles (Matching 6px rounded corners, text shadow & true 0% opacity fix)
-  movieTitles.forEach(t => {
-    const tx = (t.x / 100) * burnCanvas.width;
-    const ty = (t.y / 100) * burnCanvas.height;
-    const tSize = (t.fontSize || 14) * scaleFactor;
-
-    bCtx.save();
-    bCtx.font = `bold ${tSize}px system-ui, -apple-system, "Pyidaungsu", "Noto Sans Myanmar", sans-serif`;
-    bCtx.textAlign = "center";
-    bCtx.textBaseline = "middle";
-
-    const textMetrics = bCtx.measureText(t.text);
-    const padX = 12 * scaleFactor;
-    const padY = 5 * scaleFactor;
-    const boxW = textMetrics.width + (padX * 2);
-    const boxH = tSize + (padY * 2);
-    const titleOpacity = (t.opacity !== undefined && t.opacity !== null) ? Number(t.opacity) : 65;
-
-    // Draw background rounded box only if opacity > 0
-    if (titleOpacity > 0) {
-      const r = parseInt((t.bgColor || "#000000").slice(1, 3), 16) || 0;
-      const g = parseInt((t.bgColor || "#000000").slice(3, 5), 16) || 0;
-      const b = parseInt((t.bgColor || "#000000").slice(5, 7), 16) || 0;
-      bCtx.fillStyle = `rgba(${r}, ${g}, ${b}, ${titleOpacity / 100})`;
-      drawCanvasRoundRect(bCtx, tx - boxW / 2, ty, boxW, boxH, 6 * scaleFactor);
-      bCtx.fill();
-    }
-
-    // Matching Preview Text Shadow (0 2px 4px #000)
-    bCtx.shadowColor = "#000000";
-    bCtx.shadowOffsetY = 2 * scaleFactor;
-    bCtx.shadowBlur = 4 * scaleFactor;
-
-    bCtx.fillStyle = t.color || "#ffffff";
-    bCtx.fillText(t.text, tx, ty + boxH / 2);
-    bCtx.restore();
-  });
-
-  // 5. Draw Subtitles (Exact 8px Rounded Corners, Padding & Text Shadow)
-  const curSub = subs.find(s => currTime >= s.start && currTime <= s.end);
-  if (curSub && curSub.mm) {
-    const subX = (overlayPos.x / 100) * burnCanvas.width;
-    const subY = (overlayPos.y / 100) * burnCanvas.height;
-    const fontSize = (Number(document.getElementById("size").value) || 17) * scaleFactor;
+  // 4. Movie title overlays.
+  movieTitles.forEach(title => {
+    const tx = (Number(title.x || 0) / 100) * burnCanvas.width;
+    const ty = (Number(title.y || 0) / 100) * burnCanvas.height;
+    const fontSize = Math.max(1, Number(title.fontSize || 14) * scaleFactor);
+    const text = String(title.text || "");
+    if (!text) return;
 
     bCtx.save();
     bCtx.font = `bold ${fontSize}px system-ui, -apple-system, "Pyidaungsu", "Noto Sans Myanmar", sans-serif`;
     bCtx.textAlign = "center";
     bCtx.textBaseline = "middle";
 
-    const lines = curSub.mm.split("\n");
-    const lineHeight = fontSize * 1.38;
-    const totalBlockH = lines.length * lineHeight;
-    const startLineY = subY - (totalBlockH / 2) + (lineHeight / 2);
+    const metrics = bCtx.measureText(text);
+    const padX = 12 * scaleFactor;
+    const padY = 5 * scaleFactor;
+    const boxW = metrics.width + padX * 2;
+    const boxH = fontSize + padY * 2;
+    const opacity = Math.max(0, Math.min(100, Number(title.opacity ?? 65)));
+    const bg = title.bgColor || "#000000";
+    const r = parseInt(bg.slice(1, 3), 16) || 0;
+    const g = parseInt(bg.slice(3, 5), 16) || 0;
+    const b = parseInt(bg.slice(5, 7), 16) || 0;
 
-    const subBg = document.getElementById("bgColor").value || "#000000";
-    const subOp = Number(document.getElementById("boxOpacity").value) / 100;
-    const bgR = parseInt(subBg.slice(1, 3), 16) || 0;
-    const bgG = parseInt(subBg.slice(3, 5), 16) || 0;
-    const bgB = parseInt(subBg.slice(5, 7), 16) || 0;
-
-    let maxLineWidth = 0;
-    lines.forEach(l => {
-      const w = bCtx.measureText(l.trim()).width;
-      if (w > maxLineWidth) maxLineWidth = w;
-    });
-
-    const boxWidthMode = Number(document.getElementById("boxWidthMode").value);
-    const padW = 12 * scaleFactor;
-    const padH = 5 * scaleFactor;
-    let boxDrawW = maxLineWidth + (padW * 2);
-    if (boxWidthMode > 0) {
-      boxDrawW = (boxWidthMode / 100) * burnCanvas.width;
-    }
-
-    // Draw Subtitle Rounded Background Box (Preview border-radius: 8px)
-    if (subOp > 0) {
-      bCtx.fillStyle = `rgba(${bgR}, ${bgG}, ${bgB}, ${subOp})`;
-      drawCanvasRoundRect(bCtx, subX - (boxDrawW / 2), subY - (totalBlockH / 2) - padH, boxDrawW, totalBlockH + (padH * 2), 8 * scaleFactor);
+    if (opacity > 0) {
+      bCtx.fillStyle = `rgba(${r},${g},${b},${opacity / 100})`;
+      drawCanvasRoundRect(bCtx, tx - boxW / 2, ty, boxW, boxH, 6 * scaleFactor);
       bCtx.fill();
     }
 
-    const outlineWidth = (Number(document.getElementById("outlineWidth").value) || 1.5) * scaleFactor;
-    const outlineColor = document.getElementById("outlineColor").value || "#000000";
-    const targetColor = document.getElementById("targetColor").value || "#ffffff";
+    bCtx.shadowColor = "#000";
+    bCtx.shadowOffsetY = 2 * scaleFactor;
+    bCtx.shadowBlur = 4 * scaleFactor;
+    bCtx.fillStyle = title.color || "#ffffff";
+    bCtx.fillText(text, tx, ty + boxH / 2);
+    bCtx.restore();
+  });
 
-    // Text Shadow matching Preview (0 2px 8px rgba(0,0,0,0.8))
+  // 5. SRT-style Burmese subtitle overlay based on the current video time.
+  const currentSub = subs.find(sub => currTime >= Number(sub.start) && currTime <= Number(sub.end));
+  if (currentSub && currentSub.mm) {
+    const subX = (Number(overlayPos.x || 50) / 100) * burnCanvas.width;
+    const subY = (Number(overlayPos.y || 82) / 100) * burnCanvas.height;
+    const fontSize = Math.max(1, Number(document.getElementById("size")?.value || 17) * scaleFactor);
+    const lines = String(currentSub.mm).split("\n");
+    const lineHeight = fontSize * 1.38;
+    const blockHeight = lines.length * lineHeight;
+
+    bCtx.save();
+    bCtx.font = `bold ${fontSize}px system-ui, -apple-system, "Pyidaungsu", "Noto Sans Myanmar", sans-serif`;
+    bCtx.textAlign = "center";
+    bCtx.textBaseline = "middle";
+
+    let maxLineWidth = 0;
+    lines.forEach(line => { maxLineWidth = Math.max(maxLineWidth, bCtx.measureText(line.trim()).width); });
+
+    const widthMode = Number(document.getElementById("boxWidthMode")?.value || 0);
+    const padW = 12 * scaleFactor;
+    const padH = 5 * scaleFactor;
+    const boxW = widthMode > 0 ? (widthMode / 100) * burnCanvas.width : maxLineWidth + padW * 2;
+    const bg = document.getElementById("bgColor")?.value || "#000000";
+    const bgOpacity = Number(document.getElementById("boxOpacity")?.value || 0) / 100;
+    const bgR = parseInt(bg.slice(1, 3), 16) || 0;
+    const bgG = parseInt(bg.slice(3, 5), 16) || 0;
+    const bgB = parseInt(bg.slice(5, 7), 16) || 0;
+
+    if (bgOpacity > 0) {
+      bCtx.fillStyle = `rgba(${bgR},${bgG},${bgB},${bgOpacity})`;
+      drawCanvasRoundRect(bCtx, subX - boxW / 2, subY - blockHeight / 2 - padH, boxW, blockHeight + padH * 2, 8 * scaleFactor);
+      bCtx.fill();
+    }
+
     bCtx.shadowColor = "rgba(0,0,0,0.8)";
     bCtx.shadowOffsetY = 2 * scaleFactor;
     bCtx.shadowBlur = 8 * scaleFactor;
+    const outlineWidth = Number(document.getElementById("outlineWidth")?.value || 0) * scaleFactor;
+    const outlineColor = document.getElementById("outlineColor")?.value || "#000000";
+    const textColor = document.getElementById("targetColor")?.value || "#ffffff";
+    const firstY = subY - blockHeight / 2 + lineHeight / 2;
 
-    lines.forEach((line, idx) => {
-      const y = startLineY + (idx * lineHeight);
+    lines.forEach((line, index) => {
+      const y = firstY + index * lineHeight;
       if (outlineWidth > 0) {
         bCtx.strokeStyle = outlineColor;
         bCtx.lineWidth = outlineWidth;
         bCtx.strokeText(line.trim(), subX, y);
       }
-      bCtx.fillStyle = targetColor;
+      bCtx.fillStyle = textColor;
       bCtx.fillText(line.trim(), subX, y);
     });
     bCtx.restore();
   }
 
-  // 6. Draw Real-Time Border Progress Bar on Canvas (If Enabled)
+  // 6. Border progress bar.
   if (borderProgEnabled && totalDur > 0) {
-    const col = document.getElementById("borderColorInput").value || "#20d7ff";
-    const th = (Number(document.getElementById("borderThickness").value) || 3) * scaleFactor;
-    const pct = Math.min(1.0, Math.max(0.0, currTime / totalDur));
+    const color = document.getElementById("borderColorInput")?.value || "#20d7ff";
+    const thickness = Math.max(1, Number(document.getElementById("borderThickness")?.value || 3) * scaleFactor);
+    const pct = Math.max(0, Math.min(1, currTime / totalDur));
 
     bCtx.save();
-    bCtx.fillStyle = col;
-
+    bCtx.fillStyle = color;
     if (pct <= 0.25) {
-      bCtx.fillRect(0, 0, (pct / 0.25) * burnCanvas.width, th);
-    } else if (pct <= 0.50) {
-      bCtx.fillRect(0, 0, burnCanvas.width, th);
-      bCtx.fillRect(burnCanvas.width - th, 0, th, ((pct - 0.25) / 0.25) * burnCanvas.height);
+      bCtx.fillRect(0, 0, (pct / 0.25) * burnCanvas.width, thickness);
+    } else if (pct <= 0.5) {
+      bCtx.fillRect(0, 0, burnCanvas.width, thickness);
+      bCtx.fillRect(burnCanvas.width - thickness, 0, thickness, ((pct - 0.25) / 0.25) * burnCanvas.height);
     } else if (pct <= 0.75) {
-      bCtx.fillRect(0, 0, burnCanvas.width, th);
-      bCtx.fillRect(burnCanvas.width - th, 0, th, burnCanvas.height);
-      const bW = ((pct - 0.50) / 0.25) * burnCanvas.width;
-      bCtx.fillRect(burnCanvas.width - bW, burnCanvas.height - th, bW, th);
+      bCtx.fillRect(0, 0, burnCanvas.width, thickness);
+      bCtx.fillRect(burnCanvas.width - thickness, 0, thickness, burnCanvas.height);
+      bCtx.fillRect(burnCanvas.width - ((pct - 0.5) / 0.25) * burnCanvas.width, burnCanvas.height - thickness, ((pct - 0.5) / 0.25) * burnCanvas.width, thickness);
     } else {
-      bCtx.fillRect(0, 0, burnCanvas.width, th);
-      bCtx.fillRect(burnCanvas.width - th, 0, th, burnCanvas.height);
-      bCtx.fillRect(0, burnCanvas.height - th, burnCanvas.width, th);
-      const lH = ((pct - 0.75) / 0.25) * burnCanvas.height;
-      bCtx.fillRect(0, burnCanvas.height - lH, th, lH);
+      bCtx.fillRect(0, 0, burnCanvas.width, thickness);
+      bCtx.fillRect(burnCanvas.width - thickness, 0, thickness, burnCanvas.height);
+      bCtx.fillRect(0, burnCanvas.height - thickness, burnCanvas.width, thickness);
+      bCtx.fillRect(0, burnCanvas.height - ((pct - 0.75) / 0.25) * burnCanvas.height, thickness, ((pct - 0.75) / 0.25) * burnCanvas.height);
     }
     bCtx.restore();
   }
 }
 
-// MAIN VIDEO EXPORT FUNCTION (Frame-accurate seeking loop ensures full video movement)
+function waitForVideoReady() {
+  return new Promise((resolve, reject) => {
+    if (video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA && Number.isFinite(video.duration)) {
+      resolve();
+      return;
+    }
+    const onReady = () => { cleanup(); resolve(); };
+    const onError = () => { cleanup(); reject(new Error("Video data မဖတ်နိုင်ပါ")); };
+    const cleanup = () => {
+      video.removeEventListener("loadeddata", onReady);
+      video.removeEventListener("canplay", onReady);
+      video.removeEventListener("error", onError);
+    };
+    video.addEventListener("loadeddata", onReady, { once: true });
+    video.addEventListener("canplay", onReady, { once: true });
+    video.addEventListener("error", onError, { once: true });
+    video.load();
+  });
+}
+
+function waitForFonts() {
+  return document.fonts && document.fonts.ready ? document.fonts.ready.catch(() => {}) : Promise.resolve();
+}
+
+async function decodeExportAudio(audioCtx, url) {
+  const response = await fetch(url);
+  if (!response.ok) throw new Error(`Audio fetch failed: ${response.status}`);
+  return audioCtx.decodeAudioData(await response.arrayBuffer());
+}
+
+async function prepareExportAudio(audioCtx, destination) {
+  // Use the video element's captured audio track when the browser exposes one.
+  // Voiceover and BGM are mixed into the same destination stream below.
+  const sources = [];
+
+  if (bgmAudio && isBgmMasterEnabled && bgmAudio.src) {
+    try {
+      const buffer = await decodeExportAudio(audioCtx, bgmAudio.src);
+      const source = audioCtx.createBufferSource();
+      const gain = audioCtx.createGain();
+      source.buffer = buffer;
+      source.loop = true;
+      gain.gain.value = Math.max(0, Math.min(1, bgmVolume));
+      source.connect(gain).connect(destination);
+      source.start(0);
+      sources.push(source);
+    } catch (e) {
+      console.warn("Export BGM skipped:", e);
+    }
+  }
+
+  for (const sub of subs) {
+    const url = audioMap.get(sub.id);
+    if (!url) continue;
+    try {
+      const buffer = await decodeExportAudio(audioCtx, url);
+      const source = audioCtx.createBufferSource();
+      const gain = audioCtx.createGain();
+      source.buffer = buffer;
+      gain.gain.value = Math.max(0, Math.min(2, 1.7 * (Number(document.getElementById("voiceVolume")?.value || 100) / 100)));
+      source.connect(gain).connect(destination);
+      source.start(Math.max(0, Number(sub.start) || 0));
+      sources.push(source);
+    } catch (e) {
+      console.warn(`Voice ${sub.id} skipped:`, e);
+    }
+  }
+
+  return sources;
+}
+
 async function exportFullRecapVideo() {
   if (generating) return;
-  if (!video.src) { toast("Please upload video first"); return; }
+  if (!video.src || !file) {
+    toast("မူရင်း video ကို အရင် upload လုပ်ပါ");
+    return;
+  }
+  if (!video.captureStream && !video.mozCaptureStream) {
+    toast("ဒီ browser က video export ကို မထောက်ပံ့ပါ");
+    return;
+  }
+  if (!window.MediaRecorder) {
+    toast("ဒီ browser မှာ MediaRecorder မရှိပါ");
+    return;
+  }
 
   isExportCancelled = false;
   generating = true;
-  video.pause();
-  if (bgmAudio) bgmAudio.pause();
-
   const burnBtn = document.getElementById("exportFullBtn");
   const statusInfo = document.getElementById("exportStatusInfo");
   burnBtn.disabled = true;
   statusInfo.style.display = "block";
   document.getElementById("cancelExportBtnInShield").style.display = "inline-flex";
-
-  const totalDur = video.duration || 60;
   videoLockOverlay.classList.add("active");
-  setLockProgress(0, "🔥 Rendering Full Recap MP4...", "Compositing video, voices, titles, subtitles & BGM...");
 
-  const burnCanvas = document.getElementById("burnCanvas");
-  const bCtx = burnCanvas.getContext("2d");
+  let recorder = null;
+  let animationId = 0;
+  let exportAudioCtx = null;
+  let exportAudioDestination = null;
+  let sourceStream = null;
+  let combinedStream = null;
+  let previousMuted = video.muted;
+  let previousVolume = video.volume;
+  const chunks = [];
 
-  burnCanvas.width = 1280;
-  burnCanvas.height = 720;
+  try {
+    await waitForVideoReady();
+    await waitForFonts();
 
-  // Calculate Screen vs Canvas Exact Ratio
-  const vBoxRect = videoBox.getBoundingClientRect();
-  const screenW = vBoxRect.width || 400;
-  const scaleFactor = 1280 / screenW;
+    const totalDur = Number(video.duration);
+    if (!Number.isFinite(totalDur) || totalDur <= 0) throw new Error("Video duration မရပါ");
 
-  const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  const dest = audioCtx.createMediaStreamDestination();
-  const canvasStream = burnCanvas.captureStream(30);
-  const combinedStream = new MediaStream([
-    ...canvasStream.getVideoTracks(),
-    ...dest.stream.getAudioTracks()
-  ]);
+    const burnCanvas = document.getElementById("burnCanvas");
+    const bCtx = burnCanvas.getContext("2d", { alpha: false });
+    // Keep the original video aspect ratio in the exported file.
+    // Limit the long edge to 1920px to avoid unnecessary mobile memory use.
+    const sourceWidth = Number(video.videoWidth) || 1280;
+    const sourceHeight = Number(video.videoHeight) || 720;
+    const outputScale = Math.min(1, 1920 / Math.max(sourceWidth, sourceHeight));
+    burnCanvas.width = Math.max(2, Math.round(sourceWidth * outputScale));
+    burnCanvas.height = Math.max(2, Math.round(sourceHeight * outputScale));
+    const screenWidth = videoBox.getBoundingClientRect().width || sourceWidth;
+    const scaleFactor = burnCanvas.width / screenWidth;
 
-  let mimeType = "video/mp4;codecs=avc1,mp4a.40.2";
-  if (!MediaRecorder.isTypeSupported(mimeType)) {
-    mimeType = MediaRecorder.isTypeSupported("video/mp4") ? "video/mp4" : "video/webm;codecs=vp9,opus";
-  }
+    // Capture the original video audio track if available, while Canvas supplies video.
+    sourceStream = (video.captureStream || video.mozCaptureStream).call(video);
+    const videoTracks = [burnCanvas.captureStream(30).getVideoTracks()[0]];
+    const sourceAudioTracks = sourceStream.getAudioTracks();
 
-  const recorder = new MediaRecorder(combinedStream, {
-    mimeType: MediaRecorder.isTypeSupported(mimeType) ? mimeType : undefined,
-    videoBitsPerSecond: 4500000
-  });
-  activeRecorderInstance = recorder;
+    exportAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    await exportAudioCtx.resume();
+    exportAudioDestination = exportAudioCtx.createMediaStreamDestination();
+    await prepareExportAudio(exportAudioCtx, exportAudioDestination);
 
-  const recordedChunks = [];
-  recorder.ondataavailable = e => { if (e.data.size > 0) recordedChunks.push(e.data); };
+    combinedStream = new MediaStream([
+      ...videoTracks,
+      ...sourceAudioTracks,
+      ...exportAudioDestination.stream.getAudioTracks()
+    ]);
 
-  recorder.onstop = () => {
+    const mimeCandidates = [
+      "video/webm;codecs=vp9,opus",
+      "video/webm;codecs=vp8,opus",
+      "video/webm"
+    ];
+    const mimeType = mimeCandidates.find(type => MediaRecorder.isTypeSupported(type));
+    if (!mimeType) throw new Error("WebM recording ကို browser က မထောက်ပံ့ပါ");
+
+    recorder = new MediaRecorder(combinedStream, {
+      mimeType,
+      videoBitsPerSecond: 5_000_000,
+      audioBitsPerSecond: 192_000
+    });
+    activeRecorderInstance = recorder;
+    recorder.ondataavailable = event => {
+      if (event.data && event.data.size > 0) chunks.push(event.data);
+    };
+
+    video.currentTime = 0;
+    await new Promise(resolve => {
+      const onSeeked = () => { video.removeEventListener("seeked", onSeeked); resolve(); };
+      video.addEventListener("seeked", onSeeked, { once: true });
+    });
+
+    drawCanvasBurnFrame(bCtx, burnCanvas, 0, scaleFactor, totalDur);
+    recorder.start(250);
+
+    // Mute the visible element to prevent the export sound playing twice locally.
+    video.muted = true;
+    video.volume = 0;
+    await video.play();
+
+    const drawLoop = () => {
+      if (isExportCancelled) return;
+      const currentTime = Math.min(totalDur, Number(video.currentTime) || 0);
+      drawCanvasBurnFrame(bCtx, burnCanvas, currentTime, scaleFactor, totalDur);
+      const pct = Math.min(99, Math.round((currentTime / totalDur) * 100));
+      setLockProgress(pct, `🎬 Exporting Video (${pct}%)...`, `Original video + logo + title + SRT + voiceover`);
+      if (!video.ended && currentTime < totalDur - 0.03) {
+        animationId = requestAnimationFrame(drawLoop);
+      }
+    };
+    animationId = requestAnimationFrame(drawLoop);
+
+    await new Promise(resolve => {
+      const finish = () => { video.removeEventListener("ended", finish); resolve(); };
+      video.addEventListener("ended", finish, { once: true });
+      setTimeout(finish, Math.ceil(totalDur * 1000) + 1500);
+    });
+
+    cancelAnimationFrame(animationId);
+    await new Promise(resolve => {
+      if (recorder.state === "inactive") {
+        resolve();
+        return;
+      }
+      recorder.addEventListener("stop", resolve, { once: true });
+      recorder.stop();
+    });
+
+    if (isExportCancelled) return;
+    if (!chunks.length) throw new Error("Export data မထွက်လာပါ");
+
+    const blob = new Blob(chunks, { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `recap-export-${Date.now()}.webm`;
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(url), 3000);
+    setLockProgress(100, "🎉 Export ပြီးပါပြီ", "Video download စတင်နေပါပြီ");
+    toast("🎉 Recap video downloaded (.webm)");
+  } catch (error) {
+    console.error("Export failed:", error);
+    toast("Export မအောင်မြင်ပါ: " + error.message);
+  } finally {
+    cancelAnimationFrame(animationId);
+    if (recorder && recorder.state !== "inactive") {
+      try { recorder.stop(); } catch (e) {}
+    }
+    if (exportAudioCtx) {
+      try { await exportAudioCtx.close(); } catch (e) {}
+    }
+    if (sourceStream) sourceStream.getTracks().forEach(track => track.stop());
+    video.pause();
+    video.muted = previousMuted;
+    video.volume = previousVolume;
     videoLockOverlay.classList.remove("active");
     document.getElementById("cancelExportBtnInShield").style.display = "none";
     burnBtn.disabled = false;
     statusInfo.style.display = "none";
     activeRecorderInstance = null;
-    audioCtx.close();
     generating = false;
-
-    if (isExportCancelled) return;
-
-    const actualType = recordedChunks[0]?.type || recorder.mimeType || "video/mp4";
-    const finalBlob = new Blob(recordedChunks, { type: actualType });
-    const downloadUrl = URL.createObjectURL(finalBlob);
-    const a = document.createElement("a");
-    a.href = downloadUrl;
-    const ext = actualType.includes("mp4") ? "mp4" : "webm";
-    a.download = `recap-export-${Date.now()}.${ext}`;
-    a.click();
-    toast("🎉 MP4 Video downloaded successfully!");
-  };
-
-  recorder.start();
-
-  // Connect BGM Music with AudioContext
-  if (bgmAudio && isBgmMasterEnabled && bgmAudio.src) {
-    try {
-      const bgmResp = await fetch(bgmAudio.src);
-      const bgmBuffer = await bgmResp.arrayBuffer();
-      const decodedBgm = await audioCtx.decodeAudioData(bgmBuffer);
-      const bgmSource = audioCtx.createBufferSource();
-      bgmSource.buffer = decodedBgm;
-      bgmSource.loop = true;
-      const bgmGain = audioCtx.createGain();
-      bgmGain.gain.value = bgmVolume;
-      bgmSource.connect(bgmGain);
-      bgmGain.connect(dest);
-      bgmSource.start(0);
-    } catch(e) {
-      console.warn("BGM connect:", e);
-    }
-  }
-
-  // Pre-schedule Voiceover Audio with Boost Gain (1.7x)
-  for (let s of subs) {
-    const audioUrl = audioMap.get(s.id);
-    if (audioUrl) {
-      try {
-        const vResp = await fetch(audioUrl);
-        const vBuf = await vResp.arrayBuffer();
-        const decodedVoice = await audioCtx.decodeAudioData(vBuf);
-        const vSource = audioCtx.createBufferSource();
-        vSource.buffer = decodedVoice;
-
-        const boostGain = audioCtx.createGain();
-        boostGain.gain.value = 1.7;
-        vSource.connect(boostGain);
-        boostGain.connect(dest);
-
-        vSource.start(s.start);
-      } catch(e) {}
-    }
-  }
-
-  // Step-by-Step Frame Accurate Seeking Loop (Fixes video freeze on mobile devices)
-  video.currentTime = 0;
-  const fps = 25;
-  const stepTime = 1 / fps;
-  let currentRenderTime = 0;
-
-  while (currentRenderTime <= totalDur) {
-    if (isExportCancelled) break;
-
-    video.currentTime = currentRenderTime;
-    await new Promise(res => {
-      video.onseeked = () => res();
-      setTimeout(res, 80);
-    });
-
-    drawCanvasBurnFrame(bCtx, burnCanvas, currentRenderTime, scaleFactor, totalDur);
-
-    currentRenderTime += stepTime;
-    const pct = Math.min(99, Math.round((currentRenderTime / totalDur) * 100));
-    setLockProgress(pct, `🎬 Exporting Video (${pct}%)...`, `Compositing at ${formatTime(currentRenderTime)} / ${formatTime(totalDur)}`);
-  }
-
-  if (!isExportCancelled) {
-    setLockProgress(100, "🎉 Packaging MP4...", "Preparing video download file...");
-    await new Promise(r => setTimeout(r, 400));
-    recorder.stop();
   }
 }
 
@@ -3298,6 +3484,7 @@ window.onload = function() {
   applySubtitleStyle();
   applySubtitlePositionFromSlider();
   initTouchDrag();
+  initSubtitleResize();
   fetch(WORKER_URL + "/").catch(e => console.warn("Backend ping error:", e));
 };
 </script>
