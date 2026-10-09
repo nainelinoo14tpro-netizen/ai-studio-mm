@@ -952,7 +952,7 @@ video.anti-copyright-active {
               </div>
               <div class="sliderField">
                 <label>Logo Opacity (ရေစာ): <span class="val" id="lgOpVal">85%</span></label>
-                <input id="lgOpSlider" type="range" min="10" max="100" value="85" oninput="updateLogoProps()">
+                <input id="lgOpSlider" type="range" min="0" max="100" value="85" oninput="updateLogoProps()">
               </div>
             </div>
           </div>
@@ -1295,9 +1295,7 @@ function setLockProgress(pct, title, desc) {
   if (desc) lockDesc.textContent = desc;
 }
 
-// =========================================================================
-// BGM AUDIO ENGINE (Switch ON/OFF Color Sync & Auto Load)
-// =========================================================================
+// BGM AUDIO ENGINE
 function toggleBgmMasterSwitch() {
   isBgmMasterEnabled = !isBgmMasterEnabled;
   const btn = document.getElementById("bgmMasterToggleBtn");
@@ -2075,12 +2073,12 @@ function syncActiveTitleToSliders() {
   document.getElementById("tXSlider").value = t.x;
   document.getElementById("tYSlider").value = t.y;
   document.getElementById("tSizeSlider").value = t.fontSize;
-  document.getElementById("tOpSlider").value = t.opacity;
+  document.getElementById("tOpSlider").value = (t.opacity !== undefined && t.opacity !== null) ? t.opacity : 65;
 
   document.getElementById("tXVal").textContent = t.x + "%";
   document.getElementById("tYVal").textContent = t.y + "%";
   document.getElementById("tSizeVal").textContent = t.fontSize + "px";
-  document.getElementById("tOpVal").textContent = t.opacity + "%";
+  document.getElementById("tOpVal").textContent = document.getElementById("tOpSlider").value + "%";
 }
 
 function updateActiveTitleProps() {
@@ -2141,7 +2139,8 @@ function renderMovieTitles() {
     const r = parseInt(t.bgColor.slice(1, 3), 16) || 0;
     const g = parseInt(t.bgColor.slice(3, 5), 16) || 0;
     const b = parseInt(t.bgColor.slice(5, 7), 16) || 0;
-    el.style.backgroundColor = `rgba(${r},${g},${b},${t.opacity / 100})`;
+    const op = (t.opacity !== undefined && t.opacity !== null) ? Number(t.opacity) : 65;
+    el.style.backgroundColor = `rgba(${r},${g},${b},${op / 100})`;
 
     el.textContent = t.text;
 
@@ -2325,7 +2324,6 @@ async function extractLightweightAudioBlobFromVideo(videoFile, onProgress) {
 
   if (onProgress) onProgress(45, "Whisper အတွက် Mono WAV ဖိုင် ပြုစုနေပါသည်...");
 
-  // Convert to 16000Hz Mono WAV for Whisper AI
   const targetSampleRate = 16000;
   const numChannels = 1;
   const offlineCtx = new OfflineAudioContext(numChannels, Math.ceil(decodedAudioBuffer.duration * targetSampleRate), targetSampleRate);
@@ -2338,7 +2336,6 @@ async function extractLightweightAudioBlobFromVideo(videoFile, onProgress) {
   const renderedBuffer = await offlineCtx.startRendering();
   offlineAudioContext.close();
 
-  // Encode to 16-bit PCM WAV Blob
   const channelData = renderedBuffer.getChannelData(0);
   const totalSamples = channelData.length;
   const bufferLength = totalSamples * 2 + 44;
@@ -2356,8 +2353,8 @@ async function extractLightweightAudioBlobFromVideo(videoFile, onProgress) {
   writeString(8, 'WAVE');
   writeString(12, 'fmt ');
   view.setUint32(16, 16, true);
-  view.setUint16(20, 1, true); // PCM format
-  view.setUint16(22, 1, true); // 1 Channel (Mono)
+  view.setUint16(20, 1, true);
+  view.setUint16(22, 1, true);
   view.setUint32(24, targetSampleRate, true);
   view.setUint32(28, targetSampleRate * 2, true);
   view.setUint16(32, 2, true);
@@ -2413,7 +2410,6 @@ async function generateRecapScriptOnly() {
 
     let payloadFile = file;
 
-    // Auto Extract Audio if file is larger than 20MB to prevent HTTP 413 error
     if (file.size > 20 * 1024 * 1024 || file.type.startsWith("video")) {
       setLockProgress(15, "🎵 အသံဖိုင် သီးသန့်ထုတ်ယူနေပါသည်...", `ဗီဒီယို ဖိုင်ဆိုဒ်ကြီးမားသဖြင့် (${(file.size / (1024 * 1024)).toFixed(1)}MB) Server Limit မကျော်စေရန် ပေါ့ပါးသော အသံဖိုင်အဖြစ် အလိုအလျောက် ခွဲထုတ်နေပါသည်...`);
       try {
@@ -2833,8 +2829,24 @@ function addSub() {
   render(); toast("Line added");
 }
 
+// HELPER: Canvas Rounded Rectangle Support
+function drawCanvasRoundRect(ctx, x, y, width, height, radius) {
+  radius = Math.min(radius, width / 2, height / 2);
+  ctx.beginPath();
+  if (ctx.roundRect) {
+    ctx.roundRect(x, y, width, height, radius);
+  } else {
+    ctx.moveTo(x + radius, y);
+    ctx.arcTo(x + width, y, x + width, y + height, radius);
+    ctx.arcTo(x + width, y + height, x, y + height, radius);
+    ctx.arcTo(x, y + height, x, y, radius);
+    ctx.arcTo(x, y, x + width, y, radius);
+  }
+  ctx.closePath();
+}
+
 // =========================================================================
-// REAL-TIME FRAME RENDERING & MULTI-FLOW EXPORT ENGINES (EXACT PREVIEW MATCH)
+// REAL-TIME FRAME RENDERING & EXPORT ENGINES (100% PREVIEW ACCURACY)
 // =========================================================================
 function cancelExportProcessing() {
   isExportCancelled = true;
@@ -2851,26 +2863,30 @@ function cancelExportProcessing() {
 }
 
 // Pure Canvas Frame Drawer - 100% Matching Browser Screen Preview
-function drawCanvasBurnFrame(bCtx, burnCanvas, currTime, scaleFactor) {
+function drawCanvasBurnFrame(bCtx, burnCanvas, currTime, scaleFactor, totalDur) {
+  // 1. Draw Clean Base Movie Frame
   bCtx.drawImage(video, 0, 0, burnCanvas.width, burnCanvas.height);
 
-  // 1. Draw Blur Boxes
+  // 2. Draw Multi Blur Boxes (Matching Preview 6px rounded border)
   blurBoxes.forEach(b => {
     const bx = (b.x / 100) * burnCanvas.width;
     const by = (b.y / 100) * burnCanvas.height;
     const bw = (b.w / 100) * burnCanvas.width;
     const bh = (b.h * scaleFactor);
+    const bRad = 6 * scaleFactor;
 
     bCtx.save();
+    drawCanvasRoundRect(bCtx, bx, by, bw, bh, bRad);
+    bCtx.clip();
     bCtx.filter = `blur(${Math.max(4, b.blurStrength * scaleFactor * 0.8)}px)`;
-    bCtx.drawImage(burnCanvas, bx, by, bw, bh, bx, by, bw, bh);
+    bCtx.drawImage(video, 0, 0, burnCanvas.width, burnCanvas.height);
     bCtx.filter = 'none';
     bCtx.fillStyle = "rgba(255, 255, 255, 0.05)";
-    bCtx.fillRect(bx, by, bw, bh);
+    bCtx.fill();
     bCtx.restore();
   });
 
-  // 2. Draw Channel Logo
+  // 3. Draw Channel Logo (Exact natural aspect ratio scale)
   const logoEl = document.getElementById("videoLogoOverlay");
   if (logoEl && logoEl.src && logoEl.style.display !== "none") {
     const lw = (logoProps.size || 60) * scaleFactor;
@@ -2879,12 +2895,12 @@ function drawCanvasBurnFrame(bCtx, burnCanvas, currTime, scaleFactor) {
     const ly = (logoProps.y / 100) * burnCanvas.height;
 
     bCtx.save();
-    bCtx.globalAlpha = (logoProps.opacity || 85) / 100;
+    bCtx.globalAlpha = (logoProps.opacity ?? 85) / 100;
     bCtx.drawImage(logoEl, lx, ly, lw, lh);
     bCtx.restore();
   }
 
-  // 3. Draw Titles (Matching Screen Dimensions & Font Scale)
+  // 4. Draw Titles (Matching 6px rounded corners, text shadow & true 0% opacity fix)
   movieTitles.forEach(t => {
     const tx = (t.x / 100) * burnCanvas.width;
     const ty = (t.y / 100) * burnCanvas.height;
@@ -2900,21 +2916,29 @@ function drawCanvasBurnFrame(bCtx, burnCanvas, currTime, scaleFactor) {
     const padY = 5 * scaleFactor;
     const boxW = textMetrics.width + (padX * 2);
     const boxH = tSize + (padY * 2);
+    const titleOpacity = (t.opacity !== undefined && t.opacity !== null) ? Number(t.opacity) : 65;
 
-    const r = parseInt((t.bgColor || "#000000").slice(1, 3), 16) || 0;
-    const g = parseInt((t.bgColor || "#000000").slice(3, 5), 16) || 0;
-    const b = parseInt((t.bgColor || "#000000").slice(5, 7), 16) || 0;
-    bCtx.fillStyle = `rgba(${r}, ${g}, ${b}, ${(t.opacity || 65) / 100})`;
-    bCtx.fillRect(tx - boxW / 2, ty, boxW, boxH);
+    // Draw background rounded box only if opacity > 0
+    if (titleOpacity > 0) {
+      const r = parseInt((t.bgColor || "#000000").slice(1, 3), 16) || 0;
+      const g = parseInt((t.bgColor || "#000000").slice(3, 5), 16) || 0;
+      const b = parseInt((t.bgColor || "#000000").slice(5, 7), 16) || 0;
+      bCtx.fillStyle = `rgba(${r}, ${g}, ${b}, ${titleOpacity / 100})`;
+      drawCanvasRoundRect(bCtx, tx - boxW / 2, ty, boxW, boxH, 6 * scaleFactor);
+      bCtx.fill();
+    }
+
+    // Matching Preview Text Shadow (0 2px 4px #000)
+    bCtx.shadowColor = "#000000";
+    bCtx.shadowOffsetY = 2 * scaleFactor;
+    bCtx.shadowBlur = 4 * scaleFactor;
 
     bCtx.fillStyle = t.color || "#ffffff";
-    bCtx.shadowColor = "#000000";
-    bCtx.shadowBlur = 4 * scaleFactor;
     bCtx.fillText(t.text, tx, ty + boxH / 2);
     bCtx.restore();
   });
 
-  // 4. Draw Subtitle (Exact Screen Scale & Positioning)
+  // 5. Draw Subtitles (Exact 8px Rounded Corners, Padding & Text Shadow)
   const curSub = subs.find(s => currTime >= s.start && currTime <= s.end);
   if (curSub && curSub.mm) {
     const subX = (overlayPos.x / 100) * burnCanvas.width;
@@ -2944,32 +2968,73 @@ function drawCanvasBurnFrame(bCtx, burnCanvas, currTime, scaleFactor) {
     });
 
     const boxWidthMode = Number(document.getElementById("boxWidthMode").value);
-    let boxDrawW = maxLineWidth + (24 * scaleFactor);
+    const padW = 12 * scaleFactor;
+    const padH = 5 * scaleFactor;
+    let boxDrawW = maxLineWidth + (padW * 2);
     if (boxWidthMode > 0) {
       boxDrawW = (boxWidthMode / 100) * burnCanvas.width;
     }
 
-    const padH = 8 * scaleFactor;
-    bCtx.fillStyle = `rgba(${bgR}, ${bgG}, ${bgB}, ${subOp})`;
-    bCtx.fillRect(subX - (boxDrawW / 2), subY - (totalBlockH / 2) - padH, boxDrawW, totalBlockH + (padH * 2));
+    // Draw Subtitle Rounded Background Box (Preview border-radius: 8px)
+    if (subOp > 0) {
+      bCtx.fillStyle = `rgba(${bgR}, ${bgG}, ${bgB}, ${subOp})`;
+      drawCanvasRoundRect(bCtx, subX - (boxDrawW / 2), subY - (totalBlockH / 2) - padH, boxDrawW, totalBlockH + (padH * 2), 8 * scaleFactor);
+      bCtx.fill();
+    }
 
     const outlineWidth = (Number(document.getElementById("outlineWidth").value) || 1.5) * scaleFactor;
     const outlineColor = document.getElementById("outlineColor").value || "#000000";
     const targetColor = document.getElementById("targetColor").value || "#ffffff";
 
+    // Text Shadow matching Preview (0 2px 8px rgba(0,0,0,0.8))
+    bCtx.shadowColor = "rgba(0,0,0,0.8)";
+    bCtx.shadowOffsetY = 2 * scaleFactor;
+    bCtx.shadowBlur = 8 * scaleFactor;
+
     lines.forEach((line, idx) => {
       const y = startLineY + (idx * lineHeight);
-      bCtx.strokeStyle = outlineColor;
-      bCtx.lineWidth = Math.max(1, outlineWidth);
-      bCtx.strokeText(line.trim(), subX, y);
+      if (outlineWidth > 0) {
+        bCtx.strokeStyle = outlineColor;
+        bCtx.lineWidth = outlineWidth;
+        bCtx.strokeText(line.trim(), subX, y);
+      }
       bCtx.fillStyle = targetColor;
       bCtx.fillText(line.trim(), subX, y);
     });
     bCtx.restore();
   }
+
+  // 6. Draw Real-Time Border Progress Bar on Canvas (If Enabled)
+  if (borderProgEnabled && totalDur > 0) {
+    const col = document.getElementById("borderColorInput").value || "#20d7ff";
+    const th = (Number(document.getElementById("borderThickness").value) || 3) * scaleFactor;
+    const pct = Math.min(1.0, Math.max(0.0, currTime / totalDur));
+
+    bCtx.save();
+    bCtx.fillStyle = col;
+
+    if (pct <= 0.25) {
+      bCtx.fillRect(0, 0, (pct / 0.25) * burnCanvas.width, th);
+    } else if (pct <= 0.50) {
+      bCtx.fillRect(0, 0, burnCanvas.width, th);
+      bCtx.fillRect(burnCanvas.width - th, 0, th, ((pct - 0.25) / 0.25) * burnCanvas.height);
+    } else if (pct <= 0.75) {
+      bCtx.fillRect(0, 0, burnCanvas.width, th);
+      bCtx.fillRect(burnCanvas.width - th, 0, th, burnCanvas.height);
+      const bW = ((pct - 0.50) / 0.25) * burnCanvas.width;
+      bCtx.fillRect(burnCanvas.width - bW, burnCanvas.height - th, bW, th);
+    } else {
+      bCtx.fillRect(0, 0, burnCanvas.width, th);
+      bCtx.fillRect(burnCanvas.width - th, 0, th, burnCanvas.height);
+      bCtx.fillRect(0, burnCanvas.height - th, burnCanvas.width, th);
+      const lH = ((pct - 0.75) / 0.25) * burnCanvas.height;
+      bCtx.fillRect(0, burnCanvas.height - lH, th, lH);
+    }
+    bCtx.restore();
+  }
 }
 
-// MAIN VIDEO EXPORT FUNCTION (STORY-TO-VIDEO REALTIME COMPOSITING ENGINE)
+// MAIN VIDEO EXPORT FUNCTION (Frame-accurate seeking loop ensures full video movement)
 async function exportFullRecapVideo() {
   if (generating) return;
   if (!video.src) { toast("Please upload video first"); return; }
@@ -3033,11 +3098,13 @@ async function exportFullRecapVideo() {
 
     if (isExportCancelled) return;
 
-    const finalBlob = new Blob(recordedChunks, { type: "video/mp4" });
+    const actualType = recordedChunks[0]?.type || recorder.mimeType || "video/mp4";
+    const finalBlob = new Blob(recordedChunks, { type: actualType });
     const downloadUrl = URL.createObjectURL(finalBlob);
     const a = document.createElement("a");
     a.href = downloadUrl;
-    a.download = `recap-export-${Date.now()}.mp4`;
+    const ext = actualType.includes("mp4") ? "mp4" : "webm";
+    a.download = `recap-export-${Date.now()}.${ext}`;
     a.click();
     toast("🎉 MP4 Video downloaded successfully!");
   };
@@ -3084,24 +3151,26 @@ async function exportFullRecapVideo() {
     }
   }
 
-  // Real-time Silent Loop Rendering Engine
+  // Step-by-Step Frame Accurate Seeking Loop (Fixes video freeze on mobile devices)
   video.currentTime = 0;
-  const loopStart = performance.now();
-  let renderedSecs = 0;
+  const fps = 25;
+  const stepTime = 1 / fps;
+  let currentRenderTime = 0;
 
-  while (renderedSecs < totalDur) {
+  while (currentRenderTime <= totalDur) {
     if (isExportCancelled) break;
 
-    const elapsed = (performance.now() - loopStart) / 1000;
-    renderedSecs = Math.min(totalDur, elapsed);
+    video.currentTime = currentRenderTime;
+    await new Promise(res => {
+      video.onseeked = () => res();
+      setTimeout(res, 80);
+    });
 
-    video.currentTime = renderedSecs;
-    drawCanvasBurnFrame(bCtx, burnCanvas, renderedSecs, scaleFactor);
+    drawCanvasBurnFrame(bCtx, burnCanvas, currentRenderTime, scaleFactor, totalDur);
 
-    const pct = Math.min(99, Math.round((renderedSecs / totalDur) * 100));
-    setLockProgress(pct, `🎬 Exporting Video (${pct}%)...`, `Compositing at ${formatTime(renderedSecs)} / ${formatTime(totalDur)}`);
-
-    await new Promise(r => setTimeout(r, 33));
+    currentRenderTime += stepTime;
+    const pct = Math.min(99, Math.round((currentRenderTime / totalDur) * 100));
+    setLockProgress(pct, `🎬 Exporting Video (${pct}%)...`, `Compositing at ${formatTime(currentRenderTime)} / ${formatTime(totalDur)}`);
   }
 
   if (!isExportCancelled) {
