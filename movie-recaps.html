@@ -215,7 +215,7 @@ button:active { transform: scale(0.97); }
 
 .fixedVideoShell { width: 100%; position: relative; flex-shrink: 0; max-width: 100%; }
 
-/* External Top Recap Badge strictly above video */
+/* External Top Recap Badge */
 .modeBadgeExternal {
   background: rgba(43, 213, 118, 0.16); border: 1px solid var(--green);
   color: #fff; font-size: 9.5px; font-weight: 800; padding: 4px 10px; border-radius: 8px 8px 0 0;
@@ -244,7 +244,7 @@ video.anti-copyright-active {
   filter: contrast(1.05) saturate(1.08) brightness(1.02);
 }
 
-/* Real-Time Border Progress Bar (4 Edges) */
+/* Real-Time Border Progress Bar */
 .videoProgressBorderWrap {
   position: absolute; inset: 0; pointer-events: none; z-index: 28; display: none;
 }
@@ -263,13 +263,11 @@ video.anti-copyright-active {
 .videoEmptyState span { font-size: 32px; opacity: 0.8; }
 .videoEmptyState p { margin: 0; font-size: 11.5px; font-weight: 500; }
 
-/* Dynamic Floating Logo */
 .videoLogoOverlay {
   position: absolute; top: 10%; left: 10%; z-index: 26;
   max-width: 180px; max-height: 120px; display: none; cursor: move; touch-action: none;
 }
 
-/* Multi-Title Text Overlays */
 .videoTitleOverlayItem {
   position: absolute; z-index: 26; background: rgba(0,0,0,0.65); padding: 4px 12px; border-radius: 6px;
   color: #fff; font-size: 13px; font-weight: 800; text-shadow: 0 2px 4px #000;
@@ -282,7 +280,6 @@ video.anti-copyright-active {
   display: grid; place-items: center; cursor: pointer; font-weight: 800;
 }
 
-/* Multi-Blur Boxes - Pure Glass Blur Style */
 .videoBlurBoxItem {
   position: absolute; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
   background: rgba(255, 255, 255, 0.05); border: 1.5px dashed rgba(255,255,255,0.45);
@@ -296,7 +293,6 @@ video.anti-copyright-active {
   display: grid; place-items: center; cursor: pointer; font-weight: 800;
 }
 
-/* Subtitle Container */
 .overlay {
   position: absolute; left: 50%; top: 82%; transform: translate(-50%, -50%);
   display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -317,7 +313,6 @@ video.anti-copyright-active {
   max-width: 100%;
 }
 
-/* External Control Bar */
 .videoControlBarExternal {
   background: #090d16; border-top: 1px solid var(--border);
   padding: 8px 8px; display: flex; align-items: center; gap: 5px;
@@ -335,7 +330,6 @@ video.anti-copyright-active {
   flex: 1; min-width: 0; accent-color: var(--cyan); height: 5px; border-radius: 3px; cursor: pointer; margin: 0 2px;
 }
 
-/* Locked Shield */
 .videoLockOverlay {
   position: absolute; inset: 0; z-index: 45;
   background: rgba(6, 8, 14, 0.92); backdrop-filter: blur(8px);
@@ -560,7 +554,7 @@ video.anti-copyright-active {
 
   <div class="fixedVideoShell">
     
-    <!-- Top External Recap Badge strictly above video -->
+    <!-- Top External Recap Badge -->
     <div class="modeBadgeExternal" id="modeBadge">
       <span>●</span> <span>🎬 RECAP MODE: ဇာတ်ကြောင်းပြော အသင့်ဖြစ်ပါပြီ</span>
     </div>
@@ -851,7 +845,7 @@ video.anti-copyright-active {
 
           <div style="margin-bottom:10px">
             <label style="font-size:10px;color:var(--muted);font-weight:700;display:block;margin-bottom:4px">
-              🎼 AUTO PRESET BGM SONGS (Instant WebAudio Ambient Tracks)
+              🎼 AUTO PRESET BGM SONGS (Royalty-Free တေးဂီတများ ရွေးချယ်ရန်)
             </label>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
               <button class="secondaryBtn" id="bgmBtn-cinematic" onclick="selectPresetBgm('cinematic')">🎭 Dramatic Cinematic</button>
@@ -1096,6 +1090,14 @@ let isBgmPlayingPreview = false;
 let isBgmMasterEnabled = true;
 let activePresetKey = null;
 
+// Clean Direct Streaming Royalty-Free Ambient Audio Links (Fixed Emotional Sad Link)
+const PRESET_BGM_TRACKS = {
+  cinematic: "https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=cinematic-time-lapse-115672.mp3",
+  emotional: "https://cdn.pixabay.com/download/audio/2022/01/18/audio_d0a13f69d2.mp3?filename=ambient-piano-sad-10708.mp3",
+  thriller: "https://cdn.pixabay.com/download/audio/2022/03/10/audio_c8c8a73467.mp3?filename=dark-mystery-thriller-154627.mp3",
+  lofi: "https://cdn.pixabay.com/download/audio/2022/05/16/audio_db6591201e.mp3?filename=lofi-study-112191.mp3"
+};
+
 // Gradio Client Instance
 let gradioClientInstance = null;
 
@@ -1272,80 +1274,8 @@ function setLockProgress(pct, title, desc) {
 }
 
 // =========================================================================
-// BULLETPROOF BGM AUDIO ENGINE (Procedural Synth + WAV Generator)
+// BGM AUDIO ENGINE (Switch ON/OFF Color Sync & Auto Load)
 // =========================================================================
-function createProceduralBgmAudio(type) {
-  const sampleRate = 22050;
-  const duration = 12; // 12-second seamless audio loop
-  const totalSamples = sampleRate * duration;
-  const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  const buffer = audioCtx.createBuffer(1, totalSamples, sampleRate);
-  const data = buffer.getChannelData(0);
-
-  let baseFreq = 220;
-  if (type === 'cinematic') baseFreq = 146.83; // D3 Dramatic
-  else if (type === 'emotional') baseFreq = 174.61; // F3 Melancholy
-  else if (type === 'thriller') baseFreq = 110.00; // A2 Low Suspense
-  else if (type === 'lofi') baseFreq = 196.00; // G3 Warm Chill
-
-  for (let i = 0; i < totalSamples; i++) {
-    const t = i / sampleRate;
-    const lfo = Math.sin(2 * Math.PI * 0.25 * t);
-    const subOsc = Math.sin(2 * Math.PI * (baseFreq * 0.5) * t) * 0.4;
-    const mainOsc = Math.sin(2 * Math.PI * (baseFreq + lfo * 2) * t) * 0.35;
-    const harmOsc = Math.sin(2 * Math.PI * (baseFreq * 1.5) * t) * 0.15;
-    data[i] = (subOsc + mainOsc + harmOsc) * 0.45;
-  }
-
-  // Convert buffer to Data URI WAV file
-  const wavBlob = audioBufferToWavBlob(buffer);
-  audioCtx.close();
-  return URL.createObjectURL(wavBlob);
-}
-
-function audioBufferToWavBlob(buffer) {
-  const numChannels = buffer.numberOfChannels;
-  const sampleRate = buffer.sampleRate;
-  const format = 1; // PCM
-  const bitDepth = 16;
-  const numSamples = buffer.length * numChannels;
-  const bytesPerSample = bitDepth / 8;
-  const blockAlign = numChannels * bytesPerSample;
-  const byteRate = sampleRate * blockAlign;
-  const dataSize = numSamples * bytesPerSample;
-
-  const arrayBuffer = new ArrayBuffer(44 + dataSize);
-  const view = new DataView(arrayBuffer);
-
-  function writeString(offset, str) {
-    for (let i = 0; i < str.length; i++) view.setUint8(offset + i, str.charCodeAt(i));
-  }
-
-  writeString(0, 'RIFF');
-  view.setUint32(4, 36 + dataSize, true);
-  writeString(8, 'WAVE');
-  writeString(12, 'fmt ');
-  view.setUint32(16, 16, true);
-  view.setUint16(20, format, true);
-  view.setUint16(22, numChannels, true);
-  view.setUint32(24, sampleRate, true);
-  view.setUint32(28, byteRate, true);
-  view.setUint16(32, blockAlign, true);
-  view.setUint16(34, bitDepth, true);
-  writeString(36, 'data');
-  view.setUint32(40, dataSize, true);
-
-  let offset = 44;
-  const channelData = buffer.getChannelData(0);
-  for (let i = 0; i < buffer.length; i++) {
-    let sample = Math.max(-1, Math.min(1, channelData[i]));
-    view.setInt16(offset, sample < 0 ? sample * 0x8000 : sample * 0x7FFF, true);
-    offset += 2;
-  }
-
-  return new Blob([view], { type: 'audio/wav' });
-}
-
 function toggleBgmMasterSwitch() {
   isBgmMasterEnabled = !isBgmMasterEnabled;
   const btn = document.getElementById("bgmMasterToggleBtn");
@@ -1353,7 +1283,7 @@ function toggleBgmMasterSwitch() {
 
   if (isBgmMasterEnabled) {
     btn.textContent = "SWITCH OFF";
-    btn.style.background = "#2bd576"; // Green color
+    btn.style.background = "#2bd576"; // Green on
     btn.style.color = "#07090e";
     txt.textContent = "ENABLED (ON)";
     txt.style.color = "#2bd576";
@@ -1364,7 +1294,7 @@ function toggleBgmMasterSwitch() {
     toast("BGM Music: ON 🔊");
   } else {
     btn.textContent = "SWITCH ON";
-    btn.style.background = "#475569"; // Gray color
+    btn.style.background = "#475569"; // Gray off
     btn.style.color = "#fff";
     txt.textContent = "DISABLED (OFF)";
     txt.style.color = "#94a3b8";
@@ -1396,8 +1326,8 @@ function selectPresetBgm(type) {
   initVoiceAudioSystem();
   if (bgmAudio) { bgmAudio.pause(); }
 
-  const synthWavUrl = createProceduralBgmAudio(type);
-  bgmAudio = new Audio(synthWavUrl);
+  const url = PRESET_BGM_TRACKS[type];
+  bgmAudio = new Audio(url);
   bgmAudio.loop = true;
   bgmAudio.volume = isBgmMasterEnabled ? bgmVolume : 0;
   activePresetKey = type;
@@ -2026,7 +1956,6 @@ function initBlurBoxDrag(el, bData) {
     const clientX = e.touches ? e.touches[0].clientX : e.clientX;
     const clientY = e.touches ? e.touches[0].clientY : e.clientY;
     const boxRect = el.getBoundingClientRect();
-    const vRect = videoBox.getBoundingClientRect();
 
     grabOffsetX = clientX - boxRect.left;
     grabOffsetY = clientY - boxRect.top;
