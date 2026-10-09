@@ -42,7 +42,7 @@ input, textarea, select { user-select: text; }
 html, body {
   margin: 0; padding: 0; background: var(--bg); color: var(--text);
   font-family: system-ui, -apple-system, "Pyidaungsu", "Noto Sans Myanmar", "Segoe UI", sans-serif;
-  line-height: 1.5; overflow-x: hidden;
+  line-height: 1.5; overflow-x: hidden; width: 100%;
 }
 
 body { min-height: 100vh; }
@@ -168,9 +168,9 @@ button:active { transform: scale(0.97); }
   white-space: pre-wrap; word-break: break-word; max-height: 220px; overflow-y: auto;
 }
 
-.container { max-width: 1400px; margin: auto; padding: 8px 12px; }
+.container { max-width: 1400px; margin: auto; padding: 6px 10px; width: 100%; }
 
-.steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 8px; flex-shrink: 0; }
+.steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 6px; flex-shrink: 0; }
 .step {
   background: var(--panel); border: 1px solid var(--border); border-radius: 8px;
   padding: 5px 2px; text-align: center; color: var(--muted); font-size: 9.5px; font-weight: 600;
@@ -181,13 +181,13 @@ button:active { transform: scale(0.97); }
 
 .appBodyGrid {
   display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(380px, 0.8fr);
-  gap: 14px; align-items: start;
+  gap: 14px; align-items: start; width: 100%;
 }
 
 .card {
   background: linear-gradient(180deg, #111521, #0c0f17);
   border: 1px solid var(--border); border-radius: 16px; overflow: hidden;
-  box-shadow: var(--shadow); margin-bottom: 12px;
+  box-shadow: var(--shadow); margin-bottom: 12px; width: 100%;
 }
 .cardHead {
   padding: 10px 14px; border-bottom: 1px solid var(--border);
@@ -200,25 +200,25 @@ button:active { transform: scale(0.97); }
 .dot.busy { background: var(--gold); }
 .dot.error { background: var(--accent); }
 
-.fixedVideoShell { width: 100%; position: relative; flex-shrink: 0; }
+.fixedVideoShell { width: 100%; position: relative; flex-shrink: 0; max-width: 100%; }
 .videoStickyWrap { width: 100%; position: relative; }
 
-/* Dedicated Player Wrapper for External Controls */
+/* Dedicated Player Outer Container */
 .playerOuterWrap {
   background: #020406; border-radius: 14px; overflow: hidden;
   border: 1px solid var(--border); box-shadow: var(--shadow);
+  width: 100%; max-width: 100%; position: relative;
 }
 
 .videoBox {
   position: relative; background: #000; aspect-ratio: 16/9;
   display: flex; align-items: center; justify-content: center;
-  overflow: hidden; border: 2px dashed transparent; transition: border-color 0.2s ease;
+  overflow: hidden; width: 100%; max-width: 100%;
   user-select: none;
 }
-.videoBox.drag { border-color: var(--accent); background: rgba(255, 85, 114, 0.12); }
+.videoBox.drag { border: 2px dashed var(--accent); background: rgba(255, 85, 114, 0.12); }
 video { width: 100%; height: 100%; display: none; object-fit: contain; background: #000; pointer-events: none; }
 
-/* Anti-Copyright Filter Transformations */
 video.anti-copyright-active {
   transform: scale(1.04);
   filter: contrast(1.05) saturate(1.08) brightness(1.02);
@@ -247,25 +247,30 @@ video.anti-copyright-active {
 }
 .modeBadge.show { display: flex; }
 
-/* Video Overlays (Logo, Title, Blur Boxes) */
 .videoLogoOverlay {
   position: absolute; top: 12px; left: 12px; z-index: 26;
   max-width: 70px; max-height: 40px; display: none; pointer-events: none;
 }
 
-.videoTitleOverlay {
-  position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
-  z-index: 26; background: rgba(0,0,0,0.65); padding: 3px 12px; border-radius: 6px;
-  color: #fff; font-size: 13px; font-weight: 800; display: none; text-shadow: 0 2px 4px #000;
-  white-space: nowrap;
+/* Multi-Title Text Overlays */
+.videoTitleOverlayItem {
+  position: absolute; z-index: 26; background: rgba(0,0,0,0.65); padding: 3px 12px; border-radius: 6px;
+  color: #fff; font-size: 13px; font-weight: 800; text-shadow: 0 2px 4px #000;
+  cursor: move; touch-action: none; border: 1px dashed transparent; white-space: nowrap;
+}
+.videoTitleOverlayItem.active { border-color: var(--gold); }
+.titleCloseBadge {
+  position: absolute; top: -7px; right: -7px; width: 16px; height: 16px;
+  background: var(--accent); color: #fff; border-radius: 50%; font-size: 8.5px;
+  display: grid; place-items: center; cursor: pointer; font-weight: 800;
 }
 
-/* Multi Blur Boxes */
+/* Multiple Blur Boxes */
 .videoBlurBoxItem {
-  position: absolute; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  position: absolute; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
   background: rgba(0,0,0,0.65); border: 1.5px dashed rgba(255,255,255,0.45);
   border-radius: 6px; z-index: 24; cursor: move; touch-action: none;
-  min-width: 40px; min-height: 20px;
+  min-width: 30px; min-height: 18px;
 }
 .videoBlurBoxItem.active { border-color: var(--cyan); }
 .blurCloseBadge {
@@ -274,33 +279,31 @@ video.anti-copyright-active {
   display: grid; place-items: center; cursor: pointer; font-weight: 800;
 }
 
-/* Subtitle Container - Fixed horizontal sentence flow & clamped to 2 lines */
+/* Subtitle Container - Perfect Pre-line Centered 2 Lines Support */
 .overlay {
   position: absolute; left: 50%; top: 82%; transform: translate(-50%, -50%);
-  display: flex; flex-direction: column; align-items: center;
-  z-index: 30; cursor: move; touch-action: none; width: 90%; max-width: 90%;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  z-index: 30; cursor: move; touch-action: none; width: auto; max-width: 96%;
   pointer-events: auto;
 }
 .overlayInner {
-  position: relative; display: inline-block;
-  padding: 5px 12px; border-radius: 8px; text-align: center; word-break: break-word; line-height: 1.35;
+  position: relative; display: inline-flex; justify-content: center; align-items: center;
+  padding: 5px 12px; border-radius: 8px; text-align: center; line-height: 1.38;
   background: rgba(0, 0, 0, 0.5); box-shadow: 0 4px 18px rgba(0,0,0,0.4);
   transition: border-color 0.15s ease; border: 1.5px dashed transparent;
-  max-width: 100%; white-space: normal;
+  max-width: 100%; width: auto;
 }
-.overlay.dragging .overlayInner {
-  border-color: var(--cyan);
-}
+.overlay.dragging .overlayInner { border-color: var(--cyan); }
 .overlayTarget {
   font-size: 17px; font-weight: 700; pointer-events: none; color: #ffffff;
-  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
-  text-overflow: ellipsis; line-height: 1.35;
+  display: block; text-align: center; white-space: pre-line; word-break: break-word;
+  max-width: 100%;
 }
 
-/* External Video Control Bar Attached directly Below Video */
+/* External Control Bar Placed Directly Below Video */
 .videoControlBarExternal {
   background: #090d16; border-top: 1px solid var(--border);
-  padding: 8px 12px; display: flex; align-items: center; gap: 8px;
+  padding: 8px 10px; display: flex; align-items: center; gap: 8px;
   width: 100%; z-index: 20;
 }
 .vCtrlBtn {
@@ -315,7 +318,7 @@ video.anti-copyright-active {
   flex: 1; accent-color: var(--cyan); height: 6px; border-radius: 3px; cursor: pointer; margin: 0 4px;
 }
 
-/* LOCKED SHIELD DURING GENERATION */
+/* Locked Shield */
 .videoLockOverlay {
   position: absolute; inset: 0; z-index: 45;
   background: rgba(6, 8, 14, 0.92); backdrop-filter: blur(8px);
@@ -354,6 +357,7 @@ video.anti-copyright-active {
 }
 .liveSubTextMM {
   font-size: 13.5px; font-weight: 700; color: #fff; word-break: break-word; line-height: 1.35; margin: 0;
+  white-space: pre-line;
 }
 
 .editorTools { display: flex; gap: 6px; margin-bottom: 10px; }
@@ -433,17 +437,17 @@ video.anti-copyright-active {
 
 @media(max-width: 900px) {
   body { height: 100vh; height: 100dvh; overflow: hidden; display: flex; flex-direction: column; }
-  .container { flex: 1; display: flex; flex-direction: column; overflow: hidden; padding: 6px 10px 0 10px; }
+  .container { flex: 1; display: flex; flex-direction: column; overflow: hidden; padding: 6px 10px 0 10px; width: 100%; }
   .appBodyGrid {
     flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch;
-    padding-bottom: calc(76px + var(--safe-bottom)); display: block;
+    padding-bottom: calc(76px + var(--safe-bottom)); display: block; width: 100%;
   }
   .toneGrid { grid-template-columns: repeat(3, 1fr); }
-  .videoBox { max-height: 205px; border-radius: 0; }
+  .videoBox { max-height: 205px; }
   .tabPane { display: none; }
   .tabPane.activeTab { display: block; animation: tabFade 0.2s ease; }
   @keyframes tabFade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
-  .list { max-height: calc(100vh - 420px); }
+  .list { max-height: calc(100vh - 430px); }
 }
 
 @media(min-width: 901px) {
@@ -556,9 +560,9 @@ video.anti-copyright-active {
           <span>●</span> <span>🎬 RECAP MODE: ဇာတ်ကြောင်းပြော အသင့်ဖြစ်ပါပြီ</span>
         </div>
 
-        <!-- Video Overlays: Logo, Title & Blur Box Container -->
+        <!-- Video Overlays -->
         <img id="videoLogoOverlay" class="videoLogoOverlay" alt="Logo">
-        <div id="videoTitleOverlay" class="videoTitleOverlay">MOVIE TITLE</div>
+        <div id="movieTitlesContainer"></div>
         <div id="blurBoxesContainer"></div>
 
         <div class="videoFloatingTools" id="videoFloatingTools" style="display:none">
@@ -566,7 +570,7 @@ video.anti-copyright-active {
           <button onclick="triggerFileInput(true)" title="Choose another video">🔄 Change Video</button>
         </div>
 
-        <!-- Touch & Drag Subtitles Container (Clamped to 2 lines max) -->
+        <!-- Touch & Drag Subtitles Container -->
         <div class="overlay" id="overlay">
           <div class="overlayInner" id="overlayInner">
             <span class="overlayTarget" id="overlayTarget"></span>
@@ -587,7 +591,7 @@ video.anti-copyright-active {
         <input id="file" type="file" accept="video/mp4,video/webm,video/quicktime,video/x-matroska,video/*" hidden>
       </div>
 
-      <!-- External Control Bar attached strictly below the video -->
+      <!-- External Control Bar attached strictly below video -->
       <div class="videoControlBarExternal" id="videoControlBar">
         <button class="vCtrlBtn" id="vPlayBtn" onclick="togglePlayPause(event)">▶</button>
         <button class="vCtrlBtn" onclick="skipVideo(-5, event)" title="Back 5s">⏪ 5s</button>
@@ -632,7 +636,6 @@ video.anti-copyright-active {
             </div>
           </div>
 
-          <!-- PRIMARY ACTION: GENERATE SCRIPT FIRST -->
           <div style="margin-top:14px">
             <button class="primary" id="generateScriptBtn" style="width:100%;padding:12px" onclick="generateRecapScriptOnly()">
               <span class="btnSpinner" id="btnSpinner" style="display:none"></span>
@@ -645,7 +648,7 @@ video.anti-copyright-active {
 
           <hr style="border:0;border-top:1px solid var(--border);margin:14px 0">
 
-          <!-- VOICE SELECTION & PRODUCTION CENTER -->
+          <!-- VOICE PRODUCTION -->
           <div style="margin-bottom:12px">
             <label style="font-size:10px;color:var(--muted);font-weight:700;display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
               <span>🗣️ AI VOICE SETTINGS (မူလစကားပြောအသံ ရွေးချယ်မှု)</span>
@@ -657,7 +660,6 @@ video.anti-copyright-active {
               <button class="voiceBtn" id="voiceClone" onclick="setVoice('zero-gpu-clone')" style="background:rgba(168,85,247,0.15);border-color:rgba(168,85,247,0.4)">🎙️ Voice Clone</button>
             </div>
 
-            <!-- ZeroGPU Style Selection Dropdown -->
             <div id="cloneStyleRow" style="display:none;margin-top:8px;background:#090d16;padding:8px;border-radius:10px;border:1px solid var(--border)">
               <label style="font-size:10px;color:var(--muted);display:block;margin-bottom:4px">Voice Clone စတိုင် ရွေးချယ်ပါ:</label>
               <select id="cloneVoiceStyle" style="width:100%;padding:6px;background:#141a27;border:1px solid var(--border);color:#fff;border-radius:6px;font-size:11px">
@@ -751,7 +753,13 @@ video.anti-copyright-active {
             </div>
           </div>
 
-          <!-- Position Slider (Left/Right Horizontal centering preserved) -->
+          <!-- New Box Width Slider: Auto width or Screen full width -->
+          <div class="sliderField" style="margin-bottom:10px">
+            <label>Subtitle Box Width (အလျား အကျယ်): <span class="val" id="boxWidthVal">Auto (စာသားကွက်တိ)</span></label>
+            <input id="boxWidthMode" type="range" min="0" max="100" value="0" step="5" oninput="applySubtitleStyle()">
+          </div>
+
+          <!-- Position Slider -->
           <div class="sliderPairRow">
             <div class="sliderField">
               <label>Subtitle X (ဘယ်/ညာ %): <span class="val" id="posXVal">50%</span></label>
@@ -769,26 +777,68 @@ video.anti-copyright-active {
           </div>
 
           <p style="font-size:10px;color:var(--cyan);margin:0 0 12px 0">
-            🖐️ <b>Tip:</b> စာတန်းထိုးသည် အလျားလိုက် ၂ ကြောင်းအထိသာ အလိုအလျောက် သပ်ရပ်စွာ ပေါ်မည်ဖြစ်ပြီး Screen Touch ဖြင့်လည်း ဆွဲရွှေ့နိုင်ပါသည်။
+            🖐️ <b>Tip:</b> စာတန်းထိုးသည် Enter ခေါက်ထားသည့်အတိုင်း အလယ်တည့်တည့် အပေါ်/အောက် ကျကျနန ပေါ်မည်ဖြစ်ပြီး Screen Touch ဖြင့်လည်း ဆွဲရွှေ့နိုင်ပါသည်။
           </p>
 
           <hr style="border:0;border-top:1px solid var(--border);margin:14px 0">
 
-          <!-- MULTIPLE BLUR BOXES & ANTI-COPYRIGHT TOOLS -->
+          <!-- MULTIPLE BLUR BOXES CONTROLS -->
           <div style="font-size:11px;font-weight:700;color:#fff;margin-bottom:8px">🛡️ ANTI-COPYRIGHT & BRANDING OVERLAYS</div>
           
           <div style="display:flex;flex-direction:column;gap:10px">
-            <!-- Add Multiple Blur Boxes (Watermark / Subtitle Remover) -->
-            <div style="background:#090d16;padding:8px;border-radius:10px;border:1px solid var(--border)">
-              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+            <!-- Add Multiple Blur Boxes with Seekbars -->
+            <div style="background:#090d16;padding:10px;border-radius:10px;border:1px solid var(--border)">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
                 <label style="font-size:10px;color:var(--cyan);font-weight:700">🌫️ MULTIPLE BLUR BOXES (စာတန်းဟောင်းဖုံးရန်):</label>
                 <button onclick="addNewBlurBox()" style="font-size:9.5px;padding:3px 8px;background:rgba(32,215,255,0.18);border-color:var(--cyan);color:#fff">
                   ➕ Add New Blur Box
                 </button>
               </div>
-              <p style="font-size:9px;color:var(--muted);margin:0">
-                Blur Box များကို လိုသလောက်ထပ်ယူ၍ Screen ပေါ်တွင် စိတ်ကြိုက် နေရာရွှေ့ဖုံးအုပ်နိုင်ပါသည်။
-              </p>
+
+              <!-- Selected Blur Box Tuning Seekbars -->
+              <div id="activeBlurControls" style="display:none;margin-top:6px;border-top:1px dashed var(--border);padding-top:8px">
+                <div style="font-size:9.5px;color:var(--gold);margin-bottom:6px;font-weight:700" id="activeBlurLabel">
+                  Editing Blur Box #1
+                </div>
+
+                <div class="sliderPairRow">
+                  <div class="sliderField">
+                    <label>Blur X (ဘယ်/ညာ %): <span class="val" id="bXVal">20%</span></label>
+                    <input id="bXSlider" type="range" min="0" max="95" value="20" oninput="updateActiveBlurProps()">
+                  </div>
+                  <div class="sliderField">
+                    <label>Blur Y (အပေါ်/အောက် %): <span class="val" id="bYVal">70%</span></label>
+                    <input id="bYSlider" type="range" min="0" max="95" value="70" oninput="updateActiveBlurProps()">
+                  </div>
+                </div>
+
+                <div class="sliderPairRow">
+                  <div class="sliderField">
+                    <label>Width (%): <span class="val" id="bWVal">60%</span></label>
+                    <input id="bWSlider" type="range" min="10" max="100" value="60" oninput="updateActiveBlurProps()">
+                  </div>
+                  <div class="sliderField">
+                    <label>Height (px): <span class="val" id="bHVal">28px</span></label>
+                    <input id="bHSlider" type="range" min="12" max="120" value="28" oninput="updateActiveBlurProps()">
+                  </div>
+                </div>
+
+                <div class="sliderField">
+                  <label>Blur Color Opacity (အမည်း အလျော့/အတင်း %): <span class="val" id="bOpVal">65%</span></label>
+                  <input id="bOpSlider" type="range" min="10" max="100" value="65" oninput="updateActiveBlurProps()">
+                </div>
+              </div>
+            </div>
+
+            <!-- Multiple Movie Title Headers -->
+            <div style="background:#090d16;padding:10px;border-radius:10px;border:1px solid var(--border)">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+                <label style="font-size:10px;color:var(--gold);font-weight:700">🔤 MULTIPLE MOVIE TITLES (ခေါင်းစဉ်စာတန်းများ):</label>
+                <button onclick="addNewMovieTitle()" style="font-size:9.5px;padding:3px 8px;background:rgba(255,190,59,0.18);border-color:var(--gold);color:#fff">
+                  ➕ Add New Title Text
+                </button>
+              </div>
+              <div id="activeTitlesList"></div>
             </div>
 
             <!-- Anti-Copyright Video Transform Shield -->
@@ -804,20 +854,11 @@ video.anti-copyright-active {
               </p>
             </div>
 
-            <!-- Add Upload Logo -->
+            <!-- Add Channel Logo -->
             <div style="background:#090d16;padding:8px;border-radius:10px;border:1px solid var(--border)">
               <label style="font-size:10px;color:var(--muted);display:block;margin-bottom:4px">🏷️ Add Channel Logo (PNG/Watermark):</label>
               <input type="file" id="logoUploadInput" accept="image/*" onchange="handleLogoUpload(event)" style="font-size:10px">
               <button onclick="removeLogo()" style="font-size:9.5px;padding:2px 6px;margin-top:4px">Remove Logo</button>
-            </div>
-
-            <!-- Add Title Text -->
-            <div style="background:#090d16;padding:8px;border-radius:10px;border:1px solid var(--border)">
-              <label style="font-size:10px;color:var(--muted);display:block;margin-bottom:4px">🔤 Add Movie Title Header (ခေါင်းစဉ်စာတန်း):</label>
-              <div style="display:flex;gap:6px">
-                <input type="text" id="movieTitleInput" placeholder="ဥပမာ- ရုပ်ရှင်အညွှန်း ဇာတ်ကားအမည်" style="flex:1;background:#141a27;border:1px solid var(--border);color:#fff;border-radius:6px;padding:4px 8px;font-size:11px" oninput="updateMovieTitle(this.value)">
-                <button onclick="toggleTitleVisibility()" style="font-size:10px;padding:4px 8px" id="titleToggleBtn">Show/Hide</button>
-              </div>
             </div>
           </div>
         </div>
@@ -861,9 +902,14 @@ let selectedVoice = "my-MM-ThihaNeural";
 let overlayPos = { x: 50, y: 82 };
 let isCloneDisabledByLimit = false;
 
-// Multi Blur Boxes Collection
+// Multiple Blur Boxes State
 let blurBoxes = [];
 let blurIdCounter = 0;
+let activeBlurId = null;
+
+// Multiple Movie Titles State
+let movieTitles = [];
+let titleIdCounter = 0;
 
 // Anti-Copyright state
 let antiCopyrightEnabled = false;
@@ -871,7 +917,7 @@ let antiCopyrightEnabled = false;
 // Gradio Client Instance
 let gradioClientInstance = null;
 
-// Web Audio API Context & Gain Node for Loud Audio Voice Booster
+// Web Audio API Context & Gain Node
 let voiceAudioCtx = null;
 let voiceGainNode = null;
 
@@ -897,7 +943,6 @@ function initVoiceAudioSystem() {
     const AudioContextClass = window.AudioContext || window.webkitAudioContext;
     voiceAudioCtx = new AudioContextClass();
     voiceGainNode = voiceAudioCtx.createGain();
-    // 1.8x Volume Gain Booster for ultra-clear and loud narration
     voiceGainNode.gain.value = 1.8;
     voiceGainNode.connect(voiceAudioCtx.destination);
   }
@@ -918,7 +963,6 @@ function toast(msg) {
   window.__toast = setTimeout(() => x.classList.remove("show"), 2800);
 }
 
-// RAW ERROR MODAL WITH TRACEABILITY
 let lastLoggedError = "";
 function showErrorModal(errorTitle, errorDetail, customSub = "အမှားဖြစ်ရသည့် အကြောင်းရင်း (Raw Response Trace):") {
   lastLoggedError = `Title: ${errorTitle}\nDetail: ${errorDetail}`;
@@ -1044,9 +1088,7 @@ function setLockProgress(pct, title, desc) {
   if (desc) lockDesc.textContent = desc;
 }
 
-// =====================================================
-// DUAL-ENGINE MYANMAR TTS & ZEROGPU CLONE GENERATOR
-// =====================================================
+// TTS & Voice Clone Engines
 async function getSecMsGecClient() {
   const unixSeconds = Math.floor(Date.now() / 1000);
   const fileTimeSeconds = BigInt(unixSeconds) + 11644473600n;
@@ -1147,7 +1189,6 @@ async function generateEdgeSpeechInBrowser(text, voice, rate) {
   });
 }
 
-// ZERO-GPU VOICE CLONING
 async function fetchZeroGpuAudio(text, lockedStyle) {
   const currentSelect = document.getElementById("cloneVoiceStyle");
   const stylePrompt = lockedStyle || (currentSelect ? currentSelect.value : "A news anchor voice, formal and authoritative, steady pace, perfect for broadcast");
@@ -1290,7 +1331,7 @@ function onSeekChange(e) {
 
 videoBox.addEventListener("click", (e) => {
   if (generating) return;
-  if (e.target.closest("button") || e.target.closest("input") || e.target.closest("#overlay") || e.target.closest(".videoBlurBoxItem")) return;
+  if (e.target.closest("button") || e.target.closest("input") || e.target.closest("#overlay") || e.target.closest(".videoBlurBoxItem") || e.target.closest(".videoTitleOverlayItem")) return;
   togglePlayPause();
 });
 
@@ -1332,10 +1373,14 @@ function applySubtitleStyle() {
   const opacity = Number(document.getElementById("boxOpacity").value) / 100;
   const outlineWidth = Number(document.getElementById("outlineWidth").value);
   const fontSize = Number(document.getElementById("size").value);
+  const boxWidthMode = Number(document.getElementById("boxWidthMode").value);
 
   document.getElementById("opacityVal").textContent = Math.round(opacity * 100) + "%";
   document.getElementById("outWidthVal").textContent = outlineWidth + " px";
   document.getElementById("sizeVal").textContent = fontSize + " px";
+
+  const boxWidthText = boxWidthMode === 0 ? "Auto (စာသားကွက်တိ)" : (boxWidthMode === 100 ? "100% (Screen အပြည့်)" : boxWidthMode + "%");
+  document.getElementById("boxWidthVal").textContent = boxWidthText;
 
   const r = parseInt(bgColor.slice(1, 3), 16) || 0;
   const g = parseInt(bgColor.slice(3, 5), 16) || 0;
@@ -1346,6 +1391,16 @@ function applySubtitleStyle() {
   overlayTarget.style.fontSize = fontSize + "px";
   overlayTarget.style.webkitTextStroke = `${outlineWidth}px ${outlineColor}`;
   overlayTarget.style.textShadow = `0 2px 8px rgba(0,0,0,0.8), 0 0 4px ${outlineColor}`;
+
+  if (boxWidthMode === 0) {
+    overlay.style.width = "auto";
+    overlay.style.maxWidth = "96%";
+    overlayInner.style.width = "auto";
+  } else {
+    overlay.style.width = boxWidthMode + "%";
+    overlay.style.maxWidth = "100%";
+    overlayInner.style.width = "100%";
+  }
 }
 
 function applySubtitlePositionFromSlider() {
@@ -1357,21 +1412,15 @@ function applySubtitlePositionFromSlider() {
   overlay.style.top = overlayPos.y + "%";
 }
 
-// Touch & Drag positioning engine
-let isDragging = false;
-let startX, startY;
-
+// Touch & Drag positioning engine (Zero Offset Drift Bug Fixed)
 function initTouchDrag() {
   const target = overlay;
+  let isDragging = false;
 
   function onPointerDown(e) {
     if (generating) return;
     isDragging = true;
     target.classList.add("dragging");
-    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-    startX = clientX;
-    startY = clientY;
     e.stopPropagation();
   }
 
@@ -1417,20 +1466,81 @@ function initTouchDrag() {
   window.addEventListener("touchend", onPointerUp);
 }
 
-// MULTIPLE BLUR BOXES SYSTEM
+// MULTIPLE BLUR BOXES WITH TUNING SLIDERS
 function addNewBlurBox() {
   blurIdCounter++;
   const id = `blur-${blurIdCounter}`;
-  const boxData = { id, x: 20, y: 70, w: 60, h: 28 };
+  const boxData = { id, x: 20, y: 70, w: 60, h: 28, opacity: 65 };
   blurBoxes.push(boxData);
+  activeBlurId = id;
   renderBlurBoxes();
+  syncActiveBlurToSliders();
   toast(`Blur Box #${blurIdCounter} added!`);
 }
 
 function removeBlurBox(id) {
   blurBoxes = blurBoxes.filter(b => b.id !== id);
+  if (activeBlurId === id) activeBlurId = blurBoxes.length ? blurBoxes[0].id : null;
   renderBlurBoxes();
+  syncActiveBlurToSliders();
   toast("Blur box removed");
+}
+
+function selectActiveBlurBox(id) {
+  activeBlurId = id;
+  document.querySelectorAll(".videoBlurBoxItem").forEach(el => {
+    el.classList.toggle("active", el.id === id);
+  });
+  syncActiveBlurToSliders();
+}
+
+function syncActiveBlurToSliders() {
+  const panel = document.getElementById("activeBlurControls");
+  const b = blurBoxes.find(x => x.id === activeBlurId);
+  if (!b) {
+    panel.style.display = "none";
+    return;
+  }
+
+  panel.style.display = "block";
+  document.getElementById("activeBlurLabel").textContent = `Editing Blur Box (${b.id})`;
+  document.getElementById("bXSlider").value = b.x;
+  document.getElementById("bYSlider").value = b.y;
+  document.getElementById("bWSlider").value = b.w;
+  document.getElementById("bHSlider").value = b.h;
+  document.getElementById("bOpSlider").value = b.opacity;
+
+  document.getElementById("bXVal").textContent = b.x + "%";
+  document.getElementById("bYVal").textContent = b.y + "%";
+  document.getElementById("bWVal").textContent = b.w + "%";
+  document.getElementById("bHVal").textContent = b.h + "px";
+  document.getElementById("bOpVal").textContent = b.opacity + "%";
+}
+
+function updateActiveBlurProps() {
+  const b = blurBoxes.find(x => x.id === activeBlurId);
+  if (!b) return;
+
+  b.x = Number(document.getElementById("bXSlider").value);
+  b.y = Number(document.getElementById("bYSlider").value);
+  b.w = Number(document.getElementById("bWSlider").value);
+  b.h = Number(document.getElementById("bHSlider").value);
+  b.opacity = Number(document.getElementById("bOpSlider").value);
+
+  document.getElementById("bXVal").textContent = b.x + "%";
+  document.getElementById("bYVal").textContent = b.y + "%";
+  document.getElementById("bWVal").textContent = b.w + "%";
+  document.getElementById("bHVal").textContent = b.h + "px";
+  document.getElementById("bOpVal").textContent = b.opacity + "%";
+
+  const el = document.getElementById(b.id);
+  if (el) {
+    el.style.left = b.x + "%";
+    el.style.top = b.y + "%";
+    el.style.width = b.w + "%";
+    el.style.height = b.h + "px";
+    el.style.backgroundColor = `rgba(0,0,0,${b.opacity / 100})`;
+  }
 }
 
 function renderBlurBoxes() {
@@ -1439,14 +1549,15 @@ function renderBlurBoxes() {
 
   blurBoxes.forEach(b => {
     const el = document.createElement("div");
-    el.className = "videoBlurBoxItem";
+    el.className = "videoBlurBoxItem" + (b.id === activeBlurId ? " active" : "");
     el.id = b.id;
     el.style.left = b.x + "%";
     el.style.top = b.y + "%";
     el.style.width = b.w + "%";
     el.style.height = b.h + "px";
+    el.style.backgroundColor = `rgba(0,0,0,${b.opacity / 100})`;
 
-    el.innerHTML = `<div class="blurCloseBadge" onclick="removeBlurBox('${b.id}')">✕</div>`;
+    el.innerHTML = `<div class="blurCloseBadge" onclick="event.stopPropagation(); removeBlurBox('${b.id}')">✕</div>`;
     
     initBlurBoxDrag(el, b);
     container.appendChild(el);
@@ -1455,11 +1566,22 @@ function renderBlurBoxes() {
 
 function initBlurBoxDrag(el, bData) {
   let isBoxDragging = false;
+  let grabOffsetX = 0;
+  let grabOffsetY = 0;
 
   function onDown(e) {
     if (e.target.classList.contains("blurCloseBadge")) return;
     isBoxDragging = true;
-    el.classList.add("active");
+    selectActiveBlurBox(bData.id);
+
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    const boxRect = el.getBoundingClientRect();
+    const vRect = videoBox.getBoundingClientRect();
+
+    grabOffsetX = clientX - boxRect.left;
+    grabOffsetY = clientY - boxRect.top;
+
     e.stopPropagation();
   }
 
@@ -1467,22 +1589,133 @@ function initBlurBoxDrag(el, bData) {
     if (!isBoxDragging) return;
     const clientX = e.touches ? e.touches[0].clientX : e.clientX;
     const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-    const rect = videoBox.getBoundingClientRect();
+    const vRect = videoBox.getBoundingClientRect();
 
-    let newX = ((clientX - rect.left) / rect.width) * 100;
-    let newY = ((clientY - rect.top) / rect.height) * 100;
+    let newPixelX = clientX - vRect.left - grabOffsetX;
+    let newPixelY = clientY - vRect.top - grabOffsetY;
 
-    bData.x = Math.max(0, Math.min(90, Math.round(newX)));
-    bData.y = Math.max(0, Math.min(90, Math.round(newY)));
+    let newXPercent = (newPixelX / vRect.width) * 100;
+    let newYPercent = (newPixelY / vRect.height) * 100;
+
+    bData.x = Math.max(0, Math.min(95, Math.round(newXPercent)));
+    bData.y = Math.max(0, Math.min(95, Math.round(newYPercent)));
 
     el.style.left = bData.x + "%";
     el.style.top = bData.y + "%";
+
+    syncActiveBlurToSliders();
     e.preventDefault();
   }
 
   function onUp() {
-    if (isBoxDragging) {
-      isBoxDragging = false;
+    if (isBoxDragging) isBoxDragging = false;
+  }
+
+  el.addEventListener("mousedown", onDown);
+  window.addEventListener("mousemove", onMove);
+  window.addEventListener("mouseup", onUp);
+
+  el.addEventListener("touchstart", onDown, { passive: false });
+  window.addEventListener("touchmove", onMove, { passive: false });
+  window.addEventListener("touchend", onUp);
+}
+
+// MULTIPLE MOVIE TITLES SYSTEM
+function addNewMovieTitle() {
+  titleIdCounter++;
+  const id = `title-${titleIdCounter}`;
+  const titleData = { id, text: "ရုပ်ရှင်အညွှန်း ဇာတ်ကားအမည်", x: 50, y: 10 };
+  movieTitles.push(titleData);
+  renderMovieTitles();
+  renderMovieTitleControls();
+  toast(`Movie Title #${titleIdCounter} added!`);
+}
+
+function removeMovieTitle(id) {
+  movieTitles = movieTitles.filter(t => t.id !== id);
+  renderMovieTitles();
+  renderMovieTitleControls();
+  toast("Title removed");
+}
+
+function updateTitleText(id, val) {
+  const t = movieTitles.find(x => x.id === id);
+  if (t) {
+    t.text = val.trim();
+    const el = document.getElementById(id);
+    if (el) el.childNodes[0].nodeValue = t.text || "";
+  }
+}
+
+function renderMovieTitles() {
+  const container = document.getElementById("movieTitlesContainer");
+  container.innerHTML = "";
+
+  movieTitles.forEach(t => {
+    const el = document.createElement("div");
+    el.className = "videoTitleOverlayItem";
+    el.id = t.id;
+    el.style.left = t.x + "%";
+    el.style.top = t.y + "%";
+    el.style.transform = "translate(-50%, 0)";
+    el.textContent = t.text;
+
+    const closeBtn = document.createElement("div");
+    closeBtn.className = "titleCloseBadge";
+    closeBtn.textContent = "✕";
+    closeBtn.onclick = (e) => { e.stopPropagation(); removeMovieTitle(t.id); };
+    el.appendChild(closeBtn);
+
+    initTitleDrag(el, t);
+    container.appendChild(el);
+  });
+}
+
+function renderMovieTitleControls() {
+  const container = document.getElementById("activeTitlesList");
+  container.innerHTML = "";
+
+  movieTitles.forEach(t => {
+    const row = document.createElement("div");
+    row.style.cssText = "display:flex;gap:6px;align-items:center;margin-top:6px";
+    row.innerHTML = `
+      <input type="text" value="${t.text}" style="flex:1;background:#141a27;border:1px solid var(--border);color:#fff;border-radius:6px;padding:4px 8px;font-size:11px" oninput="updateTitleText('${t.id}', this.value)">
+      <button onclick="removeMovieTitle('${t.id}')" style="font-size:10px;padding:3px 6px;color:var(--accent)">✕ Delete</button>
+    `;
+    container.appendChild(row);
+  });
+}
+
+function initTitleDrag(el, tData) {
+  let isTitleDragging = false;
+
+  function onDown(e) {
+    if (e.target.classList.contains("titleCloseBadge")) return;
+    isTitleDragging = true;
+    el.classList.add("active");
+    e.stopPropagation();
+  }
+
+  function onMove(e) {
+    if (!isTitleDragging) return;
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    const vRect = videoBox.getBoundingClientRect();
+
+    let newX = ((clientX - vRect.left) / vRect.width) * 100;
+    let newY = ((clientY - vRect.top) / vRect.height) * 100;
+
+    tData.x = Math.max(10, Math.min(90, Math.round(newX)));
+    tData.y = Math.max(4, Math.min(90, Math.round(newY)));
+
+    el.style.left = tData.x + "%";
+    el.style.top = tData.y + "%";
+    e.preventDefault();
+  }
+
+  function onUp() {
+    if (isTitleDragging) {
+      isTitleDragging = false;
       el.classList.remove("active");
     }
   }
@@ -1525,19 +1758,6 @@ function removeLogo() {
   logo.src = "";
   document.getElementById("logoUploadInput").value = "";
   toast("Logo removed");
-}
-
-function updateMovieTitle(val) {
-  const t = document.getElementById("videoTitleOverlay");
-  t.textContent = val.trim() || "MOVIE TITLE";
-  t.style.display = val.trim() ? "block" : "none";
-}
-
-function toggleTitleVisibility() {
-  const t = document.getElementById("videoTitleOverlay");
-  const isShown = t.style.display !== "none" && t.style.display !== "";
-  t.style.display = isShown ? "none" : "block";
-  toast(isShown ? "Title hidden" : "Title visible");
 }
 
 /* ==========================================================================
@@ -1699,7 +1919,7 @@ async function synthesizeAllVoiceovers() {
       const voiceToUse = line.voiceOverride || selectedVoice;
 
       try {
-        const audioUrl = await fetchMyanmarAudio(line.mm, voiceToUse, rateStr, lockedCloneStyle);
+        const audioUrl = await fetchMyanmarAudio(line.mm.replace(/\n+/g, " "), voiceToUse, rateStr, lockedCloneStyle);
         if (audioUrl) {
           audioMap.set(line.id, audioUrl);
         }
@@ -1841,7 +2061,7 @@ async function playSingleVoice(id) {
     const lockedStyle = document.getElementById("cloneVoiceStyle")?.value;
     const voiceToUse = sub.voiceOverride || selectedVoice;
 
-    const audioUrl = await fetchMyanmarAudio(sub.mm, voiceToUse, rateStr, lockedStyle);
+    const audioUrl = await fetchMyanmarAudio(sub.mm.replace(/\n+/g, " "), voiceToUse, rateStr, lockedStyle);
     if (audioUrl) {
       audioMap.set(sub.id, audioUrl);
       toast(`🎉 Voice line #${id} updated successfully!`);
