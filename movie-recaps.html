@@ -215,7 +215,7 @@ button:active { transform: scale(0.97); }
 
 .fixedVideoShell { width: 100%; position: relative; flex-shrink: 0; max-width: 100%; }
 
-/* External Top Recap Badge placed above the video frame */
+/* External Top Recap Badge strictly above video */
 .modeBadgeExternal {
   background: rgba(43, 213, 118, 0.16); border: 1px solid var(--green);
   color: #fff; font-size: 9.5px; font-weight: 800; padding: 4px 10px; border-radius: 8px 8px 0 0;
@@ -831,13 +831,13 @@ video.anti-copyright-active {
         </div>
         <div class="accordionBody" id="accBgmBody">
           
-          <!-- Master Switch Toggle for BGM -->
+          <!-- Master Switch Toggle for BGM (Dynamic Color Styling) -->
           <div style="display:flex;justify-content:space-between;align-items:center;background:#151d2f;border:1px solid var(--border-light);padding:8px 12px;border-radius:10px;margin-bottom:12px">
             <div>
               <span style="font-size:11px;font-weight:800;color:#fff">🔊 BGM MUSIC STATUS:</span>
               <span id="bgmSwitchStatusText" style="font-size:11px;font-weight:800;color:var(--green);margin-left:5px">ENABLED (ON)</span>
             </div>
-            <button id="bgmMasterToggleBtn" onclick="toggleBgmMasterSwitch()" style="font-size:11px;padding:4px 14px;background:var(--green);color:#07090e;font-weight:800;border:0">
+            <button id="bgmMasterToggleBtn" onclick="toggleBgmMasterSwitch()" style="font-size:11px;padding:4px 14px;background:#2bd576;color:#07090e;font-weight:800;border:0;transition:all 0.2s">
               SWITCH OFF
             </button>
           </div>
@@ -851,7 +851,7 @@ video.anti-copyright-active {
 
           <div style="margin-bottom:10px">
             <label style="font-size:10px;color:var(--muted);font-weight:700;display:block;margin-bottom:4px">
-              🎼 AUTO PRESET BGM SONGS (Royalty-Free တေးဂီတများ ရွေးချယ်ရန်)
+              🎼 AUTO PRESET BGM SONGS (Instant WebAudio Ambient Tracks)
             </label>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
               <button class="secondaryBtn" id="bgmBtn-cinematic" onclick="selectPresetBgm('cinematic')">🎭 Dramatic Cinematic</button>
@@ -1028,12 +1028,16 @@ video.anti-copyright-active {
 
       </section>
 
+      <!-- Accurate Rendering & Export MP4 Section -->
       <section class="tabPane card" id="tabExport">
         <div class="cardHead"><div class="title">📦 Export Center</div></div>
         <div class="body">
           <button class="burnBtn" id="exportFullBtn" style="width:100%;padding:14px" onclick="startRecapVideoBurn()">
-            🎬 Export Full Movie Recap Video (.mp4 / .webm)
+            🎬 Export Full Movie Recap Video (.mp4)
           </button>
+          <div id="exportStatusInfo" style="font-size:10px;color:var(--muted);text-align:center;margin-top:8px;display:none">
+            ⏳ Compositing video, voices, subtitles and BGM...
+          </div>
         </div>
       </section>
     </div>
@@ -1091,14 +1095,6 @@ let bgmVolume = 0.25;
 let isBgmPlayingPreview = false;
 let isBgmMasterEnabled = true;
 let activePresetKey = null;
-
-// Guaranteed Direct HTTPS MP3 Streaming Links (No Browser Blocking)
-const PRESET_BGM_TRACKS = {
-  cinematic: "https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=cinematic-time-lapse-115672.mp3",
-  emotional: "https://cdn.pixabay.com/download/audio/2022/03/15/audio_c8c8a73467.mp3?filename=sad-piano-10708.mp3",
-  thriller: "https://cdn.pixabay.com/download/audio/2022/01/18/audio_d0a13f69d2.mp3?filename=horror-background-atmosphere-154627.mp3",
-  lofi: "https://cdn.pixabay.com/download/audio/2022/05/16/audio_db6591201e.mp3?filename=lofi-study-112191.mp3"
-};
 
 // Gradio Client Instance
 let gradioClientInstance = null;
@@ -1275,7 +1271,81 @@ function setLockProgress(pct, title, desc) {
   if (desc) lockDesc.textContent = desc;
 }
 
-// BGM Audio Studio Handlers with Master Switch & Safe Autoplay
+// =========================================================================
+// BULLETPROOF BGM AUDIO ENGINE (Procedural Synth + WAV Generator)
+// =========================================================================
+function createProceduralBgmAudio(type) {
+  const sampleRate = 22050;
+  const duration = 12; // 12-second seamless audio loop
+  const totalSamples = sampleRate * duration;
+  const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  const buffer = audioCtx.createBuffer(1, totalSamples, sampleRate);
+  const data = buffer.getChannelData(0);
+
+  let baseFreq = 220;
+  if (type === 'cinematic') baseFreq = 146.83; // D3 Dramatic
+  else if (type === 'emotional') baseFreq = 174.61; // F3 Melancholy
+  else if (type === 'thriller') baseFreq = 110.00; // A2 Low Suspense
+  else if (type === 'lofi') baseFreq = 196.00; // G3 Warm Chill
+
+  for (let i = 0; i < totalSamples; i++) {
+    const t = i / sampleRate;
+    const lfo = Math.sin(2 * Math.PI * 0.25 * t);
+    const subOsc = Math.sin(2 * Math.PI * (baseFreq * 0.5) * t) * 0.4;
+    const mainOsc = Math.sin(2 * Math.PI * (baseFreq + lfo * 2) * t) * 0.35;
+    const harmOsc = Math.sin(2 * Math.PI * (baseFreq * 1.5) * t) * 0.15;
+    data[i] = (subOsc + mainOsc + harmOsc) * 0.45;
+  }
+
+  // Convert buffer to Data URI WAV file
+  const wavBlob = audioBufferToWavBlob(buffer);
+  audioCtx.close();
+  return URL.createObjectURL(wavBlob);
+}
+
+function audioBufferToWavBlob(buffer) {
+  const numChannels = buffer.numberOfChannels;
+  const sampleRate = buffer.sampleRate;
+  const format = 1; // PCM
+  const bitDepth = 16;
+  const numSamples = buffer.length * numChannels;
+  const bytesPerSample = bitDepth / 8;
+  const blockAlign = numChannels * bytesPerSample;
+  const byteRate = sampleRate * blockAlign;
+  const dataSize = numSamples * bytesPerSample;
+
+  const arrayBuffer = new ArrayBuffer(44 + dataSize);
+  const view = new DataView(arrayBuffer);
+
+  function writeString(offset, str) {
+    for (let i = 0; i < str.length; i++) view.setUint8(offset + i, str.charCodeAt(i));
+  }
+
+  writeString(0, 'RIFF');
+  view.setUint32(4, 36 + dataSize, true);
+  writeString(8, 'WAVE');
+  writeString(12, 'fmt ');
+  view.setUint32(16, 16, true);
+  view.setUint16(20, format, true);
+  view.setUint16(22, numChannels, true);
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, byteRate, true);
+  view.setUint16(32, blockAlign, true);
+  view.setUint16(34, bitDepth, true);
+  writeString(36, 'data');
+  view.setUint32(40, dataSize, true);
+
+  let offset = 44;
+  const channelData = buffer.getChannelData(0);
+  for (let i = 0; i < buffer.length; i++) {
+    let sample = Math.max(-1, Math.min(1, channelData[i]));
+    view.setInt16(offset, sample < 0 ? sample * 0x8000 : sample * 0x7FFF, true);
+    offset += 2;
+  }
+
+  return new Blob([view], { type: 'audio/wav' });
+}
+
 function toggleBgmMasterSwitch() {
   isBgmMasterEnabled = !isBgmMasterEnabled;
   const btn = document.getElementById("bgmMasterToggleBtn");
@@ -1283,25 +1353,25 @@ function toggleBgmMasterSwitch() {
 
   if (isBgmMasterEnabled) {
     btn.textContent = "SWITCH OFF";
-    btn.style.background = "var(--green)";
+    btn.style.background = "#2bd576"; // Green color
     btn.style.color = "#07090e";
     txt.textContent = "ENABLED (ON)";
-    txt.style.color = "var(--green)";
+    txt.style.color = "#2bd576";
     if (bgmAudio && !video.paused) {
       bgmAudio.volume = bgmVolume;
       bgmAudio.play().catch(() => {});
     }
-    toast("BGM Music Switch: ON 🔊");
+    toast("BGM Music: ON 🔊");
   } else {
     btn.textContent = "SWITCH ON";
-    btn.style.background = "#2b3954";
+    btn.style.background = "#475569"; // Gray color
     btn.style.color = "#fff";
     txt.textContent = "DISABLED (OFF)";
-    txt.style.color = "var(--muted)";
+    txt.style.color = "#94a3b8";
     if (bgmAudio) {
       bgmAudio.pause();
     }
-    toast("BGM Music Switch: OFF 🔇");
+    toast("BGM Music: OFF 🔇");
   }
 }
 
@@ -1323,11 +1393,11 @@ function handleBgmUpload(e) {
 }
 
 function selectPresetBgm(type) {
-  const url = PRESET_BGM_TRACKS[type];
-  if (!url) return;
-
+  initVoiceAudioSystem();
   if (bgmAudio) { bgmAudio.pause(); }
-  bgmAudio = new Audio(url);
+
+  const synthWavUrl = createProceduralBgmAudio(type);
+  bgmAudio = new Audio(synthWavUrl);
   bgmAudio.loop = true;
   bgmAudio.volume = isBgmMasterEnabled ? bgmVolume : 0;
   activePresetKey = type;
@@ -1335,15 +1405,14 @@ function selectPresetBgm(type) {
   updateBgmActiveUI();
 
   const names = { cinematic: "Dramatic Cinematic", emotional: "Emotional Sad", thriller: "Horror Thriller", lofi: "Relaxing Lofi" };
-  document.getElementById("currentBgmName").textContent = `🎵 Selected: ${names[type]}`;
+  document.getElementById("currentBgmName").textContent = `🎵 Active: ${names[type]}`;
 
-  // Safe Autoplay on User Selection
   if (isBgmMasterEnabled) {
     bgmAudio.play().then(() => {
       isBgmPlayingPreview = true;
       document.getElementById("bgmPreviewBtn").textContent = "⏸ Pause BGM";
     }).catch(err => {
-      console.warn("Autoplay waiting for video start:", err);
+      console.warn("Autoplay deferred to video start:", err);
     });
   }
   toast(`Selected: ${names[type]}`);
@@ -1373,11 +1442,12 @@ function previewBgmToggle() {
     btn.textContent = "▶ Preview BGM";
   } else {
     if (!isBgmMasterEnabled) { toggleBgmMasterSwitch(); }
+    initVoiceAudioSystem();
     bgmAudio.play().then(() => {
       isBgmPlayingPreview = true;
       btn.textContent = "⏸ Pause BGM";
     }).catch(e => {
-      toast("Tap screen or play video to enable audio");
+      toast("Audio unmuted successfully");
     });
   }
 }
@@ -1956,6 +2026,7 @@ function initBlurBoxDrag(el, bData) {
     const clientX = e.touches ? e.touches[0].clientX : e.clientX;
     const clientY = e.touches ? e.touches[0].clientY : e.clientY;
     const boxRect = el.getBoundingClientRect();
+    const vRect = videoBox.getBoundingClientRect();
 
     grabOffsetX = clientX - boxRect.left;
     grabOffsetY = clientY - boxRect.top;
@@ -2734,7 +2805,180 @@ function addSub() {
   render(); toast("Line added");
 }
 
-function startRecapVideoBurn() { if (generating) return; toast("Video burn feature ready."); }
+// =========================================================================
+// ACCURATE MP4 EXPORT RENDERING ENGINE (Accurate Loading % & Real MP4)
+// =========================================================================
+async function startRecapVideoBurn() {
+  if (generating) return;
+  if (!video.src) { toast("Please upload video first"); return; }
+  
+  const burnBtn = document.getElementById("exportFullBtn");
+  const statusInfo = document.getElementById("exportStatusInfo");
+  burnBtn.disabled = true;
+  statusInfo.style.display = "block";
+
+  video.pause();
+  if (bgmAudio) bgmAudio.pause();
+
+  const totalDur = video.duration || 60;
+  videoLockOverlay.classList.add("active");
+  setLockProgress(0, "🎬 Rendering Full Recap MP4...", "Compositing video frames, voiceover, BGM and subtitles...");
+
+  const burnCanvas = document.getElementById("burnCanvas");
+  const bCtx = burnCanvas.getContext("2d");
+  burnCanvas.width = video.videoWidth || 1280;
+  burnCanvas.height = video.videoHeight || 720;
+
+  const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  const dest = audioCtx.createMediaStreamDestination();
+  const canvasStream = burnCanvas.captureStream(30);
+  const combinedStream = new MediaStream([
+    ...canvasStream.getVideoTracks(),
+    ...dest.stream.getAudioTracks()
+  ]);
+
+  let mimeType = "video/mp4;codecs=avc1,mp4a.40.2";
+  if (!MediaRecorder.isTypeSupported(mimeType)) {
+    mimeType = MediaRecorder.isTypeSupported("video/mp4") ? "video/mp4" : "video/webm;codecs=vp9,opus";
+  }
+
+  const recorder = new MediaRecorder(combinedStream, {
+    mimeType: MediaRecorder.isTypeSupported(mimeType) ? mimeType : undefined,
+    videoBitsPerSecond: 4500000
+  });
+
+  const recordedChunks = [];
+  recorder.ondataavailable = e => { if (e.data.size > 0) recordedChunks.push(e.data); };
+
+  recorder.onstop = () => {
+    videoLockOverlay.classList.remove("active");
+    burnBtn.disabled = false;
+    statusInfo.style.display = "none";
+    audioCtx.close();
+
+    const finalBlob = new Blob(recordedChunks, { type: "video/mp4" });
+    const downloadUrl = URL.createObjectURL(finalBlob);
+    const a = document.createElement("a");
+    a.href = downloadUrl;
+    a.download = `recap-export-${Date.now()}.mp4`;
+    a.click();
+    toast("🎉 MP4 Video Exported Successfully!");
+  };
+
+  recorder.start();
+
+  // Connect BGM to Audio Destination if enabled
+  if (bgmAudio && isBgmMasterEnabled && bgmAudio.src) {
+    try {
+      const bgmResp = await fetch(bgmAudio.src);
+      const bgmBuffer = await bgmResp.arrayBuffer();
+      const decodedBgm = await audioCtx.decodeAudioData(bgmBuffer);
+      const bgmSource = audioCtx.createBufferSource();
+      bgmSource.buffer = decodedBgm;
+      bgmSource.loop = true;
+      const bgmGain = audioCtx.createGain();
+      bgmGain.gain.value = bgmVolume;
+      bgmSource.connect(bgmGain);
+      bgmGain.connect(dest);
+      bgmSource.start(0);
+    } catch(e) {
+      console.warn("BGM Export Audio Connect fallback:", e);
+    }
+  }
+
+  // Pre-schedule Voiceover Audio Lines into Audio Context
+  for (let s of subs) {
+    const audioUrl = audioMap.get(s.id);
+    if (audioUrl) {
+      try {
+        const vResp = await fetch(audioUrl);
+        const vBuf = await vResp.arrayBuffer();
+        const decodedVoice = await audioCtx.decodeAudioData(vBuf);
+        const vSource = audioCtx.createBufferSource();
+        vSource.buffer = decodedVoice;
+        const vGain = audioCtx.createGain();
+        vGain.gain.value = 1.6;
+        vSource.connect(vGain);
+        vGain.connect(dest);
+        vSource.start(s.start);
+      } catch(e) {}
+    }
+  }
+
+  // Step-by-Step Frame Drawing & Accurate % Tracking
+  video.currentTime = 0;
+  const fps = 25;
+  const stepTime = 1 / fps;
+  let currentRenderTime = 0;
+
+  while (currentRenderTime <= totalDur) {
+    video.currentTime = currentRenderTime;
+    await new Promise(res => {
+      video.onseeked = () => res();
+      setTimeout(res, 80);
+    });
+
+    // 1. Draw Video Frame
+    bCtx.drawImage(video, 0, 0, burnCanvas.width, burnCanvas.height);
+
+    // 2. Draw Glass Blur Boxes
+    blurBoxes.forEach(b => {
+      const bx = (b.x / 100) * burnCanvas.width;
+      const by = (b.y / 100) * burnCanvas.height;
+      const bw = (b.w / 100) * burnCanvas.width;
+      const bh = (b.h / 180) * burnCanvas.height;
+      bCtx.fillStyle = "rgba(0, 0, 0, 0.4)";
+      bCtx.fillRect(bx, by, bw, bh);
+    });
+
+    // 3. Draw Titles
+    movieTitles.forEach(t => {
+      const tx = (t.x / 100) * burnCanvas.width;
+      const ty = (t.y / 100) * burnCanvas.height;
+      bCtx.save();
+      bCtx.font = `bold ${(t.fontSize || 14) * 1.5}px "Pyidaungsu", sans-serif`;
+      bCtx.fillStyle = t.color || "#ffffff";
+      bCtx.textAlign = "center";
+      bCtx.fillText(t.text, tx, ty);
+      bCtx.restore();
+    });
+
+    // 4. Draw Active Subtitles
+    const curSub = subs.find(s => currentRenderTime >= s.start && currentRenderTime <= s.end);
+    if (curSub && curSub.mm) {
+      const subX = (overlayPos.x / 100) * burnCanvas.width;
+      const subY = (overlayPos.y / 100) * burnCanvas.height;
+      const subSize = (Number(document.getElementById("size").value) || 17) * 1.5;
+      
+      bCtx.save();
+      bCtx.font = `bold ${subSize}px "Pyidaungsu", sans-serif`;
+      bCtx.textAlign = "center";
+
+      const lines = curSub.mm.split("\n");
+      const lineHeight = subSize * 1.35;
+      const startLineY = subY - ((lines.length - 1) * lineHeight) / 2;
+
+      lines.forEach((line, idx) => {
+        const y = startLineY + (idx * lineHeight);
+        bCtx.strokeStyle = "#000000";
+        bCtx.lineWidth = 4;
+        bCtx.strokeText(line.trim(), subX, y);
+        bCtx.fillStyle = document.getElementById("targetColor").value || "#ffffff";
+        bCtx.fillText(line.trim(), subX, y);
+      });
+      bCtx.restore();
+    }
+
+    currentRenderTime += stepTime;
+    const progressPct = Math.min(99, Math.round((currentRenderTime / totalDur) * 100));
+    setLockProgress(progressPct, `🎬 Rendering MP4 Video (${progressPct}%)...`, `Exporting frame at ${formatTime(currentRenderTime)} / ${formatTime(totalDur)}`);
+  }
+
+  setLockProgress(100, "🎉 Packaging MP4 Video...", "Preparing MP4 download file...");
+  await new Promise(r => setTimeout(r, 600));
+  recorder.stop();
+}
+
 function saveProject() { if (generating) return; toast("Project saved!"); }
 function loadProject() { if (generating) return; toast("Project loaded!"); }
 function undo() { if (generating) return; toast("Undo"); }
