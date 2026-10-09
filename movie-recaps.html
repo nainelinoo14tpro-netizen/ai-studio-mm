@@ -255,14 +255,6 @@ video.anti-copyright-active {
 .videoEmptyState span { font-size: 32px; opacity: 0.8; }
 .videoEmptyState p { margin: 0; font-size: 11.5px; font-weight: 500; }
 
-.videoFloatingTools {
-  position: absolute; top: 8px; right: 8px; z-index: 35; display: flex; gap: 6px;
-}
-.videoFloatingTools button {
-  background: rgba(14, 18, 27, 0.85); backdrop-filter: blur(8px);
-  border: 1px solid var(--border-light); font-size: 10px; padding: 4px 8px; border-radius: 7px;
-}
-
 .modeBadge {
   position: absolute; top: 10px; left: 10px; z-index: 38;
   background: rgba(43, 213, 118, 0.2); border: 1px solid var(--green);
@@ -290,10 +282,10 @@ video.anti-copyright-active {
   display: grid; place-items: center; cursor: pointer; font-weight: 800;
 }
 
-/* Multi-Blur Boxes */
+/* Multi-Blur Boxes - Pure Glass Blur Style */
 .videoBlurBoxItem {
   position: absolute; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
-  background: rgba(0,0,0,0.65); border: 1.5px dashed rgba(255,255,255,0.45);
+  background: rgba(255, 255, 255, 0.05); border: 1.5px dashed rgba(255,255,255,0.45);
   border-radius: 6px; z-index: 24; cursor: move; touch-action: none;
   min-width: 30px; min-height: 18px;
 }
@@ -304,7 +296,7 @@ video.anti-copyright-active {
   display: grid; place-items: center; cursor: pointer; font-weight: 800;
 }
 
-/* Subtitle Container - Perfect Width & Pre-line Stacking */
+/* Subtitle Container */
 .overlay {
   position: absolute; left: 50%; top: 82%; transform: translate(-50%, -50%);
   display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -325,7 +317,7 @@ video.anti-copyright-active {
   max-width: 100%;
 }
 
-/* External Control Bar - Strictly bounded inside the card */
+/* External Control Bar */
 .videoControlBarExternal {
   background: #090d16; border-top: 1px solid var(--border);
   padding: 8px 8px; display: flex; align-items: center; gap: 5px;
@@ -596,11 +588,6 @@ video.anti-copyright-active {
         <div id="movieTitlesContainer"></div>
         <div id="blurBoxesContainer"></div>
 
-        <div class="videoFloatingTools" id="videoFloatingTools" style="display:none">
-          <button id="soundToggleBtn" onclick="toggleMute(event)" title="Toggle Sound">🔊 Unmuted</button>
-          <button onclick="triggerFileInput(true)" title="Choose another video">🔄 Change Video</button>
-        </div>
-
         <!-- Touch & Drag Subtitles Container -->
         <div class="overlay" id="overlay">
           <div class="overlayInner" id="overlayInner">
@@ -622,7 +609,7 @@ video.anti-copyright-active {
         <input id="file" type="file" accept="video/mp4,video/webm,video/quicktime,video/x-matroska,video/*" hidden>
       </div>
 
-      <!-- External Control Bar attached strictly below video (Overflow Fixed) -->
+      <!-- External Control Bar attached strictly below video -->
       <div class="videoControlBarExternal" id="videoControlBar">
         <button class="vCtrlBtn" id="vPlayBtn" onclick="togglePlayPause(event)">▶</button>
         <button class="vCtrlBtn" onclick="skipVideo(-5, event)" title="Back 5s">⏪ 5s</button>
@@ -835,9 +822,45 @@ video.anti-copyright-active {
           </div>
         </div>
 
-        <!-- Accordion 3: Multi Movie Titles & Text Overlays -->
+        <!-- Accordion 3: Background Music (BGM) Studio -->
+        <div class="accordionHead" onclick="toggleAccordion('accBgmBody', 'accBgmChev')">
+          <div class="accordionTitle">🎵 3. Background Music (BGM) Studio</div>
+          <span class="accordionChevron" id="accBgmChev">▲</span>
+        </div>
+        <div class="accordionBody" id="accBgmBody">
+          <div style="margin-bottom:10px">
+            <label style="font-size:10px;color:var(--muted);font-weight:700;display:block;margin-bottom:4px">
+              📂 UPLOAD CUSTOM BGM SONG (MP3 / WAV)
+            </label>
+            <input type="file" id="bgmFileInput" accept="audio/*" onchange="handleBgmUpload(event)" style="font-size:10px">
+          </div>
+
+          <div style="margin-bottom:10px">
+            <label style="font-size:10px;color:var(--muted);font-weight:700;display:block;margin-bottom:4px">
+              🎼 AUTO PRESET BGM SONGS (Royalty-Free တေးဂီတများ ရွေးချယ်ရန်)
+            </label>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+              <button class="secondaryBtn" onclick="selectPresetBgm('cinematic')">🎭 Dramatic Cinematic</button>
+              <button class="secondaryBtn" onclick="selectPresetBgm('emotional')">🌧️ Emotional Sad</button>
+              <button class="secondaryBtn" onclick="selectPresetBgm('thriller')">🔥 Horror Thriller</button>
+              <button class="secondaryBtn" onclick="selectPresetBgm('lofi')">☕ Relaxing Lofi</button>
+            </div>
+            <div id="currentBgmName" style="font-size:10px;color:var(--cyan);margin-top:5px;font-weight:700">No BGM Selected</div>
+          </div>
+
+          <div class="sliderField" style="margin-top:10px">
+            <label>BGM Song Volume (%): <span class="val" id="bgmVolVal">25%</span></label>
+            <input id="bgmVolumeSlider" type="range" min="0" max="100" value="25" oninput="updateBgmVolume(this.value)">
+          </div>
+          <div style="display:flex;gap:6px;margin-top:8px">
+            <button class="secondaryBtn" onclick="previewBgmToggle()" id="bgmPreviewBtn" style="font-size:10px;padding:4px 8px">▶ Preview BGM</button>
+            <button class="danger" onclick="removeBgm()" style="font-size:10px;padding:4px 8px">✕ Remove BGM</button>
+          </div>
+        </div>
+
+        <!-- Accordion 4: Multi Movie Titles & Text Overlays -->
         <div class="accordionHead" onclick="toggleAccordion('accTitlesBody', 'accTitlesChev')">
-          <div class="accordionTitle">🔤 3. Movie Title & Custom Text Studio</div>
+          <div class="accordionTitle">🔤 4. Movie Title & Custom Text Studio</div>
           <span class="accordionChevron" id="accTitlesChev">▲</span>
         </div>
         <div class="accordionBody" id="accTitlesBody">
@@ -889,9 +912,9 @@ video.anti-copyright-active {
           </div>
         </div>
 
-        <!-- Accordion 4: Channel Logo & Watermark -->
+        <!-- Accordion 5: Channel Logo & Watermark -->
         <div class="accordionHead" onclick="toggleAccordion('accLogoBody', 'accLogoChev')">
-          <div class="accordionTitle">🏷️ 4. Channel Logo & Watermark Studio</div>
+          <div class="accordionTitle">🏷️ 5. Channel Logo & Watermark Studio</div>
           <span class="accordionChevron" id="accLogoChev">▲</span>
         </div>
         <div class="accordionBody" id="accLogoBody">
@@ -925,14 +948,14 @@ video.anti-copyright-active {
           </div>
         </div>
 
-        <!-- Accordion 5: Multi-Blur Boxes Studio -->
+        <!-- Accordion 6: Multi-Blur Boxes Studio (Glass Blur Only) -->
         <div class="accordionHead" onclick="toggleAccordion('accBlurBody', 'accBlurChev')">
-          <div class="accordionTitle">🌫️ 5. Multi-Blur Boxes Studio</div>
+          <div class="accordionTitle">🌫️ 6. Multi-Blur Boxes Studio (စာတန်းဟောင်းဖုံးရန်)</div>
           <span class="accordionChevron" id="accBlurChev">▲</span>
         </div>
         <div class="accordionBody" id="accBlurBody">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-            <span style="font-size:10.5px;color:var(--cyan);font-weight:700">စာတန်းဟောင်း ဖုံးအုပ်ရန်:</span>
+            <span style="font-size:10.5px;color:var(--cyan);font-weight:700">ဝါးသည့်နေရာအသစ် ထည့်ရန်:</span>
             <button onclick="addNewBlurBox()" style="font-size:9.5px;padding:3px 8px;background:rgba(32,215,255,0.18);border-color:var(--cyan);color:#fff">
               ➕ Add New Blur Box
             </button>
@@ -966,15 +989,15 @@ video.anti-copyright-active {
             </div>
 
             <div class="sliderField">
-              <label>Blur Opacity (အမည်း အလျော့/အတင်း %): <span class="val" id="bOpVal">65%</span></label>
-              <input id="bOpSlider" type="range" min="10" max="100" value="65" oninput="updateActiveBlurProps()">
+              <label>Glass Blur Strength (အကြည်ဝါးအား px): <span class="val" id="bStrengthVal">14px</span></label>
+              <input id="bStrengthSlider" type="range" min="4" max="32" value="14" oninput="updateActiveBlurProps()">
             </div>
           </div>
         </div>
 
-        <!-- Accordion 6: Anti-Copyright Video Shield -->
+        <!-- Accordion 7: Anti-Copyright Video Shield -->
         <div class="accordionHead" onclick="toggleAccordion('accShieldBody', 'accShieldChev')">
-          <div class="accordionTitle">⚔️ 6. Anti-Copyright Shield</div>
+          <div class="accordionTitle">⚔️ 7. Anti-Copyright Shield</div>
           <span class="accordionChevron" id="accShieldChev">▲</span>
         </div>
         <div class="accordionBody" id="accShieldBody">
@@ -1047,6 +1070,19 @@ let borderProgEnabled = false;
 
 // Anti-Copyright State
 let antiCopyrightEnabled = false;
+
+// BGM Audio State
+let bgmAudio = null;
+let bgmVolume = 0.25;
+let isBgmPlayingPreview = false;
+
+// Preset BGM Collection (Royalty-free public domain tracks)
+const PRESET_BGM_TRACKS = {
+  cinematic: "https://actions.google.com/sounds/v1/cinematic/dramatic_reveal.ogg",
+  emotional: "https://actions.google.com/sounds/v1/weather/rain_heavy.ogg",
+  thriller: "https://actions.google.com/sounds/v1/horror/ambient_hum.ogg",
+  lofi: "https://actions.google.com/sounds/v1/science_fiction/teleport.ogg"
+};
 
 // Gradio Client Instance
 let gradioClientInstance = null;
@@ -1198,13 +1234,6 @@ function disableCloneDueToLimit(reason) {
   );
 }
 
-function toggleMute(e) {
-  if (e) e.stopPropagation();
-  video.muted = !video.muted;
-  document.getElementById("soundToggleBtn").textContent = video.muted ? "🔇 Muted" : "🔊 Unmuted";
-  toast(video.muted ? "Muted" : "Unmuted");
-}
-
 function updateAudioLevels() {
   const vVol = Number(document.getElementById("videoVolume").value);
   const aVol = Number(document.getElementById("voiceVolume").value);
@@ -1228,6 +1257,65 @@ function setLockProgress(pct, title, desc) {
   lockPercentText.textContent = pct + "%";
   if (title) lockTitle.textContent = title;
   if (desc) lockDesc.textContent = desc;
+}
+
+// BGM Audio Studio Handlers
+function handleBgmUpload(e) {
+  const f = e.target.files[0];
+  if (!f) return;
+  if (bgmAudio) { bgmAudio.pause(); }
+  bgmAudio = new Audio(URL.createObjectURL(f));
+  bgmAudio.loop = true;
+  bgmAudio.volume = bgmVolume;
+  document.getElementById("currentBgmName").textContent = `🎵 Custom: ${f.name.slice(0, 24)}...`;
+  toast("BGM song loaded!");
+}
+
+function selectPresetBgm(type) {
+  const url = PRESET_BGM_TRACKS[type];
+  if (!url) return;
+  if (bgmAudio) { bgmAudio.pause(); }
+  bgmAudio = new Audio(url);
+  bgmAudio.loop = true;
+  bgmAudio.volume = bgmVolume;
+  const names = { cinematic: "Dramatic Cinematic", emotional: "Emotional Sad", thriller: "Horror Thriller", lofi: "Relaxing Lofi" };
+  document.getElementById("currentBgmName").textContent = `🎵 Preset: ${names[type]}`;
+  toast(`Selected: ${names[type]}`);
+}
+
+function updateBgmVolume(val) {
+  bgmVolume = Number(val) / 100;
+  document.getElementById("bgmVolVal").textContent = val + "%";
+  if (bgmAudio) {
+    bgmAudio.volume = bgmVolume;
+  }
+}
+
+function previewBgmToggle() {
+  if (!bgmAudio) { toast("Please select or upload a BGM song first"); return; }
+  const btn = document.getElementById("bgmPreviewBtn");
+  if (isBgmPlayingPreview) {
+    bgmAudio.pause();
+    isBgmPlayingPreview = false;
+    btn.textContent = "▶ Preview BGM";
+  } else {
+    bgmAudio.play().then(() => {
+      isBgmPlayingPreview = true;
+      btn.textContent = "⏸ Pause BGM";
+    }).catch(e => toast("Audio play blocked by browser"));
+  }
+}
+
+function removeBgm() {
+  if (bgmAudio) {
+    bgmAudio.pause();
+    bgmAudio = null;
+  }
+  isBgmPlayingPreview = false;
+  document.getElementById("bgmFileInput").value = "";
+  document.getElementById("currentBgmName").textContent = "No BGM Selected";
+  document.getElementById("bgmPreviewBtn").textContent = "▶ Preview BGM";
+  toast("BGM removed");
 }
 
 // Edge Speech & ZeroGPU Synthesizers
@@ -1442,6 +1530,10 @@ function togglePlayPause(e) {
     initVoiceAudioSystem();
     video.play().then(() => {
       vPlayBtn.textContent = "⏸";
+      if (bgmAudio) {
+        bgmAudio.currentTime = video.currentTime % (bgmAudio.duration || 60);
+        bgmAudio.play().catch(() => {});
+      }
     }).catch(() => {
       video.muted = true;
       video.play().then(() => {
@@ -1452,6 +1544,7 @@ function togglePlayPause(e) {
     video.pause();
     vPlayBtn.textContent = "▶";
     if (activeVoiceAudio) activeVoiceAudio.pause();
+    if (bgmAudio) bgmAudio.pause();
   }
 }
 
@@ -1459,6 +1552,9 @@ function skipVideo(delta, e) {
   if (e) e.stopPropagation();
   if (!video.src || generating) return;
   video.currentTime = Math.max(0, Math.min(video.duration || 0, video.currentTime + delta));
+  if (bgmAudio) {
+    bgmAudio.currentTime = video.currentTime % (bgmAudio.duration || 60);
+  }
 }
 
 function onSeekInput(e) {
@@ -1469,6 +1565,9 @@ function onSeekInput(e) {
 function onSeekChange(e) {
   if (!video.duration) return;
   video.currentTime = (Number(vSeekBar.value) / 100) * video.duration;
+  if (bgmAudio) {
+    bgmAudio.currentTime = video.currentTime % (bgmAudio.duration || 60);
+  }
 }
 
 videoBox.addEventListener("click", (e) => {
@@ -1492,7 +1591,6 @@ function loadVideo(f) {
   video.src = videoURL;
   video.style.display = "block";
   document.getElementById("emptyState").style.display = "none";
-  document.getElementById("videoFloatingTools").style.display = "flex";
   modeBadge.classList.remove("show");
   video.muted = false;
   video.load();
@@ -1666,11 +1764,11 @@ function renderBorderProgressTick(t, dur) {
   }
 }
 
-// MULTIPLE BLUR BOXES
+// MULTIPLE BLUR BOXES (PURE GLASS BLUR ONLY)
 function addNewBlurBox() {
   blurIdCounter++;
   const id = `blur-${blurIdCounter}`;
-  const boxData = { id, x: 20, y: 70, w: 60, h: 28, opacity: 65 };
+  const boxData = { id, x: 20, y: 70, w: 60, h: 28, blurStrength: 14 };
   blurBoxes.push(boxData);
   activeBlurId = id;
   renderBlurBoxes();
@@ -1708,13 +1806,13 @@ function syncActiveBlurToSliders() {
   document.getElementById("bYSlider").value = b.y;
   document.getElementById("bWSlider").value = b.w;
   document.getElementById("bHSlider").value = b.h;
-  document.getElementById("bOpSlider").value = b.opacity;
+  document.getElementById("bStrengthSlider").value = b.blurStrength;
 
   document.getElementById("bXVal").textContent = b.x + "%";
   document.getElementById("bYVal").textContent = b.y + "%";
   document.getElementById("bWVal").textContent = b.w + "%";
   document.getElementById("bHVal").textContent = b.h + "px";
-  document.getElementById("bOpVal").textContent = b.opacity + "%";
+  document.getElementById("bStrengthVal").textContent = b.blurStrength + "px";
 }
 
 function updateActiveBlurProps() {
@@ -1725,13 +1823,13 @@ function updateActiveBlurProps() {
   b.y = Number(document.getElementById("bYSlider").value);
   b.w = Number(document.getElementById("bWSlider").value);
   b.h = Number(document.getElementById("bHSlider").value);
-  b.opacity = Number(document.getElementById("bOpSlider").value);
+  b.blurStrength = Number(document.getElementById("bStrengthSlider").value);
 
   document.getElementById("bXVal").textContent = b.x + "%";
   document.getElementById("bYVal").textContent = b.y + "%";
   document.getElementById("bWVal").textContent = b.w + "%";
   document.getElementById("bHVal").textContent = b.h + "px";
-  document.getElementById("bOpVal").textContent = b.opacity + "%";
+  document.getElementById("bStrengthVal").textContent = b.blurStrength + "px";
 
   const el = document.getElementById(b.id);
   if (el) {
@@ -1739,7 +1837,8 @@ function updateActiveBlurProps() {
     el.style.top = b.y + "%";
     el.style.width = b.w + "%";
     el.style.height = b.h + "px";
-    el.style.backgroundColor = `rgba(0,0,0,${b.opacity / 100})`;
+    el.style.backdropFilter = `blur(${b.blurStrength}px)`;
+    el.style.webkitBackdropFilter = `blur(${b.blurStrength}px)`;
   }
 }
 
@@ -1755,7 +1854,8 @@ function renderBlurBoxes() {
     el.style.top = b.y + "%";
     el.style.width = b.w + "%";
     el.style.height = b.h + "px";
-    el.style.backgroundColor = `rgba(0,0,0,${b.opacity / 100})`;
+    el.style.backdropFilter = `blur(${b.blurStrength}px)`;
+    el.style.webkitBackdropFilter = `blur(${b.blurStrength}px)`;
 
     el.innerHTML = `<div class="blurCloseBadge" onclick="event.stopPropagation(); removeBlurBox('${b.id}')">✕</div>`;
     
@@ -1777,7 +1877,6 @@ function initBlurBoxDrag(el, bData) {
     const clientX = e.touches ? e.touches[0].clientX : e.clientX;
     const clientY = e.touches ? e.touches[0].clientY : e.clientY;
     const boxRect = el.getBoundingClientRect();
-    const vRect = videoBox.getBoundingClientRect();
 
     grabOffsetX = clientX - boxRect.left;
     grabOffsetY = clientY - boxRect.top;
@@ -2124,6 +2223,7 @@ async function generateRecapScriptOnly() {
 
   generating = true;
   video.pause();
+  if (bgmAudio) bgmAudio.pause();
   videoLockOverlay.classList.add("active");
   setLockProgress(5, "🚀 စတင်လုပ်ဆောင်နေပါသည်...", "ဗီဒီယို ဖိုင်ကို စစ်ဆေးနေပါသည်...");
 
@@ -2235,6 +2335,7 @@ async function synthesizeAllVoiceovers() {
   const lockedCloneStyle = document.getElementById("cloneVoiceStyle")?.value;
   generating = true;
   video.pause();
+  if (bgmAudio) bgmAudio.pause();
   videoLockOverlay.classList.add("active");
 
   document.querySelectorAll("button, select, input").forEach(el => {
@@ -2288,6 +2389,10 @@ async function synthesizeAllVoiceovers() {
       updateAudioLevels();
       video.play().then(() => {
         vPlayBtn.textContent = "⏸";
+        if (bgmAudio) {
+          bgmAudio.currentTime = 0;
+          bgmAudio.play().catch(() => {});
+        }
       }).catch(() => {});
 
       toast("🎉 အသံသွင်းယူပြီးပါပြီ! ဇာတ်ကြောင်းပြော ဗီဒီယိုကို စတင်ဖွင့်နေပါသည်...");
@@ -2345,6 +2450,9 @@ video.addEventListener("timeupdate", () => {
     bannerMM.textContent = "─ No active narration ─";
     const vVol = Number(document.getElementById("videoVolume").value) / 100;
     if (!video.muted) video.volume = vVol;
+    if (bgmAudio && !isBgmPlayingPreview) {
+      bgmAudio.volume = bgmVolume; // Return BGM to normal volume when no narration
+    }
   }
 
   document.querySelectorAll(".item.active").forEach(x => x.classList.remove("active"));
@@ -2376,7 +2484,11 @@ function playVoiceForSub(sub) {
   const vVol = Number(document.getElementById("videoVolume").value) / 100;
   const aVol = Number(document.getElementById("voiceVolume").value) / 100;
 
+  // Audio Ducking for movie background & BGM
   if (!video.muted) video.volume = Math.max(0.04, vVol * 0.35);
+  if (bgmAudio && !isBgmPlayingPreview) {
+    bgmAudio.volume = Math.max(0.03, bgmVolume * 0.35); // Soften BGM during voiceover
+  }
 
   activeVoiceAudio = new Audio(url);
   activeVoiceAudio.volume = Math.min(1.0, aVol);
@@ -2389,9 +2501,11 @@ function playVoiceForSub(sub) {
   activeVoiceAudio.play().catch(() => {});
   activeVoiceAudio.onended = () => {
     if (!video.muted) video.volume = vVol;
+    if (bgmAudio && !isBgmPlayingPreview) bgmAudio.volume = bgmVolume;
   };
 }
 
+// Single Voice Line Overwrite / Re-Generate
 async function playSingleVoice(id) {
   if (generating) return;
   const sub = subs.find(s => s.id === id);
@@ -2444,6 +2558,10 @@ function playAllVoiceover() {
   video.currentTime = subs[0].start;
   video.play();
   vPlayBtn.textContent = "⏸";
+  if (bgmAudio) {
+    bgmAudio.currentTime = video.currentTime % (bgmAudio.duration || 60);
+    bgmAudio.play().catch(() => {});
+  }
   toast("Playing recap preview...");
 }
 
