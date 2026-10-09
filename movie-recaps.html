@@ -2315,7 +2315,67 @@ function toggleAntiCopyrightShield() {
   toast(antiCopyrightEnabled ? "Anti-Copyright Shield Activated!" : "Shield Deactivated");
 }
 
-/* SCRIPT & VOICEOVER GENERATION ENGINES */
+/* HELPER: IN-BROWSER AUDIO EXTRACTION (AVOIDS HTTP 413 TOO LARGE) */
+async function extractLightweightAudioBlobFromVideo(videoFile, onProgress) {
+  const fileArrayBuffer = await videoFile.arrayBuffer();
+  if (onProgress) onProgress(30, "အသံလှိုင်းများကို ခွဲထုတ်နေပါသည်...");
+
+  const offlineAudioContext = new (window.AudioContext || window.webkitAudioContext)();
+  const decodedAudioBuffer = await offlineAudioContext.decodeAudioData(fileArrayBuffer);
+
+  if (onProgress) onProgress(45, "Whisper အတွက် Mono WAV ဖိုင် ပြုစုနေပါသည်...");
+
+  // Convert to 16000Hz Mono WAV for Whisper AI
+  const targetSampleRate = 16000;
+  const numChannels = 1;
+  const offlineCtx = new OfflineAudioContext(numChannels, Math.ceil(decodedAudioBuffer.duration * targetSampleRate), targetSampleRate);
+  
+  const bufferSource = offlineCtx.createBufferSource();
+  bufferSource.buffer = decodedAudioBuffer;
+  bufferSource.connect(offlineCtx.destination);
+  bufferSource.start(0);
+
+  const renderedBuffer = await offlineCtx.startRendering();
+  offlineAudioContext.close();
+
+  // Encode to 16-bit PCM WAV Blob
+  const channelData = renderedBuffer.getChannelData(0);
+  const totalSamples = channelData.length;
+  const bufferLength = totalSamples * 2 + 44;
+  const wavArrayBuffer = new ArrayBuffer(bufferLength);
+  const view = new DataView(wavArrayBuffer);
+
+  function writeString(offset, string) {
+    for (let i = 0; i < string.length; i++) {
+      view.setUint8(offset + i, string.charCodeAt(i));
+    }
+  }
+
+  writeString(0, 'RIFF');
+  view.setUint32(4, bufferLength - 8, true);
+  writeString(8, 'WAVE');
+  writeString(12, 'fmt ');
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true); // PCM format
+  view.setUint16(22, 1, true); // 1 Channel (Mono)
+  view.setUint32(24, targetSampleRate, true);
+  view.setUint32(28, targetSampleRate * 2, true);
+  view.setUint16(32, 2, true);
+  view.setUint16(34, 16, true);
+  writeString(36, 'data');
+  view.setUint32(40, totalSamples * 2, true);
+
+  let p = 44;
+  for (let i = 0; i < totalSamples; i++) {
+    const s = Math.max(-1, Math.min(1, channelData[i]));
+    view.setInt16(p, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+    p += 2;
+  }
+
+  return new Blob([wavArrayBuffer], { type: 'audio/wav' });
+}
+
+/* SCRIPT & VOICEOVER GENERATION ENGINES (WITH AUTO AUDIO EXTRACTION) */
 async function generateRecapScriptOnly() {
   if (generating) return;
   if (!file) { toast("Please upload a movie video first"); return; }
@@ -2347,13 +2407,29 @@ async function generateRecapScriptOnly() {
   render();
 
   try {
-    setStatus("busy", "Stage 1/2: Whisper Multi-Lang Transcribing...");
+    setStatus("busy", "Stage 1/2: Preparing Lightweight Audio...");
     step("Upload", "done"); 
     step("Whisper", "active");
-    setLockProgress(25, "🎙️ ဘာသာစကားမျိုးစုံကို နားထောင်စစ်ဆေးနေပါသည်...", "Whisper AI Multi-language Auto Detection လုပ်ဆောင်နေပါသည်...");
+
+    let payloadFile = file;
+
+    // Auto Extract Audio if file is larger than 20MB to prevent HTTP 413 error
+    if (file.size > 20 * 1024 * 1024 || file.type.startsWith("video")) {
+      setLockProgress(15, "🎵 အသံဖိုင် သီးသန့်ထုတ်ယူနေပါသည်...", `ဗီဒီယို ဖိုင်ဆိုဒ်ကြီးမားသဖြင့် (${(file.size / (1024 * 1024)).toFixed(1)}MB) Server Limit မကျော်စေရန် ပေါ့ပါးသော အသံဖိုင်အဖြစ် အလိုအလျောက် ခွဲထုတ်နေပါသည်...`);
+      try {
+        const audioBlob = await extractLightweightAudioBlobFromVideo(file, (p, desc) => {
+          setLockProgress(p, "🎵 အသံဖိုင် ခွဲထုတ်နေပါသည်...", desc);
+        });
+        payloadFile = new File([audioBlob], "audio_extract.wav", { type: "audio/wav" });
+      } catch (extractErr) {
+        console.warn("Audio extraction fallback, sending original file:", extractErr);
+      }
+    }
+
+    setLockProgress(50, "🎙️ Whisper Transcribing...", "ဘာသာစကားမျိုးစုံကို နားထောင်ပြီး စာသားထုတ်ယူနေပါသည်...");
 
     const fd = new FormData();
-    fd.append("file", file);
+    fd.append("file", payloadFile);
 
     const r1 = await fetch(WORKER_URL + "/transcribe", { method: "POST", body: fd });
     if (!r1.ok) {
@@ -2367,7 +2443,7 @@ async function generateRecapScriptOnly() {
 
     const totalVideoDuration = Math.round(video.duration || (rawSegments[rawSegments.length - 1].end || 60));
 
-    setLockProgress(65, "✨ မြန်မာဇာတ်ကြောင်းပြောစစ်စစ် ရေးနေပါသည်...", `စကားပြော ${rawSegments.length} ခုကို နားလည်အောင် ဘာသာပြန်ပြီး သဘာဝကျသော Recap စာသား ပြုစုနေပါသည်...`);
+    setLockProgress(68, "✨ မြန်မာဇာတ်ကြောင်းပြောစစ်စစ် ရေးနေပါသည်...", `စကားပြော ${rawSegments.length} ခုကို နားလည်အောင် ဘာသာပြန်ပြီး သဘာဝကျသော Recap စာသား ပြုစုနေပါသည်...`);
     step("Whisper", "done");
     step("Recap", "active");
     setStatus("busy", `Stage 2/2: Generating Natural Recap Script [${recapTone.toUpperCase()}]...`);
