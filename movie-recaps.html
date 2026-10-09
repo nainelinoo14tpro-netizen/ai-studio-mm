@@ -1028,9 +1028,19 @@ video.anti-copyright-active {
       <section class="tabPane card" id="tabExport">
         <div class="cardHead"><div class="title">📦 Export Center (Video Exporter)</div></div>
         <div class="body">
-          <button class="burnBtn" id="exportFullBtn" style="width:100%;padding:14px;font-size:13px" onclick="exportFullRecapVideo()">
+          <button class="burnBtn" id="exportFullBtn" style="width:100%;padding:14px;font-size:13px;margin-bottom:10px" onclick="exportFullRecapVideo()">
             🎬 Export Full Movie Recap Video (.mp4)
           </button>
+
+          <!-- Audio & SRT Direct Download Tools -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;border-top:1px dashed var(--border);padding-top:10px">
+            <button class="secondaryBtn" onclick="exportNarrationAudioOnly()" style="font-size:11px;padding:9px">
+              🎵 Download Full Audio
+            </button>
+            <button class="secondaryBtn" onclick="exportSrtSubtitlesOnly()" style="font-size:11px;padding:9px">
+              📝 Download Burmese SRT
+            </button>
+          </div>
           
           <div id="exportStatusInfo" style="margin-top:10px;display:none;text-align:center">
             <div style="font-size:10.5px;color:var(--cyan);font-weight:700;margin-bottom:6px" id="exportStatusText">
@@ -1102,7 +1112,7 @@ let activePresetKey = null;
 let isExportCancelled = false;
 let activeRecorderInstance = null;
 
-// Clean Direct Streaming Royalty-Free Ambient Audio Links (Fixed Emotional Sad Link)
+// Clean Direct Streaming Royalty-Free Ambient Audio Links
 const PRESET_BGM_TRACKS = {
   cinematic: "https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=cinematic-time-lapse-115672.mp3",
   emotional: "https://cdn.pixabay.com/download/audio/2022/01/18/audio_d0a13f69d2.mp3?filename=ambient-piano-sad-10708.mp3",
@@ -2525,7 +2535,6 @@ video.addEventListener("timeupdate", () => {
     vCurTime.textContent = formatTime(t);
   }
 
-  // Real-Time Border Tick
   renderBorderProgressTick(t, dur);
 
   const activeSub = subs.find(a => t >= a.start && t <= a.end);
@@ -2579,7 +2588,6 @@ function playVoiceForSub(sub) {
   const vVol = Number(document.getElementById("videoVolume").value) / 100;
   const aVol = Number(document.getElementById("voiceVolume").value) / 100;
 
-  // Audio Ducking for movie background & BGM
   if (!video.muted) video.volume = Math.max(0.04, vVol * 0.35);
   if (bgmAudio && !isBgmPlayingPreview && isBgmMasterEnabled) {
     bgmAudio.volume = Math.max(0.03, bgmVolume * 0.35);
@@ -2750,10 +2758,9 @@ function addSub() {
 }
 
 // =========================================================================
-// REAL-TIME STREAM EXPORT & COMPOSITING ENGINE (story-to-video Architecture)
+// REAL-TIME FRAME RENDERING & MULTI-FLOW EXPORT ENGINES (EXACT PREVIEW MATCH)
 // =========================================================================
 function cancelExportProcessing() {
-  if (!generating && !activeRecorderInstance) return;
   isExportCancelled = true;
   if (activeRecorderInstance && activeRecorderInstance.state !== "inactive") {
     try { activeRecorderInstance.stop(); } catch(e) {}
@@ -2767,6 +2774,126 @@ function cancelExportProcessing() {
   toast("🛑 Export ရပ်တန့်လိုက်ပါပြီ");
 }
 
+// Pure Canvas Frame Drawer - 100% Matching Browser Screen Preview
+function drawCanvasBurnFrame(bCtx, burnCanvas, currTime, scaleFactor) {
+  bCtx.drawImage(video, 0, 0, burnCanvas.width, burnCanvas.height);
+
+  // 1. Draw Blur Boxes
+  blurBoxes.forEach(b => {
+    const bx = (b.x / 100) * burnCanvas.width;
+    const by = (b.y / 100) * burnCanvas.height;
+    const bw = (b.w / 100) * burnCanvas.width;
+    const bh = (b.h * scaleFactor);
+
+    bCtx.save();
+    bCtx.filter = `blur(${Math.max(4, b.blurStrength * scaleFactor * 0.8)}px)`;
+    bCtx.drawImage(burnCanvas, bx, by, bw, bh, bx, by, bw, bh);
+    bCtx.filter = 'none';
+    bCtx.fillStyle = "rgba(255, 255, 255, 0.05)";
+    bCtx.fillRect(bx, by, bw, bh);
+    bCtx.restore();
+  });
+
+  // 2. Draw Channel Logo
+  const logoEl = document.getElementById("videoLogoOverlay");
+  if (logoEl && logoEl.src && logoEl.style.display !== "none") {
+    const lw = (logoProps.size || 60) * scaleFactor;
+    const lh = lw * (logoEl.naturalHeight / (logoEl.naturalWidth || 1));
+    const lx = (logoProps.x / 100) * burnCanvas.width;
+    const ly = (logoProps.y / 100) * burnCanvas.height;
+
+    bCtx.save();
+    bCtx.globalAlpha = (logoProps.opacity || 85) / 100;
+    bCtx.drawImage(logoEl, lx, ly, lw, lh);
+    bCtx.restore();
+  }
+
+  // 3. Draw Titles (Matching Screen Dimensions & Font Scale)
+  movieTitles.forEach(t => {
+    const tx = (t.x / 100) * burnCanvas.width;
+    const ty = (t.y / 100) * burnCanvas.height;
+    const tSize = (t.fontSize || 14) * scaleFactor;
+
+    bCtx.save();
+    bCtx.font = `bold ${tSize}px system-ui, -apple-system, "Pyidaungsu", "Noto Sans Myanmar", sans-serif`;
+    bCtx.textAlign = "center";
+    bCtx.textBaseline = "middle";
+
+    const textMetrics = bCtx.measureText(t.text);
+    const padX = 12 * scaleFactor;
+    const padY = 5 * scaleFactor;
+    const boxW = textMetrics.width + (padX * 2);
+    const boxH = tSize + (padY * 2);
+
+    const r = parseInt((t.bgColor || "#000000").slice(1, 3), 16) || 0;
+    const g = parseInt((t.bgColor || "#000000").slice(3, 5), 16) || 0;
+    const b = parseInt((t.bgColor || "#000000").slice(5, 7), 16) || 0;
+    bCtx.fillStyle = `rgba(${r}, ${g}, ${b}, ${(t.opacity || 65) / 100})`;
+    bCtx.fillRect(tx - boxW / 2, ty, boxW, boxH);
+
+    bCtx.fillStyle = t.color || "#ffffff";
+    bCtx.shadowColor = "#000000";
+    bCtx.shadowBlur = 4 * scaleFactor;
+    bCtx.fillText(t.text, tx, ty + boxH / 2);
+    bCtx.restore();
+  });
+
+  // 4. Draw Subtitle (Exact Screen Scale & Positioning)
+  const curSub = subs.find(s => currTime >= s.start && currTime <= s.end);
+  if (curSub && curSub.mm) {
+    const subX = (overlayPos.x / 100) * burnCanvas.width;
+    const subY = (overlayPos.y / 100) * burnCanvas.height;
+    const fontSize = (Number(document.getElementById("size").value) || 17) * scaleFactor;
+
+    bCtx.save();
+    bCtx.font = `bold ${fontSize}px system-ui, -apple-system, "Pyidaungsu", "Noto Sans Myanmar", sans-serif`;
+    bCtx.textAlign = "center";
+    bCtx.textBaseline = "middle";
+
+    const lines = curSub.mm.split("\n");
+    const lineHeight = fontSize * 1.38;
+    const totalBlockH = lines.length * lineHeight;
+    const startLineY = subY - (totalBlockH / 2) + (lineHeight / 2);
+
+    const subBg = document.getElementById("bgColor").value || "#000000";
+    const subOp = Number(document.getElementById("boxOpacity").value) / 100;
+    const bgR = parseInt(subBg.slice(1, 3), 16) || 0;
+    const bgG = parseInt(subBg.slice(3, 5), 16) || 0;
+    const bgB = parseInt(subBg.slice(5, 7), 16) || 0;
+
+    let maxLineWidth = 0;
+    lines.forEach(l => {
+      const w = bCtx.measureText(l.trim()).width;
+      if (w > maxLineWidth) maxLineWidth = w;
+    });
+
+    const boxWidthMode = Number(document.getElementById("boxWidthMode").value);
+    let boxDrawW = maxLineWidth + (24 * scaleFactor);
+    if (boxWidthMode > 0) {
+      boxDrawW = (boxWidthMode / 100) * burnCanvas.width;
+    }
+
+    const padH = 8 * scaleFactor;
+    bCtx.fillStyle = `rgba(${bgR}, ${bgG}, ${bgB}, ${subOp})`;
+    bCtx.fillRect(subX - (boxDrawW / 2), subY - (totalBlockH / 2) - padH, boxDrawW, totalBlockH + (padH * 2));
+
+    const outlineWidth = (Number(document.getElementById("outlineWidth").value) || 1.5) * scaleFactor;
+    const outlineColor = document.getElementById("outlineColor").value || "#000000";
+    const targetColor = document.getElementById("targetColor").value || "#ffffff";
+
+    lines.forEach((line, idx) => {
+      const y = startLineY + (idx * lineHeight);
+      bCtx.strokeStyle = outlineColor;
+      bCtx.lineWidth = Math.max(1, outlineWidth);
+      bCtx.strokeText(line.trim(), subX, y);
+      bCtx.fillStyle = targetColor;
+      bCtx.fillText(line.trim(), subX, y);
+    });
+    bCtx.restore();
+  }
+}
+
+// MAIN VIDEO EXPORT FUNCTION (STORY-TO-VIDEO REALTIME COMPOSITING ENGINE)
 async function exportFullRecapVideo() {
   if (generating) return;
   if (!video.src) { toast("Please upload video first"); return; }
@@ -2789,11 +2916,14 @@ async function exportFullRecapVideo() {
   const burnCanvas = document.getElementById("burnCanvas");
   const bCtx = burnCanvas.getContext("2d");
 
-  // Keep perfect 16:9 1280x720 video canvas[span_7](start_span)[span_7](end_span)
   burnCanvas.width = 1280;
   burnCanvas.height = 720;
 
-  // 1. Web Audio Mixer Engine setup (Same as story-to-video)[span_8](start_span)[span_8](end_span)
+  // Calculate Screen vs Canvas Exact Ratio
+  const vBoxRect = videoBox.getBoundingClientRect();
+  const screenW = vBoxRect.width || 400;
+  const scaleFactor = 1280 / screenW;
+
   const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   const dest = audioCtx.createMediaStreamDestination();
   const canvasStream = burnCanvas.captureStream(30);
@@ -2827,20 +2957,18 @@ async function exportFullRecapVideo() {
 
     if (isExportCancelled) return;
 
-    const actualType = recordedChunks[0]?.type || recorder.mimeType || "video/webm";
-    const finalBlob = new Blob(recordedChunks, { type: actualType });
+    const finalBlob = new Blob(recordedChunks, { type: "video/mp4" });
     const downloadUrl = URL.createObjectURL(finalBlob);
     const a = document.createElement("a");
     a.href = downloadUrl;
-    const ext = actualType.includes("mp4") ? "mp4" : "webm";
-    a.download = `recap-export-${Date.now()}.${ext}`;
+    a.download = `recap-export-${Date.now()}.mp4`;
     a.click();
     toast("🎉 MP4 Video downloaded successfully!");
   };
 
   recorder.start();
 
-  // 2. Schedule BGM Music with Gain[span_9](start_span)[span_9](end_span)
+  // Connect BGM Music with AudioContext
   if (bgmAudio && isBgmMasterEnabled && bgmAudio.src) {
     try {
       const bgmResp = await fetch(bgmAudio.src);
@@ -2853,13 +2981,13 @@ async function exportFullRecapVideo() {
       bgmGain.gain.value = bgmVolume;
       bgmSource.connect(bgmGain);
       bgmGain.connect(dest);
-      bgmSource.start(audioCtx.currentTime + 0.05);
+      bgmSource.start(0);
     } catch(e) {
-      console.warn("BGM track audio connect:", e);
+      console.warn("BGM connect:", e);
     }
   }
 
-  // 3. Pre-schedule all voiceovers with 1.7x Boost Gain (story-to-video pattern)[span_10](start_span)[span_10](end_span)
+  // Pre-schedule Voiceover Audio with Boost Gain (1.7x)
   for (let s of subs) {
     const audioUrl = audioMap.get(s.id);
     if (audioUrl) {
@@ -2871,167 +2999,148 @@ async function exportFullRecapVideo() {
         vSource.buffer = decodedVoice;
 
         const boostGain = audioCtx.createGain();
-        boostGain.gain.value = 1.7; // Loud clear boost[span_11](start_span)[span_11](end_span)
+        boostGain.gain.value = 1.7;
         vSource.connect(boostGain);
         boostGain.connect(dest);
 
-        vSource.start(audioCtx.currentTime + Math.max(0, Number(s.start) || 0));
+        vSource.start(s.start);
       } catch(e) {}
     }
   }
 
-  // 4. Pure Canvas Frame Drawer (story-to-video captureStream pattern)
-  const logoEl = document.getElementById("videoLogoOverlay");
-  const frameBaseCanvas = document.createElement("canvas");
-  frameBaseCanvas.width = burnCanvas.width;
-  frameBaseCanvas.height = burnCanvas.height;
-  const baseCtx = frameBaseCanvas.getContext("2d");
-
-  function drawCanvasBurnFrame(currTime) {
-    // Draw each frame to a clean base canvas first, then composite all overlays.
-    baseCtx.clearRect(0, 0, frameBaseCanvas.width, frameBaseCanvas.height);
-    baseCtx.drawImage(video, 0, 0, frameBaseCanvas.width, frameBaseCanvas.height);
-    bCtx.clearRect(0, 0, burnCanvas.width, burnCanvas.height);
-    bCtx.drawImage(frameBaseCanvas, 0, 0, burnCanvas.width, burnCanvas.height);
-
-    // 4.2 Draw Blur Boxes from the clean base frame, not from burnCanvas itself.
-    blurBoxes.forEach(b => {
-      const bx = (b.x / 100) * burnCanvas.width;
-      const by = (b.y / 100) * burnCanvas.height;
-      const bw = (b.w / 100) * burnCanvas.width;
-      const bh = (b.h / 180) * burnCanvas.height;
-
-      bCtx.save();
-      bCtx.filter = `blur(${b.blurStrength || 14}px)`;
-      bCtx.drawImage(frameBaseCanvas, bx, by, bw, bh, bx, by, bw, bh);
-      bCtx.filter = 'none';
-      bCtx.fillStyle = "rgba(255, 255, 255, 0.05)";
-      bCtx.fillRect(bx, by, bw, bh);
-      bCtx.restore();
-    });
-
-    // 4.3 Draw Channel Logo
-    if (logoEl && logoEl.src && logoEl.style.display !== "none") {
-      const lw = (logoProps.size || 60) * 1.5;
-      const lh = lw * (logoEl.naturalHeight / (logoEl.naturalWidth || 1));
-      const lx = (logoProps.x / 100) * burnCanvas.width;
-      const ly = (logoProps.y / 100) * burnCanvas.height;
-
-      bCtx.save();
-      bCtx.globalAlpha = (logoProps.opacity || 85) / 100;
-      bCtx.drawImage(logoEl, lx, ly, lw, lh);
-      bCtx.restore();
-    }
-
-    // 4.4 Draw Titles (Matching preview text & box styles)
-    movieTitles.forEach(t => {
-      const tx = (t.x / 100) * burnCanvas.width;
-      const ty = (t.y / 100) * burnCanvas.height;
-      const tSize = (t.fontSize || 14) * 1.6;
-
-      bCtx.save();
-      bCtx.font = `bold ${tSize}px "Pyidaungsu", "Noto Sans Myanmar", sans-serif`;
-      bCtx.textAlign = "center";
-      bCtx.textBaseline = "middle";
-
-      const textMetrics = bCtx.measureText(t.text);
-      const padX = 14;
-      const padY = 8;
-      const boxW = textMetrics.width + (padX * 2);
-      const boxH = tSize + (padY * 2);
-
-      const r = parseInt((t.bgColor || "#000000").slice(1, 3), 16) || 0;
-      const g = parseInt((t.bgColor || "#000000").slice(3, 5), 16) || 0;
-      const b = parseInt((t.bgColor || "#000000").slice(5, 7), 16) || 0;
-      bCtx.fillStyle = `rgba(${r}, ${g}, ${b}, ${(t.opacity || 65) / 100})`;
-      bCtx.fillRect(tx - boxW / 2, ty, boxW, boxH);
-
-      bCtx.fillStyle = t.color || "#ffffff";
-      bCtx.shadowColor = "#000000";
-      bCtx.shadowBlur = 4;
-      bCtx.fillText(t.text, tx, ty + boxH / 2);
-      bCtx.restore();
-    });
-
-    // 4.5 Draw Subtitle (Exact size & word-wrap layout)[span_13](start_span)[span_13](end_span)
-    const curSub = subs.find(s => currTime >= s.start && currTime <= s.end);
-    if (curSub && curSub.mm) {
-      const subX = (overlayPos.x / 100) * burnCanvas.width;
-      const subY = (overlayPos.y / 100) * burnCanvas.height;
-      const fontSize = (Number(document.getElementById("size").value) || 17) * 1.5;
-
-      bCtx.save();
-      bCtx.font = `bold ${fontSize}px "Pyidaungsu", "Noto Sans Myanmar", sans-serif`;
-      bCtx.textAlign = "center";
-      bCtx.textBaseline = "middle";
-
-      const lines = curSub.mm.split("\n");
-      const lineHeight = fontSize * 1.38;
-      const totalBlockH = lines.length * lineHeight;
-      const startLineY = subY - (totalBlockH / 2) + (lineHeight / 2);
-
-      const subBg = document.getElementById("bgColor").value || "#000000";
-      const subOp = Number(document.getElementById("boxOpacity").value) / 100;
-      const bgR = parseInt(subBg.slice(1, 3), 16) || 0;
-      const bgG = parseInt(subBg.slice(3, 5), 16) || 0;
-      const bgB = parseInt(subBg.slice(5, 7), 16) || 0;
-
-      let maxLineWidth = 0;
-      lines.forEach(l => {
-        const w = bCtx.measureText(l.trim()).width;
-        if (w > maxLineWidth) maxLineWidth = w;
-      });
-
-      const padW = 20;
-      const padH = 10;
-      bCtx.fillStyle = `rgba(${bgR}, ${bgG}, ${bgB}, ${subOp})`;
-      bCtx.fillRect(subX - (maxLineWidth / 2) - padW, subY - (totalBlockH / 2) - padH, maxLineWidth + (padW * 2), totalBlockH + (padH * 2));
-
-      const outlineWidth = (Number(document.getElementById("outlineWidth").value) || 1.5) * 1.8;
-      const outlineColor = document.getElementById("outlineColor").value || "#000000";
-      const targetColor = document.getElementById("targetColor").value || "#ffffff";
-
-      lines.forEach((line, idx) => {
-        const y = startLineY + (idx * lineHeight);
-        bCtx.strokeStyle = outlineColor;
-        bCtx.lineWidth = outlineWidth;
-        bCtx.strokeText(line.trim(), subX, y);
-        bCtx.fillStyle = targetColor;
-        bCtx.fillText(line.trim(), subX, y);
-      });
-      bCtx.restore();
-    }
-  }
-
-  // 5. Silent Real-time Loop Compositing (story-to-video loop mechanism)[span_14](start_span)[span_14](end_span)
+  // Real-time Silent Loop Rendering Engine
   video.currentTime = 0;
-  await new Promise(resolve => {
-    const onSeeked = () => { video.removeEventListener("seeked", onSeeked); resolve(); };
-    video.addEventListener("seeked", onSeeked, { once: true });
-    // Some browsers do not emit seeked when already at zero.
-    if (video.currentTime === 0 && video.readyState >= 2) { video.removeEventListener("seeked", onSeeked); resolve(); }
-  });
+  const loopStart = performance.now();
+  let renderedSecs = 0;
 
-  const exportStartAt = performance.now();
-  try { await video.play(); } catch (e) { console.warn("Video playback start failed:", e); }
+  while (renderedSecs < totalDur) {
+    if (isExportCancelled) break;
 
-  while (!isExportCancelled && !video.ended && video.currentTime < totalDur) {
-    const renderedSecs = Math.min(totalDur, video.currentTime || ((performance.now() - exportStartAt) / 1000));
-    drawCanvasBurnFrame(renderedSecs);
+    const elapsed = (performance.now() - loopStart) / 1000;
+    renderedSecs = Math.min(totalDur, elapsed);
+
+    video.currentTime = renderedSecs;
+    drawCanvasBurnFrame(bCtx, burnCanvas, renderedSecs, scaleFactor);
 
     const pct = Math.min(99, Math.round((renderedSecs / totalDur) * 100));
     setLockProgress(pct, `🎬 Exporting Video (${pct}%)...`, `Compositing at ${formatTime(renderedSecs)} / ${formatTime(totalDur)}`);
+
     await new Promise(r => setTimeout(r, 33));
   }
 
-  video.pause();
-  if (activeRecorderInstance && activeRecorderInstance.state !== "inactive") {
-    if (!isExportCancelled) {
-      setLockProgress(100, "🎉 Packaging video...", "Preparing video download file...");
-      await new Promise(r => setTimeout(r, 400));
-    }
-    activeRecorderInstance.stop();
+  if (!isExportCancelled) {
+    setLockProgress(100, "🎉 Packaging MP4...", "Preparing video download file...");
+    await new Promise(r => setTimeout(r, 400));
+    recorder.stop();
   }
+}
+
+// DIRECT AUDIO & SRT EXPORT ENGINES (FOR CAPCUT / PREMIERE)
+async function exportNarrationAudioOnly() {
+  if (!subs.length || !audioMap.size) {
+    toast("အရင်ဆုံး '🎙️ Generate All Voices' ဖြင့် အသံများ ထုတ်ပေးပါ");
+    return;
+  }
+
+  toast("🎵 Merging narration voice audio...");
+  try {
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const audioDataBuffers = [];
+    let totalSamples = 0;
+
+    for (let s of subs) {
+      const url = audioMap.get(s.id);
+      if (url) {
+        const resp = await fetch(url);
+        const arrayBuf = await resp.arrayBuffer();
+        const decoded = await audioCtx.decodeAudioData(arrayBuf);
+        audioDataBuffers.push(decoded);
+        totalSamples += decoded.length;
+      }
+    }
+
+    if (!audioDataBuffers.length) throw new Error("No decoded voices found");
+
+    const mergedBuffer = audioCtx.createBuffer(
+      audioDataBuffers[0].numberOfChannels,
+      totalSamples,
+      audioDataBuffers[0].sampleRate
+    );
+
+    for (let channel = 0; channel < mergedBuffer.numberOfChannels; channel++) {
+      let offset = 0;
+      const channelData = mergedBuffer.getChannelData(channel);
+      for (const b of audioDataBuffers) {
+        const srcData = b.getChannelData(Math.min(channel, b.numberOfChannels - 1));
+        for (let j = 0; j < srcData.length; j++) {
+          channelData[offset + j] = Math.max(-1.0, Math.min(1.0, srcData[j] * 1.7));
+        }
+        offset += b.length;
+      }
+    }
+
+    function encodeWAV(abuffer, totalSamples) {
+      const numOfChan = abuffer.numberOfChannels;
+      const length = totalSamples * numOfChan * 2 + 44;
+      const out = new DataView(new ArrayBuffer(length));
+      let pos = 0;
+      function setUint16(data) { out.setUint16(pos, data, true); pos += 2; }
+      function setUint32(data) { out.setUint32(pos, data, true); pos += 4; }
+      setUint32(0x46464952); setUint32(length - 8); setUint32(0x45564157);
+      setUint32(0x20746d66); setUint32(16); setUint16(1); setUint16(numOfChan);
+      setUint32(abuffer.sampleRate); setUint32(abuffer.sampleRate * 2 * numOfChan);
+      setUint16(numOfChan * 2); setUint16(16); setUint32(0x61746164); setUint32(length - pos - 4);
+      const channels = [];
+      for (let i = 0; i < numOfChan; i++) channels.push(abuffer.getChannelData(i));
+      let sample = 0;
+      for (let i = 0; i < abuffer.length; i++) {
+        for (let ch = 0; ch < numOfChan; ch++) {
+          sample = Math.max(-1, Math.min(1, channels[ch][i]));
+          sample = (0.5 + sample < 0 ? sample * 32768 : sample * 32767) | 0;
+          out.setInt16(pos, sample, true); pos += 2;
+        }
+      }
+      return new Blob([out.buffer], { type: "audio/wav" });
+    }
+
+    const wavBlob = encodeWAV(mergedBuffer, totalSamples);
+    const downloadUrl = URL.createObjectURL(wavBlob);
+    const a = document.createElement("a");
+    a.href = downloadUrl;
+    a.download = `recap-narration-audio-${Date.now()}.wav`;
+    a.click();
+    toast("🎉 Downloaded Full Narration Audio!");
+    audioCtx.close();
+  } catch(e) {
+    toast("Audio Download failed: " + e.message);
+  }
+}
+
+function exportSrtSubtitlesOnly() {
+  if (!subs.length) { toast("No script available to export SRT"); return; }
+  
+  function formatSrtTime(secs) {
+    const d = new Date(secs * 1000);
+    const h = String(Math.floor(secs / 3600)).padStart(2, '0');
+    const m = String(d.getUTCMinutes()).padStart(2, '0');
+    const s = String(d.getUTCSeconds()).padStart(2, '0');
+    const ms = String(d.getUTCMilliseconds()).padStart(3, '0');
+    return `${h}:${m}:${s},${ms}`;
+  }
+
+  let srtContent = "";
+  subs.forEach((s, idx) => {
+    srtContent += `${idx + 1}\n`;
+    srtContent += `${formatSrtTime(s.start)} --> ${formatSrtTime(s.end)}\n`;
+    srtContent += `${s.mm.trim()}\n\n`;
+  });
+
+  const blob = new Blob([srtContent], { type: "text/plain;charset=utf-8" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `recap-subtitles-${Date.now()}.srt`;
+  a.click();
+  toast("🎉 Downloaded Burmese SRT Subtitles!");
 }
 
 function saveProject() { if (generating) return; toast("Project saved!"); }
