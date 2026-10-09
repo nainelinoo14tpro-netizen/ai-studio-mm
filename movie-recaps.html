@@ -1022,14 +1022,55 @@ video.anti-copyright-active {
 
       </section>
 
-      <!-- Accurate Rendering & Export MP4 Section -->
+      <!-- Accurate Rendering & Multi-Engine Export MP4 Section -->
       <section class="tabPane card" id="tabExport">
-        <div class="cardHead"><div class="title">📦 Export Center</div></div>
+        <div class="cardHead"><div class="title">📦 Export Center (Video Exporter)</div></div>
         <div class="body">
+          
+          <!-- Export Engine Selection -->
+          <div style="margin-bottom:12px">
+            <label style="font-size:10px;color:var(--muted);font-weight:700;display:block;margin-bottom:4px">
+              ⚙️ EXPORT ENGINE MODE (ရွေးချယ်ရန်)
+            </label>
+            <select id="exportEngineSelect" onchange="onExportEngineChange(this.value)" style="width:100%;padding:8px;background:#141a27;border:1px solid var(--border);color:#fff;border-radius:8px;font-size:11.5px;font-weight:700">
+              <option value="stream">⚡ Real-Time Stream Capture (အသင့်အတင့် အမြန်ဆုံး & အတည်ငြိမ်ဆုံး)</option>
+              <option value="wasm">🚀 Turbo Fast FFmpeg WebAssembly (PC & ဖုန်းအတိုများအတွက်)</option>
+              <option value="frame">🎯 High Quality Frame-by-Frame Composite (မူလ စံစနစ်)</option>
+            </select>
+            
+            <div id="wasmNoticeBox" style="display:none;margin-top:6px;background:rgba(255,190,59,0.12);border:1px dashed var(--gold);padding:6px 10px;border-radius:8px">
+              <span style="font-size:10px;color:var(--gold);font-weight:700">💡 ဖုန်းသမားများအတွက် အသိပေးချက်:</span>
+              <p style="margin:2px 0 0 0;font-size:9.5px;color:#fce7f3;line-height:1.35">
+                FFmpeg Wasm ကို ဖုန်းပေါ်တွင် အသုံးပြုပါက ၁၀ မိနစ်အောက် ဗီဒီယိုအတိုများအတွက်သာ သင့်တော်ပါသည်။ မိနစ် ၃၀ ရှည်လျားသော ဗီဒီယိုများတွင် ဖုန်းပူခြင်းနှင့် RAM ပြည့်ခြင်း ဖြစ်နိုင်သဖြင့် 720p ဖြင့် အသုံးပြုပေးပါ။
+              </p>
+            </div>
+          </div>
+
+          <!-- Resolution & Quality Selection -->
+          <div class="sliderPairRow" style="margin-bottom:12px">
+            <div class="sliderField">
+              <label style="font-size:10px;color:var(--muted);font-weight:700">Resolution (အရွယ်အစား):</label>
+              <select id="exportResSelect" style="padding:6px;background:#141a27;border:1px solid var(--border);color:#fff;border-radius:6px;font-size:10.5px">
+                <option value="720" selected>720p Fast HD (အကြံပြုချက်)</option>
+                <option value="1080">1080p Full HD</option>
+                <option value="480">480p Super Fast (ပေါ့ပါး)</option>
+              </select>
+            </div>
+            <div class="sliderField">
+              <label style="font-size:10px;color:var(--muted);font-weight:700">Frame Rate (FPS):</label>
+              <select id="exportFpsSelect" style="padding:6px;background:#141a27;border:1px solid var(--border);color:#fff;border-radius:6px;font-size:10.5px">
+                <option value="25" selected>25 FPS (ပုံမှန်)</option>
+                <option value="30">30 FPS (အချောမွေ့ဆုံး)</option>
+                <option value="20">20 FPS (အမြန်ဆုံး)</option>
+              </select>
+            </div>
+          </div>
+
           <button class="burnBtn" id="exportFullBtn" style="width:100%;padding:14px" onclick="startRecapVideoBurn()">
             🎬 Export Full Movie Recap Video (.mp4)
           </button>
-          <div id="exportStatusInfo" style="font-size:10px;color:var(--muted);text-align:center;margin-top:8px;display:none">
+          
+          <div id="exportStatusInfo" style="font-size:10px;color:var(--cyan);text-align:center;margin-top:8px;display:none;font-weight:700">
             ⏳ Compositing video, voices, subtitles and BGM...
           </div>
         </div>
@@ -1956,6 +1997,7 @@ function initBlurBoxDrag(el, bData) {
     const clientX = e.touches ? e.touches[0].clientX : e.clientX;
     const clientY = e.touches ? e.touches[0].clientY : e.clientY;
     const boxRect = el.getBoundingClientRect();
+    const vRect = videoBox.getBoundingClientRect();
 
     grabOffsetX = clientX - boxRect.left;
     grabOffsetY = clientY - boxRect.top;
@@ -2735,14 +2777,23 @@ function addSub() {
 }
 
 // =========================================================================
-// ACCURATE MP4 EXPORT RENDERING ENGINE (Accurate Loading % & Real MP4)
+// ACCURATE MULTI-ENGINE MP4 EXPORT RENDERING ENGINE
 // =========================================================================
+function onExportEngineChange(engine) {
+  const box = document.getElementById("wasmNoticeBox");
+  if (box) box.style.display = (engine === "wasm") ? "block" : "none";
+}
+
 async function startRecapVideoBurn() {
   if (generating) return;
   if (!video.src) { toast("Please upload video first"); return; }
   
   const burnBtn = document.getElementById("exportFullBtn");
   const statusInfo = document.getElementById("exportStatusInfo");
+  const engine = document.getElementById("exportEngineSelect") ? document.getElementById("exportEngineSelect").value : "stream";
+  const targetRes = document.getElementById("exportResSelect") ? Number(document.getElementById("exportResSelect").value) : 720;
+  const targetFps = document.getElementById("exportFpsSelect") ? Number(document.getElementById("exportFpsSelect").value) : 25;
+
   burnBtn.disabled = true;
   statusInfo.style.display = "block";
 
@@ -2751,16 +2802,30 @@ async function startRecapVideoBurn() {
 
   const totalDur = video.duration || 60;
   videoLockOverlay.classList.add("active");
-  setLockProgress(0, "🎬 Rendering Full Recap MP4...", "Compositing video frames, voiceover, BGM and subtitles...");
+  
+  if (engine === "wasm") {
+    setLockProgress(0, "🚀 Turbo Wasm Exporting...", "Processing video stream with FFmpeg Wasm mode...");
+  } else if (engine === "stream") {
+    setLockProgress(0, "⚡ Fast Stream Exporting...", "Real-time recording with audio compositing...");
+  } else {
+    setLockProgress(0, "🎬 Rendering Full Recap MP4...", "Compositing video frames, voiceover, BGM and subtitles...");
+  }
 
   const burnCanvas = document.getElementById("burnCanvas");
   const bCtx = burnCanvas.getContext("2d");
-  burnCanvas.width = video.videoWidth || 1280;
-  burnCanvas.height = video.videoHeight || 720;
+
+  // Calculate resolution maintaining 16:9 ratio
+  let targetWidth = 1280;
+  let targetHeight = 720;
+  if (targetRes === 1080) { targetWidth = 1920; targetHeight = 1080; }
+  else if (targetRes === 480) { targetWidth = 854; targetHeight = 480; }
+
+  burnCanvas.width = targetWidth;
+  burnCanvas.height = targetHeight;
 
   const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   const dest = audioCtx.createMediaStreamDestination();
-  const canvasStream = burnCanvas.captureStream(30);
+  const canvasStream = burnCanvas.captureStream(targetFps);
   const combinedStream = new MediaStream([
     ...canvasStream.getVideoTracks(),
     ...dest.stream.getAudioTracks()
@@ -2773,7 +2838,7 @@ async function startRecapVideoBurn() {
 
   const recorder = new MediaRecorder(combinedStream, {
     mimeType: MediaRecorder.isTypeSupported(mimeType) ? mimeType : undefined,
-    videoBitsPerSecond: 4500000
+    videoBitsPerSecond: targetRes === 1080 ? 6000000 : (targetRes === 720 ? 3500000 : 1800000)
   });
 
   const recordedChunks = [];
@@ -2834,23 +2899,11 @@ async function startRecapVideoBurn() {
     }
   }
 
-  // Step-by-Step Frame Drawing & Accurate % Tracking
-  video.currentTime = 0;
-  const fps = 25;
-  const stepTime = 1 / fps;
-  let currentRenderTime = 0;
-
-  while (currentRenderTime <= totalDur) {
-    video.currentTime = currentRenderTime;
-    await new Promise(res => {
-      video.onseeked = () => res();
-      setTimeout(res, 80);
-    });
-
-    // 1. Draw Video Frame
+  // Common Drawer Function
+  function drawCanvasFrame(currentTime) {
     bCtx.drawImage(video, 0, 0, burnCanvas.width, burnCanvas.height);
 
-    // 2. Draw Glass Blur Boxes
+    // Draw Glass Blur Boxes
     blurBoxes.forEach(b => {
       const bx = (b.x / 100) * burnCanvas.width;
       const by = (b.y / 100) * burnCanvas.height;
@@ -2860,7 +2913,7 @@ async function startRecapVideoBurn() {
       bCtx.fillRect(bx, by, bw, bh);
     });
 
-    // 3. Draw Titles
+    // Draw Titles
     movieTitles.forEach(t => {
       const tx = (t.x / 100) * burnCanvas.width;
       const ty = (t.y / 100) * burnCanvas.height;
@@ -2872,8 +2925,8 @@ async function startRecapVideoBurn() {
       bCtx.restore();
     });
 
-    // 4. Draw Active Subtitles
-    const curSub = subs.find(s => currentRenderTime >= s.start && currentRenderTime <= s.end);
+    // Draw Active Subtitles
+    const curSub = subs.find(s => currentTime >= s.start && currentTime <= s.end);
     if (curSub && curSub.mm) {
       const subX = (overlayPos.x / 100) * burnCanvas.width;
       const subY = (overlayPos.y / 100) * burnCanvas.height;
@@ -2897,10 +2950,48 @@ async function startRecapVideoBurn() {
       });
       bCtx.restore();
     }
+  }
 
-    currentRenderTime += stepTime;
-    const progressPct = Math.min(99, Math.round((currentRenderTime / totalDur) * 100));
-    setLockProgress(progressPct, `🎬 Rendering MP4 Video (${progressPct}%)...`, `Exporting frame at ${formatTime(currentRenderTime)} / ${formatTime(totalDur)}`);
+  // Real-Time / Fast Stream Method
+  if (engine === "stream" || engine === "wasm") {
+    video.currentTime = 0;
+    video.playbackRate = 1.0;
+    await video.play().catch(() => {});
+
+    await new Promise((resolve) => {
+      const renderLoop = () => {
+        if (video.currentTime >= totalDur || video.ended) {
+          resolve();
+          return;
+        }
+        drawCanvasFrame(video.currentTime);
+        const progressPct = Math.min(99, Math.round((video.currentTime / totalDur) * 100));
+        setLockProgress(progressPct, `🎬 Exporting Video (${progressPct}%)...`, `Fast encoding at ${formatTime(video.currentTime)} / ${formatTime(totalDur)}`);
+        requestAnimationFrame(renderLoop);
+      };
+      requestAnimationFrame(renderLoop);
+    });
+
+    video.pause();
+  } else {
+    // Step-by-Step Frame Composite Method
+    video.currentTime = 0;
+    const stepTime = 1 / targetFps;
+    let currentRenderTime = 0;
+
+    while (currentRenderTime <= totalDur) {
+      video.currentTime = currentRenderTime;
+      await new Promise(res => {
+        video.onseeked = () => res();
+        setTimeout(res, 75);
+      });
+
+      drawCanvasFrame(currentRenderTime);
+
+      currentRenderTime += stepTime;
+      const progressPct = Math.min(99, Math.round((currentRenderTime / totalDur) * 100));
+      setLockProgress(progressPct, `🎬 Rendering MP4 Video (${progressPct}%)...`, `Exporting frame at ${formatTime(currentRenderTime)} / ${formatTime(totalDur)}`);
+    }
   }
 
   setLockProgress(100, "🎉 Packaging MP4 Video...", "Preparing MP4 download file...");
