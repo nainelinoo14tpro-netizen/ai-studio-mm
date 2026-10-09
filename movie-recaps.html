@@ -264,7 +264,7 @@ video.anti-copyright-active {
 .videoEmptyState p { margin: 0; font-size: 11.5px; font-weight: 500; }
 
 .videoLogoOverlay {
-  position: absolute; top: 10%; left: 10%; z-index: 26;
+  position: absolute; top: 0%; left: 0%; z-index: 26;
   max-width: 180px; max-height: 120px; display: none; cursor: move; touch-action: none;
 }
 
@@ -297,7 +297,7 @@ video.anti-copyright-active {
   position: absolute; left: 50%; top: 82%; transform: translate(-50%, -50%);
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   z-index: 30; cursor: move; touch-action: none;
-  width: max-content; max-width: 96%; pointer-events: auto;
+  width: max-content; max-width: 100%; pointer-events: auto;
 }
 .overlayInner {
   position: relative; display: inline-flex; justify-content: center; align-items: center;
@@ -781,11 +781,11 @@ video.anti-copyright-active {
           <div class="sliderPairRow">
             <div class="sliderField">
               <label>Subtitle X (ဘယ်/ညာ %): <span class="val" id="posXVal">50%</span></label>
-              <input id="posX" type="range" min="5" max="95" value="50" oninput="applySubtitlePositionFromSlider()">
+              <input id="posX" type="range" min="0" max="100" value="50" oninput="applySubtitlePositionFromSlider()">
             </div>
             <div class="sliderField">
               <label>Subtitle Y (အပေါ်/အောက် %): <span class="val" id="posYVal">82%</span></label>
-              <input id="posY" type="range" min="5" max="95" value="82" oninput="applySubtitlePositionFromSlider()">
+              <input id="posY" type="range" min="0" max="100" value="82" oninput="applySubtitlePositionFromSlider()">
             </div>
           </div>
 
@@ -899,11 +899,11 @@ video.anti-copyright-active {
             <div class="sliderPairRow">
               <div class="sliderField">
                 <label>Title X (ဘယ်/ညာ %): <span class="val" id="tXVal">50%</span></label>
-                <input id="tXSlider" type="range" min="5" max="95" value="50" oninput="updateActiveTitleProps()">
+                <input id="tXSlider" type="range" min="0" max="100" value="50" oninput="updateActiveTitleProps()">
               </div>
               <div class="sliderField">
                 <label>Title Y (အပေါ်/အောက် %): <span class="val" id="tYVal">10%</span></label>
-                <input id="tYSlider" type="range" min="4" max="95" value="10" oninput="updateActiveTitleProps()">
+                <input id="tYSlider" type="range" min="0" max="100" value="10" oninput="updateActiveTitleProps()">
               </div>
             </div>
 
@@ -935,11 +935,11 @@ video.anti-copyright-active {
             <div class="sliderPairRow">
               <div class="sliderField">
                 <label>Logo X (ဘယ်/ညာ %): <span class="val" id="lgXVal">10%</span></label>
-                <input id="lgXSlider" type="range" min="0" max="90" value="10" oninput="updateLogoProps()">
+                <input id="lgXSlider" type="range" min="0" max="100" value="10" oninput="updateLogoProps()">
               </div>
               <div class="sliderField">
                 <label>Logo Y (အပေါ်/အောက် %): <span class="val" id="lgYVal">10%</span></label>
-                <input id="lgYSlider" type="range" min="0" max="90" value="10" oninput="updateLogoProps()">
+                <input id="lgYSlider" type="range" min="0" max="100" value="10" oninput="updateLogoProps()">
               </div>
             </div>
 
@@ -950,7 +950,7 @@ video.anti-copyright-active {
               </div>
               <div class="sliderField">
                 <label>Logo Opacity (ရေစာ): <span class="val" id="lgOpVal">85%</span></label>
-                <input id="lgOpSlider" type="range" min="10" max="100" value="85" oninput="updateLogoProps()">
+                <input id="lgOpSlider" type="range" min="0" max="100" value="85" oninput="updateLogoProps()">
               </div>
             </div>
           </div>
@@ -977,18 +977,18 @@ video.anti-copyright-active {
             <div class="sliderPairRow">
               <div class="sliderField">
                 <label>Blur X (ဘယ်/ညာ %): <span class="val" id="bXVal">20%</span></label>
-                <input id="bXSlider" type="range" min="0" max="95" value="20" oninput="updateActiveBlurProps()">
+                <input id="bXSlider" type="range" min="0" max="100" value="20" oninput="updateActiveBlurProps()">
               </div>
               <div class="sliderField">
                 <label>Blur Y (အပေါ်/အောက် %): <span class="val" id="bYVal">70%</span></label>
-                <input id="bYSlider" type="range" min="0" max="95" value="70" oninput="updateActiveBlurProps()">
+                <input id="bYSlider" type="range" min="0" max="100" value="70" oninput="updateActiveBlurProps()">
               </div>
             </div>
 
             <div class="sliderPairRow">
               <div class="sliderField">
                 <label>Width (%): <span class="val" id="bWVal">60%</span></label>
-                <input id="bWSlider" type="range" min="10" max="100" value="60" oninput="updateActiveBlurProps()">
+                <input id="bWSlider" type="range" min="0" max="100" value="60" oninput="updateActiveBlurProps()">
               </div>
               <div class="sliderField">
                 <label>Height (px): <span class="val" id="bHVal">28px</span></label>
@@ -998,7 +998,7 @@ video.anti-copyright-active {
 
             <div class="sliderField">
               <label>Glass Blur Strength (အကြည်ဝါးအား px): <span class="val" id="bStrengthVal">14px</span></label>
-              <input id="bStrengthSlider" type="range" min="4" max="32" value="14" oninput="updateActiveBlurProps()">
+              <input id="bStrengthSlider" type="range" min="0" max="40" value="14" oninput="updateActiveBlurProps()">
             </div>
           </div>
         </div>
@@ -1116,7 +1116,7 @@ let titleIdCounter = 0;
 let activeTitleId = null;
 
 // Logo State
-let logoProps = { x: 10, y: 10, size: 60, opacity: 85 };
+let logoProps = { x: 0, y: 0, size: 60, opacity: 85 };
 
 // Real-Time Border State
 let borderProgEnabled = false;
@@ -1131,7 +1131,7 @@ let isBgmPlayingPreview = false;
 let isBgmMasterEnabled = true;
 let activePresetKey = null;
 
-// Clean Direct Streaming Royalty-Free Ambient Audio Links (Fixed Emotional Sad Link)
+// Clean Direct Streaming Royalty-Free Ambient Audio Links
 const PRESET_BGM_TRACKS = {
   cinematic: "https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=cinematic-time-lapse-115672.mp3",
   emotional: "https://cdn.pixabay.com/download/audio/2022/01/18/audio_d0a13f69d2.mp3?filename=ambient-piano-sad-10708.mp3",
@@ -1754,7 +1754,7 @@ function applySubtitleStyle() {
 
   if (boxWidthMode === 0) {
     overlay.style.width = "max-content";
-    overlay.style.maxWidth = "96%";
+    overlay.style.maxWidth = "100%";
     overlayInner.style.width = "auto";
   } else {
     overlay.style.width = boxWidthMode + "%";
@@ -1793,8 +1793,8 @@ function initTouchDrag() {
     let newX = ((clientX - rect.left) / rect.width) * 100;
     let newY = ((clientY - rect.top) / rect.height) * 100;
 
-    newX = Math.max(5, Math.min(95, newX));
-    newY = Math.max(5, Math.min(95, newY));
+    newX = Math.max(0, Math.min(100, newX));
+    newY = Math.max(0, Math.min(100, newY));
 
     overlayPos.x = Math.round(newX);
     overlayPos.y = Math.round(newY);
@@ -2017,8 +2017,8 @@ function initBlurBoxDrag(el, bData) {
     let newXPercent = (newPixelX / vRect.width) * 100;
     let newYPercent = (newPixelY / vRect.height) * 100;
 
-    bData.x = Math.max(0, Math.min(95, Math.round(newXPercent)));
-    bData.y = Math.max(0, Math.min(95, Math.round(newYPercent)));
+    bData.x = Math.max(0, Math.min(100, Math.round(newXPercent)));
+    bData.y = Math.max(0, Math.min(100, Math.round(newYPercent)));
 
     el.style.left = bData.x + "%";
     el.style.top = bData.y + "%";
@@ -2210,8 +2210,8 @@ function initTitleDrag(el, tData) {
     let newX = ((clientX - vRect.left) / vRect.width) * 100;
     let newY = ((clientY - vRect.top) / vRect.height) * 100;
 
-    tData.x = Math.max(5, Math.min(95, Math.round(newX)));
-    tData.y = Math.max(4, Math.min(95, Math.round(newY)));
+    tData.x = Math.max(0, Math.min(100, Math.round(newX)));
+    tData.y = Math.max(0, Math.min(100, Math.round(newY)));
 
     el.style.left = tData.x + "%";
     el.style.top = tData.y + "%";
@@ -2297,8 +2297,8 @@ function initLogoDrag() {
     let newX = ((clientX - vRect.left) / vRect.width) * 100;
     let newY = ((clientY - vRect.top) / vRect.height) * 100;
 
-    logoProps.x = Math.max(0, Math.min(90, Math.round(newX)));
-    logoProps.y = Math.max(0, Math.min(90, Math.round(newY)));
+    logoProps.x = Math.max(0, Math.min(100, Math.round(newX)));
+    logoProps.y = Math.max(0, Math.min(100, Math.round(newY)));
 
     logo.style.left = logoProps.x + "%";
     logo.style.top = logoProps.y + "%";
