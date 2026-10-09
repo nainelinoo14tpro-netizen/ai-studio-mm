@@ -200,10 +200,22 @@ button:active { transform: scale(0.97); }
 .dot.busy { background: var(--gold); }
 .dot.error { background: var(--accent); }
 
-.fixedVideoShell { width: 100%; position: relative; flex-shrink: 0; max-width: 100%; }
-.videoStickyWrap { width: 100%; position: relative; }
+/* Accordion Foldable Style */
+.accordionHead {
+  padding: 11px 14px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  cursor: pointer; background: #101522; transition: background 0.15s ease;
+}
+.accordionHead:hover { background: #161e30; }
+.accordionTitle { font-weight: 800; font-size: 12.5px; display: flex; align-items: center; gap: 6px; color: #fff; }
+.accordionChevron { font-size: 11px; color: var(--muted); transition: transform 0.2s ease; }
+.accordionChevron.rotate { transform: rotate(180deg); }
+.accordionBody { padding: 12px 14px; display: block; }
+.accordionBody.collapsed { display: none; }
 
-/* Dedicated Player Outer Container */
+.fixedVideoShell { width: 100%; position: relative; flex-shrink: 0; max-width: 100%; }
+
+/* Player Container */
 .playerOuterWrap {
   background: #020406; border-radius: 14px; overflow: hidden;
   border: 1px solid var(--border); box-shadow: var(--shadow);
@@ -223,6 +235,18 @@ video.anti-copyright-active {
   transform: scale(1.04);
   filter: contrast(1.05) saturate(1.08) brightness(1.02);
 }
+
+/* Real-Time Border Progress Bar (4 Edges) */
+.videoProgressBorderWrap {
+  position: absolute; inset: 0; pointer-events: none; z-index: 28; display: none;
+}
+.vProgEdge {
+  position: absolute; background: var(--cyan); transition: width 0.1s linear, height 0.1s linear;
+}
+.vProgTop { top: 0; left: 0; height: 3px; width: 0%; }
+.vProgRight { top: 0; right: 0; width: 3px; height: 0%; }
+.vProgBottom { bottom: 0; right: 0; height: 3px; width: 0%; }
+.vProgLeft { bottom: 0; left: 0; width: 3px; height: 0%; }
 
 .videoEmptyState {
   display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -247,16 +271,17 @@ video.anti-copyright-active {
 }
 .modeBadge.show { display: flex; }
 
+/* Dynamic Floating Logo */
 .videoLogoOverlay {
-  position: absolute; top: 12px; left: 12px; z-index: 26;
-  max-width: 70px; max-height: 40px; display: none; pointer-events: none;
+  position: absolute; top: 10%; left: 10%; z-index: 26;
+  max-width: 180px; max-height: 120px; display: none; cursor: move; touch-action: none;
 }
 
 /* Multi-Title Text Overlays */
 .videoTitleOverlayItem {
-  position: absolute; z-index: 26; background: rgba(0,0,0,0.65); padding: 3px 12px; border-radius: 6px;
+  position: absolute; z-index: 26; background: rgba(0,0,0,0.65); padding: 4px 12px; border-radius: 6px;
   color: #fff; font-size: 13px; font-weight: 800; text-shadow: 0 2px 4px #000;
-  cursor: move; touch-action: none; border: 1px dashed transparent; white-space: nowrap;
+  cursor: move; touch-action: none; border: 1.5px dashed transparent; white-space: nowrap;
 }
 .videoTitleOverlayItem.active { border-color: var(--gold); }
 .titleCloseBadge {
@@ -265,7 +290,7 @@ video.anti-copyright-active {
   display: grid; place-items: center; cursor: pointer; font-weight: 800;
 }
 
-/* Multiple Blur Boxes */
+/* Multi-Blur Boxes */
 .videoBlurBoxItem {
   position: absolute; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
   background: rgba(0,0,0,0.65); border: 1.5px dashed rgba(255,255,255,0.45);
@@ -279,19 +304,19 @@ video.anti-copyright-active {
   display: grid; place-items: center; cursor: pointer; font-weight: 800;
 }
 
-/* Subtitle Container - Perfect Pre-line Centered 2 Lines Support */
+/* Subtitle Container - Perfect Width & Pre-line Stacking */
 .overlay {
   position: absolute; left: 50%; top: 82%; transform: translate(-50%, -50%);
   display: flex; flex-direction: column; align-items: center; justify-content: center;
-  z-index: 30; cursor: move; touch-action: none; width: auto; max-width: 96%;
-  pointer-events: auto;
+  z-index: 30; cursor: move; touch-action: none;
+  width: max-content; max-width: 96%; pointer-events: auto;
 }
 .overlayInner {
   position: relative; display: inline-flex; justify-content: center; align-items: center;
   padding: 5px 12px; border-radius: 8px; text-align: center; line-height: 1.38;
   background: rgba(0, 0, 0, 0.5); box-shadow: 0 4px 18px rgba(0,0,0,0.4);
   transition: border-color 0.15s ease; border: 1.5px dashed transparent;
-  max-width: 100%; width: auto;
+  width: 100%; max-width: 100%;
 }
 .overlay.dragging .overlayInner { border-color: var(--cyan); }
 .overlayTarget {
@@ -300,22 +325,22 @@ video.anti-copyright-active {
   max-width: 100%;
 }
 
-/* External Control Bar Placed Directly Below Video */
+/* External Control Bar - Strictly bounded inside the card */
 .videoControlBarExternal {
   background: #090d16; border-top: 1px solid var(--border);
-  padding: 8px 10px; display: flex; align-items: center; gap: 8px;
-  width: 100%; z-index: 20;
+  padding: 8px 8px; display: flex; align-items: center; gap: 5px;
+  width: 100%; max-width: 100%; box-sizing: border-box; overflow: hidden;
 }
 .vCtrlBtn {
   background: rgba(255, 255, 255, 0.12); border: 1px solid var(--border); color: #fff;
-  border-radius: 7px; padding: 5px 10px; font-size: 11px; font-weight: 700;
+  border-radius: 7px; padding: 5px 8px; font-size: 11px; font-weight: 700; flex-shrink: 0;
 }
 .vCtrlBtn:hover { background: rgba(255, 255, 255, 0.25); border-color: var(--cyan); }
 .vTimeText {
-  font-size: 10px; font-family: ui-monospace, monospace; color: #d0d7e5; min-width: 36px; text-align: center;
+  font-size: 9.5px; font-family: ui-monospace, monospace; color: #d0d7e5; min-width: 32px; text-align: center; flex-shrink: 0;
 }
 .vSeekBar {
-  flex: 1; accent-color: var(--cyan); height: 6px; border-radius: 3px; cursor: pointer; margin: 0 4px;
+  flex: 1; min-width: 0; accent-color: var(--cyan); height: 5px; border-radius: 3px; cursor: pointer; margin: 0 2px;
 }
 
 /* Locked Shield */
@@ -342,8 +367,6 @@ video.anti-copyright-active {
   border-radius: 99px; transition: width 0.25s ease;
 }
 .lockPercentText { font-size: 14px; font-weight: 800; color: var(--cyan); font-family: ui-monospace, monospace; }
-
-.body { padding: 12px 14px; }
 
 .liveSubBanner {
   background: #0b0f19; border: 1px solid #1f2b40;
@@ -560,6 +583,14 @@ video.anti-copyright-active {
           <span>●</span> <span>🎬 RECAP MODE: ဇာတ်ကြောင်းပြော အသင့်ဖြစ်ပါပြီ</span>
         </div>
 
+        <!-- Real-Time Video Border Progress Bar Frame -->
+        <div class="videoProgressBorderWrap" id="videoProgressBorderWrap">
+          <div class="vProgEdge vProgTop" id="bpTop"></div>
+          <div class="vProgEdge vProgRight" id="bpRight"></div>
+          <div class="vProgEdge vProgBottom" id="bpBottom"></div>
+          <div class="vProgEdge vProgLeft" id="bpLeft"></div>
+        </div>
+
         <!-- Video Overlays -->
         <img id="videoLogoOverlay" class="videoLogoOverlay" alt="Logo">
         <div id="movieTitlesContainer"></div>
@@ -591,7 +622,7 @@ video.anti-copyright-active {
         <input id="file" type="file" accept="video/mp4,video/webm,video/quicktime,video/x-matroska,video/*" hidden>
       </div>
 
-      <!-- External Control Bar attached strictly below video -->
+      <!-- External Control Bar attached strictly below video (Overflow Fixed) -->
       <div class="videoControlBarExternal" id="videoControlBar">
         <button class="vCtrlBtn" id="vPlayBtn" onclick="togglePlayPause(event)">▶</button>
         <button class="vCtrlBtn" onclick="skipVideo(-5, event)" title="Back 5s">⏪ 5s</button>
@@ -723,10 +754,16 @@ video.anti-copyright-active {
       </section>
     </div>
 
+    <!-- ACCORDION FOLDABLE STUDIO CONTROLS -->
     <div class="desktopCol">
       <section class="tabPane card" id="tabStyle">
-        <div class="cardHead"><div class="title">🎨 Subtitle Color & Design Studio</div></div>
-        <div class="body">
+        
+        <!-- Accordion 1: Subtitle Color & Design -->
+        <div class="accordionHead" onclick="toggleAccordion('accSubBody', 'accSubChev')">
+          <div class="accordionTitle">🎨 1. Subtitle Studio (အရောင် & ဒီဇိုင်း)</div>
+          <span class="accordionChevron" id="accSubChev">▲</span>
+        </div>
+        <div class="accordionBody" id="accSubBody">
           <div class="styleGrid">
             <div class="field">
               <label>စာသားအရောင် (Text Color)</label>
@@ -744,7 +781,7 @@ video.anti-copyright-active {
 
           <div class="sliderPairRow">
             <div class="sliderField">
-              <label>Box အကြည်/အမည်း Opacity: <span class="val" id="opacityVal">50%</span></label>
+              <label>Box အကြည်/အမည်း: <span class="val" id="opacityVal">50%</span></label>
               <input id="boxOpacity" type="range" min="0" max="100" value="50" oninput="applySubtitleStyle()">
             </div>
             <div class="sliderField">
@@ -753,115 +790,205 @@ video.anti-copyright-active {
             </div>
           </div>
 
-          <!-- New Box Width Slider: Auto width or Screen full width -->
           <div class="sliderField" style="margin-bottom:10px">
             <label>Subtitle Box Width (အလျား အကျယ်): <span class="val" id="boxWidthVal">Auto (စာသားကွက်တိ)</span></label>
             <input id="boxWidthMode" type="range" min="0" max="100" value="0" step="5" oninput="applySubtitleStyle()">
           </div>
 
-          <!-- Position Slider -->
           <div class="sliderPairRow">
             <div class="sliderField">
               <label>Subtitle X (ဘယ်/ညာ %): <span class="val" id="posXVal">50%</span></label>
-              <input id="posX" type="range" min="10" max="90" value="50" oninput="applySubtitlePositionFromSlider()">
+              <input id="posX" type="range" min="5" max="95" value="50" oninput="applySubtitlePositionFromSlider()">
             </div>
             <div class="sliderField">
               <label>Subtitle Y (အပေါ်/အောက် %): <span class="val" id="posYVal">82%</span></label>
-              <input id="posY" type="range" min="10" max="95" value="82" oninput="applySubtitlePositionFromSlider()">
+              <input id="posY" type="range" min="5" max="95" value="82" oninput="applySubtitlePositionFromSlider()">
             </div>
           </div>
 
-          <div class="sliderField" style="margin-bottom:14px">
+          <div class="sliderField">
             <label>Font Size (စာလုံးအရွယ်အစား): <span class="val" id="sizeVal">17 px</span></label>
             <input id="size" type="range" min="11" max="44" value="17" oninput="applySubtitleStyle()">
           </div>
+        </div>
 
-          <p style="font-size:10px;color:var(--cyan);margin:0 0 12px 0">
-            🖐️ <b>Tip:</b> စာတန်းထိုးသည် Enter ခေါက်ထားသည့်အတိုင်း အလယ်တည့်တည့် အပေါ်/အောက် ကျကျနန ပေါ်မည်ဖြစ်ပြီး Screen Touch ဖြင့်လည်း ဆွဲရွှေ့နိုင်ပါသည်။
-          </p>
+        <!-- Accordion 2: Real-time Video Border Progress Bar -->
+        <div class="accordionHead" onclick="toggleAccordion('accBorderBody', 'accBorderChev')">
+          <div class="accordionTitle">✨ 2. Real-Time Video Border Progress Bar</div>
+          <span class="accordionChevron" id="accBorderChev">▲</span>
+        </div>
+        <div class="accordionBody" id="accBorderBody">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <label style="font-size:10.5px;color:var(--cyan);font-weight:700">ဘေးဘောင် လေးထောင့် အချိန်ပြေးဘား ဖွင့်ရန်:</label>
+            <input type="checkbox" id="showBorderProgCheck" onchange="toggleBorderProgressBar()">
+          </div>
 
-          <hr style="border:0;border-top:1px solid var(--border);margin:14px 0">
-
-          <!-- MULTIPLE BLUR BOXES CONTROLS -->
-          <div style="font-size:11px;font-weight:700;color:#fff;margin-bottom:8px">🛡️ ANTI-COPYRIGHT & BRANDING OVERLAYS</div>
-          
-          <div style="display:flex;flex-direction:column;gap:10px">
-            <!-- Add Multiple Blur Boxes with Seekbars -->
-            <div style="background:#090d16;padding:10px;border-radius:10px;border:1px solid var(--border)">
-              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-                <label style="font-size:10px;color:var(--cyan);font-weight:700">🌫️ MULTIPLE BLUR BOXES (စာတန်းဟောင်းဖုံးရန်):</label>
-                <button onclick="addNewBlurBox()" style="font-size:9.5px;padding:3px 8px;background:rgba(32,215,255,0.18);border-color:var(--cyan);color:#fff">
-                  ➕ Add New Blur Box
-                </button>
-              </div>
-
-              <!-- Selected Blur Box Tuning Seekbars -->
-              <div id="activeBlurControls" style="display:none;margin-top:6px;border-top:1px dashed var(--border);padding-top:8px">
-                <div style="font-size:9.5px;color:var(--gold);margin-bottom:6px;font-weight:700" id="activeBlurLabel">
-                  Editing Blur Box #1
-                </div>
-
-                <div class="sliderPairRow">
-                  <div class="sliderField">
-                    <label>Blur X (ဘယ်/ညာ %): <span class="val" id="bXVal">20%</span></label>
-                    <input id="bXSlider" type="range" min="0" max="95" value="20" oninput="updateActiveBlurProps()">
-                  </div>
-                  <div class="sliderField">
-                    <label>Blur Y (အပေါ်/အောက် %): <span class="val" id="bYVal">70%</span></label>
-                    <input id="bYSlider" type="range" min="0" max="95" value="70" oninput="updateActiveBlurProps()">
-                  </div>
-                </div>
-
-                <div class="sliderPairRow">
-                  <div class="sliderField">
-                    <label>Width (%): <span class="val" id="bWVal">60%</span></label>
-                    <input id="bWSlider" type="range" min="10" max="100" value="60" oninput="updateActiveBlurProps()">
-                  </div>
-                  <div class="sliderField">
-                    <label>Height (px): <span class="val" id="bHVal">28px</span></label>
-                    <input id="bHSlider" type="range" min="12" max="120" value="28" oninput="updateActiveBlurProps()">
-                  </div>
-                </div>
-
-                <div class="sliderField">
-                  <label>Blur Color Opacity (အမည်း အလျော့/အတင်း %): <span class="val" id="bOpVal">65%</span></label>
-                  <input id="bOpSlider" type="range" min="10" max="100" value="65" oninput="updateActiveBlurProps()">
-                </div>
-              </div>
+          <div class="settingGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div class="field">
+              <label>ဘောင်အရောင် (Border Color)</label>
+              <input id="borderColorInput" type="color" value="#20d7ff" oninput="updateBorderProgressStyle()">
             </div>
-
-            <!-- Multiple Movie Title Headers -->
-            <div style="background:#090d16;padding:10px;border-radius:10px;border:1px solid var(--border)">
-              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-                <label style="font-size:10px;color:var(--gold);font-weight:700">🔤 MULTIPLE MOVIE TITLES (ခေါင်းစဉ်စာတန်းများ):</label>
-                <button onclick="addNewMovieTitle()" style="font-size:9.5px;padding:3px 8px;background:rgba(255,190,59,0.18);border-color:var(--gold);color:#fff">
-                  ➕ Add New Title Text
-                </button>
-              </div>
-              <div id="activeTitlesList"></div>
-            </div>
-
-            <!-- Anti-Copyright Video Transform Shield -->
-            <div style="background:#090d16;padding:8px;border-radius:10px;border:1px solid var(--border)">
-              <div style="display:flex;justify-content:space-between;align-items:center">
-                <label style="font-size:10px;color:var(--gold);font-weight:700">⚔️ Anti-Copyright Video Shield:</label>
-                <button onclick="toggleAntiCopyrightShield()" id="shieldToggleBtn" style="font-size:9.5px;padding:3px 8px">
-                  Enable Shield
-                </button>
-              </div>
-              <p style="font-size:9px;color:var(--muted);margin:4px 0 0 0">
-                Content ID ရှောင်လွှဲနိုင်ရန် Video Scale (1.04x) နှင့် Subtle Color Grading များကို အလိုအလျောက် ပေါင်းစပ်ပေးပါသည်။
-              </p>
-            </div>
-
-            <!-- Add Channel Logo -->
-            <div style="background:#090d16;padding:8px;border-radius:10px;border:1px solid var(--border)">
-              <label style="font-size:10px;color:var(--muted);display:block;margin-bottom:4px">🏷️ Add Channel Logo (PNG/Watermark):</label>
-              <input type="file" id="logoUploadInput" accept="image/*" onchange="handleLogoUpload(event)" style="font-size:10px">
-              <button onclick="removeLogo()" style="font-size:9.5px;padding:2px 6px;margin-top:4px">Remove Logo</button>
+            <div class="field">
+              <label>ဘောင်အထူ: <span id="borderThickVal" style="color:var(--cyan)">3px</span></label>
+              <input id="borderThickness" type="range" min="1" max="10" value="3" oninput="document.getElementById('borderThickVal').textContent=this.value+'px'; updateBorderProgressStyle()">
             </div>
           </div>
         </div>
+
+        <!-- Accordion 3: Multi Movie Titles & Text Overlays -->
+        <div class="accordionHead" onclick="toggleAccordion('accTitlesBody', 'accTitlesChev')">
+          <div class="accordionTitle">🔤 3. Movie Title & Custom Text Studio</div>
+          <span class="accordionChevron" id="accTitlesChev">▲</span>
+        </div>
+        <div class="accordionBody" id="accTitlesBody">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <span style="font-size:10.5px;color:var(--gold);font-weight:700">စာတန်းအသစ်များ ထပ်ထည့်ရန်:</span>
+            <button onclick="addNewMovieTitle()" style="font-size:9.5px;padding:3px 8px;background:rgba(255,190,59,0.18);border-color:var(--gold);color:#fff">
+              ➕ Add New Title Text
+            </button>
+          </div>
+
+          <div id="activeTitlesList"></div>
+
+          <!-- Active Title Editor Controls -->
+          <div id="activeTitleEditorBox" style="display:none;margin-top:10px;border-top:1px dashed var(--border);padding-top:10px">
+            <div style="font-size:10px;color:var(--cyan);font-weight:700;margin-bottom:6px" id="editingTitleLabel">Editing Selected Title</div>
+            
+            <div class="styleGrid">
+              <div class="field">
+                <label>Text Color</label>
+                <input id="tTextColor" type="color" value="#ffffff" oninput="updateActiveTitleProps()">
+              </div>
+              <div class="field">
+                <label>Background Box Color</label>
+                <input id="tBgColor" type="color" value="#000000" oninput="updateActiveTitleProps()">
+              </div>
+            </div>
+
+            <div class="sliderPairRow">
+              <div class="sliderField">
+                <label>Title X (ဘယ်/ညာ %): <span class="val" id="tXVal">50%</span></label>
+                <input id="tXSlider" type="range" min="5" max="95" value="50" oninput="updateActiveTitleProps()">
+              </div>
+              <div class="sliderField">
+                <label>Title Y (အပေါ်/အောက် %): <span class="val" id="tYVal">10%</span></label>
+                <input id="tYSlider" type="range" min="4" max="95" value="10" oninput="updateActiveTitleProps()">
+              </div>
+            </div>
+
+            <div class="sliderPairRow">
+              <div class="sliderField">
+                <label>Font Size: <span class="val" id="tSizeVal">14px</span></label>
+                <input id="tSizeSlider" type="range" min="10" max="36" value="14" oninput="updateActiveTitleProps()">
+              </div>
+              <div class="sliderField">
+                <label>Box Opacity: <span class="val" id="tOpVal">65%</span></label>
+                <input id="tOpSlider" type="range" min="0" max="100" value="65" oninput="updateActiveTitleProps()">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Accordion 4: Channel Logo & Watermark -->
+        <div class="accordionHead" onclick="toggleAccordion('accLogoBody', 'accLogoChev')">
+          <div class="accordionTitle">🏷️ 4. Channel Logo & Watermark Studio</div>
+          <span class="accordionChevron" id="accLogoChev">▲</span>
+        </div>
+        <div class="accordionBody" id="accLogoBody">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <input type="file" id="logoUploadInput" accept="image/*" onchange="handleLogoUpload(event)" style="font-size:10px">
+            <button onclick="removeLogo()" style="font-size:9.5px;padding:3px 6px">Remove Logo</button>
+          </div>
+
+          <div id="logoControlsBox" style="display:none;margin-top:8px">
+            <div class="sliderPairRow">
+              <div class="sliderField">
+                <label>Logo X (ဘယ်/ညာ %): <span class="val" id="lgXVal">10%</span></label>
+                <input id="lgXSlider" type="range" min="0" max="90" value="10" oninput="updateLogoProps()">
+              </div>
+              <div class="sliderField">
+                <label>Logo Y (အပေါ်/အောက် %): <span class="val" id="lgYVal">10%</span></label>
+                <input id="lgYSlider" type="range" min="0" max="90" value="10" oninput="updateLogoProps()">
+              </div>
+            </div>
+
+            <div class="sliderPairRow">
+              <div class="sliderField">
+                <label>Logo Size: <span class="val" id="lgSizeVal">60px</span></label>
+                <input id="lgSizeSlider" type="range" min="20" max="180" value="60" oninput="updateLogoProps()">
+              </div>
+              <div class="sliderField">
+                <label>Logo Opacity (ရေစာ): <span class="val" id="lgOpVal">85%</span></label>
+                <input id="lgOpSlider" type="range" min="10" max="100" value="85" oninput="updateLogoProps()">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Accordion 5: Multi-Blur Boxes Studio -->
+        <div class="accordionHead" onclick="toggleAccordion('accBlurBody', 'accBlurChev')">
+          <div class="accordionTitle">🌫️ 5. Multi-Blur Boxes Studio</div>
+          <span class="accordionChevron" id="accBlurChev">▲</span>
+        </div>
+        <div class="accordionBody" id="accBlurBody">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <span style="font-size:10.5px;color:var(--cyan);font-weight:700">စာတန်းဟောင်း ဖုံးအုပ်ရန်:</span>
+            <button onclick="addNewBlurBox()" style="font-size:9.5px;padding:3px 8px;background:rgba(32,215,255,0.18);border-color:var(--cyan);color:#fff">
+              ➕ Add New Blur Box
+            </button>
+          </div>
+
+          <div id="activeBlurControls" style="display:none;margin-top:6px;border-top:1px dashed var(--border);padding-top:8px">
+            <div style="font-size:9.5px;color:var(--gold);margin-bottom:6px;font-weight:700" id="activeBlurLabel">
+              Editing Blur Box #1
+            </div>
+
+            <div class="sliderPairRow">
+              <div class="sliderField">
+                <label>Blur X (ဘယ်/ညာ %): <span class="val" id="bXVal">20%</span></label>
+                <input id="bXSlider" type="range" min="0" max="95" value="20" oninput="updateActiveBlurProps()">
+              </div>
+              <div class="sliderField">
+                <label>Blur Y (အပေါ်/အောက် %): <span class="val" id="bYVal">70%</span></label>
+                <input id="bYSlider" type="range" min="0" max="95" value="70" oninput="updateActiveBlurProps()">
+              </div>
+            </div>
+
+            <div class="sliderPairRow">
+              <div class="sliderField">
+                <label>Width (%): <span class="val" id="bWVal">60%</span></label>
+                <input id="bWSlider" type="range" min="10" max="100" value="60" oninput="updateActiveBlurProps()">
+              </div>
+              <div class="sliderField">
+                <label>Height (px): <span class="val" id="bHVal">28px</span></label>
+                <input id="bHSlider" type="range" min="12" max="120" value="28" oninput="updateActiveBlurProps()">
+              </div>
+            </div>
+
+            <div class="sliderField">
+              <label>Blur Opacity (အမည်း အလျော့/အတင်း %): <span class="val" id="bOpVal">65%</span></label>
+              <input id="bOpSlider" type="range" min="10" max="100" value="65" oninput="updateActiveBlurProps()">
+            </div>
+          </div>
+        </div>
+
+        <!-- Accordion 6: Anti-Copyright Video Shield -->
+        <div class="accordionHead" onclick="toggleAccordion('accShieldBody', 'accShieldChev')">
+          <div class="accordionTitle">⚔️ 6. Anti-Copyright Shield</div>
+          <span class="accordionChevron" id="accShieldChev">▲</span>
+        </div>
+        <div class="accordionBody" id="accShieldBody">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <label style="font-size:10px;color:var(--gold);font-weight:700">Video Transform Shield:</label>
+            <button onclick="toggleAntiCopyrightShield()" id="shieldToggleBtn" style="font-size:9.5px;padding:3px 8px">
+              Enable Shield
+            </button>
+          </div>
+          <p style="font-size:9px;color:var(--muted);margin:4px 0 0 0">
+            Content ID ရှောင်လွှဲနိုင်ရန် Video Scale (1.04x) နှင့် Subtle Color Grading များကို အလိုအလျောက် ပေါင်းစပ်ပေးပါသည်။
+          </p>
+        </div>
+
       </section>
 
       <section class="tabPane card" id="tabExport">
@@ -902,16 +1029,23 @@ let selectedVoice = "my-MM-ThihaNeural";
 let overlayPos = { x: 50, y: 82 };
 let isCloneDisabledByLimit = false;
 
-// Multiple Blur Boxes State
+// Multi Blur Boxes State
 let blurBoxes = [];
 let blurIdCounter = 0;
 let activeBlurId = null;
 
-// Multiple Movie Titles State
+// Multi Movie Titles State
 let movieTitles = [];
 let titleIdCounter = 0;
+let activeTitleId = null;
 
-// Anti-Copyright state
+// Logo State
+let logoProps = { x: 10, y: 10, size: 60, opacity: 85 };
+
+// Real-Time Border State
+let borderProgEnabled = false;
+
+// Anti-Copyright State
 let antiCopyrightEnabled = false;
 
 // Gradio Client Instance
@@ -937,6 +1071,14 @@ const lockTitle = document.getElementById("lockTitle");
 const lockDesc = document.getElementById("lockDesc");
 const lockProgFill = document.getElementById("lockProgFill");
 const lockPercentText = document.getElementById("lockPercentText");
+
+function toggleAccordion(bodyId, chevId) {
+  const b = document.getElementById(bodyId);
+  const c = document.getElementById(chevId);
+  if (!b) return;
+  b.classList.toggle("collapsed");
+  if (c) c.classList.toggle("rotate");
+}
 
 function initVoiceAudioSystem() {
   if (!voiceAudioCtx) {
@@ -1088,7 +1230,7 @@ function setLockProgress(pct, title, desc) {
   if (desc) lockDesc.textContent = desc;
 }
 
-// TTS & Voice Clone Engines
+// Edge Speech & ZeroGPU Synthesizers
 async function getSecMsGecClient() {
   const unixSeconds = Math.floor(Date.now() / 1000);
   const fileTimeSeconds = BigInt(unixSeconds) + 11644473600n;
@@ -1331,7 +1473,7 @@ function onSeekChange(e) {
 
 videoBox.addEventListener("click", (e) => {
   if (generating) return;
-  if (e.target.closest("button") || e.target.closest("input") || e.target.closest("#overlay") || e.target.closest(".videoBlurBoxItem") || e.target.closest(".videoTitleOverlayItem")) return;
+  if (e.target.closest("button") || e.target.closest("input") || e.target.closest("#overlay") || e.target.closest(".videoBlurBoxItem") || e.target.closest(".videoTitleOverlayItem") || e.target.closest("#videoLogoOverlay")) return;
   togglePlayPause();
 });
 
@@ -1393,7 +1535,7 @@ function applySubtitleStyle() {
   overlayTarget.style.textShadow = `0 2px 8px rgba(0,0,0,0.8), 0 0 4px ${outlineColor}`;
 
   if (boxWidthMode === 0) {
-    overlay.style.width = "auto";
+    overlay.style.width = "max-content";
     overlay.style.maxWidth = "96%";
     overlayInner.style.width = "auto";
   } else {
@@ -1412,7 +1554,7 @@ function applySubtitlePositionFromSlider() {
   overlay.style.top = overlayPos.y + "%";
 }
 
-// Touch & Drag positioning engine (Zero Offset Drift Bug Fixed)
+// Touch & Drag positioning engine
 function initTouchDrag() {
   const target = overlay;
   let isDragging = false;
@@ -1433,8 +1575,8 @@ function initTouchDrag() {
     let newX = ((clientX - rect.left) / rect.width) * 100;
     let newY = ((clientY - rect.top) / rect.height) * 100;
 
-    newX = Math.max(10, Math.min(90, newX));
-    newY = Math.max(10, Math.min(95, newY));
+    newX = Math.max(5, Math.min(95, newX));
+    newY = Math.max(5, Math.min(95, newY));
 
     overlayPos.x = Math.round(newX);
     overlayPos.y = Math.round(newY);
@@ -1466,7 +1608,65 @@ function initTouchDrag() {
   window.addEventListener("touchend", onPointerUp);
 }
 
-// MULTIPLE BLUR BOXES WITH TUNING SLIDERS
+// REAL-TIME VIDEO BORDER PROGRESS BAR ENGINE
+function toggleBorderProgressBar() {
+  borderProgEnabled = document.getElementById("showBorderProgCheck").checked;
+  const wrap = document.getElementById("videoProgressBorderWrap");
+  wrap.style.display = borderProgEnabled ? "block" : "none";
+  updateBorderProgressStyle();
+  toast(borderProgEnabled ? "Border Progress Bar Enabled!" : "Border Bar Disabled");
+}
+
+function updateBorderProgressStyle() {
+  const col = document.getElementById("borderColorInput").value;
+  const th = (document.getElementById("borderThickness").value || 3) + "px";
+
+  const top = document.getElementById("bpTop");
+  const right = document.getElementById("bpRight");
+  const bottom = document.getElementById("bpBottom");
+  const left = document.getElementById("bpLeft");
+
+  [top, right, bottom, left].forEach(el => el.style.backgroundColor = col);
+
+  top.style.height = th;
+  bottom.style.height = th;
+  right.style.width = th;
+  left.style.width = th;
+}
+
+function renderBorderProgressTick(t, dur) {
+  if (!borderProgEnabled || !dur || dur <= 0) return;
+
+  const pct = Math.min(1.0, Math.max(0.0, t / dur));
+  const top = document.getElementById("bpTop");
+  const right = document.getElementById("bpRight");
+  const bottom = document.getElementById("bpBottom");
+  const left = document.getElementById("bpLeft");
+
+  if (pct <= 0.25) {
+    top.style.width = (pct / 0.25) * 100 + "%";
+    right.style.height = "0%";
+    bottom.style.width = "0%";
+    left.style.height = "0%";
+  } else if (pct <= 0.50) {
+    top.style.width = "100%";
+    right.style.height = ((pct - 0.25) / 0.25) * 100 + "%";
+    bottom.style.width = "0%";
+    left.style.height = "0%";
+  } else if (pct <= 0.75) {
+    top.style.width = "100%";
+    right.style.height = "100%";
+    bottom.style.width = ((pct - 0.50) / 0.25) * 100 + "%";
+    left.style.height = "0%";
+  } else {
+    top.style.width = "100%";
+    right.style.height = "100%";
+    bottom.style.width = "100%";
+    left.style.height = ((pct - 0.75) / 0.25) * 100 + "%";
+  }
+}
+
+// MULTIPLE BLUR BOXES
 function addNewBlurBox() {
   blurIdCounter++;
   const id = `blur-${blurIdCounter}`;
@@ -1620,30 +1820,106 @@ function initBlurBoxDrag(el, bData) {
   window.addEventListener("touchend", onUp);
 }
 
-// MULTIPLE MOVIE TITLES SYSTEM
+// MULTI MOVIE TITLES STUDIO
 function addNewMovieTitle() {
   titleIdCounter++;
   const id = `title-${titleIdCounter}`;
-  const titleData = { id, text: "ရုပ်ရှင်အညွှန်း ဇာတ်ကားအမည်", x: 50, y: 10 };
+  const titleData = { 
+    id, 
+    text: "ရုပ်ရှင်အညွှန်း ဇာတ်ကားအမည်", 
+    x: 50, 
+    y: 10, 
+    fontSize: 14, 
+    color: "#ffffff", 
+    bgColor: "#000000", 
+    opacity: 65 
+  };
   movieTitles.push(titleData);
+  activeTitleId = id;
   renderMovieTitles();
   renderMovieTitleControls();
-  toast(`Movie Title #${titleIdCounter} added!`);
+  syncActiveTitleToSliders();
+  toast(`Title Text #${titleIdCounter} added!`);
 }
 
 function removeMovieTitle(id) {
   movieTitles = movieTitles.filter(t => t.id !== id);
+  if (activeTitleId === id) activeTitleId = movieTitles.length ? movieTitles[0].id : null;
   renderMovieTitles();
   renderMovieTitleControls();
+  syncActiveTitleToSliders();
   toast("Title removed");
+}
+
+function selectActiveTitle(id) {
+  activeTitleId = id;
+  document.querySelectorAll(".videoTitleOverlayItem").forEach(el => {
+    el.classList.toggle("active", el.id === id);
+  });
+  syncActiveTitleToSliders();
+}
+
+function syncActiveTitleToSliders() {
+  const panel = document.getElementById("activeTitleEditorBox");
+  const t = movieTitles.find(x => x.id === activeTitleId);
+  if (!t) {
+    panel.style.display = "none";
+    return;
+  }
+
+  panel.style.display = "block";
+  document.getElementById("editingTitleLabel").textContent = `Editing (${t.text.slice(0, 16)}...)`;
+  document.getElementById("tTextColor").value = t.color;
+  document.getElementById("tBgColor").value = t.bgColor;
+  document.getElementById("tXSlider").value = t.x;
+  document.getElementById("tYSlider").value = t.y;
+  document.getElementById("tSizeSlider").value = t.fontSize;
+  document.getElementById("tOpSlider").value = t.opacity;
+
+  document.getElementById("tXVal").textContent = t.x + "%";
+  document.getElementById("tYVal").textContent = t.y + "%";
+  document.getElementById("tSizeVal").textContent = t.fontSize + "px";
+  document.getElementById("tOpVal").textContent = t.opacity + "%";
+}
+
+function updateActiveTitleProps() {
+  const t = movieTitles.find(x => x.id === activeTitleId);
+  if (!t) return;
+
+  t.color = document.getElementById("tTextColor").value;
+  t.bgColor = document.getElementById("tBgColor").value;
+  t.x = Number(document.getElementById("tXSlider").value);
+  t.y = Number(document.getElementById("tYSlider").value);
+  t.fontSize = Number(document.getElementById("tSizeSlider").value);
+  t.opacity = Number(document.getElementById("tOpSlider").value);
+
+  document.getElementById("tXVal").textContent = t.x + "%";
+  document.getElementById("tYVal").textContent = t.y + "%";
+  document.getElementById("tSizeVal").textContent = t.fontSize + "px";
+  document.getElementById("tOpVal").textContent = t.opacity + "%";
+
+  const el = document.getElementById(t.id);
+  if (el) {
+    el.style.left = t.x + "%";
+    el.style.top = t.y + "%";
+    el.style.color = t.color;
+    el.style.fontSize = t.fontSize + "px";
+    
+    const r = parseInt(t.bgColor.slice(1, 3), 16) || 0;
+    const g = parseInt(t.bgColor.slice(3, 5), 16) || 0;
+    const b = parseInt(t.bgColor.slice(5, 7), 16) || 0;
+    el.style.backgroundColor = `rgba(${r},${g},${b},${t.opacity / 100})`;
+  }
 }
 
 function updateTitleText(id, val) {
   const t = movieTitles.find(x => x.id === id);
   if (t) {
-    t.text = val.trim();
+    t.text = val;
     const el = document.getElementById(id);
-    if (el) el.childNodes[0].nodeValue = t.text || "";
+    if (el) {
+      el.childNodes[0].nodeValue = t.text || "";
+    }
   }
 }
 
@@ -1653,11 +1929,19 @@ function renderMovieTitles() {
 
   movieTitles.forEach(t => {
     const el = document.createElement("div");
-    el.className = "videoTitleOverlayItem";
+    el.className = "videoTitleOverlayItem" + (t.id === activeTitleId ? " active" : "");
     el.id = t.id;
     el.style.left = t.x + "%";
     el.style.top = t.y + "%";
     el.style.transform = "translate(-50%, 0)";
+    el.style.color = t.color;
+    el.style.fontSize = t.fontSize + "px";
+
+    const r = parseInt(t.bgColor.slice(1, 3), 16) || 0;
+    const g = parseInt(t.bgColor.slice(3, 5), 16) || 0;
+    const b = parseInt(t.bgColor.slice(5, 7), 16) || 0;
+    el.style.backgroundColor = `rgba(${r},${g},${b},${t.opacity / 100})`;
+
     el.textContent = t.text;
 
     const closeBtn = document.createElement("div");
@@ -1679,8 +1963,9 @@ function renderMovieTitleControls() {
     const row = document.createElement("div");
     row.style.cssText = "display:flex;gap:6px;align-items:center;margin-top:6px";
     row.innerHTML = `
-      <input type="text" value="${t.text}" style="flex:1;background:#141a27;border:1px solid var(--border);color:#fff;border-radius:6px;padding:4px 8px;font-size:11px" oninput="updateTitleText('${t.id}', this.value)">
-      <button onclick="removeMovieTitle('${t.id}')" style="font-size:10px;padding:3px 6px;color:var(--accent)">✕ Delete</button>
+      <input type="text" value="${t.text}" style="flex:1;background:#141a27;border:1px solid var(--border);color:#fff;border-radius:6px;padding:4px 8px;font-size:11px" onfocus="selectActiveTitle('${t.id}')" oninput="updateTitleText('${t.id}', this.value)">
+      <button onclick="selectActiveTitle('${t.id}')" style="font-size:9.5px;padding:3px 6px;color:var(--cyan)">⚙️ Edit</button>
+      <button onclick="removeMovieTitle('${t.id}')" style="font-size:9.5px;padding:3px 6px;color:var(--accent)">✕</button>
     `;
     container.appendChild(row);
   });
@@ -1692,7 +1977,7 @@ function initTitleDrag(el, tData) {
   function onDown(e) {
     if (e.target.classList.contains("titleCloseBadge")) return;
     isTitleDragging = true;
-    el.classList.add("active");
+    selectActiveTitle(tData.id);
     e.stopPropagation();
   }
 
@@ -1705,19 +1990,18 @@ function initTitleDrag(el, tData) {
     let newX = ((clientX - vRect.left) / vRect.width) * 100;
     let newY = ((clientY - vRect.top) / vRect.height) * 100;
 
-    tData.x = Math.max(10, Math.min(90, Math.round(newX)));
-    tData.y = Math.max(4, Math.min(90, Math.round(newY)));
+    tData.x = Math.max(5, Math.min(95, Math.round(newX)));
+    tData.y = Math.max(4, Math.min(95, Math.round(newY)));
 
     el.style.left = tData.x + "%";
     el.style.top = tData.y + "%";
+
+    syncActiveTitleToSliders();
     e.preventDefault();
   }
 
   function onUp() {
-    if (isTitleDragging) {
-      isTitleDragging = false;
-      el.classList.remove("active");
-    }
+    if (isTitleDragging) isTitleDragging = false;
   }
 
   el.addEventListener("mousedown", onDown);
@@ -1729,7 +2013,98 @@ function initTitleDrag(el, tData) {
   window.addEventListener("touchend", onUp);
 }
 
-// ANTI-COPYRIGHT SHIELD TOGGLE
+// LOGO STUDIO CONTROLS
+function handleLogoUpload(e) {
+  const f = e.target.files[0];
+  if (!f) return;
+  const reader = new FileReader();
+  reader.onload = function(evt) {
+    const logo = document.getElementById("videoLogoOverlay");
+    logo.src = evt.target.result;
+    logo.style.display = "block";
+    document.getElementById("logoControlsBox").style.display = "block";
+    updateLogoProps();
+    initLogoDrag();
+    toast("Logo added successfully!");
+  };
+  reader.readAsDataURL(f);
+}
+
+function removeLogo() {
+  const logo = document.getElementById("videoLogoOverlay");
+  logo.style.display = "none";
+  logo.src = "";
+  document.getElementById("logoUploadInput").value = "";
+  document.getElementById("logoControlsBox").style.display = "none";
+  toast("Logo removed");
+}
+
+function updateLogoProps() {
+  const logo = document.getElementById("videoLogoOverlay");
+  if (!logo || !logo.src) return;
+
+  logoProps.x = Number(document.getElementById("lgXSlider").value);
+  logoProps.y = Number(document.getElementById("lgYSlider").value);
+  logoProps.size = Number(document.getElementById("lgSizeSlider").value);
+  logoProps.opacity = Number(document.getElementById("lgOpSlider").value);
+
+  document.getElementById("lgXVal").textContent = logoProps.x + "%";
+  document.getElementById("lgYVal").textContent = logoProps.y + "%";
+  document.getElementById("lgSizeVal").textContent = logoProps.size + "px";
+  document.getElementById("lgOpVal").textContent = logoProps.opacity + "%";
+
+  logo.style.left = logoProps.x + "%";
+  logo.style.top = logoProps.y + "%";
+  logo.style.maxWidth = logoProps.size + "px";
+  logo.style.opacity = logoProps.opacity / 100;
+}
+
+function initLogoDrag() {
+  const logo = document.getElementById("videoLogoOverlay");
+  let isDraggingLogo = false;
+
+  function onDown(e) {
+    isDraggingLogo = true;
+    e.stopPropagation();
+  }
+
+  function onMove(e) {
+    if (!isDraggingLogo) return;
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    const vRect = videoBox.getBoundingClientRect();
+
+    let newX = ((clientX - vRect.left) / vRect.width) * 100;
+    let newY = ((clientY - vRect.top) / vRect.height) * 100;
+
+    logoProps.x = Math.max(0, Math.min(90, Math.round(newX)));
+    logoProps.y = Math.max(0, Math.min(90, Math.round(newY)));
+
+    logo.style.left = logoProps.x + "%";
+    logo.style.top = logoProps.y + "%";
+
+    document.getElementById("lgXSlider").value = logoProps.x;
+    document.getElementById("lgYSlider").value = logoProps.y;
+    document.getElementById("lgXVal").textContent = logoProps.x + "%";
+    document.getElementById("lgYVal").textContent = logoProps.y + "%";
+
+    e.preventDefault();
+  }
+
+  function onUp() {
+    if (isDraggingLogo) isDraggingLogo = false;
+  }
+
+  logo.addEventListener("mousedown", onDown);
+  window.addEventListener("mousemove", onMove);
+  window.addEventListener("mouseup", onUp);
+
+  logo.addEventListener("touchstart", onDown, { passive: false });
+  window.addEventListener("touchmove", onMove, { passive: false });
+  window.addEventListener("touchend", onUp);
+}
+
+// ANTI-COPYRIGHT VIDEO SHIELD
 function toggleAntiCopyrightShield() {
   antiCopyrightEnabled = !antiCopyrightEnabled;
   video.classList.toggle("anti-copyright-active", antiCopyrightEnabled);
@@ -1739,38 +2114,13 @@ function toggleAntiCopyrightShield() {
   toast(antiCopyrightEnabled ? "Anti-Copyright Shield Activated!" : "Shield Deactivated");
 }
 
-function handleLogoUpload(e) {
-  const file = e.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = function(evt) {
-    const logo = document.getElementById("videoLogoOverlay");
-    logo.src = evt.target.result;
-    logo.style.display = "block";
-    toast("Logo added successfully!");
-  };
-  reader.readAsDataURL(file);
-}
-
-function removeLogo() {
-  const logo = document.getElementById("videoLogoOverlay");
-  logo.style.display = "none";
-  logo.src = "";
-  document.getElementById("logoUploadInput").value = "";
-  toast("Logo removed");
-}
-
-/* ==========================================================================
-   STEP 1, 2, 3: MULTI-LANGUAGE TRANSCRIBE & NATURAL RECAP GENERATOR
-   ========================================================================== */
+/* SCRIPT & VOICEOVER GENERATION ENGINES */
 async function generateRecapScriptOnly() {
   if (generating) return;
   if (!file) { toast("Please upload a movie video first"); return; }
 
   const targetBox = document.getElementById("videoBox");
-  if (targetBox) {
-    targetBox.scrollIntoView({ behavior: "smooth", block: "center" });
-  }
+  if (targetBox) targetBox.scrollIntoView({ behavior: "smooth", block: "center" });
 
   generating = true;
   video.pause();
@@ -1875,9 +2225,6 @@ async function generateRecapScriptOnly() {
   }
 }
 
-/* ==========================================================================
-   STEP 4: SYNTHESIZE VOICEOVER
-   ========================================================================== */
 async function synthesizeAllVoiceovers() {
   if (generating) return;
   if (!subs.length) { toast("ကျေးဇူးပြု၍ Script အရင်ရေးပေးပါ"); return; }
@@ -1966,7 +2313,7 @@ async function synthesizeAllVoiceovers() {
   }
 }
 
-/* Audio Ducking & Narration Playback Engine */
+/* Playback & Real-Time Border Tick Engine */
 let activeVoiceAudio = null;
 
 video.addEventListener("timeupdate", () => {
@@ -1977,6 +2324,9 @@ video.addEventListener("timeupdate", () => {
     vSeekBar.value = (t / dur) * 100;
     vCurTime.textContent = formatTime(t);
   }
+
+  // Real-Time Border Tick
+  renderBorderProgressTick(t, dur);
 
   const activeSub = subs.find(a => t >= a.start && t <= a.end);
   const bannerTime = document.getElementById("liveSubTimeBadge");
@@ -2042,7 +2392,6 @@ function playVoiceForSub(sub) {
   };
 }
 
-// Single Voice Line Overwrite / Re-Generate
 async function playSingleVoice(id) {
   if (generating) return;
   const sub = subs.find(s => s.id === id);
