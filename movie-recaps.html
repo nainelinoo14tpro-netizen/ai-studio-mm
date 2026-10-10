@@ -1027,8 +1027,29 @@ video.anti-copyright-active {
       <section class="tabPane card" id="tabExport">
         <div class="cardHead"><div class="title">📦 Export Center (Video Exporter)</div></div>
         <div class="body" style="padding:12px">
+          <!-- Export Format Selector -->
+          <div style="background:#131826;border:1px solid var(--border);border-radius:12px;padding:10px 12px;margin-bottom:12px">
+            <label style="font-size:10.5px;color:var(--muted);font-weight:700;display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+              <span>🎞️ EXPORT VIDEO FORMAT (ဖိုင်အမျိုးအစား ရွေးချယ်ရန်)</span>
+              <span id="formatSupportTag" style="font-size:9.5px;color:var(--cyan);font-family:ui-monospace, monospace">Checking...</span>
+            </label>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+              <button type="button" class="secondaryBtn active" id="btnFmtMp4" onclick="setExportFormat('mp4')" style="padding:8px 10px;font-size:11px;font-weight:700;display:flex;flex-direction:column;gap:2px">
+                <span style="font-size:13px">📹 MP4 (.mp4)</span>
+                <small id="mp4StatusDesc" style="font-size:8.5px;opacity:0.8">H.264 / AAC Direct</small>
+              </button>
+              <button type="button" class="secondaryBtn" id="btnFmtWebm" onclick="setExportFormat('webm')" style="padding:8px 10px;font-size:11px;font-weight:700;display:flex;flex-direction:column;gap:2px">
+                <span style="font-size:13px">🌐 WEBM (.webm)</span>
+                <small style="font-size:8.5px;opacity:0.8">VP9 / Opus High Quality</small>
+              </button>
+            </div>
+            <p id="formatNoticeText" style="font-size:9.5px;color:var(--muted);margin:8px 0 0 0;line-height:1.35">
+              💡 MP4 သည် Facebook၊ TikTok၊ CapCut နှင့် ဖုန်းအားလုံးတွင် ပိုမိုအဆင်ပြေစေပါသည်။
+            </p>
+          </div>
+
           <button class="burnBtn" id="exportFullBtn" style="width:100%;padding:14px;font-size:13px;margin-bottom:10px" onclick="exportFullRecapVideo()">
-            🎬 Export Full Movie Recap Video (With Burmese Voiceover)
+            🎬 Export Full Movie Recap Video (<span id="exportBtnFormatText">.mp4</span>)
           </button>
 
           <!-- Audio & SRT Direct Download Tools -->
@@ -1110,6 +1131,7 @@ let activePresetKey = null;
 // Export Cancel State
 let isExportCancelled = false;
 let activeRecorderInstance = null;
+let selectedExportFormat = "mp4"; // 'mp4' or 'webm'
 
 // Clean Direct Streaming Royalty-Free Ambient Audio Links
 const PRESET_BGM_TRACKS = {
@@ -2934,6 +2956,94 @@ function cancelExportProcessing() {
   toast("🛑 Export ရပ်တန့်လိုက်ပါပြီ");
 }
 
+function checkSupportedMediaRecorderMime(preferredFmt = "mp4") {
+  if (!window.MediaRecorder) return null;
+
+  const mp4Types = [
+    "video/mp4;codecs=avc1.42E01E,mp4a.40.2",
+    "video/mp4;codecs=avc1,mp4a.40.2",
+    "video/mp4;codecs=h264,aac",
+    "video/mp4;codecs=h264",
+    "video/mp4;codecs=avc1",
+    "video/mp4"
+  ];
+
+  const webmTypes = [
+    "video/webm;codecs=vp9,opus",
+    "video/webm;codecs=vp8,opus",
+    "video/webm;codecs=vp9",
+    "video/webm;codecs=vp8",
+    "video/webm"
+  ];
+
+  if (preferredFmt === "mp4") {
+    for (const type of mp4Types) {
+      if (MediaRecorder.isTypeSupported(type)) {
+        return { mimeType: type, ext: "mp4", isNative: true };
+      }
+    }
+    // If MP4 not natively supported by browser's MediaRecorder, fallback to WebM
+    for (const type of webmTypes) {
+      if (MediaRecorder.isTypeSupported(type)) {
+        return { mimeType: type, ext: "webm", isNative: false, fallbackFromMp4: true };
+      }
+    }
+  } else {
+    for (const type of webmTypes) {
+      if (MediaRecorder.isTypeSupported(type)) {
+        return { mimeType: type, ext: "webm", isNative: true };
+      }
+    }
+  }
+
+  return null;
+}
+
+function updateFormatUI() {
+  const btnMp4 = document.getElementById("btnFmtMp4");
+  const btnWebm = document.getElementById("btnFmtWebm");
+  const tag = document.getElementById("formatSupportTag");
+  const notice = document.getElementById("formatNoticeText");
+  const btnLabel = document.getElementById("exportBtnFormatText");
+  const mp4Desc = document.getElementById("mp4StatusDesc");
+
+  const mp4Check = checkSupportedMediaRecorderMime("mp4");
+  const isMp4Supported = mp4Check && mp4Check.isNative;
+
+  if (btnMp4 && btnWebm) {
+    btnMp4.classList.toggle("active", selectedExportFormat === "mp4");
+    btnWebm.classList.toggle("active", selectedExportFormat === "webm");
+  }
+
+  if (btnLabel) {
+    btnLabel.textContent = `.${selectedExportFormat}`;
+  }
+
+  if (selectedExportFormat === "mp4") {
+    if (isMp4Supported) {
+      tag.textContent = "✓ MP4 Hardware Supported";
+      tag.style.color = "var(--green)";
+      if (mp4Desc) mp4Desc.textContent = "Direct H.264 / AAC";
+      if (notice) notice.innerHTML = "💡 သင့် browser သည် <b>MP4 Video</b> တိုက်ရိုက်ထုတ်လုပ်ခြင်းကို အပြည့်အဝ ထောက်ပံ့ထားပါသည်။ TikTok & Facebook သို့ တိုက်ရိုက်တင်နိုင်ပါသည်။";
+    } else {
+      tag.textContent = "ℹ Auto-WebM Fallback";
+      tag.style.color = "var(--gold)";
+      if (mp4Desc) mp4Desc.textContent = "WebM auto-fallback";
+      if (notice) notice.innerHTML = "⚠️ ဒီ browser သည် MediaRecorder MP4 တိုက်ရိုက်မထောက်ပံ့သေးပါက အရည်အသွေးမြင့် WebM ဖြင့် အလိုအလျောက် ထုတ်ပေးပါမည်။";
+    }
+  } else {
+    tag.textContent = "✓ WebM High Quality";
+    tag.style.color = "var(--cyan)";
+    if (notice) notice.innerHTML = "💡 WEBM (.webm) သည် ကွန်ပျူတာနှင့် ဖုန်း Browser များအားလုံးတွင် အလွယ်တကူ ဖွင့်ကြည့်နိုင်ပြီး ဖိုင်ဆိုဒ် ပိုမိုကျစ်လျစ်ပါသည်။";
+  }
+}
+
+function setExportFormat(fmt) {
+  selectedExportFormat = fmt;
+  updateFormatUI();
+  toast(`Export Format: ${fmt.toUpperCase()}`);
+}
+
 function drawCanvasBurnFrame(bCtx, burnCanvas, currTime, scaleFactor, totalDur) {
   // 1. Base movie video frame
   bCtx.save();
@@ -3287,16 +3397,15 @@ async function exportFullRecapVideo() {
 
     combinedStream = new MediaStream([videoTrack, ...mixedAudioTracks]);
 
-    const mimeCandidates = [
-      "video/webm;codecs=vp9,opus",
-      "video/webm;codecs=vp8,opus",
-      "video/webm"
-    ];
-    const mimeType = mimeCandidates.find(type => MediaRecorder.isTypeSupported(type));
-    if (!mimeType) throw new Error("WebM recording ကို browser က မထောက်ပံ့ပါ");
+    const formatInfo = checkSupportedMediaRecorderMime(selectedExportFormat);
+    if (!formatInfo) throw new Error("သင့် browser တွင် ဗီဒီယိုဖမ်းယူသည့် MediaRecorder ကို မထောက်ပံ့ပါ");
+
+    if (selectedExportFormat === "mp4" && formatInfo.fallbackFromMp4) {
+      toast("Browser MP4 မရသဖြင့် WebM သို့ အလိုအလျောက် ပြောင်းလဲထုတ်ပေးနေပါသည်");
+    }
 
     recorder = new MediaRecorder(combinedStream, {
-      mimeType,
+      mimeType: formatInfo.mimeType,
       videoBitsPerSecond: 6_000_000,
       audioBitsPerSecond: 256_000
     });
@@ -3324,7 +3433,7 @@ async function exportFullRecapVideo() {
       const currentTime = Math.min(totalDur, Number(video.currentTime) || 0);
       drawCanvasBurnFrame(bCtx, burnCanvas, currentTime, scaleFactor, totalDur);
       const pct = Math.min(99, Math.round(30 + (currentTime / totalDur) * 68));
-      setLockProgress(pct, `🎬 Video Exporting (${pct}%)...`, `Original Video + BGM + Burmese Voiceover + Subtitles`);
+      setLockProgress(pct, `🎬 Video Exporting (${pct}%)...`, `Compositing Video + Voiceover + BGM into .${formatInfo.ext}`);
       if (!video.ended && currentTime < totalDur - 0.03) {
         animationId = requestAnimationFrame(drawLoop);
       }
@@ -3350,16 +3459,17 @@ async function exportFullRecapVideo() {
     if (isExportCancelled) return;
     if (!chunks.length) throw new Error("Export data မထွက်လာပါ");
 
-    const blob = new Blob(chunks, { type: mimeType });
-    const url = URL.createObjectURL(blob);
+    const finalBlob = new Blob(chunks, { type: formatInfo.mimeType });
+    const downloadExt = formatInfo.ext;
+    const url = URL.createObjectURL(finalBlob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `movie-recap-${Date.now()}.webm`;
+    link.download = `movie-recap-${Date.now()}.${downloadExt}`;
     link.click();
     setTimeout(() => URL.revokeObjectURL(url), 3500);
 
-    setLockProgress(100, "🎉 Export ပြီးပါပြီ", "ရုပ်ရှင်ဇာတ်ကြောင်းပြော ဗီဒီယိုကို အောင်မြင်စွာ ဒေါင်းလုဒ်ဆွဲပြီးပါပြီ!");
-    toast("🎉 Recap video with Burmese Voiceover exported!");
+    setLockProgress(100, "🎉 Export ပြီးပါပြီ", `ရုပ်ရှင်ဇာတ်ကြောင်းပြော ဗီဒီယို (.${downloadExt}) ကို အောင်မြင်စွာ ဒေါင်းလုဒ်ဆွဲပြီးပါပြီ!`);
+    toast(`🎉 Recap video exported (.${downloadExt}) with Burmese Voiceover!`);
   } catch (error) {
     console.error("Export failed:", error);
     toast("Export မအောင်မြင်ပါ: " + error.message);
@@ -3508,6 +3618,7 @@ window.onload = function() {
   applySubtitlePositionFromSlider();
   initTouchDrag();
   initSubtitleResize();
+  updateFormatUI();
   fetch(WORKER_URL + "/").catch(e => console.warn("Backend ping error:", e));
 };
 </script>
