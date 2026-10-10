@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="my,en">
 <head>
@@ -1297,7 +1298,10 @@ function updateAudioLevels() {
   document.getElementById("videoVolVal").textContent = vVol + "%";
   document.getElementById("voiceVolVal").textContent = aVol + "%";
 
-  if (!video.muted) {
+  if (vVol <= 0) {
+    video.volume = 0;
+  } else {
+    video.muted = false;
     video.volume = vVol / 100;
   }
   if (activeVoiceAudio) {
@@ -2703,7 +2707,11 @@ video.addEventListener("timeupdate", () => {
     bannerTime.textContent = formatTime(t);
     bannerMM.textContent = "─ No active narration ─";
     const vVol = Number(document.getElementById("videoVolume").value) / 100;
-    if (!video.muted) video.volume = vVol;
+    if (vVol <= 0) {
+      video.volume = 0;
+    } else if (!video.muted) {
+      video.volume = vVol;
+    }
     if (bgmAudio && !isBgmPlayingPreview && isBgmMasterEnabled) {
       bgmAudio.volume = bgmVolume;
     }
@@ -2738,7 +2746,11 @@ function playVoiceForSub(sub) {
   const vVol = Number(document.getElementById("videoVolume").value) / 100;
   const aVol = Number(document.getElementById("voiceVolume").value) / 100;
 
-  if (!video.muted) video.volume = Math.max(0.04, vVol * 0.35);
+  if (vVol <= 0) {
+    video.volume = 0;
+  } else if (!video.muted) {
+    video.volume = vVol * 0.35;
+  }
   if (bgmAudio && !isBgmPlayingPreview && isBgmMasterEnabled) {
     bgmAudio.volume = Math.max(0.03, bgmVolume * 0.35);
   }
@@ -2753,7 +2765,11 @@ function playVoiceForSub(sub) {
 
   activeVoiceAudio.play().catch(() => {});
   activeVoiceAudio.onended = () => {
-    if (!video.muted) video.volume = vVol;
+    if (vVol <= 0) {
+      video.volume = 0;
+    } else if (!video.muted) {
+      video.volume = vVol;
+    }
     if (bgmAudio && !isBgmPlayingPreview && isBgmMasterEnabled) bgmAudio.volume = bgmVolume;
   };
 }
@@ -3271,14 +3287,16 @@ async function prepareExportAudio(audioCtx, destination) {
 
   // 1. Original Video Audio Track via AudioContext to ensure volume balance
   try {
-    const vVol = Number(document.getElementById("videoVolume")?.value || 20) / 100;
-    if (vVol > 0 && file) {
+    const vVolInput = document.getElementById("videoVolume");
+    const vVol = vVolInput ? Number(vVolInput.value) / 100 : 0.2;
+    // Strictly respect the volume slider: if 0%, do not decode or mix original video audio into export
+    if (vVol > 0.001 && file) {
       const videoArrayBuffer = await file.arrayBuffer();
       const decodedVideoAudio = await audioCtx.decodeAudioData(videoArrayBuffer);
       const videoSource = audioCtx.createBufferSource();
       const videoGain = audioCtx.createGain();
       videoSource.buffer = decodedVideoAudio;
-      videoGain.gain.value = vVol;
+      videoGain.gain.value = Math.max(0, Math.min(1, vVol));
       videoSource.connect(videoGain).connect(destination);
       videoSource.start(0);
       sources.push(videoSource);
@@ -3624,3 +3642,4 @@ window.onload = function() {
 </script>
 </body>
 </html>
+```
