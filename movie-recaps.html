@@ -3296,15 +3296,18 @@ async function prepareExportAudio(audioCtx, destination) {
   return sources;
 }
 
-/* Encode canvas and mixed audio into a 100% Real H.264/AAC MP4 Container using mp4-muxer */
+/* Encode canvas and mixed audio into a 100% Real H.264 MP4 Container using mp4-muxer */
 async function encodeWithMp4Muxer(burnCanvas, audioDestination, totalDur, onProgress) {
   if (typeof Mp4Muxer === "undefined") {
     throw new Error("Mp4Muxer library load မဖြစ်သေးပါ။");
   }
 
   const fps = 30;
-  const width = burnCanvas.width;
-  const height = burnCanvas.height;
+  // Ensure dimensions are strictly even numbers for hardware H.264 encoders
+  const width = Math.floor(burnCanvas.width / 2) * 2;
+  const height = Math.floor(burnCanvas.height / 2) * 2;
+  burnCanvas.width = width;
+  burnCanvas.height = height;
 
   const muxer = new Mp4Muxer.Muxer({
     target: new Mp4Muxer.ArrayBufferTarget(),
@@ -3313,57 +3316,46 @@ async function encodeWithMp4Muxer(burnCanvas, audioDestination, totalDur, onProg
       width: width,
       height: height
     },
-    audio: {
-      codec: 'aac',
-      numberOfChannels: 2,
-      sampleRate: 44100
-    },
     fastStart: 'in-memory'
   });
 
+  let encoderError = null;
   const videoEncoder = new VideoEncoder({
     output: (chunk, meta) => muxer.addVideoChunk(chunk, meta),
-    error: e => console.error("VideoEncoder error:", e)
+    error: e => {
+      console.error("VideoEncoder hardware error:", e);
+      encoderError = e;
+    }
   });
 
-  videoEncoder.configure({
-    codec: 'avc1.42E01E', // Baseline H.264 compatible with all mobile players
-    width: width,
-    height: height,
-    bitrate: 4_500_000,
-    framerate: fps
-  });
+  // Try candidate H.264 profiles supported across mobile hardware
+  const candidateCodecs = ['avc1.42E01E', 'avc1.4D401E', 'avc1.64001E'];
+  let configured = false;
+  for (const c of candidateCodecs) {
+    try {
+      const support = await VideoEncoder.isConfigSupported({
+        codec: c,
+        width: width,
+        height: height,
+        bitrate: 4_500_000,
+        framerate: fps
+      });
+      if (support && support.supported) {
+        videoEncoder.configure(support.config);
+        configured = true;
+        break;
+      }
+    } catch(err) {}
+  }
 
-  const audioEncoder = new AudioEncoder({
-    output: (chunk, meta) => muxer.addAudioChunk(chunk, meta),
-    error: e => console.error("AudioEncoder error:", e)
-  });
-
-  audioEncoder.configure({
-    codec: 'mp4a.40.2', // AAC-LC
-    numberOfChannels: 2,
-    sampleRate: 44100,
-    bitrate: 128000
-  });
-
-  // Audio track reader via AudioWorklet or MediaStreamTrackProcessor
-  let audioProcessor = null;
-  const audioTracks = audioDestination.stream.getAudioTracks();
-  if (audioTracks.length > 0 && typeof MediaStreamTrackProcessor !== "undefined") {
-    audioProcessor = new MediaStreamTrackProcessor({ track: audioTracks[0] });
-    const audioReader = audioProcessor.readable.getReader();
-    (async () => {
-      try {
-        while (!isExportCancelled) {
-          const { done, value } = await audioReader.read();
-          if (done) break;
-          if (value && audioEncoder.state === "configured") {
-            audioEncoder.encode(value);
-            value.close();
-          }
-        }
-      } catch(err) {}
-    })();
+  if (!configured) {
+    videoEncoder.configure({
+      codec: 'avc1.42E01E',
+      width: width,
+      height: height,
+      bitrate: 4_500_000,
+      framerate: fps
+    });
   }
 
   video.currentTime = 0;
@@ -3376,6 +3368,10 @@ async function encodeWithMp4Muxer(burnCanvas, audioDestination, totalDur, onProg
   const totalFrames = Math.ceil(totalDur * fps);
 
   while (frameIndex < totalFrames && !isExportCancelled && !video.ended) {
+    if (encoderError || videoEncoder.state !== "configured") {
+      throw new Error("Hardware encoder crashed or closed.");
+    }
+
     const curTime = frameIndex / fps;
     drawCanvasBurnFrame(bCtx, burnCanvas, curTime, scaleFactor, totalDur);
 
@@ -3385,7 +3381,9 @@ async function encodeWithMp4Muxer(burnCanvas, audioDestination, totalDur, onProg
     });
 
     const isKeyframe = (frameIndex % 60 === 0);
-    videoEncoder.encode(videoFrame, { keyFrame: isKeyframe });
+    if (videoEncoder.state === "configured") {
+      videoEncoder.encode(videoFrame, { keyFrame: isKeyframe });
+    }
     videoFrame.close();
     frameBitmap.close();
 
@@ -3397,8 +3395,9 @@ async function encodeWithMp4Muxer(burnCanvas, audioDestination, totalDur, onProg
     await new Promise(r => setTimeout(r, Math.floor(1000 / fps)));
   }
 
-  await videoEncoder.flush();
-  try { await audioEncoder.flush(); } catch(e){}
+  if (videoEncoder.state === "configured") {
+    await videoEncoder.flush();
+  }
   muxer.finalize();
 
   return new Blob([muxer.target.buffer], { type: 'video/mp4' });
@@ -3469,15 +3468,23 @@ async function exportFullRecapVideo() {
     // Step C: Branch into Real H.264 MP4 vs Standard WebM
     let finalBlob = null;
     let downloadExt = selectedExportFormat;
+    let usedWebCodecs = false;
 
     if (selectedExportFormat === "mp4" && typeof VideoEncoder !== "undefined" && typeof Mp4Muxer !== "undefined") {
-      setLockProgress(35, "🎬 Real MP4 H.264 Encoding စတင်နေပါသည်...", "TikTok / CapCut 100% တင်သွင်းနိုင်မည့် MP4 ဖိုင်အဖြစ် ထုတ်လုပ်နေပါသည်...");
-      finalBlob = await encodeWithMp4Muxer(burnCanvas, exportAudioDestination, totalDur, (pct) => {
-        setLockProgress(pct, `🎬 Video Exporting MP4 (${pct}%)...`, `TikTok & CapCut Compatible H.264 Video`);
-      });
-      downloadExt = "mp4";
-    } else {
-      // Standard Recording Engine (Fallback or WEBM Mode)
+      try {
+        setLockProgress(35, "🎬 Real MP4 H.264 Encoding စတင်နေပါသည်...", "TikTok / CapCut 100% တင်သွင်းနိုင်မည့် MP4 ဖိုင်အဖြစ် ထုတ်လုပ်နေပါသည်...");
+        finalBlob = await encodeWithMp4Muxer(burnCanvas, exportAudioDestination, totalDur, (pct) => {
+          setLockProgress(pct, `🎬 Video Exporting MP4 (${pct}%)...`, `TikTok & CapCut Compatible H.264 Video`);
+        });
+        downloadExt = "mp4";
+        usedWebCodecs = true;
+      } catch(encErr) {
+        console.warn("WebCodecs hardware encoding failed, safe fallback to MediaRecorder:", encErr);
+      }
+    }
+
+    if (!usedWebCodecs) {
+      // Standard Recording Engine (Safe Fallback or WEBM Mode)
       const canvasStream = burnCanvas.captureStream(30);
       const videoTrack = canvasStream.getVideoTracks()[0];
       const mixedAudioTracks = exportAudioDestination.stream.getAudioTracks();
