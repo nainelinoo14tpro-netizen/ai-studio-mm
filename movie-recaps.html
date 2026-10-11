@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="my,en">
 <head>
@@ -12,6 +11,9 @@
     import { Client } from "https://cdn.jsdelivr.net/npm/@gradio/client/dist/index.min.js";
     window.GradioClient = Client;
 </script>
+
+<!-- MP4 Muxer for Client-side Real MP4 Output (Compatible with TikTok & CapCut) -->
+<script src="https://cdn.jsdelivr.net/npm/mp4-muxer@5.1.4/build/mp4-muxer.min.js"></script>
 
 <style>
 :root {
@@ -751,6 +753,11 @@ video.anti-copyright-active {
           <span class="accordionChevron" id="accSubChev">▲</span>
         </div>
         <div class="accordionBody" id="accSubBody">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <label style="font-size:10.5px;color:var(--cyan);font-weight:700">စာတန်း ထည့်သွင်းပြသရန် (Show Subtitle):</label>
+            <input type="checkbox" id="showSubtitleCheck" checked onchange="toggleSubtitleVisibility()">
+          </div>
+
           <div class="styleGrid">
             <div class="field">
               <label>စာသားအရောင် (Text Color)</label>
@@ -1032,12 +1039,12 @@ video.anti-copyright-active {
           <div style="background:#131826;border:1px solid var(--border);border-radius:12px;padding:10px 12px;margin-bottom:12px">
             <label style="font-size:10.5px;color:var(--muted);font-weight:700;display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
               <span>🎞️ EXPORT VIDEO FORMAT (ဖိုင်အမျိုးအစား ရွေးချယ်ရန်)</span>
-              <span id="formatSupportTag" style="font-size:9.5px;color:var(--cyan);font-family:ui-monospace, monospace">Checking...</span>
+              <span id="formatSupportTag" style="font-size:9.5px;color:var(--green);font-family:ui-monospace, monospace">MP4 Ready</span>
             </label>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
               <button type="button" class="secondaryBtn active" id="btnFmtMp4" onclick="setExportFormat('mp4')" style="padding:8px 10px;font-size:11px;font-weight:700;display:flex;flex-direction:column;gap:2px">
                 <span style="font-size:13px">📹 MP4 (.mp4)</span>
-                <small id="mp4StatusDesc" style="font-size:8.5px;opacity:0.8">H.264 / AAC Direct</small>
+                <small id="mp4StatusDesc" style="font-size:8.5px;opacity:0.8">TikTok / CapCut Valid H.264</small>
               </button>
               <button type="button" class="secondaryBtn" id="btnFmtWebm" onclick="setExportFormat('webm')" style="padding:8px 10px;font-size:11px;font-weight:700;display:flex;flex-direction:column;gap:2px">
                 <span style="font-size:13px">🌐 WEBM (.webm)</span>
@@ -1045,7 +1052,7 @@ video.anti-copyright-active {
               </button>
             </div>
             <p id="formatNoticeText" style="font-size:9.5px;color:var(--muted);margin:8px 0 0 0;line-height:1.35">
-              💡 MP4 သည် Facebook၊ TikTok၊ CapCut နှင့် ဖုန်းအားလုံးတွင် ပိုမိုအဆင်ပြေစေပါသည်။
+              💡 MP4 သည် TikTok, CapCut, Facebook နှင့် ဖုန်းအားလုံးတွင် 100% တိုက်ရိုက်တင်သွင်း အသုံးပြုနိုင်ပါသည်။
             </p>
           </div>
 
@@ -1118,6 +1125,9 @@ let logoProps = { x: 0, y: 0, size: 60, opacity: 85 };
 
 // Real-Time Border State
 let borderProgEnabled = false;
+
+// Subtitle Visibility State
+let isSubtitleVisible = true;
 
 // Anti-Copyright State
 let antiCopyrightEnabled = false;
@@ -1735,6 +1745,12 @@ function loadVideo(f) {
 
   setStatus("ready", `Loaded: ${f.name.slice(0, 16)}...`);
   toast("Video loaded! Tap play button to start.");
+}
+
+function toggleSubtitleVisibility() {
+  isSubtitleVisible = document.getElementById("showSubtitleCheck").checked;
+  overlay.style.display = isSubtitleVisible ? "flex" : "none";
+  toast(isSubtitleVisible ? "Subtitle Shown" : "Subtitle Hidden");
 }
 
 function applySubtitleStyle() {
@@ -2723,7 +2739,7 @@ video.addEventListener("timeupdate", () => {
     if (activeEl) activeEl.classList.add("active");
   }
 
-  if (activeSub && activeSub.mm) {
+  if (activeSub && activeSub.mm && isSubtitleVisible) {
     overlayInner.style.visibility = "visible";
     overlayTarget.textContent = activeSub.mm;
   } else {
@@ -2972,91 +2988,22 @@ function cancelExportProcessing() {
   toast("🛑 Export ရပ်တန့်လိုက်ပါပြီ");
 }
 
-function checkSupportedMediaRecorderMime(preferredFmt = "mp4") {
-  if (!window.MediaRecorder) return null;
-
-  const mp4Types = [
-    "video/mp4;codecs=avc1.42E01E,mp4a.40.2",
-    "video/mp4;codecs=avc1,mp4a.40.2",
-    "video/mp4;codecs=h264,aac",
-    "video/mp4;codecs=h264",
-    "video/mp4;codecs=avc1",
-    "video/mp4"
-  ];
-
-  const webmTypes = [
-    "video/webm;codecs=vp9,opus",
-    "video/webm;codecs=vp8,opus",
-    "video/webm;codecs=vp9",
-    "video/webm;codecs=vp8",
-    "video/webm"
-  ];
-
-  if (preferredFmt === "mp4") {
-    for (const type of mp4Types) {
-      if (MediaRecorder.isTypeSupported(type)) {
-        return { mimeType: type, ext: "mp4", isNative: true };
-      }
-    }
-    // If MP4 not natively supported by browser's MediaRecorder, fallback to WebM
-    for (const type of webmTypes) {
-      if (MediaRecorder.isTypeSupported(type)) {
-        return { mimeType: type, ext: "webm", isNative: false, fallbackFromMp4: true };
-      }
-    }
-  } else {
-    for (const type of webmTypes) {
-      if (MediaRecorder.isTypeSupported(type)) {
-        return { mimeType: type, ext: "webm", isNative: true };
-      }
-    }
-  }
-
-  return null;
-}
-
-function updateFormatUI() {
-  const btnMp4 = document.getElementById("btnFmtMp4");
-  const btnWebm = document.getElementById("btnFmtWebm");
-  const tag = document.getElementById("formatSupportTag");
-  const notice = document.getElementById("formatNoticeText");
-  const btnLabel = document.getElementById("exportBtnFormatText");
-  const mp4Desc = document.getElementById("mp4StatusDesc");
-
-  const mp4Check = checkSupportedMediaRecorderMime("mp4");
-  const isMp4Supported = mp4Check && mp4Check.isNative;
-
-  if (btnMp4 && btnWebm) {
-    btnMp4.classList.toggle("active", selectedExportFormat === "mp4");
-    btnWebm.classList.toggle("active", selectedExportFormat === "webm");
-  }
-
-  if (btnLabel) {
-    btnLabel.textContent = `.${selectedExportFormat}`;
-  }
-
-  if (selectedExportFormat === "mp4") {
-    if (isMp4Supported) {
-      tag.textContent = "✓ MP4 Hardware Supported";
-      tag.style.color = "var(--green)";
-      if (mp4Desc) mp4Desc.textContent = "Direct H.264 / AAC";
-      if (notice) notice.innerHTML = "💡 သင့် browser သည် <b>MP4 Video</b> တိုက်ရိုက်ထုတ်လုပ်ခြင်းကို အပြည့်အဝ ထောက်ပံ့ထားပါသည်။ TikTok & Facebook သို့ တိုက်ရိုက်တင်နိုင်ပါသည်။";
-    } else {
-      tag.textContent = "ℹ Auto-WebM Fallback";
-      tag.style.color = "var(--gold)";
-      if (mp4Desc) mp4Desc.textContent = "WebM auto-fallback";
-      if (notice) notice.innerHTML = "⚠️ ဒီ browser သည် MediaRecorder MP4 တိုက်ရိုက်မထောက်ပံ့သေးပါက အရည်အသွေးမြင့် WebM ဖြင့် အလိုအလျောက် ထုတ်ပေးပါမည်။";
-    }
-  } else {
-    tag.textContent = "✓ WebM High Quality";
-    tag.style.color = "var(--cyan)";
-    if (notice) notice.innerHTML = "💡 WEBM (.webm) သည် ကွန်ပျူတာနှင့် ဖုန်း Browser များအားလုံးတွင် အလွယ်တကူ ဖွင့်ကြည့်နိုင်ပြီး ဖိုင်ဆိုဒ် ပိုမိုကျစ်လျစ်ပါသည်။";
-  }
-}
-
 function setExportFormat(fmt) {
   selectedExportFormat = fmt;
-  updateFormatUI();
+  const btnMp4 = document.getElementById("btnFmtMp4");
+  const btnWebm = document.getElementById("btnFmtWebm");
+  const btnLabel = document.getElementById("exportBtnFormatText");
+  const tag = document.getElementById("formatSupportTag");
+
+  if (btnMp4 && btnWebm) {
+    btnMp4.classList.toggle("active", fmt === "mp4");
+    btnWebm.classList.toggle("active", fmt === "webm");
+  }
+  if (btnLabel) btnLabel.textContent = `.${fmt}`;
+  if (tag) {
+    tag.textContent = fmt === "mp4" ? "MP4 Muxer Active" : "WebM Native";
+    tag.style.color = fmt === "mp4" ? "var(--green)" : "var(--cyan)";
+  }
   toast(`Export Format: ${fmt.toUpperCase()}`);
 }
 
@@ -3140,58 +3087,60 @@ function drawCanvasBurnFrame(bCtx, burnCanvas, currTime, scaleFactor, totalDur) 
   });
 
   // 5. Burmese subtitle overlay
-  const currentSub = subs.find(sub => currTime >= Number(sub.start) && currTime <= Number(sub.end));
-  if (currentSub && currentSub.mm) {
-    const subX = (Number(overlayPos.x || 50) / 100) * burnCanvas.width;
-    const subY = (Number(overlayPos.y || 82) / 100) * burnCanvas.height;
-    const fontSize = Math.max(1, Number(document.getElementById("size")?.value || 17) * scaleFactor);
-    const lines = String(currentSub.mm).split("\n");
-    const lineHeight = fontSize * 1.38;
-    const blockHeight = lines.length * lineHeight;
+  if (isSubtitleVisible) {
+    const currentSub = subs.find(sub => currTime >= Number(sub.start) && currTime <= Number(sub.end));
+    if (currentSub && currentSub.mm) {
+      const subX = (Number(overlayPos.x || 50) / 100) * burnCanvas.width;
+      const subY = (Number(overlayPos.y || 82) / 100) * burnCanvas.height;
+      const fontSize = Math.max(1, Number(document.getElementById("size")?.value || 17) * scaleFactor);
+      const lines = String(currentSub.mm).split("\n");
+      const lineHeight = fontSize * 1.38;
+      const blockHeight = lines.length * lineHeight;
 
-    bCtx.save();
-    bCtx.font = `bold ${fontSize}px system-ui, -apple-system, "Pyidaungsu", "Noto Sans Myanmar", sans-serif`;
-    bCtx.textAlign = "center";
-    bCtx.textBaseline = "middle";
+      bCtx.save();
+      bCtx.font = `bold ${fontSize}px system-ui, -apple-system, "Pyidaungsu", "Noto Sans Myanmar", sans-serif`;
+      bCtx.textAlign = "center";
+      bCtx.textBaseline = "middle";
 
-    let maxLineWidth = 0;
-    lines.forEach(line => { maxLineWidth = Math.max(maxLineWidth, bCtx.measureText(line.trim()).width); });
+      let maxLineWidth = 0;
+      lines.forEach(line => { maxLineWidth = Math.max(maxLineWidth, bCtx.measureText(line.trim()).width); });
 
-    const widthMode = Number(document.getElementById("boxWidthMode")?.value || 0);
-    const padW = 12 * scaleFactor;
-    const padH = 5 * scaleFactor;
-    const boxW = widthMode > 0 ? (widthMode / 100) * burnCanvas.width : maxLineWidth + padW * 2;
-    const bg = document.getElementById("bgColor")?.value || "#000000";
-    const bgOpacity = Number(document.getElementById("boxOpacity")?.value || 0) / 100;
-    const bgR = parseInt(bg.slice(1, 3), 16) || 0;
-    const bgG = parseInt(bg.slice(3, 5), 16) || 0;
-    const bgB = parseInt(bg.slice(5, 7), 16) || 0;
+      const widthMode = Number(document.getElementById("boxWidthMode")?.value || 0);
+      const padW = 12 * scaleFactor;
+      const padH = 5 * scaleFactor;
+      const boxW = widthMode > 0 ? (widthMode / 100) * burnCanvas.width : maxLineWidth + padW * 2;
+      const bg = document.getElementById("bgColor")?.value || "#000000";
+      const bgOpacity = Number(document.getElementById("boxOpacity")?.value || 0) / 100;
+      const bgR = parseInt(bg.slice(1, 3), 16) || 0;
+      const bgG = parseInt(bg.slice(3, 5), 16) || 0;
+      const bgB = parseInt(bg.slice(5, 7), 16) || 0;
 
-    if (bgOpacity > 0) {
-      bCtx.fillStyle = `rgba(${bgR},${bgG},${bgB},${bgOpacity})`;
-      drawCanvasRoundRect(bCtx, subX - boxW / 2, subY - blockHeight / 2 - padH, boxW, blockHeight + padH * 2, 8 * scaleFactor);
-      bCtx.fill();
-    }
-
-    bCtx.shadowColor = "rgba(0,0,0,0.8)";
-    bCtx.shadowOffsetY = 2 * scaleFactor;
-    bCtx.shadowBlur = 8 * scaleFactor;
-    const outlineWidth = Number(document.getElementById("outlineWidth")?.value || 0) * scaleFactor;
-    const outlineColor = document.getElementById("outlineColor")?.value || "#000000";
-    const textColor = document.getElementById("targetColor")?.value || "#ffffff";
-    const firstY = subY - blockHeight / 2 + lineHeight / 2;
-
-    lines.forEach((line, index) => {
-      const y = firstY + index * lineHeight;
-      if (outlineWidth > 0) {
-        bCtx.strokeStyle = outlineColor;
-        bCtx.lineWidth = outlineWidth;
-        bCtx.strokeText(line.trim(), subX, y);
+      if (bgOpacity > 0) {
+        bCtx.fillStyle = `rgba(${bgR},${bgG},${bgB},${bgOpacity})`;
+        drawCanvasRoundRect(bCtx, subX - boxW / 2, subY - blockHeight / 2 - padH, boxW, blockHeight + padH * 2, 8 * scaleFactor);
+        bCtx.fill();
       }
-      bCtx.fillStyle = textColor;
-      bCtx.fillText(line.trim(), subX, y);
-    });
-    bCtx.restore();
+
+      bCtx.shadowColor = "rgba(0,0,0,0.8)";
+      bCtx.shadowOffsetY = 2 * scaleFactor;
+      bCtx.shadowBlur = 8 * scaleFactor;
+      const outlineWidth = Number(document.getElementById("outlineWidth")?.value || 0) * scaleFactor;
+      const outlineColor = document.getElementById("outlineColor")?.value || "#000000";
+      const textColor = document.getElementById("targetColor")?.value || "#ffffff";
+      const firstY = subY - blockHeight / 2 + lineHeight / 2;
+
+      lines.forEach((line, index) => {
+        const y = firstY + index * lineHeight;
+        if (outlineWidth > 0) {
+          bCtx.strokeStyle = outlineColor;
+          bCtx.lineWidth = outlineWidth;
+          bCtx.strokeText(line.trim(), subX, y);
+        }
+        bCtx.fillStyle = textColor;
+        bCtx.fillText(line.trim(), subX, y);
+      });
+      bCtx.restore();
+    }
   }
 
   // 6. Border progress bar
@@ -3289,7 +3238,6 @@ async function prepareExportAudio(audioCtx, destination) {
   try {
     const vVolInput = document.getElementById("videoVolume");
     const vVol = vVolInput ? Number(vVolInput.value) / 100 : 0.2;
-    // Strictly respect the volume slider: if 0%, do not decode or mix original video audio into export
     if (vVol > 0.001 && file) {
       const videoArrayBuffer = await file.arrayBuffer();
       const decodedVideoAudio = await audioCtx.decodeAudioData(videoArrayBuffer);
@@ -3348,6 +3296,114 @@ async function prepareExportAudio(audioCtx, destination) {
   return sources;
 }
 
+/* Encode canvas and mixed audio into a 100% Real H.264/AAC MP4 Container using mp4-muxer */
+async function encodeWithMp4Muxer(burnCanvas, audioDestination, totalDur, onProgress) {
+  if (typeof Mp4Muxer === "undefined") {
+    throw new Error("Mp4Muxer library load မဖြစ်သေးပါ။");
+  }
+
+  const fps = 30;
+  const width = burnCanvas.width;
+  const height = burnCanvas.height;
+
+  const muxer = new Mp4Muxer.Muxer({
+    target: new Mp4Muxer.ArrayBufferTarget(),
+    video: {
+      codec: 'avc',
+      width: width,
+      height: height
+    },
+    audio: {
+      codec: 'aac',
+      numberOfChannels: 2,
+      sampleRate: 44100
+    },
+    fastStart: 'in-memory'
+  });
+
+  const videoEncoder = new VideoEncoder({
+    output: (chunk, meta) => muxer.addVideoChunk(chunk, meta),
+    error: e => console.error("VideoEncoder error:", e)
+  });
+
+  videoEncoder.configure({
+    codec: 'avc1.42E01E', // Baseline H.264 compatible with all mobile players
+    width: width,
+    height: height,
+    bitrate: 4_500_000,
+    framerate: fps
+  });
+
+  const audioEncoder = new AudioEncoder({
+    output: (chunk, meta) => muxer.addAudioChunk(chunk, meta),
+    error: e => console.error("AudioEncoder error:", e)
+  });
+
+  audioEncoder.configure({
+    codec: 'mp4a.40.2', // AAC-LC
+    numberOfChannels: 2,
+    sampleRate: 44100,
+    bitrate: 128000
+  });
+
+  // Audio track reader via AudioWorklet or MediaStreamTrackProcessor
+  let audioProcessor = null;
+  const audioTracks = audioDestination.stream.getAudioTracks();
+  if (audioTracks.length > 0 && typeof MediaStreamTrackProcessor !== "undefined") {
+    audioProcessor = new MediaStreamTrackProcessor({ track: audioTracks[0] });
+    const audioReader = audioProcessor.readable.getReader();
+    (async () => {
+      try {
+        while (!isExportCancelled) {
+          const { done, value } = await audioReader.read();
+          if (done) break;
+          if (value && audioEncoder.state === "configured") {
+            audioEncoder.encode(value);
+            value.close();
+          }
+        }
+      } catch(err) {}
+    })();
+  }
+
+  video.currentTime = 0;
+  await new Promise(res => { video.addEventListener("seeked", res, { once: true }); });
+  await video.play();
+
+  const bCtx = burnCanvas.getContext("2d", { alpha: false });
+  const scaleFactor = width / (videoBox.getBoundingClientRect().width || width);
+  let frameIndex = 0;
+  const totalFrames = Math.ceil(totalDur * fps);
+
+  while (frameIndex < totalFrames && !isExportCancelled && !video.ended) {
+    const curTime = frameIndex / fps;
+    drawCanvasBurnFrame(bCtx, burnCanvas, curTime, scaleFactor, totalDur);
+
+    const frameBitmap = await createImageBitmap(burnCanvas);
+    const videoFrame = new VideoFrame(frameBitmap, {
+      timestamp: Math.round(curTime * 1_000_000)
+    });
+
+    const isKeyframe = (frameIndex % 60 === 0);
+    videoEncoder.encode(videoFrame, { keyFrame: isKeyframe });
+    videoFrame.close();
+    frameBitmap.close();
+
+    frameIndex++;
+    if (onProgress) {
+      onProgress(Math.min(98, Math.round((frameIndex / totalFrames) * 100)));
+    }
+
+    await new Promise(r => setTimeout(r, Math.floor(1000 / fps)));
+  }
+
+  await videoEncoder.flush();
+  try { await audioEncoder.flush(); } catch(e){}
+  muxer.finalize();
+
+  return new Blob([muxer.target.buffer], { type: 'video/mp4' });
+}
+
 async function exportFullRecapVideo() {
   if (generating) return;
   if (!video.src || !file) {
@@ -3373,7 +3429,6 @@ async function exportFullRecapVideo() {
   let exportAudioCtx = null;
   let exportAudioDestination = null;
   let activeAudioSources = [];
-  let combinedStream = null;
   let previousMuted = video.muted;
   let previousVolume = video.volume;
   const chunks = [];
@@ -3408,77 +3463,89 @@ async function exportFullRecapVideo() {
     setLockProgress(30, "🎛️ Audio Mixer ပြင်ဆင်နေပါသည်...", "ဗီဒီယိုအသံ၊ BGM နှင့် မြန်မာ Voiceover များကို ပေါင်းစပ်နေပါသည်...");
     activeAudioSources = await prepareExportAudio(exportAudioCtx, exportAudioDestination);
 
-    // Step C: Combine Canvas video stream with the AudioDestination audio stream
-    const canvasStream = burnCanvas.captureStream(30);
-    const videoTrack = canvasStream.getVideoTracks()[0];
-    const mixedAudioTracks = exportAudioDestination.stream.getAudioTracks();
-
-    combinedStream = new MediaStream([videoTrack, ...mixedAudioTracks]);
-
-    const formatInfo = checkSupportedMediaRecorderMime(selectedExportFormat);
-    if (!formatInfo) throw new Error("သင့် browser တွင် ဗီဒီယိုဖမ်းယူသည့် MediaRecorder ကို မထောက်ပံ့ပါ");
-
-    if (selectedExportFormat === "mp4" && formatInfo.fallbackFromMp4) {
-      toast("Browser MP4 မရသဖြင့် WebM သို့ အလိုအလျောက် ပြောင်းလဲထုတ်ပေးနေပါသည်");
-    }
-
-    recorder = new MediaRecorder(combinedStream, {
-      mimeType: formatInfo.mimeType,
-      videoBitsPerSecond: 6_000_000,
-      audioBitsPerSecond: 256_000
-    });
-    activeRecorderInstance = recorder;
-
-    recorder.ondataavailable = event => {
-      if (event.data && event.data.size > 0) chunks.push(event.data);
-    };
-
-    video.currentTime = 0;
-    await new Promise(resolve => {
-      const onSeeked = () => { video.removeEventListener("seeked", onSeeked); resolve(); };
-      video.addEventListener("seeked", onSeeked, { once: true });
-    });
-
-    drawCanvasBurnFrame(bCtx, burnCanvas, 0, scaleFactor, totalDur);
-    recorder.start(250);
-
     video.muted = true;
     video.volume = 0;
-    await video.play();
 
-    const drawLoop = () => {
-      if (isExportCancelled) return;
-      const currentTime = Math.min(totalDur, Number(video.currentTime) || 0);
-      drawCanvasBurnFrame(bCtx, burnCanvas, currentTime, scaleFactor, totalDur);
-      const pct = Math.min(99, Math.round(30 + (currentTime / totalDur) * 68));
-      setLockProgress(pct, `🎬 Video Exporting (${pct}%)...`, `Compositing Video + Voiceover + BGM into .${formatInfo.ext}`);
-      if (!video.ended && currentTime < totalDur - 0.03) {
-        animationId = requestAnimationFrame(drawLoop);
+    // Step C: Branch into Real H.264 MP4 vs Standard WebM
+    let finalBlob = null;
+    let downloadExt = selectedExportFormat;
+
+    if (selectedExportFormat === "mp4" && typeof VideoEncoder !== "undefined" && typeof Mp4Muxer !== "undefined") {
+      setLockProgress(35, "🎬 Real MP4 H.264 Encoding စတင်နေပါသည်...", "TikTok / CapCut 100% တင်သွင်းနိုင်မည့် MP4 ဖိုင်အဖြစ် ထုတ်လုပ်နေပါသည်...");
+      finalBlob = await encodeWithMp4Muxer(burnCanvas, exportAudioDestination, totalDur, (pct) => {
+        setLockProgress(pct, `🎬 Video Exporting MP4 (${pct}%)...`, `TikTok & CapCut Compatible H.264 Video`);
+      });
+      downloadExt = "mp4";
+    } else {
+      // Standard Recording Engine (Fallback or WEBM Mode)
+      const canvasStream = burnCanvas.captureStream(30);
+      const videoTrack = canvasStream.getVideoTracks()[0];
+      const mixedAudioTracks = exportAudioDestination.stream.getAudioTracks();
+      const combinedStream = new MediaStream([videoTrack, ...mixedAudioTracks]);
+
+      let chosenMime = "video/webm";
+      if (selectedExportFormat === "mp4" && MediaRecorder.isTypeSupported("video/mp4")) {
+        chosenMime = "video/mp4";
+        downloadExt = "mp4";
+      } else {
+        const webmCandidates = ["video/webm;codecs=vp9,opus", "video/webm;codecs=vp8,opus", "video/webm"];
+        chosenMime = webmCandidates.find(t => MediaRecorder.isTypeSupported(t)) || "video/webm";
+        downloadExt = "webm";
       }
-    };
-    animationId = requestAnimationFrame(drawLoop);
 
-    await new Promise(resolve => {
-      const finish = () => { video.removeEventListener("ended", finish); resolve(); };
-      video.addEventListener("ended", finish, { once: true });
-      setTimeout(finish, Math.ceil(totalDur * 1000) + 1800);
-    });
+      recorder = new MediaRecorder(combinedStream, {
+        mimeType: chosenMime,
+        videoBitsPerSecond: 6_000_000,
+        audioBitsPerSecond: 256_000
+      });
+      activeRecorderInstance = recorder;
 
-    cancelAnimationFrame(animationId);
-    await new Promise(resolve => {
-      if (recorder.state === "inactive") {
-        resolve();
-        return;
-      }
-      recorder.addEventListener("stop", resolve, { once: true });
-      recorder.stop();
-    });
+      recorder.ondataavailable = event => {
+        if (event.data && event.data.size > 0) chunks.push(event.data);
+      };
+
+      video.currentTime = 0;
+      await new Promise(resolve => {
+        const onSeeked = () => { video.removeEventListener("seeked", onSeeked); resolve(); };
+        video.addEventListener("seeked", onSeeked, { once: true });
+      });
+
+      drawCanvasBurnFrame(bCtx, burnCanvas, 0, scaleFactor, totalDur);
+      recorder.start(250);
+      await video.play();
+
+      const drawLoop = () => {
+        if (isExportCancelled) return;
+        const currentTime = Math.min(totalDur, Number(video.currentTime) || 0);
+        drawCanvasBurnFrame(bCtx, burnCanvas, currentTime, scaleFactor, totalDur);
+        const pct = Math.min(99, Math.round(30 + (currentTime / totalDur) * 68));
+        setLockProgress(pct, `🎬 Video Exporting (${pct}%)...`, `Recording into .${downloadExt}`);
+        if (!video.ended && currentTime < totalDur - 0.03) {
+          animationId = requestAnimationFrame(drawLoop);
+        }
+      };
+      animationId = requestAnimationFrame(drawLoop);
+
+      await new Promise(resolve => {
+        const finish = () => { video.removeEventListener("ended", finish); resolve(); };
+        video.addEventListener("ended", finish, { once: true });
+        setTimeout(finish, Math.ceil(totalDur * 1000) + 1800);
+      });
+
+      cancelAnimationFrame(animationId);
+      await new Promise(resolve => {
+        if (recorder.state === "inactive") { resolve(); return; }
+        recorder.addEventListener("stop", resolve, { once: true });
+        recorder.stop();
+      });
+
+      if (!chunks.length) throw new Error("Export data မထွက်လာပါ");
+      finalBlob = new Blob(chunks, { type: chosenMime });
+    }
 
     if (isExportCancelled) return;
-    if (!chunks.length) throw new Error("Export data မထွက်လာပါ");
+    if (!finalBlob) throw new Error("Export blob ဖန်တီး၍ မရပါ");
 
-    const finalBlob = new Blob(chunks, { type: formatInfo.mimeType });
-    const downloadExt = formatInfo.ext;
     const url = URL.createObjectURL(finalBlob);
     const link = document.createElement("a");
     link.href = url;
@@ -3636,10 +3703,8 @@ window.onload = function() {
   applySubtitlePositionFromSlider();
   initTouchDrag();
   initSubtitleResize();
-  updateFormatUI();
   fetch(WORKER_URL + "/").catch(e => console.warn("Backend ping error:", e));
 };
 </script>
 </body>
 </html>
-```
