@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="my,en">
 <head>
-<!-- Coi Service Worker for Cross-Origin Isolation & SharedArrayBuffer -->
+<!-- Coi Service Worker -->
 <script src="coi-serviceworker.js"></script>
 
 <meta charset="UTF-8">
@@ -3294,7 +3294,7 @@ async function prepareExportAudio(audioCtx, destination) {
   return sources;
 }
 
-/* FFmpeg.wasm Direct HTTP REST Converter (No WebSocket Timeout, 100% Valid MP4) */
+/* FFmpeg.wasm Direct HTTP REST Converter (Single-Thread, SharedArrayBuffer Not Required) */
 async function loadFFmpegWasm() {
   if (ffmpegWasmInstance && ffmpegWasmInstance.isLoaded()) return ffmpegWasmInstance;
   if (ffmpegWasmLoadingPromise) return ffmpegWasmLoadingPromise;
@@ -3307,7 +3307,7 @@ async function loadFFmpegWasm() {
     setLockProgress(77, "📦 FFmpeg.wasm ကို စတင်ပြင်ဆင်နေပါသည်...", "ပထမဆုံးအသုံးပြုချိန်တွင် FFmpeg Core/WASM ကို Download လုပ်နေပါသည်...");
     const instance = window.FFmpeg.createFFmpeg({
       log: false,
-      corePath: "https://unpkg.com/@ffmpeg/core@0.11.0/dist/ffmpeg-core.js"
+      corePath: "https://unpkg.com/@ffmpeg/core-st@0.11.1/dist/ffmpeg-core.js"
     });
 
     instance.setProgress(({ ratio }) => {
