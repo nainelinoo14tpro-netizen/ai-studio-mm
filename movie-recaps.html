@@ -1,16 +1,13 @@
 <!DOCTYPE html>
 <html lang="my,en">
 <head>
-<!-- Coi Service Worker -->
-<script src="coi-serviceworker.js"></script>
-
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
 <meta name="theme-color" content="#080a10">
 <title>Movie Recap Studio Pro</title>
 
-<!-- FFmpeg.wasm (single-thread browser build; MP4 encoding runs locally on the device) -->
-<script src="https://unpkg.com/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"></script>
+<!-- FFmpeg.wasm Single-thread Match build -->
+<script src="https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.11.0/dist/ffmpeg.min.js"></script>
 
 <!-- Gradio Client JS Library -->
 <script type="module">
@@ -1094,7 +1091,6 @@ video.anti-copyright-active {
 
 <script>
 const WORKER_URL = "https://ai-studio-mm.nainelinoo-14tpro.workers.dev";
-// FFmpeg.wasm is loaded on demand from the CDN and encodes MP4 locally.
 let ffmpegWasmInstance = null;
 let ffmpegWasmLoadingPromise = null;
 
@@ -1144,7 +1140,7 @@ let activePresetKey = null;
 // Export Cancel State
 let isExportCancelled = false;
 let activeRecorderInstance = null;
-let selectedExportFormat = "mp4"; // 'mp4' or 'webm'
+let selectedExportFormat = "mp4";
 
 // Clean Direct Streaming Royalty-Free Ambient Audio Links
 const PRESET_BGM_TRACKS = {
@@ -2176,7 +2172,7 @@ function updateActiveTitleProps() {
     
     const r = parseInt(t.bgColor.slice(1, 3), 16) || 0;
     const g = parseInt(t.bgColor.slice(3, 5), 16) || 0;
-    const b = parseInt(t.bgColor.slice(5, 7), 16) || 0;
+    const b = parseInt(bgColor.slice(5, 7), 16) || 0;
     el.style.backgroundColor = `rgba(${r},${g},${b},${t.opacity / 100})`;
   }
 }
@@ -2208,7 +2204,7 @@ function renderMovieTitles() {
 
     const r = parseInt(t.bgColor.slice(1, 3), 16) || 0;
     const g = parseInt(t.bgColor.slice(3, 5), 16) || 0;
-    const b = parseInt(t.bgColor.slice(5, 7), 16) || 0;
+    const b = parseInt(bgColor.slice(5, 7), 16) || 0;
     const op = (t.opacity !== undefined && t.opacity !== null) ? Number(t.opacity) : 65;
     el.style.backgroundColor = `rgba(${r},${g},${b},${op / 100})`;
 
@@ -2847,7 +2843,6 @@ function playAllVoiceover() {
   if (bgmAudio && isBgmMasterEnabled) {
     bgmAudio.currentTime = video.currentTime % (bgmAudio.duration || 60);
     bgmAudio.volume = bgmVolume;
-    bgmAudio.play().catch(() => {});
   }
   toast("Playing recap preview...");
 }
@@ -2991,7 +2986,6 @@ function cancelExportProcessing() {
 }
 
 function setExportFormat(fmt) {
-  // This build intentionally exports MP4 only.
   selectedExportFormat = "mp4";
   const btnMp4 = document.getElementById("btnFmtMp4");
   const btnLabel = document.getElementById("exportBtnFormatText");
@@ -3002,18 +2996,15 @@ function setExportFormat(fmt) {
     tag.textContent = "Local FFmpeg.wasm";
     tag.style.color = "var(--green)";
   }
-  if (fmt && fmt !== "mp4") toast("ဤဗားရှင်းတွင် MP4 format တစ်မျိုးတည်းသာ ထုတ်ပေးပါသည်");
 }
 
 function drawCanvasBurnFrame(bCtx, burnCanvas, currTime, scaleFactor, totalDur) {
-  // 1. Base movie video frame
   bCtx.save();
   bCtx.filter = "none";
   bCtx.globalAlpha = 1;
   bCtx.drawImage(video, 0, 0, burnCanvas.width, burnCanvas.height);
   bCtx.restore();
 
-  // 2. Blur boxes
   blurBoxes.forEach(box => {
     const bx = (Number(box.x) / 100) * burnCanvas.width;
     const by = (Number(box.y) / 100) * burnCanvas.height;
@@ -3032,7 +3023,6 @@ function drawCanvasBurnFrame(bCtx, burnCanvas, currTime, scaleFactor, totalDur) 
     bCtx.restore();
   });
 
-  // 3. Logo overlay
   const logoEl = document.getElementById("videoLogoOverlay");
   if (logoEl && logoEl.complete && logoEl.naturalWidth > 0 && logoEl.style.display !== "none") {
     const lw = Math.max(1, Number(logoProps.size || 60) * scaleFactor);
@@ -3046,7 +3036,6 @@ function drawCanvasBurnFrame(bCtx, burnCanvas, currTime, scaleFactor, totalDur) 
     bCtx.restore();
   }
 
-  // 4. Movie title overlays
   movieTitles.forEach(title => {
     const tx = (Number(title.x || 0) / 100) * burnCanvas.width;
     const ty = (Number(title.y || 0) / 100) * burnCanvas.height;
@@ -3084,7 +3073,6 @@ function drawCanvasBurnFrame(bCtx, burnCanvas, currTime, scaleFactor, totalDur) 
     bCtx.restore();
   });
 
-  // 5. Burmese subtitle overlay
   if (isSubtitleVisible) {
     const currentSub = subs.find(sub => currTime >= Number(sub.start) && currTime <= Number(sub.end));
     if (currentSub && currentSub.mm) {
@@ -3141,7 +3129,6 @@ function drawCanvasBurnFrame(bCtx, burnCanvas, currTime, scaleFactor, totalDur) 
     }
   }
 
-  // 6. Border progress bar
   if (borderProgEnabled && totalDur > 0) {
     const color = document.getElementById("borderColorInput")?.value || "#20d7ff";
     const thickness = Math.max(1, Number(document.getElementById("borderThickness")?.value || 3) * scaleFactor);
@@ -3198,7 +3185,6 @@ async function decodeExportAudio(audioCtx, url) {
   return audioCtx.decodeAudioData(await response.arrayBuffer());
 }
 
-/* Ensure missing voiceovers are synthesized before exporting video */
 async function ensureAllVoiceoversSynthesizedForExport() {
   if (!subs.length) return;
   const missing = subs.filter(s => !audioMap.has(s.id));
@@ -3228,11 +3214,9 @@ async function ensureAllVoiceoversSynthesizedForExport() {
   }
 }
 
-/* Pre-decode all Voiceover and BGM buffers, and schedule them into the export AudioContext */
 async function prepareExportAudio(audioCtx, destination) {
   const sources = [];
 
-  // 1. Original Video Audio Track via AudioContext to ensure volume balance
   try {
     const vVolInput = document.getElementById("videoVolume");
     const vVol = vVolInput ? Number(vVolInput.value) / 100 : 0.2;
@@ -3251,7 +3235,6 @@ async function prepareExportAudio(audioCtx, destination) {
     console.warn("Could not decode video audio track for mix:", err);
   }
 
-  // 2. Background Music (BGM) Track
   if (bgmAudio && isBgmMasterEnabled && bgmAudio.src) {
     try {
       const buffer = await decodeExportAudio(audioCtx, bgmAudio.src);
@@ -3268,7 +3251,6 @@ async function prepareExportAudio(audioCtx, destination) {
     }
   }
 
-  // 3. Myanmar Voiceover Clips scheduled exactly at each subtitle's start timestamp
   const voiceVolSetting = Number(document.getElementById("voiceVolume")?.value || 100) / 100;
   const targetVoiceGain = Math.max(0.2, 1.8 * voiceVolSetting);
 
@@ -3306,8 +3288,8 @@ async function loadFFmpegWasm() {
 
     setLockProgress(77, "📦 FFmpeg.wasm ကို စတင်ပြင်ဆင်နေပါသည်...", "ပထမဆုံးအသုံးပြုချိန်တွင် FFmpeg Core/WASM ကို Download လုပ်နေပါသည်...");
     const instance = window.FFmpeg.createFFmpeg({
-      log: false,
-      corePath: "https://unpkg.com/@ffmpeg/core-st@0.11.1/dist/ffmpeg-core.js"
+      log: true,
+      corePath: "https://cdn.jsdelivr.net/npm/@ffmpeg/core-st@0.11.1/dist/ffmpeg-core.js"
     });
 
     instance.setProgress(({ ratio }) => {
@@ -3340,7 +3322,6 @@ async function convertRecordedBlobToMp4(recordedBlob) {
   const inputName = "movie-recap-input.webm";
   const outputName = "movie-recap-output.mp4";
 
-  // Clear stale files from a previous run to avoid memory accumulation.
   for (const name of [inputName, outputName]) {
     try { ffmpeg.FS("unlink", name); } catch (e) {}
   }
@@ -3375,13 +3356,11 @@ async function convertRecordedBlobToMp4(recordedBlob) {
     type: "video/mp4"
   });
 
-  // Remove temporary data from FFmpeg's in-memory filesystem.
   for (const name of [inputName, outputName]) {
     try { ffmpeg.FS("unlink", name); } catch (e) {}
   }
 
   if (mp4Blob.size < 100) throw new Error("FFmpeg က MP4 output မထုတ်ပေးနိုင်ပါ");
-  // Basic MP4 container signature check ('ftyp' appears at byte offset 4).
   const signature = new Uint8Array(await mp4Blob.slice(4, 8).arrayBuffer());
   if (String.fromCharCode(...signature) !== "ftyp") {
     throw new Error("Output ဖိုင်သည် MP4 container အစစ် မဟုတ်ပါ။ Export ကို ရပ်တန့်လိုက်ပါသည်။");
@@ -3436,7 +3415,6 @@ async function exportFullRecapVideo() {
 
     const sourceWidth = Number(video.videoWidth) || 1280;
     const sourceHeight = Number(video.videoHeight) || 720;
-    // Limit output dimensions to reduce memory use on phones; keep aspect ratio and even dimensions.
     const outputScale = Math.min(1, 1280 / Math.max(sourceWidth, sourceHeight));
     burnCanvas.width = Math.max(2, Math.round(sourceWidth * outputScale / 2) * 2);
     burnCanvas.height = Math.max(2, Math.round(sourceHeight * outputScale / 2) * 2);
@@ -3468,7 +3446,7 @@ async function exportFullRecapVideo() {
       "video/webm"
     ];
     const chosenMime = mimeCandidates.find(type => MediaRecorder.isTypeSupported(type));
-    if (!chosenMime) throw new Error("ဒီ Browser က FFmpeg.wasm အတွက်လိုအပ်သော WebM intermediate recording ကို မပံ့ပိုးပါ။ နောက်ဆုံး Browser Version ကို စမ်းကြည့်ပါ။");
+    if (!chosenMime) throw new Error("ဒီ Browser က FFmpeg.wasm အတွက်လိုအပ်သော WebM intermediate recording ကို မပံ့ပိုးပါ။");
 
     recorder = new MediaRecorder(combinedStream, {
       mimeType: chosenMime,
