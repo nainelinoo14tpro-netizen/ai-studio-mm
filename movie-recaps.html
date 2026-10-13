@@ -18,18 +18,22 @@
 
 <style>
 :root {
-  /* Silver & Charcoal Grey Metallic Theme */
+  /* Silver & Deep Silver Metallic Theme */
   --bg: #cbd5e1;
-  --bg-silver: #f1f5f9;
-  --panel: #e2e8f0;
+  --bg-silver: #e2e8f0;
+  --panel: #cbd5e1;
   --panel2: #94a3b8;
   --panel3: #64748b;
   --border: #94a3b8;
   --border-light: #b0bec5;
   --text: #0f172a;
-  --text-muted: #475569;
-  --btn-charcoal: #334155;
-  --btn-charcoal-hover: #1e293b;
+  --text-muted: #334155;
+  
+  /* Deep Silver / Metallic Charcoal Buttons */
+  --btn-silver: linear-gradient(180deg, #64748b, #475569);
+  --btn-silver-hover: linear-gradient(180deg, #475569, #334155);
+  --btn-silver-border: #334155;
+  
   --red-loading: #ef4444;
   --cyan: #0284c7;
   --green: #16a34a;
@@ -55,38 +59,49 @@ html, body {
 body { min-height: 100vh; }
 button, input, textarea, select { font: inherit; }
 
-/* Charcoal Grey Buttons */
+/* Deep Silver Metallic Buttons */
 button {
-  cursor: pointer; color: #ffffff; background: var(--btn-charcoal);
-  border: 1px solid #475569; border-radius: 8px;
-  padding: 8px 12px; font-weight: 600; font-size: 12px;
+  cursor: pointer; color: #ffffff; background: var(--btn-silver);
+  border: 1px solid var(--btn-silver-border); border-radius: 8px;
+  padding: 8px 12px; font-weight: 700; font-size: 12px;
   display: inline-flex; align-items: center; justify-content: center; gap: 6px;
   transition: all 0.15s ease;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.25);
+  text-shadow: 0 1px 2px rgba(0,0,0,0.4);
 }
-button:hover { border-color: #1e293b; background: var(--btn-charcoal-hover); }
+button:hover { background: var(--btn-silver-hover); border-color: #1e293b; }
 button:active { transform: scale(0.97); }
 
 .primary {
-  background: #1e293b !important;
+  background: linear-gradient(180deg, #334155, #1e293b) !important;
   border: 1px solid #0f172a !important; color: #fff !important;
-  box-shadow: 0 3px 10px rgba(0,0,0,0.25);
+  box-shadow: 0 3px 8px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.2);
 }
 .primary:hover { background: #0f172a !important; }
 .primary:disabled, button:disabled, select:disabled, input:disabled { opacity: 0.45; cursor: not-allowed; filter: saturate(0.6); }
 
-.secondaryBtn { background: #475569; border-color: #64748b; color: #f8fafc; }
-.secondaryBtn:hover { background: #334155; }
-.secondaryBtn.active { border-color: #0f172a; background: #0f172a; color: #fff; box-shadow: 0 0 8px rgba(0,0,0,0.3); }
-.voiceBtn.active { border-color: #0f172a; background: #0f172a; color: #fff; }
+.secondaryBtn { 
+  background: linear-gradient(180deg, #64748b, #475569); 
+  border-color: #334155; color: #ffffff; 
+}
+.secondaryBtn:hover { background: linear-gradient(180deg, #475569, #334155); }
+.secondaryBtn.active { 
+  background: linear-gradient(180deg, #1e293b, #0f172a); 
+  border-color: #0f172a; color: #38bdf8; 
+  box-shadow: 0 0 8px rgba(0,0,0,0.4); 
+}
+.voiceBtn.active { 
+  background: linear-gradient(180deg, #1e293b, #0f172a); 
+  border-color: #0f172a; color: #38bdf8; 
+}
 
 .danger { background: #dc2626 !important; border-color: #b91c1c !important; color: #fff !important; }
 .danger:hover { background: #b91c1c !important; }
 .burnBtn {
-  background: #dc2626 !important; border: 0; color: #fff !important;
-  box-shadow: 0 4px 14px rgba(220, 38, 38, 0.35); font-weight: 700;
+  background: linear-gradient(180deg, #dc2626, #b91c1c) !important; border: 0; color: #fff !important;
+  box-shadow: 0 4px 14px rgba(220, 38, 38, 0.4); font-weight: 800;
 }
-.burnBtn:hover { background: #b91c1c !important; }
+.burnBtn:hover { background: #991b1b !important; }
 
 /* Red Loading Spinner */
 .btnSpinner {
@@ -196,7 +211,7 @@ button:active { transform: scale(0.97); }
 .cardHead {
   padding: 10px 14px; border-bottom: 1px solid var(--border);
   display: flex; align-items: center; justify-content: space-between; gap: 8px;
-  background: #e2e8f0;
+  background: #cbd5e1;
 }
 .title { font-weight: 800; font-size: 13px; display: flex; align-items: center; gap: 6px; color: #0f172a; }
 .status { font-size: 10px; color: var(--text-muted); display: flex; align-items: center; gap: 5px; margin-top: 2px; }
@@ -208,9 +223,9 @@ button:active { transform: scale(0.97); }
 .accordionHead {
   padding: 11px 14px; border-bottom: 1px solid var(--border);
   display: flex; align-items: center; justify-content: space-between;
-  cursor: pointer; background: #e2e8f0; transition: background 0.15s ease;
+  cursor: pointer; background: #cbd5e1; transition: background 0.15s ease;
 }
-.accordionHead:hover { background: #cbd5e1; }
+.accordionHead:hover { background: #94a3b8; }
 .accordionTitle { font-weight: 800; font-size: 12.5px; display: flex; align-items: center; gap: 6px; color: #0f172a; }
 .accordionChevron { font-size: 11px; color: var(--text-muted); transition: transform 0.2s ease; }
 .accordionChevron.rotate { transform: rotate(180deg); }
@@ -268,7 +283,7 @@ video.anti-copyright-active {
 .videoTitleOverlayItem {
   position: absolute; z-index: 45; background: rgba(0,0,0,0.65); padding: 4px 12px; border-radius: 6px;
   color: #fff; font-size: 15px; font-weight: 800; text-shadow: 0 2px 4px #000;
-  cursor: move; touch-action: none; border: 1.5px dashed transparent; white-space: nowrap;
+  cursor: pointer; touch-action: none; border: 1.5px dashed transparent; white-space: nowrap;
 }
 .videoTitleOverlayItem.active { border-color: #38bdf8; }
 .titleCloseBadge {
@@ -289,7 +304,7 @@ video.anti-copyright-active {
 .videoBlurBoxItem {
   position: absolute; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
   background: rgba(255, 255, 255, 0.05); border: 1.5px dashed rgba(255,255,255,0.7);
-  border-radius: 6px; z-index: 40; cursor: move; touch-action: none;
+  border-radius: 6px; z-index: 40; cursor: pointer; touch-action: none;
   min-width: 30px; min-height: 18px;
 }
 .videoBlurBoxItem.active { border-color: #38bdf8; }
@@ -320,12 +335,12 @@ video.anti-copyright-active {
   max-width: 100%;
 }
 
-/* POPUP DIRECT EDITOR PANELS (UNDER ACTIVE ELEMENT IN VIDEO BOX) */
+/* POPUP DIRECT EDITOR PANELS (INSIDE VIDEO BOX) */
 .videoFloatingOverlayPanel {
   position: absolute; z-index: 90;
   background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(8px);
-  border: 1px solid #475569; border-radius: 8px; padding: 6px 10px;
-  box-shadow: 0 6px 20px rgba(0,0,0,0.8); display: none; color: #fff;
+  border: 1.5px solid #475569; border-radius: 8px; padding: 6px 10px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.85); display: none; color: #fff;
   min-width: 250px; max-width: 95%;
   animation: popIn 0.15s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -340,10 +355,10 @@ video.anti-copyright-active {
   padding: 8px; display: flex; align-items: center; gap: 6px; width: 100%;
 }
 .vCtrlBtn {
-  background: #334155; border: 1px solid #475569; color: #fff;
+  background: var(--btn-silver); border: 1px solid var(--btn-silver-border); color: #fff;
   border-radius: 6px; padding: 5px 8px; font-size: 11px; font-weight: 700; flex-shrink: 0;
 }
-.vCtrlBtn:hover { background: #475569; }
+.vCtrlBtn:hover { background: var(--btn-silver-hover); }
 .vTimeText {
   font-size: 10px; font-family: ui-monospace, monospace; color: #cbd5e1; min-width: 32px; text-align: center; flex-shrink: 0;
 }
@@ -382,14 +397,14 @@ video.anti-copyright-active {
 .lockPercentText { font-size: 14px; font-weight: 800; color: var(--red-loading); font-family: ui-monospace, monospace; }
 
 .liveSubBanner {
-  background: #e2e8f0; border: 1px solid var(--border);
+  background: #cbd5e1; border: 1px solid var(--border);
   border-left: 4px solid #334155; border-radius: 10px;
   padding: 8px 12px; margin-bottom: 10px; display: flex;
   flex-direction: column; gap: 2px;
 }
 .liveSubHeader {
   display: flex; justify-content: space-between; align-items: center;
-  font-size: 9px; font-weight: 800; color: #334155;
+  font-size: 9px; font-weight: 800; color: #0f172a;
 }
 .liveSubTextMM {
   font-size: 13.5px; font-weight: 700; color: #0f172a; word-break: break-word; line-height: 1.35; margin: 0;
@@ -463,14 +478,18 @@ video.anti-copyright-active {
 .bottomNav {
   position: fixed; left: 10px; right: 10px; bottom: calc(8px + var(--safe-bottom));
   z-index: 90; display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px;
-  padding: 5px; background: #e2e8f0; border: 1.5px solid var(--border);
+  padding: 5px; background: #cbd5e1; border: 1.5px solid var(--border);
   border-radius: 14px; box-shadow: var(--shadow);
 }
 .bottomNav button {
   border: 0; background: transparent; font-size: 10px; padding: 6px 2px;
-  flex-direction: column; gap: 3px; border-radius: 8px; color: #475569;
+  flex-direction: column; gap: 3px; border-radius: 8px; color: #334155;
+  box-shadow: none; text-shadow: none;
 }
-.bottomNav button.active { background: #334155; color: #ffffff; font-weight: 700; }
+.bottomNav button.active { 
+  background: var(--btn-silver); color: #ffffff; font-weight: 700; 
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
 
 @media(max-width: 900px) {
   body { min-height: 100dvh; height: auto; overflow-x: hidden; overflow-y: auto; display: block; }
@@ -619,10 +638,10 @@ video.anti-copyright-active {
         <!-- FLOATING DIRECT BLUR CONTROLS (POPUP INSIDE VIDEO) -->
         <div id="videoFloatingBlurBar" class="videoFloatingOverlayPanel">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
-            <span style="font-weight:700;color:#38bdf8;font-size:10px" id="vBlurTitle">🌫️ BLUR ADJUSTMENT</span>
+            <span style="font-weight:700;color:#38bdf8;font-size:10.5px" id="vBlurTitle">🌫️ BLUR ADJUSTMENT</span>
             <div style="display:flex;gap:4px">
-              <button onclick="removeCurrentBlurFromPopup()" style="padding:2px 6px;font-size:9px;background:var(--red-loading);border:0">🗑️ Remove</button>
-              <button onclick="closeDirectPanels()" style="padding:2px 6px;font-size:9px;background:#334155">✕ Done</button>
+              <button onclick="removeCurrentBlurFromPopup()" style="padding:2px 6px;font-size:9.5px;background:var(--red-loading);border:0">🗑️ Remove</button>
+              <button onclick="closeDirectPanels()" style="padding:2px 6px;font-size:9.5px;background:#334155">✕ Done</button>
             </div>
           </div>
           <div style="display:flex;align-items:center;gap:8px">
@@ -635,10 +654,10 @@ video.anti-copyright-active {
         <!-- FLOATING DIRECT TITLE CONTROLS (POPUP INSIDE VIDEO) -->
         <div id="videoFloatingTitleBar" class="videoFloatingOverlayPanel">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
-            <span style="font-weight:700;color:#38bdf8;font-size:10px">🔤 EDIT TITLE TEXT & STYLE</span>
+            <span style="font-weight:700;color:#38bdf8;font-size:10.5px">🔤 EDIT TITLE TEXT & STYLE</span>
             <div style="display:flex;gap:4px">
-              <button onclick="removeCurrentTitleFromPopup()" style="padding:2px 6px;font-size:9px;background:var(--red-loading);border:0">🗑️ Remove</button>
-              <button onclick="closeDirectPanels()" style="padding:2px 6px;font-size:9px;background:#334155">✕ Done</button>
+              <button onclick="removeCurrentTitleFromPopup()" style="padding:2px 6px;font-size:9.5px;background:var(--red-loading);border:0">🗑️ Remove</button>
+              <button onclick="closeDirectPanels()" style="padding:2px 6px;font-size:9.5px;background:#334155">✕ Done</button>
             </div>
           </div>
           <input type="text" id="vDirectTitleText" placeholder="Title text..." style="width:100%;padding:4px 6px;margin-bottom:4px;background:#1e293b;border:1px solid #475569;color:#fff;border-radius:4px;font-size:11px" oninput="onDirectTitleTextInput(this.value)">
@@ -679,8 +698,8 @@ video.anti-copyright-active {
       <!-- VIDEO TOOLBAR HEADER (DIRECT ACTIONS) -->
       <div class="videoDirectToolsHeader">
         <div style="display:flex;gap:5px">
-          <button onclick="addNewBlurBox()" style="font-size:10px;padding:4px 8px;background:#475569">➕ Add Blur</button>
-          <button onclick="addNewMovieTitle()" style="font-size:10px;padding:4px 8px;background:#475569">🔤 Add Title</button>
+          <button onclick="addNewBlurBox()" style="font-size:10px;padding:4px 8px">➕ Add Blur</button>
+          <button onclick="addNewMovieTitle()" style="font-size:10px;padding:4px 8px">🔤 Add Title</button>
         </div>
         <div style="font-size:10px;color:#cbd5e1;font-weight:700" id="currentToolInfo">Tap element to edit</div>
       </div>
@@ -908,7 +927,7 @@ video.anti-copyright-active {
           <span class="accordionChevron" id="accBgmChev">▲</span>
         </div>
         <div class="accordionBody" id="accBgmBody">
-          <div style="display:flex;justify-content:space-between;align-items:center;background:#e2e8f0;border:1px solid var(--border);padding:8px 12px;border-radius:10px;margin-bottom:12px">
+          <div style="display:flex;justify-content:space-between;align-items:center;background:#cbd5e1;border:1px solid var(--border);padding:8px 12px;border-radius:10px;margin-bottom:12px">
             <div>
               <span style="font-size:11px;font-weight:800;color:#0f172a">🔊 BGM MUSIC STATUS:</span>
               <span id="bgmSwitchStatusText" style="font-size:11px;font-weight:800;color:var(--green);margin-left:5px">ENABLED (ON)</span>
@@ -1007,7 +1026,7 @@ video.anti-copyright-active {
       <section class="tabPane card" id="tabExport">
         <div class="cardHead"><div class="title">📦 Export Center (Video Exporter)</div></div>
         <div class="body" style="padding:12px">
-          <div style="background:#e2e8f0;border:1px solid var(--border);border-radius:12px;padding:10px 12px;margin-bottom:12px">
+          <div style="background:#cbd5e1;border:1px solid var(--border);border-radius:12px;padding:10px 12px;margin-bottom:12px">
             <label style="font-size:10.5px;color:var(--text-muted);font-weight:700;display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
               <span>🎞️ EXPORT VIDEO FORMAT</span>
               <span id="formatSupportTag" style="font-size:9.5px;color:var(--green);font-family:ui-monospace, monospace">Direct MP4 Engine Ready</span>
@@ -1420,6 +1439,17 @@ function removeBgm() {
   toast("BGM removed");
 }
 
+/* HELPER: SECURE & NON-SECURE COMPATIBLE UUID GENERATOR (HTTP Safe) */
+function generateSafeUUID() {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    try { return crypto.randomUUID(); } catch (e) {}
+  }
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+}
+
 /* Edge Speech & ZeroGPU Synthesizers */
 async function getSecMsGecClient() {
   const unixSeconds = Math.floor(Date.now() / 1000);
@@ -1427,15 +1457,21 @@ async function getSecMsGecClient() {
   let ticks = fileTimeSeconds * 10000000n;
   ticks -= (ticks % 3000000000n);
   const strToHash = ticks.toString() + "6A5AA1D4EAFF4E9FB37E23D68491D6F4";
-  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(strToHash));
-  return Array.from(new Uint8Array(digest))
-    .map(b => b.toString(16).padStart(2, "0"))
-    .join("")
-    .toUpperCase();
+  
+  if (typeof crypto !== 'undefined' && crypto.subtle) {
+    try {
+      const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(strToHash));
+      return Array.from(new Uint8Array(digest))
+        .map(b => b.toString(16).padStart(2, "0"))
+        .join("")
+        .toUpperCase();
+    } catch(e) {}
+  }
+  return "6A5AA1D4EAFF4E9FB37E23D68491D6F4";
 }
 
 async function generateEdgeSpeechInBrowser(text, voice, rate) {
-  const connectionId = crypto.randomUUID().replace(/-/g, "");
+  const connectionId = generateSafeUUID().replace(/-/g, "");
   const secMsGec = await getSecMsGecClient();
   const wsUrl = `wss://speech.platform.bing.com/consumer/speech/synthesize/readaloud/edge/v1?TrustedClientToken=6A5AA1D4EAFF4E9FB37E23D68491D6F4&Sec-MS-GEC=${secMsGec}&Sec-MS-GEC-Version=1-131.0.2903.86&ConnectionId=${connectionId}`;
 
@@ -1461,7 +1497,7 @@ async function generateEdgeSpeechInBrowser(text, voice, rate) {
 
     ws.onopen = () => {
       const dateStr = new Date().toString();
-      const reqId = crypto.randomUUID().replace(/-/g, "");
+      const reqId = generateSafeUUID().replace(/-/g, "");
       const cleanText = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
       const ssml = `<speak version='1.0' xmlns='http://www.w3.org/2001/synthesis' xmlns:mstts='http://www.w3.org/2001/mstts' xml:lang='my-MM'><voice name='${voice}'><prosody pitch='+0Hz' rate='${rate}' volume='+50%'>${cleanText}</prosody></voice></speak>`;
 
@@ -1925,12 +1961,12 @@ function selectActiveBlurBox(id) {
   document.getElementById("videoFloatingTitleBar").style.display = "none";
   const blurBar = document.getElementById("videoFloatingBlurBar");
   
-  // Position panel right below blur box
+  // Position popup right below blur box inside video
   const el = document.getElementById(b.id);
   if (el) {
     const elHeight = el.offsetHeight || 40;
-    blurBar.style.left = Math.max(5, Math.min(65, b.x)) + "%";
-    blurBar.style.top = `calc(${b.y}% + ${elHeight + 8}px)`;
+    blurBar.style.left = Math.max(4, Math.min(60, b.x)) + "%";
+    blurBar.style.top = `calc(${Math.min(75, b.y)}% + ${elHeight + 8}px)`;
   }
   
   blurBar.style.display = "block";
@@ -2036,8 +2072,8 @@ function initBlurBoxDrag(el, bData) {
     const blurBar = document.getElementById("videoFloatingBlurBar");
     if (blurBar && blurBar.style.display !== "none") {
       const elHeight = el.offsetHeight || 40;
-      blurBar.style.left = Math.max(5, Math.min(65, bData.x)) + "%";
-      blurBar.style.top = `calc(${bData.y}% + ${elHeight + 8}px)`;
+      blurBar.style.left = Math.max(4, Math.min(60, bData.x)) + "%";
+      blurBar.style.top = `calc(${Math.min(75, bData.y)}% + ${elHeight + 8}px)`;
     }
     e.preventDefault();
   }
@@ -2095,12 +2131,12 @@ function selectActiveTitle(id) {
   document.getElementById("videoFloatingBlurBar").style.display = "none";
   const titleBar = document.getElementById("videoFloatingTitleBar");
   
-  // Position panel right below title text
+  // Position popup right below title text inside video
   const el = document.getElementById(t.id);
   if (el) {
     const elHeight = el.offsetHeight || 26;
-    titleBar.style.left = Math.max(5, Math.min(50, t.x - 20)) + "%";
-    titleBar.style.top = `calc(${t.y}% + ${elHeight + 8}px)`;
+    titleBar.style.left = Math.max(4, Math.min(50, t.x - 20)) + "%";
+    titleBar.style.top = `calc(${Math.min(75, t.y)}% + ${elHeight + 8}px)`;
   }
 
   titleBar.style.display = "block";
@@ -2225,8 +2261,8 @@ function initTitleDrag(el, tData) {
     const titleBar = document.getElementById("videoFloatingTitleBar");
     if (titleBar && titleBar.style.display !== "none") {
       const elHeight = el.offsetHeight || 26;
-      titleBar.style.left = Math.max(5, Math.min(50, tData.x - 20)) + "%";
-      titleBar.style.top = `calc(${tData.y}% + ${elHeight + 8}px)`;
+      titleBar.style.left = Math.max(4, Math.min(50, tData.x - 20)) + "%";
+      titleBar.style.top = `calc(${Math.min(75, tData.y)}% + ${elHeight + 8}px)`;
     }
     e.preventDefault();
   }
