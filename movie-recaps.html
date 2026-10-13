@@ -142,9 +142,7 @@ button:active { transform: scale(0.97); }
 .appTileCard:hover, .appTileCard:active {
   background: #f1f5f9; border-color: #334155; transform: translateY(-2px);
 }
-.appTileCard.activeTool {
-  border-color: #334155; background: #e2e8f0;
-}
+.appTileCard.activeTool { border-color: #334155; background: #e2e8f0; }
 .appTileIcon {
   width: 40px; height: 40px; border-radius: 11px;
   display: grid; place-items: center; font-size: 20px; margin-bottom: 8px;
@@ -207,7 +205,6 @@ button:active { transform: scale(0.97); }
 .dot.busy { background: var(--gold); }
 .dot.error { background: var(--red-loading); }
 
-/* Accordion Foldable Style */
 .accordionHead {
   padding: 11px 14px; border-bottom: 1px solid var(--border);
   display: flex; align-items: center; justify-content: space-between;
@@ -248,12 +245,8 @@ video.anti-copyright-active {
   filter: contrast(1.05) saturate(1.08) brightness(1.02);
 }
 
-.videoProgressBorderWrap {
-  position: absolute; inset: 0; pointer-events: none; z-index: 28; display: none;
-}
-.vProgEdge {
-  position: absolute; background: #38bdf8; transition: width 0.1s linear, height 0.1s linear;
-}
+.videoProgressBorderWrap { position: absolute; inset: 0; pointer-events: none; z-index: 28; display: none; }
+.vProgEdge { position: absolute; background: #38bdf8; transition: width 0.1s linear, height 0.1s linear; }
 .vProgTop { top: 0; left: 0; height: 3px; width: 0%; }
 .vProgRight { top: 0; right: 0; width: 3px; height: 0%; }
 .vProgBottom { bottom: 0; right: 0; height: 3px; width: 0%; }
@@ -271,16 +264,18 @@ video.anti-copyright-active {
   max-width: 180px; max-height: 120px; display: none; cursor: move; touch-action: none;
 }
 
+/* Video Title Overlays */
 .videoTitleOverlayItem {
-  position: absolute; z-index: 32; background: rgba(0,0,0,0.65); padding: 4px 12px; border-radius: 6px;
-  color: #fff; font-size: 14px; font-weight: 800; text-shadow: 0 2px 4px #000;
+  position: absolute; z-index: 45; background: rgba(0,0,0,0.65); padding: 4px 12px; border-radius: 6px;
+  color: #fff; font-size: 15px; font-weight: 800; text-shadow: 0 2px 4px #000;
   cursor: move; touch-action: none; border: 1.5px dashed transparent; white-space: nowrap;
 }
 .videoTitleOverlayItem.active { border-color: #38bdf8; }
 .titleCloseBadge {
-  position: absolute; top: -8px; right: -8px; width: 18px; height: 18px;
-  background: var(--red-loading); color: #fff; border-radius: 50%; font-size: 9px;
-  display: grid; place-items: center; cursor: pointer; font-weight: 800;
+  position: absolute; top: -10px; right: -10px; width: 22px; height: 22px;
+  background: var(--red-loading); color: #fff; border-radius: 50%; font-size: 11px;
+  display: grid; place-items: center; cursor: pointer; font-weight: 900; z-index: 60;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.5); border: 1.5px solid #fff;
 }
 
 .resizeHandle { position: absolute; width: 16px; height: 16px; border-radius: 50%; background: #38bdf8; border: 2px solid #000; z-index: 80; touch-action: none; }
@@ -290,17 +285,19 @@ video.anti-copyright-active {
 .resizeHandle.se { right: -9px; bottom: -9px; cursor: nwse-resize; }
 .videoLogoResizeHandle { position: absolute; width: 18px; height: 18px; right: -9px; bottom: -9px; border-radius: 50%; background: #38bdf8; border: 2px solid #000; z-index: 81; touch-action: none; }
 
+/* Video Blur Boxes with Visible Delete Badge */
 .videoBlurBoxItem {
   position: absolute; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
-  background: rgba(255, 255, 255, 0.05); border: 1.5px dashed rgba(255,255,255,0.6);
-  border-radius: 6px; z-index: 24; cursor: move; touch-action: none;
+  background: rgba(255, 255, 255, 0.05); border: 1.5px dashed rgba(255,255,255,0.7);
+  border-radius: 6px; z-index: 40; cursor: move; touch-action: none;
   min-width: 30px; min-height: 18px;
 }
 .videoBlurBoxItem.active { border-color: #38bdf8; }
 .blurCloseBadge {
-  position: absolute; top: -8px; right: -8px; width: 18px; height: 18px;
-  background: var(--red-loading); color: #fff; border-radius: 50%; font-size: 9px;
-  display: grid; place-items: center; cursor: pointer; font-weight: 800;
+  position: absolute; top: -10px; right: -10px; width: 22px; height: 22px;
+  background: var(--red-loading); color: #fff; border-radius: 50%; font-size: 11px;
+  display: grid; place-items: center; cursor: pointer; font-weight: 900; z-index: 60;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.5); border: 1.5px solid #fff;
 }
 
 .overlay {
@@ -323,6 +320,19 @@ video.anti-copyright-active {
   max-width: 100%;
 }
 
+/* FLOATING ON-VIDEO DIRECT EDITOR PANELS (INSIDE VIDEO BOX) */
+.videoFloatingOverlayPanel {
+  position: absolute; left: 8px; right: 8px; bottom: 8px; z-index: 70;
+  background: rgba(15, 23, 42, 0.94); backdrop-filter: blur(8px);
+  border: 1px solid #475569; border-radius: 10px; padding: 8px 12px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.7); display: none; color: #fff;
+  animation: slideUpFloating 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes slideUpFloating {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 /* Video Control Bar */
 .videoControlBarExternal {
   background: #1e293b; border-top: 1px solid #334155;
@@ -340,19 +350,15 @@ video.anti-copyright-active {
   flex: 1; min-width: 0; accent-color: var(--red-loading); height: 5px; border-radius: 3px; cursor: pointer; margin: 0 2px;
 }
 
-/* ON-VIDEO DIRECT TOOLBAR & PANELS */
 .videoDirectToolsHeader {
   background: #334155; padding: 6px 10px; display: flex; gap: 8px; align-items: center; justify-content: space-between;
   border-top: 1px solid #475569;
-}
-.onVideoPanel {
-  background: #0f172a; padding: 8px 10px; border-top: 1px solid #334155; display: none; color: #fff; font-size: 11px;
 }
 
 /* Red Loading Video Overlay */
 .videoLockOverlay {
   position: absolute; inset: 0; z-index: 95;
-  background: rgba(15, 23, 42, 0.92); backdrop-filter: blur(6px);
+  background: rgba(15, 23, 42, 0.94); backdrop-filter: blur(6px);
   display: none; flex-direction: column; align-items: center; justify-content: center;
   padding: 24px; text-align: center; cursor: not-allowed; pointer-events: all;
 }
@@ -609,6 +615,44 @@ video.anti-copyright-active {
           </div>
         </div>
 
+        <!-- FLOATING ON-VIDEO DIRECT BLUR CONTROLS -->
+        <div id="videoFloatingBlurBar" class="videoFloatingOverlayPanel">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+            <span style="font-weight:700;color:#38bdf8" id="vBlurTitle">🌫️ BLUR ADJUSTMENT</span>
+            <button onclick="closeDirectPanels()" style="padding:2px 8px;font-size:10px;background:#334155">✕ Done</button>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <span style="font-size:11px">Blur အား:</span>
+            <input type="range" id="vDirectBlurSeek" min="0" max="40" value="14" style="flex:1;accent-color:var(--red-loading)" oninput="onDirectBlurSeek(this.value)">
+            <span id="vDirectBlurVal" style="min-width:32px;color:#38bdf8;font-family:ui-monospace, monospace;font-weight:700">14px</span>
+          </div>
+        </div>
+
+        <!-- FLOATING ON-VIDEO DIRECT TITLE CONTROLS (WITH FONT SIZE) -->
+        <div id="videoFloatingTitleBar" class="videoFloatingOverlayPanel">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+            <span style="font-weight:700;color:#38bdf8">🔤 EDIT TITLE TEXT & STYLE</span>
+            <button onclick="closeDirectPanels()" style="padding:2px 8px;font-size:10px;background:#334155">✕ Done</button>
+          </div>
+          <input type="text" id="vDirectTitleText" placeholder="Title text..." style="width:100%;padding:5px 8px;margin-bottom:6px;background:#1e293b;border:1px solid #475569;color:#fff;border-radius:6px;font-size:12px" oninput="onDirectTitleTextInput(this.value)">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px">
+            <div style="display:flex;align-items:center;gap:6px">
+              <span style="font-size:11px">အရွယ်:</span>
+              <input type="range" id="vDirectTitleSize" min="10" max="40" value="16" style="flex:1;accent-color:var(--red-loading)" oninput="onDirectTitleSizeChange(this.value)">
+              <span id="vDirectTitleSizeVal" style="font-size:10px;color:#38bdf8;font-family:ui-monospace, monospace">16px</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px">
+              <span style="font-size:11px">အကြည်:</span>
+              <input type="range" id="vDirectTitleOp" min="0" max="100" value="65" style="flex:1;accent-color:var(--red-loading)" oninput="onDirectTitleOpChange(this.value)">
+              <span id="vDirectTitleOpVal" style="font-size:10px;color:#38bdf8;font-family:ui-monospace, monospace">65%</span>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px">
+            <label style="display:flex;align-items:center;gap:5px;font-size:11px">စာသားအရောင်: <input type="color" id="vDirectTitleColor" value="#ffffff" oninput="onDirectTitleColorChange(this.value)" style="width:28px;height:24px;border:0;background:transparent;cursor:pointer"></label>
+            <label style="display:flex;align-items:center;gap:5px;font-size:11px">နောက်ခံအရောင်: <input type="color" id="vDirectTitleBg" value="#000000" oninput="onDirectTitleBgChange(this.value)" style="width:28px;height:24px;border:0;background:transparent;cursor:pointer"></label>
+          </div>
+        </div>
+
         <div class="videoLockOverlay" id="videoLockOverlay">
           <div class="lockSpinnerRing"></div>
           <div class="lockTitle" id="lockTitle">⏳ AI Script ဖန်တီးနေပါသည်...</div>
@@ -632,36 +676,6 @@ video.anti-copyright-active {
           <button onclick="addNewMovieTitle()" style="font-size:10px;padding:4px 8px;background:#475569">🔤 Add Title</button>
         </div>
         <div style="font-size:10px;color:#cbd5e1;font-weight:700" id="currentToolInfo">Tap element to edit</div>
-      </div>
-
-      <!-- ON-VIDEO DIRECT BLUR CONTROLS (SEEK BAR STYLE) -->
-      <div id="videoDirectBlurBar" class="onVideoPanel">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-          <span style="font-weight:700;color:#38bdf8" id="vBlurTitle">🌫️ BLUR ADJUSTMENT</span>
-          <button onclick="closeDirectPanels()" style="padding:2px 6px;font-size:9px;background:#334155">✕ Close</button>
-        </div>
-        <div style="display:flex;align-items:center;gap:8px">
-          <span>Blur အား:</span>
-          <input type="range" id="vDirectBlurSeek" min="0" max="40" value="14" style="flex:1;accent-color:var(--red-loading)" oninput="onDirectBlurSeek(this.value)">
-          <span id="vDirectBlurVal" style="min-width:30px;color:#38bdf8;font-family:ui-monospace, monospace">14px</span>
-        </div>
-      </div>
-
-      <!-- ON-VIDEO DIRECT TITLE CONTROLS -->
-      <div id="videoDirectTitleBar" class="onVideoPanel">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-          <span style="font-weight:700;color:#38bdf8">🔤 EDIT TITLE TEXT & COLOR</span>
-          <button onclick="closeDirectPanels()" style="padding:2px 6px;font-size:9px;background:#334155">✕ Close</button>
-        </div>
-        <input type="text" id="vDirectTitleText" placeholder="Title text..." style="width:100%;padding:5px 8px;margin-bottom:6px;background:#1e293b;border:1px solid #475569;color:#fff;border-radius:6px;font-size:11px" oninput="onDirectTitleTextInput(this.value)">
-        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-          <label style="display:flex;align-items:center;gap:4px">စာသား: <input type="color" id="vDirectTitleColor" value="#ffffff" oninput="onDirectTitleColorChange(this.value)" style="width:28px;height:24px;border:0;background:transparent"></label>
-          <label style="display:flex;align-items:center;gap:4px">နောက်ခံ: <input type="color" id="vDirectTitleBg" value="#000000" oninput="onDirectTitleBgChange(this.value)" style="width:28px;height:24px;border:0;background:transparent"></label>
-          <div style="display:flex;align-items:center;gap:4px;flex:1;min-width:120px">
-            <span>အကြည်:</span>
-            <input type="range" id="vDirectTitleOp" min="0" max="100" value="65" style="flex:1;accent-color:var(--red-loading)" oninput="onDirectTitleOpChange(this.value)">
-          </div>
-        </div>
       </div>
 
       <!-- STANDARD VIDEO SEEK BAR -->
@@ -887,7 +901,6 @@ video.anti-copyright-active {
           <span class="accordionChevron" id="accBgmChev">▲</span>
         </div>
         <div class="accordionBody" id="accBgmBody">
-          
           <div style="display:flex;justify-content:space-between;align-items:center;background:#e2e8f0;border:1px solid var(--border);padding:8px 12px;border-radius:10px;margin-bottom:12px">
             <div>
               <span style="font-size:11px;font-weight:800;color:#0f172a">🔊 BGM MUSIC STATUS:</span>
@@ -1655,7 +1668,7 @@ function onSeekChange(e) {
 
 videoBox.addEventListener("click", (e) => {
   if (generating) return;
-  if (e.target.closest("button") || e.target.closest("input") || e.target.closest("#overlay") || e.target.closest(".videoBlurBoxItem") || e.target.closest(".videoTitleOverlayItem") || e.target.closest("#videoLogoOverlay")) return;
+  if (e.target.closest("button") || e.target.closest("input") || e.target.closest("#overlay") || e.target.closest(".videoBlurBoxItem") || e.target.closest(".videoTitleOverlayItem") || e.target.closest("#videoLogoOverlay") || e.target.closest(".videoFloatingOverlayPanel")) return;
   togglePlayPause();
 });
 
@@ -1862,12 +1875,12 @@ function renderBorderProgressTick(t, dur) {
    ON-VIDEO DIRECT BLUR & TITLE CONTROLS
 =================================================== */
 function closeDirectPanels() {
-  document.getElementById("videoDirectBlurBar").style.display = "none";
-  document.getElementById("videoDirectTitleBar").style.display = "none";
+  document.getElementById("videoFloatingBlurBar").style.display = "none";
+  document.getElementById("videoFloatingTitleBar").style.display = "none";
   document.getElementById("currentToolInfo").textContent = "Tap element to edit";
 }
 
-// MULTIPLE BLUR BOXES
+// 1. BLUR BOX
 function addNewBlurBox() {
   blurIdCounter++;
   const id = `blur-${blurIdCounter}`;
@@ -1895,8 +1908,8 @@ function selectActiveBlurBox(id) {
   const b = blurBoxes.find(x => x.id === id);
   if (!b) return;
 
-  document.getElementById("videoDirectTitleBar").style.display = "none";
-  const blurBar = document.getElementById("videoDirectBlurBar");
+  document.getElementById("videoFloatingTitleBar").style.display = "none";
+  const blurBar = document.getElementById("videoFloatingBlurBar");
   blurBar.style.display = "block";
   document.getElementById("vBlurTitle").textContent = `🌫️ BLUR #${b.id.replace('blur-','')} (GLASS BLUR)`;
   document.getElementById("vDirectBlurSeek").value = b.blurStrength;
@@ -1931,7 +1944,12 @@ function renderBlurBoxes() {
     el.style.backdropFilter = `blur(${b.blurStrength}px)`;
     el.style.webkitBackdropFilter = `blur(${b.blurStrength}px)`;
 
-    el.innerHTML = `<div class="blurCloseBadge" onclick="event.stopPropagation(); removeBlurBox('${b.id}')">✕</div>`;
+    // Prominent Red ✕ Button on Blur Box
+    const closeBtn = document.createElement("div");
+    closeBtn.className = "blurCloseBadge";
+    closeBtn.textContent = "✕";
+    closeBtn.onclick = (e) => { e.stopPropagation(); removeBlurBox(b.id); };
+    el.appendChild(closeBtn);
     
     initBlurBoxDrag(el, b);
     container.appendChild(el);
@@ -2000,7 +2018,7 @@ function initBlurBoxDrag(el, bData) {
   el.addEventListener("pointercancel", finish);
 }
 
-// MULTI MOVIE TITLES STUDIO
+// 2. MULTI MOVIE TITLES STUDIO
 function addNewMovieTitle() {
   titleIdCounter++;
   const id = `title-${titleIdCounter}`;
@@ -2009,7 +2027,7 @@ function addNewMovieTitle() {
     text: "ရုပ်ရှင်အညွှန်း ဇာတ်ကားအမည်", 
     x: 50, 
     y: 15, 
-    fontSize: 15, 
+    fontSize: 16, 
     color: "#ffffff", 
     bgColor: "#000000", 
     opacity: 65 
@@ -2037,13 +2055,16 @@ function selectActiveTitle(id) {
   const t = movieTitles.find(x => x.id === id);
   if (!t) return;
 
-  document.getElementById("videoDirectBlurBar").style.display = "none";
-  const titleBar = document.getElementById("videoDirectTitleBar");
+  document.getElementById("videoFloatingBlurBar").style.display = "none";
+  const titleBar = document.getElementById("videoFloatingTitleBar");
   titleBar.style.display = "block";
   document.getElementById("vDirectTitleText").value = t.text;
   document.getElementById("vDirectTitleColor").value = t.color;
   document.getElementById("vDirectTitleBg").value = t.bgColor;
   document.getElementById("vDirectTitleOp").value = t.opacity;
+  document.getElementById("vDirectTitleOpVal").textContent = t.opacity + "%";
+  document.getElementById("vDirectTitleSize").value = t.fontSize;
+  document.getElementById("vDirectTitleSizeVal").textContent = t.fontSize + "px";
   document.getElementById("currentToolInfo").textContent = `Editing: ${t.text.slice(0, 15)}...`;
 }
 
@@ -2053,6 +2074,15 @@ function onDirectTitleTextInput(val) {
   t.text = val;
   const el = document.getElementById(t.id);
   if (el) el.childNodes[0].nodeValue = t.text;
+}
+
+function onDirectTitleSizeChange(sizeVal) {
+  const t = movieTitles.find(x => x.id === activeTitleId);
+  if (!t) return;
+  t.fontSize = Number(sizeVal);
+  document.getElementById("vDirectTitleSizeVal").textContent = sizeVal + "px";
+  const el = document.getElementById(t.id);
+  if (el) el.style.fontSize = sizeVal + "px";
 }
 
 function onDirectTitleColorChange(col) {
@@ -2074,6 +2104,7 @@ function onDirectTitleOpChange(opVal) {
   const t = movieTitles.find(x => x.id === activeTitleId);
   if (!t) return;
   t.opacity = Number(opVal);
+  document.getElementById("vDirectTitleOpVal").textContent = opVal + "%";
   updateTitleStyle(t);
 }
 
@@ -2108,6 +2139,7 @@ function renderMovieTitles() {
 
     el.textContent = t.text;
 
+    // Prominent Red ✕ Button on Title
     const closeBtn = document.createElement("div");
     closeBtn.className = "titleCloseBadge";
     closeBtn.textContent = "✕";
