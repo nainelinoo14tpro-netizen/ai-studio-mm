@@ -3,265 +3,324 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
-<meta name="theme-color" content="#06080e">
+<meta name="theme-color" content="#e2e8f0">
 <title>AI Studio Suite - Central Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Padauk:wght@400;700&display=swap" rel="stylesheet">
 
 <style>
-:root {
-  --bg: #06080e;
-  --panel: rgba(14, 18, 28, 0.75);
-  --panel-hover: rgba(22, 28, 44, 0.85);
-  --border: rgba(45, 58, 85, 0.65);
-  --border-glow: rgba(32, 215, 255, 0.5);
-  --text: #f5f7fb;
-  --muted: #8e9bb2;
-  --cyan: #20d7ff;
-  --accent-pink: #ff5572;
-  --accent-gold: #ffbe3b;
-  --accent-green: #2bd576;
-  --accent-purple: #a855f7;
-  --shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
-}
-
 * {
+  margin: 0;
+  padding: 0;
   box-sizing: border-box;
-  margin: 0; padding: 0;
-  -webkit-tap-highlight-color: transparent;
+  font-family: 'Padauk', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
   user-select: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
-html, body {
-  background: var(--bg);
-  color: var(--text);
-  font-family: system-ui, -apple-system, "Pyidaungsu", "Noto Sans Myanmar", "Segoe UI", sans-serif;
-  min-height: 100vh;
+body {
+  background-color: #e2e8f0;
+  color: #0f172a;
   overflow-x: hidden;
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
 }
 
-/* Glowing Dynamic Background Animations */
-.bgCanvasWrap {
-  position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden;
-}
-.glowOrb {
-  position: absolute; border-radius: 50%; filter: blur(90px); opacity: 0.22;
-  animation: floatOrb 18s ease-in-out infinite alternate;
-}
-.orb1 { width: 380px; height: 380px; background: #ff5572; top: -80px; left: -100px; }
-.orb2 { width: 420px; height: 420px; background: #7657ff; bottom: -100px; right: -80px; animation-duration: 22s; }
-.orb3 { width: 320px; height: 320px; background: #20d7ff; top: 40%; left: 55%; animation-duration: 15s; }
-
-@keyframes floatOrb {
-  0% { transform: translate(0, 0) scale(1); }
-  50% { transform: translate(40px, 60px) scale(1.1); }
-  100% { transform: translate(-30px, 30px) scale(0.95); }
+/* Top Navigation Bar */
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 20px;
+  background-color: #ffffff;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  border-bottom: 2px solid #d97706;
 }
 
-/* Background Grid Overlay */
-.bgGrid {
-  position: absolute; inset: 0;
-  background-image: 
-    linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
-  background-size: 38px 38px;
-  mask-image: radial-gradient(circle at 50% 50%, black 40%, transparent 85%);
-  -webkit-mask-image: radial-gradient(circle at 50% 50%, black 40%, transparent 85%);
+.nav-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  white-space: nowrap;
 }
 
-.mainContainer {
-  position: relative; z-index: 10;
-  max-width: 1180px; margin: 0 auto;
-  padding: 32px 20px 48px 20px;
-  width: 100%; flex: 1;
-  display: flex; flex-direction: column;
+.logo {
+  font-size: 1.15rem;
+  font-weight: bold;
+  color: #b45309;
+  letter-spacing: 0.3px;
 }
 
-/* Header Area */
-.appHeader {
-  display: flex; justify-content: space-between; align-items: center;
-  margin-bottom: 42px;
-}
-.brandLogo {
-  display: flex; align-items: center; gap: 12px;
-}
-.logoSpark {
-  width: 38px; height: 38px; border-radius: 12px;
-  background: linear-gradient(135deg, #7657ff, #20d7ff);
-  display: grid; place-items: center; font-size: 19px;
-  box-shadow: 0 0 20px rgba(118, 87, 255, 0.5);
-  animation: pulseGlow 3s ease-in-out infinite alternate;
-}
-@keyframes pulseGlow {
-  from { box-shadow: 0 0 16px rgba(118, 87, 255, 0.4); }
-  to { box-shadow: 0 0 28px rgba(32, 215, 255, 0.7); }
-}
-.brandText h1 {
-  font-size: 17px; font-weight: 800; letter-spacing: 0.5px;
-  background: linear-gradient(135deg, #ffffff, #c5d3f0);
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-}
-.brandText p {
-  font-size: 10px; color: var(--muted); font-weight: 600; letter-spacing: 0.3px;
+.menu-btn {
+  background: none;
+  border: none;
+  color: #1e293b;
+  font-size: 1.4rem;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 6px;
 }
 
-.systemStatusPill {
-  display: flex; align-items: center; gap: 8px;
-  background: rgba(14, 20, 32, 0.85); border: 1px solid rgba(43, 213, 118, 0.3);
-  padding: 6px 14px; border-radius: 99px; font-size: 11px; font-weight: 700; color: #d0fae5;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3); backdrop-filter: blur(12px);
-}
-.pulseDot {
-  width: 7px; height: 7px; border-radius: 50%; background: var(--accent-green);
-  box-shadow: 0 0 10px var(--accent-green); animation: blink 1.8s infinite;
-}
-@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
-
-/* Hero Showcase */
-.heroSection {
-  text-align: center; margin-bottom: 46px; max-width: 680px; margin-left: auto; margin-right: auto;
-}
-.heroBadge {
-  display: inline-flex; align-items: center; gap: 6px;
-  background: rgba(118, 87, 255, 0.12); border: 1px solid rgba(118, 87, 255, 0.35);
-  color: var(--cyan); font-size: 10.5px; font-weight: 700;
-  padding: 5px 14px; border-radius: 99px; margin-bottom: 16px;
-  text-transform: uppercase; letter-spacing: 0.8px;
-}
-.heroTitle {
-  font-size: 32px; font-weight: 850; line-height: 1.35; margin-bottom: 12px;
-  background: linear-gradient(135deg, #ffffff 40%, #8ca4d8 100%);
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-}
-.heroSub {
-  font-size: 13.5px; color: var(--muted); line-height: 1.6;
+.status-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #f0fdf4;
+  border: 1px solid #86efac;
+  padding: 5px 12px;
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #15803d;
 }
 
-/* Dashboard Grid (Auto fit for 4 items) */
-.studioGrid {
+.pulse-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #16a34a;
+  box-shadow: 0 0 8px #16a34a;
+  animation: pulseBlink 1.8s infinite;
+}
+@keyframes pulseBlink { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+/* Background Overlay */
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(15, 23, 42, 0.5);
+  opacity: 0;
+  visibility: hidden;
+  transition: 0.3s ease;
+  z-index: 998;
+  backdrop-filter: blur(2px);
+}
+.overlay.active { opacity: 1; visibility: visible; }
+
+/* Left Side Slide Menu */
+.slide-menu {
+  position: fixed;
+  top: 0;
+  left: -300px;
+  width: 270px;
+  height: 100%;
+  background-color: #ffffff;
+  box-shadow: 5px 0 25px rgba(0, 0, 0, 0.15);
+  transition: left 0.3s ease;
+  z-index: 999;
+  display: flex;
+  flex-direction: column;
+}
+.slide-menu.active { left: 0; }
+
+.menu-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 18px;
+  border-bottom: 1px solid #e2e8f0;
+}
+.menu-title { font-size: 1.05rem; font-weight: bold; color: #475569; }
+.close-btn { background: none; border: none; color: #1e293b; font-size: 1.3rem; cursor: pointer; }
+.menu-links { list-style: none; padding: 12px 10px; flex-grow: 1; }
+.menu-links li { margin-bottom: 6px; }
+.menu-links a {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  color: #334155;
+  text-decoration: none;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+}
+.menu-links a:hover, .menu-links a.active {
+  background-color: #fef3c7;
+  color: #b45309;
+  font-weight: 600;
+}
+
+/* Main Container */
+.container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 24px 16px 40px;
+  width: 100%;
+  flex: 1;
+}
+
+/* Glassmorphism Header Box */
+.glass-header {
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(12px);
+  padding: 20px 16px;
+  border-radius: 16px;
+  margin-bottom: 24px;
+  box-shadow: 0 6px 24px rgba(31, 38, 135, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  text-align: center;
+}
+.glass-header h2 {
+  color: #b45309;
+  font-size: 1.35rem;
+  margin-bottom: 4px;
+  font-weight: 700;
+}
+.glass-header p {
+  color: #475569;
+  font-size: 0.85rem;
+}
+
+/* Studio Cards Grid */
+.studio-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 22px;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
   margin-bottom: 24px;
 }
 
-.studioCard {
+.studio-card {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 16px;
+  padding: 20px 18px;
+  display: flex;
+  flex-direction: column;
+  text-decoration: none;
+  color: inherit;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04);
+  transition: all 0.25s ease;
   position: relative;
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: 24px;
-  padding: 26px 22px;
-  display: flex; flex-direction: column;
-  text-decoration: none; color: inherit;
-  backdrop-filter: blur(20px);
-  box-shadow: var(--shadow);
-  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-  overflow: hidden;
 }
 
-.studioCard::before {
-  content: ""; position: absolute; inset: 0;
-  border-radius: 24px; padding: 1.5px;
-  background: linear-gradient(135deg, transparent, rgba(255, 255, 255, 0.08), transparent);
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor; mask-composite: exclude;
-  pointer-events: none;
+.studio-card:hover {
+  transform: translateY(-4px);
+  border-color: #f59e0b;
+  box-shadow: 0 8px 24px rgba(245, 158, 11, 0.15);
 }
 
-.studioCard:hover {
-  transform: translateY(-8px);
-  background: var(--panel-hover);
-  border-color: rgba(255, 255, 255, 0.22);
+.studio-card:active {
+  transform: scale(0.98);
 }
 
-/* Card Themes */
-.cardRecap:hover {
-  border-color: rgba(255, 85, 114, 0.6);
-  box-shadow: 0 16px 42px rgba(255, 85, 114, 0.25);
-}
-.cardStory:hover {
-  border-color: rgba(255, 190, 59, 0.6);
-  box-shadow: 0 16px 42px rgba(255, 190, 59, 0.22);
-}
-.cardVideo:hover {
-  border-color: rgba(43, 213, 118, 0.6);
-  box-shadow: 0 16px 42px rgba(43, 213, 118, 0.22);
-}
-.cardVoice:hover {
-  border-color: rgba(168, 85, 247, 0.6);
-  box-shadow: 0 16px 42px rgba(168, 85, 247, 0.25);
+.card-top-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
 }
 
-.cardTopRow {
-  display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;
-}
-.cardIcon {
-  width: 52px; height: 52px; border-radius: 16px;
-  display: grid; place-items: center; font-size: 24px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
-}
-.iconRecap { background: linear-gradient(135deg, #ff5572, #ff7e40); }
-.iconStory { background: linear-gradient(135deg, #ffbe3b, #ff5572); }
-.iconVideo { background: linear-gradient(135deg, #2bd576, #20d7ff); }
-.iconVoice { background: linear-gradient(135deg, #a855f7, #6366f1); }
-
-.cardPill {
-  font-size: 10px; font-weight: 700; padding: 4px 10px; border-radius: 99px;
-  text-transform: uppercase; letter-spacing: 0.6px;
-}
-.pillRecap { background: rgba(255, 85, 114, 0.15); color: #ff8ca0; border: 1px solid rgba(255, 85, 114, 0.3); }
-.pillStory { background: rgba(255, 190, 59, 0.15); color: #ffd678; border: 1px solid rgba(255, 190, 59, 0.3); }
-.pillVideo { background: rgba(43, 213, 118, 0.15); color: #6ee7b7; border: 1px solid rgba(43, 213, 118, 0.3); }
-.pillVoice { background: rgba(168, 85, 247, 0.15); color: #d8b4fe; border: 1px solid rgba(168, 85, 247, 0.3); }
-
-.cardTitle {
-  font-size: 19px; font-weight: 800; margin-bottom: 8px; color: #fff;
-}
-.cardDesc {
-  font-size: 12.5px; color: var(--muted); line-height: 1.55; margin-bottom: 22px; flex: 1;
+.card-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  font-size: 24px;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.15);
 }
 
-.cardFeaturesList {
-  display: flex; flex-direction: column; gap: 7px; margin-bottom: 24px;
-  border-top: 1px solid rgba(255, 255, 255, 0.06); padding-top: 16px;
+.card-pill {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 99px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
-.featureItem {
-  display: flex; align-items: center; gap: 8px; font-size: 11px; color: #cfd8e8; font-weight: 500;
-}
-.featureDot {
-  width: 5px; height: 5px; border-radius: 50%; background: var(--cyan);
+.pill-orange { background: #fff7ed; color: #c2410c; border: 1px solid #ffedd5; }
+.pill-gold { background: #fffbeb; color: #b45309; border: 1px solid #fef3c7; }
+.pill-green { background: #f0fdf4; color: #15803d; border: 1px solid #dcfce7; }
+.pill-blue { background: #eff6ff; color: #1d4ed8; border: 1px solid #dbeafe; }
+
+.card-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 6px;
 }
 
-.cardLaunchBtn {
-  display: flex; align-items: center; justify-content: space-between;
-  width: 100%; padding: 11px 16px; border-radius: 14px;
-  background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border);
-  font-size: 12.5px; font-weight: 700; color: #fff;
+.card-desc {
+  font-size: 12px;
+  color: #64748b;
+  line-height: 1.5;
+  margin-bottom: 16px;
+  flex: 1;
+}
+
+.card-features {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 18px;
+  border-top: 1px solid #f1f5f9;
+  padding-top: 12px;
+}
+
+.feature-item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 11px;
+  color: #475569;
+}
+
+.feature-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #f59e0b;
+}
+
+.launch-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 9px 14px;
+  border-radius: 10px;
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  font-size: 12px;
+  font-weight: 700;
+  color: #334155;
   transition: all 0.2s ease;
 }
-.studioCard:hover .cardLaunchBtn {
-  background: #ffffff; color: #080a10; border-color: #ffffff;
-  box-shadow: 0 6px 20px rgba(255, 255, 255, 0.3);
+
+.studio-card:hover .launch-btn {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #ffffff;
+  border-color: #f59e0b;
+  box-shadow: 0 4px 12px rgba(217, 119, 6, 0.25);
 }
 
 /* Footer Area */
-.appFooter {
-  text-align: center; margin-top: auto; padding-top: 36px;
-  font-size: 11.5px; color: rgba(142, 155, 178, 0.6);
-}
-
-/* Responsive adjustments */
-@media (max-width: 960px) {
-  .heroTitle { font-size: 26px; }
-  .heroSection { margin-bottom: 32px; }
-  .appHeader { margin-bottom: 30px; }
+.app-footer {
+  text-align: center;
+  margin-top: auto;
+  padding: 20px 0;
+  font-size: 11.5px;
+  color: #94a3b8;
 }
 </style>
 
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#07090e">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="AI Studio">
 <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/1179/1179069.png">
 
@@ -279,113 +338,119 @@ html, body {
     });
   }
 </script>
-
 </head>
+
 <body>
 
-<!-- Ambient Glow & Animated Background -->
-<div class="bgCanvasWrap">
-  <div class="glowOrb orb1"></div>
-  <div class="glowOrb orb2"></div>
-  <div class="glowOrb orb3"></div>
-  <div class="bgGrid"></div>
-</div>
+<!-- Top Navbar -->
+<header class="navbar">
+  <div class="nav-left">
+    <button class="menu-btn" onclick="openMenu()">☰</button>
+    <div class="logo">AI Studio App</div>
+  </div>
+  <div class="status-badge">
+    <span class="pulse-dot"></span>
+    <span>Studio Online</span>
+  </div>
+</header>
 
-<div class="mainContainer">
+<!-- Overlay -->
+<div class="overlay" id="overlay" onclick="closeMenu()"></div>
 
-  <!-- Header -->
-  <header class="appHeader">
-    <div class="brandLogo">
-      <div class="logoSpark">✦</div>
-      <div class="brandText">
-        <h1>AI STUDIO PRO</h1>
-        <p>MODULAR AI MEDIA SUITE</p>
-      </div>
-    </div>
+<!-- Left Side Slide Menu -->
+<nav class="slide-menu" id="slideMenu">
+  <div class="menu-header">
+    <span class="menu-title">Menu</span>
+    <button class="close-btn" onclick="closeMenu()">✕</button>
+  </div>
+  <ul class="menu-links">
+    <li><a href="index.html" class="active">🏠 Main Page</a></li>
+    <li><a href="mmvoice.html">🎙️ Myanmar Voice TTS</a></li>
+    <li><a href="story-maker.html">📖 Story Create</a></li>
+    <li><a href="story-to-video.html">🎬 Story to Video Studio</a></li>
+    <li><a href="movie-recaps.html">🎬 Movie Recaps</a></li>
+  </ul>
+</nav>
 
-    <div class="systemStatusPill">
-      <span class="pulseDot"></span>
-      <span>Cloudflare AI Online</span>
-    </div>
-  </header>
+<!-- Main Container -->
+<main class="container">
 
-  <!-- Hero Section -->
-  <section class="heroSection">
-    <div class="heroBadge">✨ All-in-One Creation</div>
-    <h2 class="heroTitle">Next-Gen AI Media Studio</h2>
-    <p class="heroSub">ဖန်တီးမှုအသစ်များအတွက် ဇာတ်လမ်း၊ ဗီဒီယိုနှင့် အသံတုဖန်တီးနိုင်သော AI ကိရိယာများ</p>
-  </section>
+  <!-- Header Section -->
+  <div class="glass-header">
+    <h2>🇲🇲 Myanmar AI Studio Suite</h2>
+    <p>မြန်မာအသံ၊ ဇာတ်လမ်းဖန်တီးမှုနှင့် ဗီဒီယို Studio စနစ်များ</p>
+  </div>
 
   <!-- Studio Cards Grid -->
-  <div class="studioGrid">
+  <div class="studio-grid">
 
-    <!-- Card 1: Movie Recaps -->
-    <a href="movie-recaps.html" class="studioCard cardRecap">
-      <div class="cardTopRow">
-        <div class="cardIcon iconRecap">🎬</div>
-        <span class="cardPill pillRecap">Story Recap</span>
+    <!-- Card 1: Myanmar Voice TTS (Replaced voice-clone) -->
+    <a href="mmvoice.html" class="studio-card">
+      <div class="card-top-row">
+        <div class="card-icon">🎙️</div>
+        <span class="card-pill pill-gold">Voice AI</span>
       </div>
-      <h3 class="cardTitle">Movie Recaps</h3>
-      <p class="cardDesc">ရုပ်ရှင်အကျဉ်းချုပ်ဇာတ်လမ်းများကို စိတ်ဝင်စားဖွယ် ဖန်တီးပေးခြင်း။</p>
-      <div class="cardFeaturesList">
-        <div class="featureItem"><span class="featureDot"></span> အခန်းဆက် ဇာတ်ညွှန်းခွဲထုတ်ခြင်း</div>
-        <div class="featureItem"><span class="featureDot"></span> အသံသွင်းရန် အဆင်သင့် Script ရရှိခြင်း</div>
+      <h3 class="card-title">Myanmar Voice TTS</h3>
+      <p class="cardDesc">Microsoft Edge TTS အခြေပြု သဘာဝကျသော စတိုင်စုံ မြန်မာအသံ ထုတ်လုပ်မှု စနစ်။</p>
+      <div class="card-features">
+        <div class="feature-item"><span class="feature-dot"></span> နီလာ နှင့် သီဟ မြန်မာအသံများ</div>
+        <div class="feature-item"><span class="feature-dot"></span> Natural / Story / Horror စတိုင်များ</div>
       </div>
-      <div class="cardLaunchBtn">
+      <div class="launch-btn">
         <span>စတင်ဖန်တီးမည်</span>
         <span>→</span>
       </div>
     </a>
 
     <!-- Card 2: Story Maker -->
-    <a href="story-maker.html" class="studioCard cardStory">
-      <div class="cardTopRow">
-        <div class="cardIcon iconStory">📖</div>
-        <span class="cardPill pillStory">Story Engine</span>
+    <a href="story-maker.html" class="studio-card">
+      <div class="card-top-row">
+        <div class="card-icon">📖</div>
+        <span class="card-pill pill-orange">Story Engine</span>
       </div>
-      <h3 class="cardTitle">Story Maker</h3>
-      <p class="cardDesc">စိတ်ကူးယဉ်နှင့် ထူးခြားဆန်းကြယ် ဇာတ်လမ်းများကို အလွယ်တကူ ရေးသားခြင်း။</p>
-      <div class="cardFeaturesList">
-        <div class="featureItem"><span class="featureDot"></span> ရသစုံ စာပေအမျိုးအစားများ</div>
-        <div class="featureItem"><span class="featureDot"></span> စိတ်ဝင်စားဖွယ် အလှည့်အပြောင်းများ</div>
+      <h3 class="card-title">Story Maker</h3>
+      <p class="card-desc">ခေါင်းစဉ်တစ်ခုရိုက်ထည့်ရုံဖြင့် ဇာတ်လမ်းနှင့် AI Image Prompts များကို အပိုင်းလိုက် ခွဲထုတ်ပေးခြင်း။</p>
+      <div class="card-features">
+        <div class="feature-item"><span class="feature-dot"></span> ရသစုံ စာပေအမျိုးအစားများ</div>
+        <div class="feature-item"><span class="feature-dot"></span> ၁၀ စက္ကန့်စာ အပိုင်းလိုက် Scripts</div>
       </div>
-      <div class="cardLaunchBtn">
+      <div class="launch-btn">
         <span>စတင်ဖန်တီးမည်</span>
         <span>→</span>
       </div>
     </a>
 
     <!-- Card 3: Story to Video -->
-    <a href="story-to-video.html" class="studioCard cardVideo">
-      <div class="cardTopRow">
-        <div class="cardIcon iconVideo">🎥</div>
-        <span class="cardPill pillVideo">Visual AI</span>
+    <a href="story-to-video.html" class="studio-card">
+      <div class="card-top-row">
+        <div class="card-icon">🎬</div>
+        <span class="card-pill pill-green">Video Studio</span>
       </div>
-      <h3 class="cardTitle">Story to Video</h3>
-      <p class="cardDesc">စာသားဇာတ်လမ်းများမှ ရုပ်ပုံနှင့် ဗီဒီယို Prompts များ ထုတ်ယူခြင်း။</p>
-      <div class="cardFeaturesList">
-        <div class="featureItem"><span class="featureDot"></span> Midjourney/Flux Visual Prompts</div>
-        <div class="featureItem"><span class="featureDot"></span> Timeline Video Scenes</div>
+      <h3 class="card-title">Story to Video</h3>
+      <p class="card-desc">ဓာတ်ပုံ၊ အသံ၊ စာတန်းထိုးနှင့် Motion Effect များ ပေါင်းစပ်ကာ MP4 ဗီဒီယို တိုက်ရိုက် ထုတ်ယူခြင်း။</p>
+      <div class="card-features">
+        <div class="feature-item"><span class="feature-dot"></span> 16:9 Landscape & 9:16 Shorts</div>
+        <div class="feature-item"><span class="feature-dot"></span> SRT Edit & Real-time Canvas</div>
       </div>
-      <div class="cardLaunchBtn">
+      <div class="launch-btn">
         <span>စတင်ဖန်တီးမည်</span>
         <span>→</span>
       </div>
     </a>
 
-    <!-- Card 4: Voice Clone / Myanmar TTS (New Feature) -->
-    <a href="voice-clone.html" class="studioCard cardVoice">
-      <div class="cardTopRow">
-        <div class="cardIcon iconVoice">🎙️</div>
-        <span class="cardPill pillVoice">Voice AI</span>
+    <!-- Card 4: Movie Recaps -->
+    <a href="movie-recaps.html" class="studio-card">
+      <div class="card-top-row">
+        <div class="card-icon">🎥</div>
+        <span class="card-pill pill-blue">Recap Studio</span>
       </div>
-      <h3 class="cardTitle">Voice Clone & TTS</h3>
-      <p class="cardDesc">VoxCPM2 အသုံးပြုထားသော မြန်မာစကားပြောနှင့် အသံတုပခြင်း (Voice Cloning)။</p>
-      <div class="cardFeaturesList">
-        <div class="featureItem"><span class="featureDot"></span> သဘာဝကျသော မြန်မာအသံ Styles</div>
-        <div class="featureItem"><span class="featureDot"></span> ကိုယ်ပိုင်အသံနမူနာဖြင့် Voice Cloning</div>
+      <h3 class="card-title">Movie Recaps</h3>
+      <p class="card-desc">ရုပ်ရှင်ဇာတ်လမ်းများကို အကျဉ်းချုပ်ပြီး မြန်မာအသံဖြင့် ဇာတ်ကြောင်းပြောရန် Script များ ဖန်တီးပေးခြင်း။</p>
+      <div class="card-features">
+        <div class="feature-item"><span class="feature-dot"></span> အခန်းဆက် ဇာတ်ညွှန်းခွဲထုတ်ခြင်း</div>
+        <div class="feature-item"><span class="feature-dot"></span> အသံသွင်းရန် အဆင်သင့် Script ရရှိခြင်း</div>
       </div>
-      <div class="cardLaunchBtn">
+      <div class="launch-btn">
         <span>စတင်ဖန်တီးမည်</span>
         <span>→</span>
       </div>
@@ -393,12 +458,26 @@ html, body {
 
   </div>
 
-  <!-- Footer -->
-  <footer class="appFooter">
-    <p>© 2026 AI Studio Pro • Powered by Hugging Face & Vercel</p>
+  <!-- Footer Area -->
+  <footer class="app-footer">
+    <p>© 2026 AI Studio Suite • Light Slate & Amber Gold Design</p>
   </footer>
 
-</div>
+</main>
 
+<script>
+  const slideMenu = document.getElementById('slideMenu');
+  const overlay = document.getElementById('overlay');
+
+  function openMenu() {
+    slideMenu.classList.add('active');
+    overlay.classList.add('active');
+  }
+
+  function closeMenu() {
+    slideMenu.classList.remove('active');
+    overlay.classList.remove('active');
+  }
+</script>
 </body>
 </html>
