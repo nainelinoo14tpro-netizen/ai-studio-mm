@@ -159,7 +159,7 @@
       font-size: 0.8rem;
     }
 
-    /* Sample Voice Buttons Box (Right Under Header) */
+    /* Sample Voice Buttons Box */
     .sample-bar-wrap {
       background: #ffffff;
       border: 1px solid #cbd5e1;
@@ -210,12 +210,12 @@
       border-color: #d97706;
     }
 
-    /* Sample Mic Wave Animation Box */
+    /* Single Mic Wave Animation Box */
     .sample-active-box {
       display: none;
       align-items: center;
       justify-content: center;
-      gap: 10px;
+      gap: 8px;
       background: #fef3c7;
       border: 1px dashed #f59e0b;
       padding: 8px 12px;
@@ -227,18 +227,19 @@
 
     .sample-mic-pulse {
       position: relative;
-      width: 26px;
-      height: 26px;
+      width: 24px;
+      height: 24px;
       display: flex;
       align-items: center;
       justify-content: center;
+      flex-shrink: 0;
     }
     .sample-mic-pulse span {
       position: absolute;
       width: 100%;
       height: 100%;
       border-radius: 50%;
-      background: rgba(245, 158, 11, 0.4);
+      background: rgba(245, 158, 11, 0.45);
       animation: sampleWave 1.2s infinite ease-out;
     }
     @keyframes sampleWave {
@@ -259,10 +260,26 @@
       margin-bottom: 14px;
     }
 
+    .text-head-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
     label {
       font-weight: 600;
       font-size: 12.5px;
       color: #b45309;
+    }
+
+    .char-badge {
+      font-size: 11px;
+      font-weight: 700;
+      color: #b45309;
+      background: #fef3c7;
+      border: 1px solid #fde68a;
+      padding: 2px 8px;
+      border-radius: 99px;
     }
 
     select, textarea {
@@ -495,7 +512,7 @@
       <p>Microsoft Edge TTS အခြေပြု သဘာဝကျ မြန်မာအသံစနစ်</p>
     </div>
 
-    <!-- Sample Voice Preview Box (Directly Under Header) -->
+    <!-- Sample Voice Preview Box (Single Mic Indicator) -->
     <div class="sample-bar-wrap">
       <div class="sample-label">
         <span>⚡ အသံနမူနာ ကြိုတင်စမ်းသပ်ရန်-</span>
@@ -509,20 +526,23 @@
         </button>
       </div>
 
-      <!-- Live Mic / Audio Playing Indicator -->
+      <!-- Single Mic Pulsing Indicator -->
       <div class="sample-active-box" id="sampleActiveBox">
         <div class="sample-mic-pulse">
           <span></span>
           <div style="font-size:14px; position:relative; z-index:2;">🎙️</div>
         </div>
-        <span id="sampleActiveText">သီဟ အသံကို ဖွင့်ပြနေပါသည်...</span>
+        <span id="sampleActiveText">အသံကို ဖွင့်ပြနေပါသည်...</span>
       </div>
     </div>
 
     <div class="box">
-      <!-- 1. Text Input -->
-      <label>၁။ အသံထွက်စေချင်သော မြန်မာစာသား ရိုက်ထည့်ပါ:</label>
-      <textarea id="textInput" rows="4" placeholder="ဤနေရာတွင် မြန်မာလို စာသားရိုက်ထည့်ပါ...">မင်္ဂလာပါ၊ သင်နှစ်သက်ရာ အသံပိုင်ရှင်နှင့် စတိုင်ကို ရွေးချယ်ပြီး အသံဖန်တီးနိုင်ပါပြီ။</textarea>
+      <!-- 1. Text Input with Real-time Character Counter -->
+      <div class="text-head-row">
+        <label>၁။ အသံထွက်စေချင်သော မြန်မာစာသား ရိုက်ထည့်ပါ:</label>
+        <span class="char-badge" id="charBadge">စာလုံးရေ: <span id="charCount">၀</span> လုံး</span>
+      </div>
+      <textarea id="textInput" rows="4" placeholder="ဤနေရာတွင် မြန်မာလို စာသားရိုက်ထည့်ပါ..." oninput="updateCharCount()">မင်္ဂလာပါ၊ သင်နှစ်သက်ရာ အသံပိုင်ရှင်နှင့် စတိုင်ကို ရွေးချယ်ပြီး အသံဖန်တီးနိုင်ပါပြီ။</textarea>
 
       <!-- 2. Dropdown Grid for Speaker & Style -->
       <div class="dropdown-grid">
@@ -614,6 +634,18 @@
       overlay.classList.remove('active');
     }
 
+    // Real-time Character Counter
+    function toMyanmarNum(num) {
+      const mmNums = ['၀', '၁', '၂', '၃', '၄', '၅', '၆', '၇', '၈', '၉'];
+      return num.toString().split('').map(d => mmNums[d] || d).join('');
+    }
+
+    function updateCharCount() {
+      const text = document.getElementById('textInput').value;
+      const count = text.length;
+      document.getElementById('charCount').textContent = toMyanmarNum(count);
+    }
+
     const presets = {
       natural: { speed: 0, pitch: 0 },
       recaps: { speed: 15, pitch: -2 },
@@ -690,7 +722,6 @@
       const activeBox = document.getElementById('sampleActiveBox');
       const activeText = document.getElementById('sampleActiveText');
 
-      // Stop current playback if same button is tapped
       if (currentlyPlayingBtnId === btnId && !sampleAudio.paused) {
         sampleAudio.pause();
         sampleAudio.currentTime = 0;
@@ -701,7 +732,6 @@
         return;
       }
 
-      // Reset previous playback
       if (!sampleAudio.paused) {
         sampleAudio.pause();
         if (currentlyPlayingBtnId) {
@@ -716,7 +746,7 @@
       const originalHtml = btn.innerHTML;
       btn.innerText = "⏳ ရယူနေသည်...";
       activeBox.style.display = 'flex';
-      activeText.innerText = `${voice.includes('Thiha') ? 'သီဟ' : 'နီလာ'} အသံကို ရယူနေပါသည်...`;
+      activeText.innerText = `${voice.includes('Thiha') ? 'သီဟ' : 'နီလာ'} ၏ အသံကို ရယူနေပါသည်...`;
 
       const sampleText = voice.includes('Thiha') 
         ? "မင်္ဂလာပါခင်ဗျာ၊ ကျွန်တော်ကတော့ သီဟ ဖြစ်ပါတယ်။ သင့်ဇာတ်လမ်းတွေကို ကျွန်တော်ဖတ်ပြပေးပါမယ်။"
@@ -738,7 +768,7 @@
         btn.classList.add('playing');
         btn.innerHTML = "⏹ ရပ်တန့်မည်";
         currentlyPlayingBtnId = btnId;
-        activeText.innerText = `🎙️ ${voice.includes('Thiha') ? 'သီဟ' : 'နီလာ'} ၏ အသံကို ဖွင့်ပြနေပါသည်...`;
+        activeText.innerText = `${voice.includes('Thiha') ? 'သီဟ' : 'နီလာ'} ၏ အသံကို ဖွင့်ပြနေပါသည်...`;
 
         sampleAudio.onended = () => {
           btn.classList.remove('playing');
@@ -819,6 +849,10 @@
         btnText.innerText = "✨ အသံဖန်တီးပါ (Generate Voice)";
       }
     }
+
+    window.onload = function() {
+      updateCharCount();
+    };
   </script>
 </body>
 </html>
