@@ -81,17 +81,6 @@ html, body {
   border-radius: 6px;
 }
 
-.headerBtns { display: flex; gap: 6px; align-items: center; }
-
-.iconBtn {
-  width: 32px; height: 32px; padding: 0; border-radius: 8px; font-size: 13px;
-  background: #f8fafc; border: 1px solid var(--border); color: #334155;
-  cursor: pointer; display: flex; align-items: center; justify-content: center;
-  transition: all 0.15s ease;
-}
-.iconBtn:hover { background: #fef3c7; border-color: var(--gold); color: var(--accent); }
-.iconBtn:active { transform: scale(0.95); }
-
 /* Background Overlay */
 .overlay {
   position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -270,21 +259,98 @@ button {
   margin-top: 14px; flex-wrap: wrap;
 }
 
+/* Real % Writing Animation Progress Box */
 .genProgressBox {
-  display: none; background: #fffbeb; border: 1px solid #fde68a;
-  border-radius: 14px; padding: 14px; margin-bottom: 14px; text-align: center;
+  display: none;
+  background: #ffffff;
+  border: 1px solid #fde68a;
+  border-radius: 14px;
+  padding: 18px 16px;
+  margin-bottom: 14px;
+  text-align: center;
+  box-shadow: 0 4px 15px rgba(245, 158, 11, 0.08);
 }
+
+.writing-anim-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.writing-pen-icon {
+  font-size: 30px;
+  display: inline-block;
+  animation: penWritingMotion 1.4s ease-in-out infinite alternate;
+  transform-origin: bottom left;
+}
+
+@keyframes penWritingMotion {
+  0% { transform: translate(-15px, 0) rotate(0deg); }
+  25% { transform: translate(-5px, -5px) rotate(14deg); }
+  50% { transform: translate(12px, 0) rotate(-6deg); }
+  75% { transform: translate(4px, -4px) rotate(12deg); }
+  100% { transform: translate(-15px, 0) rotate(0deg); }
+}
+
+.writing-lines-mock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  width: 140px;
+}
+
+.writing-line {
+  height: 4px;
+  background: #fef3c7;
+  border-radius: 99px;
+  position: relative;
+  overflow: hidden;
+}
+
+.writing-line::after {
+  content: '';
+  position: absolute;
+  top: 0; left: -100%;
+  width: 100%; height: 100%;
+  background: linear-gradient(90deg, transparent, #f59e0b, transparent);
+  animation: shimmerLine 1.3s infinite ease-in-out;
+}
+
+.writing-line:nth-child(1) { width: 100%; }
+.writing-line:nth-child(2) { width: 75%; }
+.writing-line:nth-child(3) { width: 45%; }
+
+@keyframes shimmerLine {
+  0% { left: -100%; }
+  100% { left: 100%; }
+}
+
 .genProgressHead {
-  display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
 }
+
 .animTrack {
-  width: 100%; height: 8px; background: #e2e8f0;
-  border-radius: 10px; overflow: hidden; position: relative;
+  width: 100%;
+  height: 8px;
+  background: #e2e8f0;
+  border-radius: 10px;
+  overflow: hidden;
+  position: relative;
 }
+
 .animBarFill {
-  height: 100%; width: 0%;
+  height: 100%;
+  width: 0%;
   background: linear-gradient(90deg, var(--gold), var(--accent));
-  border-radius: 10px; transition: width 0.3s ease;
+  border-radius: 10px;
+  transition: width 0.25s ease;
 }
 
 .btnSpinner {
@@ -324,16 +390,11 @@ button {
 
 <body>
 
-<!-- Top Navbar -->
+<!-- Top Navbar (Cleaned without Undo/Redo/Save buttons) -->
 <header class="navbar">
   <div class="nav-left">
     <button class="menu-btn" onclick="openMenu()">☰</button>
     <div class="logo">AI Studio App</div>
-  </div>
-  <div class="headerBtns">
-    <button class="iconBtn lockable" onclick="undo()" title="Undo">↶</button>
-    <button class="iconBtn lockable" onclick="redo()" title="Redo">↷</button>
-    <button class="iconBtn lockable" onclick="saveStoryToLocal()" title="Save Story">💾</button>
   </div>
 </header>
 
@@ -396,15 +457,25 @@ button {
         </div>
       </div>
 
+      <!-- Real Writing Animation Progress Box -->
       <div class="genProgressBox" id="genProgressBox">
+        <div class="writing-anim-wrap">
+          <div class="writing-pen-icon">✍️</div>
+          <div class="writing-lines-mock">
+            <div class="writing-line"></div>
+            <div class="writing-line"></div>
+            <div class="writing-line"></div>
+          </div>
+        </div>
+
         <div class="genProgressHead">
-          <span style="font-size:12px;font-weight:700;color:var(--accent)" id="genProgressStatus">✨ Initializing Story Pipeline...</span>
-          <span style="font-size:12px;font-weight:700;color:var(--gold-dark);font-family:ui-monospace" id="genProgressPercent">0%</span>
+          <span style="font-size:12.5px;font-weight:700;color:var(--accent)" id="genProgressStatus">စာမူများ စတင်ရေးဖွဲ့နေပါသည်...</span>
+          <span style="font-size:13px;font-weight:700;color:var(--gold-dark);font-family:ui-monospace" id="genProgressPercent">0%</span>
         </div>
         <div class="animTrack">
           <div class="animBarFill" id="genProgressBar"></div>
         </div>
-        <div style="font-size:10px;color:var(--muted);margin-top:6px" id="genProgressDesc">AI engine connecting...</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:6px" id="genProgressDesc">AI engine connecting...</div>
       </div>
 
       <div class="card">
@@ -526,7 +597,6 @@ button {
 </main>
 
 <script>
-// Dual-Engine Backend Connectivity (Exact same as mmvoice.html)
 const RENDER_BACKEND_URL = "https://myanmar-tts-app.onrender.com";
 const WORKER_URL = "https://ai-studio-mm.nainelinoo-14tpro.workers.dev";
 
@@ -598,6 +668,7 @@ function setUiLocked(locked) {
   }
 }
 
+// Real % Progress Updater with Smooth Stages
 function updateProgress(percent, status, desc) {
   const box = document.getElementById("genProgressBox");
   box.style.display = "block";
@@ -672,21 +743,21 @@ function saveHistory() {
   future = [];
 }
 function undo() {
-  if (!history.length) { toast("Nothing to undo"); return; }
+  if (!history.length) return;
   future.push(JSON.stringify(scenes));
   scenes = JSON.parse(history.pop());
   renderScenes();
   toast("Undo performed");
 }
 function redo() {
-  if (!future.length) { toast("Nothing to redo"); return; }
+  if (!future.length) return;
   history.push(JSON.stringify(scenes));
   scenes = JSON.parse(future.pop());
   renderScenes();
   toast("Redo performed");
 }
 
-// Dual-Engine TTS Audio Function (Matches mmvoice.html)
+// Dual-Engine TTS Audio Function
 async function requestTTSAudio(payload) {
   let response = null;
   try {
@@ -757,9 +828,10 @@ async function playSceneVoice(idx) {
   }
 }
 
+// Generate Story with Real % Progress & Writing Animation
 async function generateStory() {
   const topic = document.getElementById("topicInput").value.trim();
-  if (!topic) { toast("Please enter a story title/topic"); return; }
+  if (!topic) { toast("ကျေးဇူးပြု၍ ခေါင်းစဉ်အရင် ရိုက်ထည့်ပါ"); return; }
   if (isGenerating) return;
 
   isGenerating = true;
@@ -774,16 +846,30 @@ async function generateStory() {
   const artStyle = document.getElementById("artStyleSelect").value;
 
   spinner.style.display = "inline-block";
-  btnText.textContent = "Connecting to Story Engine...";
+  btnText.textContent = "ဇာတ်လမ်း စတင်ရေးဖွဲ့နေပါသည်...";
 
-  updateProgress(15, "Connecting AI...", "Prompting story structure...");
+  updateProgress(8, "📝 ဇာတ်လမ်း ခေါင်းစဉ်နှင့် ပုံစံကို တည်ဆောက်နေသည်...", "AI စာရေးဆရာ ချိတ်ဆက်နေပါသည်...");
 
+  let curPercent = 8;
+  const stages = [
+    { target: 25, status: "📝 ဇာတ်ကောင်များနှင့် ဇာတ်အိမ် တည်ဆောက်နေသည်...", desc: "ဇာတ်လမ်း အဖွင့်အပိုင်းများ စတင်ရေးဖွဲ့နေပါသည်..." },
+    { target: 50, status: "✍️ အခန်းဆက် မြန်မာစကားပြော ဇာတ်ညွှန်းများ ရေးသားနေသည်...", desc: `${selectedType === "series" ? selectedEpisodes + " Episodes" : "Single Episode"} စကားပြောများ ရေးဖွဲ့နေသည်...` },
+    { target: 75, status: "🎨 အခန်းတိုင်းအတွက် Visual AI Prompts များ ဖွဲ့စည်းနေသည်...", desc: "Art Style နှင့် ကိုက်ညီသော အသေးစိတ် Prompts များ ထုတ်ယူနေသည်..." },
+    { target: 88, status: "✨ စာမူအချိတ်အဆက်များနှင့် Cliffhangers များ စစ်ဆေးနေသည်...", desc: "နောက်ဆုံးအဆင့် စာမူအချောသပ်နေပါသည်..." }
+  ];
+
+  let stageIdx = 0;
   const progInterval = setInterval(() => {
-    const cur = parseInt(document.getElementById("genProgressPercent").textContent) || 15;
-    if (cur < 82) {
-      updateProgress(cur + 8, "Structuring Multi-Episode Scenes...", `Drafting ${selectedType === "series" ? selectedEpisodes + " Episodes (15 scenes/ep)" : "1 Episode"} cliffhangers...`);
+    if (stageIdx < stages.length) {
+      const s = stages[stageIdx];
+      if (curPercent < s.target) {
+        curPercent += Math.floor(Math.random() * 4) + 2;
+        updateProgress(curPercent, s.status, s.desc);
+      } else {
+        stageIdx++;
+      }
     }
-  }, 1400);
+  }, 450);
 
   try {
     const res = await fetch(WORKER_URL + "/story", {
@@ -805,7 +891,7 @@ async function generateStory() {
       throw new Error(errData.error || `Server HTTP ${res.status}`);
     }
 
-    updateProgress(90, "Translating & Formatting...", "Finalizing script and prompts...");
+    updateProgress(96, "📋 ဇာတ်ကွက်များ Timeline သို့ နေရာချနေသည်...", "Scenes & Prompts အားလုံး ပြီးစီးလုနီးပါး ဖြစ်ပါသည်...");
 
     const data = await res.json();
     let rawScenes = data.story || [];
@@ -819,8 +905,8 @@ async function generateStory() {
       image_prompt_en: `${s.image_prompt_en || "Cinematic visual"}, ${artStyle}`
     }));
 
-    updateProgress(100, "Done!", "All scenes created successfully!");
-    await new Promise(r => setTimeout(r, 450));
+    updateProgress(100, "✅ ဇာတ်လမ်း အပိုင်းအားလုံး ရေးသားပြီးစီးပါပြီ!", "Timeline တွင် အဆင်သင့် စတင်ဖတ်ရှုနိုင်ပါပြီ။");
+    await new Promise(r => setTimeout(r, 600));
 
     activeEpFilter = 0;
     setupEpisodeFilters();
@@ -829,7 +915,7 @@ async function generateStory() {
 
     const toolBar = document.getElementById("actionToolBar");
     toolBar.style.display = "flex";
-    toast(`🎉 Generated ${scenes.length} scenes across all episodes!`);
+    toast(`🎉 Generated ${scenes.length} scenes successfully!`);
 
     setTimeout(() => {
       toolBar.scrollIntoView({ behavior: "smooth", block: "center" });
