@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Padauk:wght@400;700&display=swap" rel="stylesheet">
-<!-- JSZip Library for 1-Click Instant Project Export -->
+<!-- JSZip for 1-Click Project Export -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
 <style>
@@ -82,6 +82,12 @@ button:active { transform: scale(0.97); }
 }
 .burnBtn:hover { opacity: 0.95; }
 
+.cancelBtn {
+  background: #fee2e2; border: 1.5px solid #ef4444; color: #b91c1c;
+  font-weight: 700; border-radius: 8px; padding: 7px 16px; margin-top: 12px;
+}
+.cancelBtn:hover { background: #fecaca; }
+
 .btnSpinner {
   width: 13px; height: 13px;
   border: 2px solid rgba(255,255,255,0.4); border-top-color: #fff;
@@ -89,12 +95,12 @@ button:active { transform: scale(0.97); }
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* Top Navbar */
+/* Top Navbar (Menu button always clickable) */
 .navbar {
   display: flex; justify-content: space-between; align-items: center;
   padding: 12px 20px; background-color: #ffffff;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
-  position: sticky; top: 0; z-index: 100;
+  position: sticky; top: 0; z-index: 1000;
   border-bottom: 2px solid var(--gold-dark);
 }
 .nav-left { display: flex; align-items: center; gap: 10px; white-space: nowrap; }
@@ -102,6 +108,7 @@ button:active { transform: scale(0.97); }
 .menu-btn {
   background: none; border: none; color: #1e293b;
   font-size: 1.4rem; cursor: pointer; padding: 2px 6px; border-radius: 6px;
+  z-index: 1001; pointer-events: auto !important;
 }
 
 /* Left Side Slide Menu & Overlay */
@@ -179,7 +186,7 @@ button:active { transform: scale(0.97); }
 .chevron { font-size: 11px; color: var(--muted); transition: transform 0.2s ease; }
 .chevron.rotate { transform: rotate(180deg); }
 
-/* Preview Canvas Box (Studio Slate Gray) */
+/* Preview Canvas Box (Studio Gray) */
 .previewCanvasBox {
   position: relative; width: 100%; background: var(--studio-gray);
   display: flex; align-items: center; justify-content: center;
@@ -204,14 +211,14 @@ canvas#videoCanvas:active { cursor: grabbing; }
 .vTimeText { font-size: 10px; font-family: ui-monospace, monospace; color: #f1f5f9; min-width: 36px; text-align: center; }
 .vSeekBar { flex: 1; accent-color: var(--gold); height: 6px; border-radius: 3px; cursor: pointer; }
 
-/* Overlay Toolbar Under Video */
+/* 4 Buttons Toolbar Under Video */
 .overlay-tools-bar {
-  display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 10px;
+  display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 6px; margin-top: 10px;
 }
 .tool-tab-btn {
-  padding: 9px 8px; font-size: 11.5px; font-weight: 700; border-radius: 10px;
+  padding: 8px 6px; font-size: 11px; font-weight: 700; border-radius: 8px;
   border: 1px solid var(--border); background: #ffffff; color: #334155;
-  display: flex; align-items: center; justify-content: center; gap: 6px;
+  display: flex; align-items: center; justify-content: center; gap: 4px;
   transition: all 0.2s ease;
 }
 .tool-tab-btn:hover { background: #fffbeb; border-color: var(--gold); color: var(--accent); }
@@ -221,7 +228,7 @@ canvas#videoCanvas:active { cursor: grabbing; }
   box-shadow: 0 3px 10px rgba(245, 158, 11, 0.3);
 }
 
-/* Settings Panels for Title, Custom Text & Logo */
+/* Settings Panels */
 .overlay-settings-panel {
   display: none; background: #fffbeb; border: 1px solid #fde68a;
   border-radius: 12px; padding: 14px; margin-top: 10px;
@@ -242,7 +249,7 @@ canvas#videoCanvas:active { cursor: grabbing; }
 }
 .activeProgressOverlay.active { display: flex; }
 
-/* 1. Mic Wave Animation (Voice Generation) */
+/* 1. Mic Wave Animation */
 .mic-wave-box {
   display: none; position: relative; width: 56px; height: 56px;
   align-items: center; justify-content: center; margin-bottom: 12px;
@@ -258,7 +265,7 @@ canvas#videoCanvas:active { cursor: grabbing; }
 }
 .mic-wave-icon { font-size: 26px; z-index: 2; position: relative; }
 
-/* 2. Paint Brush Animation (Image Generation) */
+/* 2. Paint Brush Animation */
 .paint-draw-box {
   display: none; flex-direction: column; align-items: center; justify-content: center;
   gap: 8px; margin-bottom: 12px;
@@ -284,14 +291,12 @@ canvas#videoCanvas:active { cursor: grabbing; }
 }
 @keyframes paintLineSweep { 0% { left: -100%; } 100% { left: 100%; } }
 
-/* 3. Video Editing & Exporting Timeline Animation */
+/* 3. Video Editing Timeline Animation */
 .video-edit-anim-box {
   display: none; flex-direction: column; align-items: center; justify-content: center;
   gap: 10px; margin-bottom: 12px;
 }
-.film-clap-wrap {
-  display: flex; align-items: center; gap: 8px; font-size: 28px;
-}
+.film-clap-wrap { display: flex; align-items: center; gap: 8px; font-size: 28px; }
 .film-clap-wrap .scissor {
   display: inline-block; animation: scissorCut 1.1s infinite alternate ease-in-out;
 }
@@ -305,9 +310,7 @@ canvas#videoCanvas:active { cursor: grabbing; }
   border: 1px solid #64748b; display: flex; align-items: center; justify-content: space-around;
   padding: 0 4px; position: relative; overflow: hidden;
 }
-.film-hole {
-  width: 8px; height: 8px; background: #cbd5e1; border-radius: 2px;
-}
+.film-hole { width: 8px; height: 8px; background: #cbd5e1; border-radius: 2px; }
 .filmstrip-track::after {
   content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
   background: linear-gradient(90deg, transparent, rgba(245, 158, 11, 0.6), transparent);
@@ -358,7 +361,7 @@ canvas#videoCanvas:active { cursor: grabbing; }
 .export-opt-content h4 { font-size: 13px; color: var(--text); font-weight: 700; margin-bottom: 2px; }
 .export-opt-content p { font-size: 10.5px; color: var(--muted); line-height: 1.35; }
 
-/* Alert Banner For Long Scene Splits */
+/* Alert Banner */
 .splitAlertBanner {
   background: #fffbeb; border: 1px solid #fde68a;
   border-radius: 10px; padding: 10px 12px; margin-bottom: 12px;
@@ -460,10 +463,10 @@ canvas#videoCanvas:active { cursor: grabbing; }
 
 <body>
 
-<!-- Top Navbar (Cleaned) -->
+<!-- Top Navbar (Main Menu is always unlocked) -->
 <header class="navbar">
   <div class="nav-left">
-    <button class="menu-btn" onclick="openMenu()">☰</button>
+    <button class="menu-btn" onclick="openMenu()" title="Main Menu">☰</button>
     <div class="logo">AI Studio App</div>
   </div>
 </header>
@@ -488,7 +491,7 @@ canvas#videoCanvas:active { cursor: grabbing; }
 
 <div class="toast" id="toast"></div>
 
-<!-- 3 Export Options Selection Modal -->
+<!-- 3 Export Options Modal -->
 <div class="export-modal-backdrop" id="exportModalBackdrop" onclick="closeExportModal()">
   <div class="export-modal-card" onclick="event.stopPropagation()">
     <div class="export-modal-head">
@@ -497,25 +500,22 @@ canvas#videoCanvas:active { cursor: grabbing; }
     </div>
     
     <div class="export-choice-list">
-      <!-- Option 1: Fast Render -->
       <div class="export-option-btn" onclick="selectExportMethod('fast')">
         <div class="export-opt-icon">⚡</div>
         <div class="export-opt-content">
           <h4>Fast Video Export (၃ ဆ မှ ၅ ဆ ပိုမြန်)</h4>
-          <p>Real-time စောင့်စရာမလိုဘဲ ဖုန်း၏ GPU စနစ်ဖြင့် အမြန်ဆုံး Video ချုပ်ယူပေးမည်။</p>
+          <p>အသံထပ်ခြင်းမရှိဘဲ ဖုန်း၏ GPU စနစ်ဖြင့် အမြန်ဆုံး Video ချုပ်ယူပေးမည်။</p>
         </div>
       </div>
 
-      <!-- Option 2: 1-Click ZIP -->
       <div class="export-option-btn" onclick="selectExportMethod('zip')">
         <div class="export-opt-icon">📦</div>
         <div class="export-opt-content">
           <h4>1-Click ZIP Project (၁ စက္ကန့်တည်းနှင့် ချက်ချင်းရ)</h4>
-          <p>ရုပ်ပုံများ + အသံဖိုင် + စာတန်းထိုး (.srt) အားလုံးကို ZIP ဖြင့် ဒေါင်းလုဒ်ရယူမည် (CapCut အတွက် သင့်တော်)။</p>
+          <p>ရုပ်ပုံများ + အသံဖိုင် + စာတန်းထိုး (.srt) အားလုံးကို ZIP ဖြင့် ဒေါင်းလုဒ်ရယူမည်။</p>
         </div>
       </div>
 
-      <!-- Option 3: Standard Real-Time MP4 -->
       <div class="export-option-btn" onclick="selectExportMethod('standard')">
         <div class="export-opt-icon">🎥</div>
         <div class="export-opt-content">
@@ -541,13 +541,12 @@ canvas#videoCanvas:active { cursor: grabbing; }
         <div class="cardHead no-cursor">
           <div class="title">🎬 Real-Time Video Preview</div>
           <div style="display:flex;gap:5px">
-            <button class="tagBtn active" id="ratioLandscape" onclick="setAspectRatio('16/9')">📺 16:9 Landscape</button>
-            <button class="tagBtn" id="ratioPortrait" onclick="setAspectRatio('9/16')">📱 9:16 Shorts</button>
+            <button class="tagBtn active lockable" id="ratioLandscape" onclick="setAspectRatio('16/9')">📺 16:9 Landscape</button>
+            <button class="tagBtn lockable" id="ratioPortrait" onclick="setAspectRatio('9/16')">📱 9:16 Shorts</button>
           </div>
         </div>
 
         <div class="body" style="padding:10px">
-          <!-- Canvas with Studio Gray Background & Dragging -->
           <div class="previewCanvasBox landscape" id="canvasBox">
             <canvas id="videoCanvas" width="1280" height="720"></canvas>
 
@@ -558,17 +557,17 @@ canvas#videoCanvas:active { cursor: grabbing; }
               <span class="vTimeText" id="totalTimeText">00:00</span>
             </div>
 
-            <!-- Custom Progress Overlays -->
+            <!-- Custom Progress Overlays with Cancel Button -->
             <div class="activeProgressOverlay" id="activeProgressOverlay">
               
-              <!-- 1. Mic Wave Animation (Voice Generation) -->
+              <!-- 1. Mic Wave Animation (Voice Gen) -->
               <div class="mic-wave-box" id="micWaveBox">
                 <div class="mic-wave-circle"></div>
                 <div class="mic-wave-circle"></div>
                 <div class="mic-wave-icon">🎙️</div>
               </div>
 
-              <!-- 2. Paint Brush Animation (Image Generation) -->
+              <!-- 2. Paint Brush Animation (Image Gen) -->
               <div class="paint-draw-box" id="paintDrawBox">
                 <div class="brush-icon">🖌️</div>
                 <div class="paint-palette-line"></div>
@@ -596,19 +595,27 @@ canvas#videoCanvas:active { cursor: grabbing; }
                 <div class="animBarFill" id="animBarFill"></div>
               </div>
               <div style="font-size:14px;font-weight:700;color:var(--gold);font-family:ui-monospace" id="progPercentText">0%</div>
+
+              <!-- Cancel Export Button -->
+              <button class="cancelBtn" id="cancelExportBtn" onclick="cancelCurrentExport()" style="display:none">
+                🛑 Cancel Export (ရပ်တန့်မည်)
+              </button>
             </div>
           </div>
 
-          <!-- Dedicated Toolbar Under Video: Title, Custom Text, Logo Buttons -->
+          <!-- 4 Floating Feature Buttons Under Video -->
           <div class="overlay-tools-bar">
-            <button class="tool-tab-btn" id="btnToggleTitle" onclick="toggleOverlayTab('title')">
+            <button class="tool-tab-btn lockable" id="btnToggleTitle" onclick="toggleOverlayTab('title')">
               <span>📝 Add Title</span>
             </button>
-            <button class="tool-tab-btn" id="btnToggleText" onclick="toggleOverlayTab('text')">
+            <button class="tool-tab-btn lockable" id="btnToggleText" onclick="toggleOverlayTab('text')">
               <span>➕ Custom Text</span>
             </button>
-            <button class="tool-tab-btn" id="btnToggleLogo" onclick="toggleOverlayTab('logo')">
+            <button class="tool-tab-btn lockable" id="btnToggleLogo" onclick="toggleOverlayTab('logo')">
               <span>🛡️ Logo</span>
+            </button>
+            <button class="tool-tab-btn lockable" id="btnToggleProgress" onclick="toggleOverlayTab('progress')">
+              <span>📏 Progress Bar</span>
             </button>
           </div>
 
@@ -718,13 +725,48 @@ canvas#videoCanvas:active { cursor: grabbing; }
             <small style="font-size:10px;color:var(--muted);display:block;margin-top:4px">💡 Logo ပုံကို Canvas ပေါ်တွင် လက်ချောင်းဖြင့် စိတ်ကြိုက်ဆွဲရွှေ့ နေရာချနိုင်ပါသည်။</small>
           </div>
 
+          <!-- 4. Dedicated Real-Time Video Progress Bar / Border Panel -->
+          <div class="overlay-settings-panel" id="panelProgress">
+            <div class="panel-head-row">
+              <span style="font-size:11px;font-weight:700;color:var(--green)">📏 Video Progress Line / Frame Controls</span>
+              <label style="font-size:11px;display:flex;align-items:center;gap:4px;cursor:pointer">
+                <input type="checkbox" id="showProgressBarCheck" checked onchange="drawCurrentFrame()"> Show Progress Frame
+              </label>
+            </div>
+            <div class="settingGrid">
+              <div class="field">
+                <label>ပုံစံ (Style)</label>
+                <select id="progressStyleSelect" onchange="drawCurrentFrame()">
+                  <option value="bottom" selected>▬ Bottom Line (အောက်ခြေလိုင်း)</option>
+                  <option value="frame">🔲 Outer Border (ဘေးဘောင်ပတ်လည်)</option>
+                  <option value="top">▔ Top Line (အပေါ်လိုင်း)</option>
+                </select>
+              </div>
+              <div class="field">
+                <label>ဘားအရောင် (Bar Color)</label>
+                <input id="progressBarColor" type="color" value="#f59e0b" oninput="drawCurrentFrame()">
+              </div>
+            </div>
+            <div class="settingGrid">
+              <div class="field">
+                <label>အထူ (Thickness/Height): <span id="progThickVal" style="color:var(--accent)">6px</span></label>
+                <input id="progressBarThickness" type="range" min="2" max="20" value="6" oninput="document.getElementById('progThickVal').textContent=this.value+'px'; drawCurrentFrame()">
+              </div>
+              <div class="field">
+                <label>နောက်ခံလိုင်း (Track Background)</label>
+                <input id="progressTrackColor" type="color" value="#1e293b" oninput="drawCurrentFrame()">
+              </div>
+            </div>
+            <small style="font-size:10px;color:var(--muted);display:block;margin-top:4px">💡 ဗီဒီယို ပြေးနေစဉ် Video Time အပြည့်ဖြစ်သည်နှင့် ဘား/ဘောင် ပါ ပြည့်သွားမည် ဖြစ်ပါသည်။</small>
+          </div>
+
           <!-- Generate Voices and Export Video Action Buttons -->
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px">
-            <button class="primary" onclick="generateAllVoices()" id="genVoicesBtn">
+            <button class="primary lockable" onclick="generateAllVoices()" id="genVoicesBtn">
               <span class="btnSpinner" id="voiceSpinner" style="display:none"></span>
               <span>🎙️ Generate Voices</span>
             </button>
-            <button class="burnBtn" onclick="openExportModal()" id="exportBtn">
+            <button class="burnBtn lockable" onclick="openExportModal()" id="exportBtn">
               🎬 Export MP4 Video
             </button>
           </div>
@@ -740,29 +782,29 @@ canvas#videoCanvas:active { cursor: grabbing; }
           <div class="settingGrid">
             <div class="field">
               <label>Subtitle Text Color</label>
-              <input id="subColor" type="color" value="#ffffff" oninput="drawCurrentFrame()">
+              <input id="subColor" type="color" value="#ffffff" oninput="drawCurrentFrame()" class="lockable">
             </div>
             <div class="field">
               <label>Subtitle Outline</label>
-              <input id="subOutline" type="color" value="#000000" oninput="drawCurrentFrame()">
+              <input id="subOutline" type="color" value="#000000" oninput="drawCurrentFrame()" class="lockable">
             </div>
           </div>
 
           <div class="settingGrid">
             <div class="field">
               <label>Font Size: <span id="subSizeVal" style="color:var(--accent)">24px</span></label>
-              <input id="subSize" type="range" min="16" max="44" value="24" oninput="document.getElementById('subSizeVal').textContent=this.value+'px'; drawCurrentFrame()">
+              <input id="subSize" type="range" min="16" max="44" value="24" oninput="document.getElementById('subSizeVal').textContent=this.value+'px'; drawCurrentFrame()" class="lockable">
             </div>
             <div class="field">
               <label>Y Position (%): <span id="subYVal" style="color:var(--accent)">82%</span></label>
-              <input id="subY" type="range" min="50" max="95" value="82" oninput="document.getElementById('subYVal').textContent=this.value+'%'; drawCurrentFrame()">
+              <input id="subY" type="range" min="50" max="95" value="82" oninput="document.getElementById('subYVal').textContent=this.value+'%'; drawCurrentFrame()" class="lockable">
             </div>
           </div>
 
           <div class="settingGrid">
             <div class="field">
               <label>Ken Burns Motion</label>
-              <select id="motionSelect" onchange="drawCurrentFrame()">
+              <select id="motionSelect" onchange="drawCurrentFrame()" class="lockable">
                 <option value="slow">🌿 Smooth Slow Zoom</option>
                 <option value="medium" selected>⚡ Medium Motion</option>
                 <option value="none">🔒 Static</option>
@@ -770,7 +812,7 @@ canvas#videoCanvas:active { cursor: grabbing; }
             </div>
             <div class="field">
               <label>Video Transition</label>
-              <select id="transitionSelect" onchange="drawCurrentFrame()">
+              <select id="transitionSelect" onchange="drawCurrentFrame()" class="lockable">
                 <option value="fade" selected>✨ Smooth Crossfade</option>
                 <option value="none">🔒 Direct Cut (None)</option>
               </select>
@@ -779,24 +821,24 @@ canvas#videoCanvas:active { cursor: grabbing; }
 
           <div class="field" style="margin-bottom:10px">
             <label>Transition Duration: <span id="transDurVal" style="color:var(--accent);font-weight:700">0.45s</span></label>
-            <input id="transDuration" type="range" min="0.05" max="1.0" step="0.05" value="0.45" oninput="document.getElementById('transDurVal').textContent=this.value+'s'; drawCurrentFrame()">
+            <input id="transDuration" type="range" min="0.05" max="1.0" step="0.05" value="0.45" oninput="document.getElementById('transDurVal').textContent=this.value+'s'; drawCurrentFrame()" class="lockable">
           </div>
 
           <div class="field" style="margin-bottom:10px">
             <label>AI Voice Actor (ကျား/မ)</label>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
-              <button class="voiceBtn active" id="vThiha" onclick="setVoice('my-MM-ThihaNeural')">👨 သီဟ (ကျား)</button>
-              <button class="voiceBtn" id="vNilar" onclick="setVoice('my-MM-NilarNeural')">👩 နီလာ (မ)</button>
+              <button class="voiceBtn active lockable" id="vThiha" onclick="setVoice('my-MM-ThihaNeural')">👨 သီဟ (ကျား)</button>
+              <button class="voiceBtn lockable" id="vNilar" onclick="setVoice('my-MM-NilarNeural')">👩 နီလာ (မ)</button>
             </div>
           </div>
 
           <div class="field">
             <label>AI Voice Emotion / Mood (အသံစတိုင်လ် ဇာတ်ကောင်)</label>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
-              <button class="voiceBtn active" id="moodNormal" onclick="setVoiceMood('normal')">😐 ပုံမှန် Normal</button>
-              <button class="voiceBtn" id="moodHorror" onclick="setVoiceMood('horror')">👻 သရဲ/သည်းထိတ်</button>
-              <button class="voiceBtn" id="moodComedy" onclick="setVoiceMood('comedy')">😂 ဟာသ/သွက်လက်</button>
-              <button class="voiceBtn" id="moodMystery" onclick="setVoiceMood('mystery')">🔮 ထူးဆန်း/ဒဏ္ဍာရီ</button>
+              <button class="voiceBtn active lockable" id="moodNormal" onclick="setVoiceMood('normal')">😐 ပုံမှန် Normal</button>
+              <button class="voiceBtn lockable" id="moodHorror" onclick="setVoiceMood('horror')">👻 သရဲ/သည်းထိတ်</button>
+              <button class="voiceBtn lockable" id="moodComedy" onclick="setVoiceMood('comedy')">😂 ဟာသ/သွက်လက်</button>
+              <button class="voiceBtn lockable" id="moodMystery" onclick="setVoiceMood('mystery')">🔮 ထူးဆန်း/ဒဏ္ဍာရီ</button>
             </div>
           </div>
         </div>
@@ -810,7 +852,7 @@ canvas#videoCanvas:active { cursor: grabbing; }
         <div class="body" id="engineBody">
           <div class="field" style="margin-bottom:8px">
             <label>⚡ PRIMARY AI GENERATOR MODE</label>
-            <select id="engineModeSelect">
+            <select id="engineModeSelect" class="lockable">
               <option value="auto" selected>🚀 Auto-Hybrid (Cloudflare -> HuggingFace -> Client)</option>
               <option value="cf">⚡ Cloudflare Workers AI (Ultra Fast)</option>
               <option value="hf">🤗 Hugging Face API (Worker Token)</option>
@@ -829,12 +871,12 @@ canvas#videoCanvas:active { cursor: grabbing; }
           <span id="sceneCountBadge" style="font-size:10.5px;color:var(--muted)"></span>
         </div>
         <div style="display:flex;gap:4px">
-          <button class="aiGenBtn" onclick="generateAllAIImages()" id="bulkAIBtn" style="padding:4px 9px;font-size:10.5px">
+          <button class="aiGenBtn lockable" onclick="generateAllAIImages()" id="bulkAIBtn" style="padding:4px 9px;font-size:10.5px">
             <span class="btnSpinner" id="bulkAISpinner" style="display:none"></span>
             <span>🎨 Auto Gen All Images</span>
           </button>
           <input type="file" id="bulkImgInput" accept="image/*,video/*" multiple hidden onchange="handleBulkImageUpload(event)">
-          <button onclick="document.getElementById('bulkImgInput').click()" style="padding:4px 8px;font-size:10.5px">📁 Upload</button>
+          <button class="lockable" onclick="document.getElementById('bulkImgInput').click()" style="padding:4px 8px;font-size:10.5px">📁 Upload</button>
         </div>
       </div>
 
@@ -845,7 +887,7 @@ canvas#videoCanvas:active { cursor: grabbing; }
             ⚠️ <b>သတိပေးချက် -</b> အချို့သော Scene များတွင် စာသားများလွန်းနေပါသည် (၁၅~၂၀ စက္ကန့် ဖြစ်နိုင်ပါသည်)။<br>
             အသံနှင့် စာတန်းထိုး မလွဲစေရန် ၈~၁၀ စက္ကန့်စာ အပိုင်းများအဖြစ် ခွဲထုတ်လိုက်ပါ။
           </div>
-          <button class="splitActionBtn" onclick="executeAutoSceneSplitting()">
+          <button class="splitActionBtn lockable" onclick="executeAutoSceneSplitting()">
             ⚡ Auto Split into 8s-10s Scenes
           </button>
         </div>
@@ -899,6 +941,12 @@ let previewAudioSources = new Map();
 let draggingElement = null;
 let activeOpenTab = null;
 
+// Export & Lock Controls
+let isExportActive = false;
+let exportAbortController = null;
+let currentActiveRecorder = null;
+let bgWorker = null;
+
 const canvas = document.getElementById("videoCanvas");
 const ctx = canvas.getContext("2d");
 const canvasControls = document.getElementById("canvasControls");
@@ -915,6 +963,7 @@ const animBarFill = document.getElementById("animBarFill");
 const progPercentText = document.getElementById("progPercentText");
 const progTitle = document.getElementById("progTitle");
 const progDesc = document.getElementById("progDesc");
+const cancelExportBtn = document.getElementById("cancelExportBtn");
 
 const slideMenu = document.getElementById('slideMenu');
 const overlay = document.getElementById('overlay');
@@ -927,6 +976,50 @@ function openMenu() {
 function closeMenu() {
   slideMenu.classList.remove('active');
   overlay.classList.remove('active');
+}
+
+// Background Worker Timer to prevent pause when switching tabs
+function initBackgroundWorker() {
+  if (!bgWorker) {
+    const workerScript = `
+      let timerId = null;
+      onmessage = function(e) {
+        if (e.data === 'start') {
+          if (timerId) clearInterval(timerId);
+          timerId = setInterval(() => postMessage('tick'), 25);
+        } else if (e.data === 'stop') {
+          if (timerId) clearInterval(timerId);
+          timerId = null;
+        }
+      };
+    `;
+    const blob = new Blob([workerScript], { type: 'application/javascript' });
+    bgWorker = new Worker(URL.createObjectURL(blob));
+  }
+}
+
+// Lock all buttons except hamburger menu during export
+function setExportingLock(locked) {
+  isExportActive = locked;
+  document.querySelectorAll(".lockable, input.lockable, select.lockable").forEach(el => {
+    el.disabled = locked;
+    if (locked) {
+      el.style.pointerEvents = "none";
+      el.style.opacity = "0.5";
+    } else {
+      el.style.pointerEvents = "auto";
+      el.style.opacity = "1";
+    }
+  });
+
+  // Warn before accidental page reload/exit
+  if (locked) {
+    window.onbeforeunload = function() {
+      return "ဗီဒီယို Export ပြုလုပ်နေဆဲဖြစ်ပါသည်။ ထွက်ခွာလိုပါသလား?";
+    };
+  } else {
+    window.onbeforeunload = null;
+  }
 }
 
 function openExportModal() {
@@ -948,8 +1041,22 @@ function selectExportMethod(method) {
   }
 }
 
+function cancelCurrentExport() {
+  if (!isExportActive) return;
+  toast("🛑 Export ပြုလုပ်မှုကို ရပ်တန့်လိုက်ပါပြီ");
+  if (exportAbortController) exportAbortController.abort();
+  if (currentActiveRecorder && currentActiveRecorder.state !== 'inactive') {
+    try { currentActiveRecorder.stop(); } catch(e){}
+  }
+  if (bgWorker) bgWorker.postMessage('stop');
+  hideProgressBar();
+  setExportingLock(false);
+  currentTime = 0;
+  drawCurrentFrame();
+}
+
 function toggleOverlayTab(tabName) {
-  const panels = ['title', 'text', 'logo'];
+  const panels = ['title', 'text', 'logo', 'progress'];
   panels.forEach(p => {
     const btn = document.getElementById(`btnToggle${p.charAt(0).toUpperCase() + p.slice(1)}`);
     const panel = document.getElementById(`panel${p.charAt(0).toUpperCase() + p.slice(1)}`);
@@ -991,7 +1098,7 @@ function toggleCard(bodyId, chevId) {
   if (c) c.classList.toggle("rotate");
 }
 
-function showProgressBar(type, title, desc) {
+function showProgressBar(type, title, desc, showCancel = false) {
   const preview = document.getElementById("videoPreviewCard");
   if (preview) preview.scrollIntoView({ behavior: "smooth", block: "start" });
 
@@ -999,6 +1106,7 @@ function showProgressBar(type, title, desc) {
   micWaveBox.style.display = (type === 'voice') ? 'flex' : 'none';
   paintDrawBox.style.display = (type === 'image') ? 'flex' : 'none';
   videoEditAnimBox.style.display = (type === 'editing') ? 'flex' : 'none';
+  cancelExportBtn.style.display = showCancel ? 'inline-flex' : 'none';
 
   animBarFill.style.width = "0%";
   progPercentText.textContent = "0%";
@@ -1018,6 +1126,7 @@ function hideProgressBar() {
   micWaveBox.style.display = 'none';
   paintDrawBox.style.display = 'none';
   videoEditAnimBox.style.display = 'none';
+  cancelExportBtn.style.display = 'none';
 }
 
 function toast(msg) {
@@ -1291,9 +1400,9 @@ function renderSceneList() {
           <div class="sceneHeaderRow">
             <span class="sceneBadge">SCENE #${idx+1} (${sceneDurations[idx]?.toFixed(1)}s)</span>
             <div class="sceneHeaderBtns">
-              <button onclick="toggleSrtEdit(${idx})" style="color:var(--accent);font-size:9px">📝 SRT</button>
-              <button onclick="generateSingleAIImage(${idx})" style="color:var(--gold)" title="Auto Draw AI Image">🎨 AI Gen</button>
-              <button onclick="playSingleSceneAudio(${idx})">🔊 Play</button>
+              <button onclick="toggleSrtEdit(${idx})" style="color:var(--accent);font-size:9px" class="lockable">📝 SRT</button>
+              <button onclick="generateSingleAIImage(${idx})" style="color:var(--gold)" title="Auto Draw AI Image" class="lockable">🎨 AI Gen</button>
+              <button onclick="playSingleSceneAudio(${idx})" class="lockable">🔊 Play</button>
             </div>
           </div>
 
@@ -1305,7 +1414,7 @@ function renderSceneList() {
             <div class="scenePromptScrollBox">
               <div class="scenePromptBox" title="${s.image_prompt_en || ''}">🎨 ${s.image_prompt_en || ''}</div>
             </div>
-            <button class="copyBtn" onclick="copyPrompt('${encodeURIComponent(s.image_prompt_en || '').replace(/'/g, "%27")}')">📋 Copy</button>
+            <button class="copyBtn lockable" onclick="copyPrompt('${encodeURIComponent(s.image_prompt_en || '').replace(/'/g, "%27")}')">📋 Copy</button>
           </div>
         </div>
       </div>
@@ -1718,6 +1827,7 @@ function renderMediaFrame(media, sceneTime, sceneDur, sceneIdx, alpha = 1.0) {
   ctx.restore();
 }
 
+// Draw Frame on Sleek Studio Slate Gray Canvas with Real-Time Progress Bar / Frame
 function drawCurrentFrame() {
   ctx.fillStyle = "#334155";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -1753,7 +1863,7 @@ function drawCurrentFrame() {
     ctx.fillText(`Ratio: ${currentAspect} • Click 'Auto Gen All Images'`, canvas.width / 2, canvas.height / 2 + 20);
   }
 
-  // 1. Video Title (Draggable & Customizable)
+  // 1. Video Title (Draggable)
   const showTitle = document.getElementById("showTitleCheck").checked;
   const titleText = document.getElementById("videoTitleInput").value.trim();
   if (showTitle && titleText) {
@@ -1779,7 +1889,7 @@ function drawCurrentFrame() {
     ctx.restore();
   }
 
-  // 2. Extra Custom Text (Draggable & Customizable)
+  // 2. Extra Custom Text (Draggable)
   const showExtra = document.getElementById("showExtraTextCheck").checked;
   const extraText = document.getElementById("extraTextInput").value.trim();
   if (showExtra && extraText) {
@@ -1805,7 +1915,7 @@ function drawCurrentFrame() {
     ctx.restore();
   }
 
-  // 3. Channel Logo (Draggable & Customizable)
+  // 3. Channel Logo (Draggable)
   if (logoImageObj && logoImageObj.complete) {
     const lSize = parseInt(document.getElementById("logoSize").value) || 60;
     const lOpacity = (parseInt(document.getElementById("logoOpacity").value) || 85) / 100;
@@ -1880,9 +1990,51 @@ function drawCurrentFrame() {
     });
     ctx.restore();
   }
+
+  // 5. Real-Time Video Progress Bar / Border Rendering
+  const showProgBar = document.getElementById("showProgressBarCheck")?.checked;
+  if (showProgBar && totalDuration > 0) {
+    const progStyle = document.getElementById("progressStyleSelect")?.value || "bottom";
+    const progColor = document.getElementById("progressBarColor")?.value || "#f59e0b";
+    const trackColor = document.getElementById("progressTrackColor")?.value || "#1e293b";
+    const thickness = parseInt(document.getElementById("progressBarThickness")?.value) || 6;
+    const ratio = Math.max(0, Math.min(1, currentTime / totalDuration));
+
+    ctx.save();
+    if (progStyle === "bottom") {
+      const y = canvas.height - thickness;
+      // Background Track
+      ctx.fillStyle = trackColor;
+      ctx.fillRect(0, y, canvas.width, thickness);
+      // Active Progress
+      ctx.fillStyle = progColor;
+      ctx.fillRect(0, y, canvas.width * ratio, thickness);
+    } else if (progStyle === "top") {
+      // Background Track
+      ctx.fillStyle = trackColor;
+      ctx.fillRect(0, 0, canvas.width, thickness);
+      // Active Progress
+      ctx.fillStyle = progColor;
+      ctx.fillRect(0, 0, canvas.width * ratio, thickness);
+    } else if (progStyle === "frame") {
+      // Outer Frame Running Border
+      const totalPerimeter = (canvas.width + canvas.height) * 2;
+      const currentPerimeter = totalPerimeter * ratio;
+
+      ctx.strokeStyle = trackColor;
+      ctx.lineWidth = thickness;
+      ctx.strokeRect(thickness / 2, thickness / 2, canvas.width - thickness, canvas.height - thickness);
+
+      ctx.strokeStyle = progColor;
+      ctx.lineWidth = thickness;
+      ctx.setLineDash([currentPerimeter, totalPerimeter]);
+      ctx.strokeRect(thickness / 2, thickness / 2, canvas.width - thickness, canvas.height - thickness);
+    }
+    ctx.restore();
+  }
 }
 
-// Real-Time Touch Dragging on Canvas
+// Touch / Pointer Dragging Handlers
 function getCanvasCoords(e) {
   const rect = canvas.getBoundingClientRect();
   const clientX = e.touches ? e.touches[0].clientX : e.clientX;
@@ -1893,6 +2045,7 @@ function getCanvasCoords(e) {
 }
 
 function handlePointerDown(e) {
+  if (isExportActive) return;
   const { x, y } = getCanvasCoords(e);
 
   if (document.getElementById("showTitleCheck").checked) {
@@ -1927,7 +2080,7 @@ function handlePointerDown(e) {
 }
 
 function handlePointerMove(e) {
-  if (!draggingElement) return;
+  if (!draggingElement || isExportActive) return;
   e.preventDefault();
   const { xPct, yPct } = getCanvasCoords(e);
   const clampedX = Math.max(5, Math.min(95, xPct));
@@ -2082,18 +2235,69 @@ function formatTime(s) {
   return `${String(m).padStart(2, "0")}:${String(sec).padStart(2, "0")}`;
 }
 
+// Helper: Concatenate all scene audio slices into a single linear AudioBuffer (Fixes Audio Overlap completely)
+async function createMergedSingleAudioBuffer(audioCtx) {
+  const audioDataBuffers = [];
+  let totalSamples = 0;
+
+  for (let i = 0; i < currentScenes.length; i++) {
+    const aud = audioBuffers.get(i);
+    if (aud && aud.src) {
+      try {
+        const resp = await fetch(aud.src);
+        const arrayBuf = await resp.arrayBuffer();
+        const decoded = await audioCtx.decodeAudioData(arrayBuf);
+        audioDataBuffers.push({ buffer: decoded, duration: sceneDurations[i] || decoded.duration });
+        totalSamples += Math.round((sceneDurations[i] || decoded.duration) * audioCtx.sampleRate);
+      } catch(e) {
+        audioDataBuffers.push(null);
+      }
+    } else {
+      audioDataBuffers.push(null);
+      totalSamples += Math.round((sceneDurations[i] || 8.5) * audioCtx.sampleRate);
+    }
+  }
+
+  if (!totalSamples) return null;
+
+  const merged = audioCtx.createBuffer(2, totalSamples, audioCtx.sampleRate);
+  let sampleOffset = 0;
+
+  for (let i = 0; i < currentScenes.length; i++) {
+    const item = audioDataBuffers[i];
+    const sliceLen = Math.round((sceneDurations[i] || 8.5) * audioCtx.sampleRate);
+
+    if (item && item.buffer) {
+      const src = item.buffer;
+      for (let ch = 0; ch < 2; ch++) {
+        const srcData = src.getChannelData(Math.min(ch, src.numberOfChannels - 1));
+        const destData = merged.getChannelData(ch);
+        const copyLen = Math.min(srcData.length, sliceLen);
+        for (let j = 0; j < copyLen; j++) {
+          destData[sampleOffset + j] = Math.max(-1.0, Math.min(1.0, srcData[j] * 1.6));
+        }
+      }
+    }
+    sampleOffset += sliceLen;
+  }
+
+  return merged;
+}
+
 // -------------------------------------------------------------
-// EXPORT METHOD 1: Fast Video Export (Accelerated Speed)
+// EXPORT METHOD 1: Fast Video Export (Audio Overlap Fixed & Background Worker Enabled)
 // -------------------------------------------------------------
 async function exportFastVideo() {
   if (!currentScenes.length) { toast("No scenes to export"); return; }
   pausePlayback();
+  initBackgroundWorker();
+  setExportingLock(true);
 
-  showProgressBar('editing', "⚡ Fast Video Render စတင်နေပါသည်...", "ဗီဒီယို ဖရိန်များနှင့် အသံလှိုင်းများကို အရှိန်မြှင့် ချုပ်လုပ်နေပါသည်...");
+  showProgressBar('editing', "⚡ Fast Video Render စတင်နေပါသည်...", "အသံနှင့် ဗီဒီယိုဖရိန်များကို တစ်ပြိုင်နက် ချုပ်လုပ်နေသည်...", true);
 
   const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   const dest = audioCtx.createMediaStreamDestination();
-  const canvasStream = canvas.captureStream(25);
+  const canvasStream = canvas.captureStream(30);
   const combinedStream = new MediaStream([
     ...canvasStream.getVideoTracks(),
     ...dest.stream.getAudioTracks()
@@ -2108,12 +2312,15 @@ async function exportFastVideo() {
     mimeType: MediaRecorder.isTypeSupported(mimeType) ? mimeType : undefined,
     videoBitsPerSecond: 4500000 
   });
+  currentActiveRecorder = recorder;
 
   const recordedChunks = [];
   recorder.ondataavailable = e => { if (e.data.size > 0) recordedChunks.push(e.data); };
 
   recorder.onstop = () => {
     hideProgressBar();
+    setExportingLock(false);
+    if (bgWorker) bgWorker.postMessage('stop');
     const finalBlob = new Blob(recordedChunks, { type: "video/mp4" });
     const a = document.createElement("a");
     a.href = URL.createObjectURL(finalBlob);
@@ -2122,49 +2329,40 @@ async function exportFastVideo() {
     toast("🎉 Fast Video download ပြီးစီးပါပြီ!");
   };
 
+  // Pre-merge all audio into ONE single continuous buffer to completely eliminate audio overlap
+  updateProgressBar(5, "အသံလှိုင်းများကို အတိအကျ စီတန်းနေပါသည်...");
+  const mergedAudio = await createMergedSingleAudioBuffer(audioCtx);
+  if (mergedAudio) {
+    const singleSource = audioCtx.createBufferSource();
+    singleSource.buffer = mergedAudio;
+    singleSource.connect(dest);
+    singleSource.start(0);
+  }
+
   recorder.start();
+  bgWorker.postMessage('start');
+
   currentTime = 0;
-  let accumulatedTime = 0;
+  const renderStartTime = performance.now();
 
-  for (let i = 0; i < currentScenes.length; i++) {
-    const dur = sceneDurations[i] || 8.5;
-    const aud = audioBuffers.get(i);
-    const media = imageObjects.get(i);
-
-    if (aud && aud.src) {
-      try {
-        const response = await fetch(aud.src);
-        const arrayBuffer = await response.arrayBuffer();
-        const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
-        const source = audioCtx.createBufferSource();
-        source.buffer = audioBuffer;
-        const exportGainNode = audioCtx.createGain();
-        exportGainNode.gain.value = 1.7;
-        source.connect(exportGainNode);
-        exportGainNode.connect(dest);
-        source.start(audioCtx.currentTime);
-      } catch(e) {}
-    }
-
-    if (media instanceof HTMLVideoElement) {
-      media.currentTime = 0;
-      media.play().catch(() => {});
-    }
-
-    // Faster accelerated sampling step (3x faster sampling)
-    const stepTime = 0.08;
-    for (let t = 0; t < dur; t += stepTime) {
-      currentTime = accumulatedTime + t;
+  const renderPromise = new Promise((resolve) => {
+    bgWorker.onmessage = function() {
+      if (!isExportActive) { resolve(); return; }
+      const elapsed = (performance.now() - renderStartTime) / 1000;
+      currentTime = elapsed;
       drawCurrentFrame();
 
       const pct = Math.min(99, Math.round((currentTime / totalDuration) * 100));
-      updateProgressBar(pct, `Scene ${i+1}/${currentScenes.length} ဖရိန်များ ချုပ်လုပ်နေသည် (${pct}%)`);
-      await new Promise(r => setTimeout(r, 14));
-    }
+      updateProgressBar(pct, `Fast Render ပြုလုပ်နေပါသည် (${pct}%)...`);
 
-    if (media instanceof HTMLVideoElement) media.pause();
-    accumulatedTime += dur;
-  }
+      if (currentTime >= totalDuration) {
+        resolve();
+      }
+    };
+  });
+
+  await renderPromise;
+  if (!isExportActive) { audioCtx.close(); return; }
 
   updateProgressBar(100, "ဗီဒီယိုဖိုင် အချောသပ်နေပါသည်...");
   await new Promise(r => setTimeout(r, 400));
@@ -2178,8 +2376,9 @@ async function exportFastVideo() {
 async function exportZipProject() {
   if (!currentScenes.length) { toast("No scenes to export"); return; }
   pausePlayback();
+  setExportingLock(true);
 
-  showProgressBar('editing', "📦 1-Click ZIP ထုပ်ပိုးနေပါသည်...", "ရုပ်ပုံများ၊ အသံနှင့် စာတန်းထိုးများကို ZIP ဖိုင်အဖြစ် တည်ဆောက်နေသည်...");
+  showProgressBar('editing', "📦 1-Click ZIP ထုပ်ပိုးနေပါသည်...", "ရုပ်ပုံများ၊ အသံနှင့် စာတန်းထိုးများကို ZIP ဖိုင်အဖြစ် တည်ဆောက်နေသည်...", true);
 
   try {
     const zip = new JSZip();
@@ -2187,20 +2386,17 @@ async function exportZipProject() {
     let srtContent = "";
     let srtTimeCursor = 0;
 
-    // 1. Process and Add Images & SRT
     for (let i = 0; i < currentScenes.length; i++) {
+      if (!isExportActive) return;
       const s = currentScenes[i];
       const dur = sceneDurations[i] || 8.5;
-      const media = imageObjects.get(i);
 
-      // Create snapshot of scene frame as high-res JPEG
       currentTime = srtTimeCursor + 0.1;
       drawCurrentFrame();
       const imgDataUrl = canvas.toDataURL("image/jpeg", 0.95);
       const base64Data = imgDataUrl.replace(/^data:image\/jpeg;base64,/, "");
       imgFolder.file(`scene_${String(i+1).padStart(2, '0')}.jpg`, base64Data, { base64: true });
 
-      // Generate SRT entry
       const startSrt = formatSrtTime(srtTimeCursor);
       const endSrt = formatSrtTime(srtTimeCursor + dur);
       srtContent += `${i + 1}\n${startSrt} --> ${endSrt}\n${(s.text_mm || '').trim()}\n\n`;
@@ -2211,58 +2407,19 @@ async function exportZipProject() {
 
     zip.file(`subtitles_ep${activeEpisode}.srt`, srtContent);
 
-    // 2. Merge Full Audio to Single File
+    // Merge Full Audio
     updateProgressBar(65, "အသံဖိုင်များ ပေါင်းစပ်နေပါသည်...");
-    let audioMergedBlob = null;
-
-    if (audioBuffers.size > 0) {
-      try {
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        const audioDataBuffers = [];
-        let totalSamples = 0;
-
-        for (let i = 0; i < currentScenes.length; i++) {
-          const aud = audioBuffers.get(i);
-          if (aud && aud.src) {
-            const resp = await fetch(aud.src);
-            const arrayBuf = await resp.arrayBuffer();
-            const decoded = await audioCtx.decodeAudioData(arrayBuf);
-            audioDataBuffers.push(decoded);
-            totalSamples += decoded.length;
-          }
-        }
-
-        if (audioDataBuffers.length > 0) {
-          const mergedBuffer = audioCtx.createBuffer(
-            audioDataBuffers[0].numberOfChannels,
-            totalSamples,
-            audioDataBuffers[0].sampleRate
-          );
-
-          for (let channel = 0; channel < mergedBuffer.numberOfChannels; channel++) {
-            let offset = 0;
-            const channelData = mergedBuffer.getChannelData(channel);
-            for (const b of audioDataBuffers) {
-              const srcData = b.getChannelData(Math.min(channel, b.numberOfChannels - 1));
-              for (let j = 0; j < srcData.length; j++) {
-                channelData[offset + j] = Math.max(-1.0, Math.min(1.0, srcData[j] * 1.7));
-              }
-              offset += b.length;
-            }
-          }
-
-          audioMergedBlob = bufferToWaveBlob(mergedBuffer, totalSamples);
-          zip.file(`voice_ep${activeEpisode}.wav`, audioMergedBlob);
-        }
-        audioCtx.close();
-      } catch(e) {
-        console.warn("Could not merge audio into ZIP:", e);
-      }
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const mergedAudio = await createMergedSingleAudioBuffer(audioCtx);
+    if (mergedAudio) {
+      const wavBlob = bufferToWaveBlob(mergedAudio, mergedAudio.length);
+      zip.file(`voice_ep${activeEpisode}.wav`, wavBlob);
     }
+    audioCtx.close();
 
     updateProgressBar(85, "ZIP ဖိုင် ဖိသိပ်ထုပ်ပိုးနေပါသည်...");
     const content = await zip.generateAsync({ type: "blob" }, (metadata) => {
-      updateProgressBar(85 + Math.round(metadata.percent * 0.15), "ZIP ဖိုင် ဒေါင်းလုဒ် ပြုလုပ်နေပါသည်...");
+      updateProgressBar(85 + Math.round(metadata.percent * 0.15), "ZIP ဖိုင် တည်ဆောက်နေပါသည်...");
     });
 
     const a = document.createElement("a");
@@ -2271,12 +2428,14 @@ async function exportZipProject() {
     a.click();
 
     updateProgressBar(100, "ZIP Package ဒေါင်းလုဒ် အောင်မြင်ပါပြီ!");
-    await new Promise(r => setTimeout(r, 500));
+    await new Promise(r => setTimeout(r, 400));
     hideProgressBar();
+    setExportingLock(false);
     toast("🎉 1-Click ZIP Package download အောင်မြင်ပါပြီ!");
 
   } catch(err) {
     hideProgressBar();
+    setExportingLock(false);
     toast("ZIP Export Error: " + err.message);
   }
 }
@@ -2290,13 +2449,15 @@ function formatSrtTime(totalSec) {
 }
 
 // -------------------------------------------------------------
-// EXPORT METHOD 3: Standard Real-Time MP4 Recorder
+// EXPORT METHOD 3: Standard Real-Time MP4 Recorder (Background Worker Supported)
 // -------------------------------------------------------------
 async function exportStandardRealtimeVideo() {
   if (!currentScenes.length) { toast("No scenes to export"); return; }
   pausePlayback();
+  initBackgroundWorker();
+  setExportingLock(true);
 
-  showProgressBar('editing', "🎥 Standard MP4 Video ထုတ်လုပ်နေပါသည်...", "တိုက်ရိုက်အသံဖမ်းယူပြီး တည်းဖြတ်နေပါသည်...");
+  showProgressBar('editing', "🎥 Standard MP4 Video ထုတ်လုပ်နေပါသည်...", "တိုက်ရိုက်အသံဖမ်းယူပြီး တည်းဖြတ်နေပါသည်...", true);
 
   const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   const dest = audioCtx.createMediaStreamDestination();
@@ -2315,12 +2476,15 @@ async function exportStandardRealtimeVideo() {
     mimeType: MediaRecorder.isTypeSupported(mimeType) ? mimeType : undefined,
     videoBitsPerSecond: 4500000 
   });
+  currentActiveRecorder = recorder;
 
   const recordedChunks = [];
   recorder.ondataavailable = e => { if (e.data.size > 0) recordedChunks.push(e.data); };
 
   recorder.onstop = () => {
     hideProgressBar();
+    setExportingLock(false);
+    if (bgWorker) bgWorker.postMessage('stop');
     const finalBlob = new Blob(recordedChunks, { type: "video/mp4" });
     const a = document.createElement("a");
     a.href = URL.createObjectURL(finalBlob);
@@ -2329,56 +2493,81 @@ async function exportStandardRealtimeVideo() {
     toast("🎉 MP4 Video downloaded successfully!");
   };
 
+  const mergedAudio = await createMergedSingleAudioBuffer(audioCtx);
+  if (mergedAudio) {
+    const singleSource = audioCtx.createBufferSource();
+    singleSource.buffer = mergedAudio;
+    singleSource.connect(dest);
+    singleSource.start(0);
+  }
+
   recorder.start();
+  bgWorker.postMessage('start');
+
   currentTime = 0;
-  let accumulatedTime = 0;
+  const renderStartTime = performance.now();
 
-  for (let i = 0; i < currentScenes.length; i++) {
-    const dur = sceneDurations[i] || 8.5;
-    const aud = audioBuffers.get(i);
-    const media = imageObjects.get(i);
-
-    if (aud && aud.src) {
-      try {
-        const response = await fetch(aud.src);
-        const arrayBuffer = await response.arrayBuffer();
-        const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
-        const source = audioCtx.createBufferSource();
-        source.buffer = audioBuffer;
-
-        const exportGainNode = audioCtx.createGain();
-        exportGainNode.gain.value = 1.7;
-        source.connect(exportGainNode);
-        exportGainNode.connect(dest);
-
-        source.start(audioCtx.currentTime);
-      } catch(e) {}
-    }
-
-    if (media instanceof HTMLVideoElement) {
-      media.currentTime = 0;
-      media.play().catch(() => {});
-    }
-
-    const sceneStart = performance.now();
-    while (performance.now() - sceneStart < (dur * 1000)) {
-      currentTime = accumulatedTime + ((performance.now() - sceneStart) / 1000);
+  const standardPromise = new Promise((resolve) => {
+    bgWorker.onmessage = function() {
+      if (!isExportActive) { resolve(); return; }
+      const elapsed = (performance.now() - renderStartTime) / 1000;
+      currentTime = elapsed;
       drawCurrentFrame();
 
       const pct = Math.min(99, Math.round((currentTime / totalDuration) * 100));
-      updateProgressBar(pct, `Scene ${i+1}/${currentScenes.length} (${pct}%)`);
+      updateProgressBar(pct, `Real-time အသံသွင်း ဗီဒီယိုချုပ်နေသည် (${pct}%)...`);
 
-      await new Promise(r => setTimeout(r, 33));
-    }
+      if (currentTime >= totalDuration) {
+        resolve();
+      }
+    };
+  });
 
-    if (media instanceof HTMLVideoElement) media.pause();
-    accumulatedTime += dur;
-  }
+  await standardPromise;
+  if (!isExportActive) { audioCtx.close(); return; }
 
   updateProgressBar(100, "Encoding MP4 video file...");
   await new Promise(r => setTimeout(r, 400));
   recorder.stop();
   audioCtx.close();
+}
+
+function bufferToWaveBlob(abuffer, totalSamples) {
+  const numOfChan = abuffer.numberOfChannels;
+  const length = totalSamples * numOfChan * 2 + 44;
+  const out = new DataView(new ArrayBuffer(length));
+  let pos = 0;
+
+  function setUint16(data) { out.setUint16(pos, data, true); pos += 2; }
+  function setUint32(data) { out.setUint32(pos, data, true); pos += 4; }
+
+  setUint32(0x46464952); // "RIFF"
+  setUint32(length - 8);
+  setUint32(0x45564157); // "WAVE"
+  setUint32(0x20746d66); // "fmt "
+  setUint32(16);
+  setUint16(1); // PCM
+  setUint16(numOfChan);
+  setUint32(abuffer.sampleRate);
+  setUint32(abuffer.sampleRate * 2 * numOfChan);
+  setUint16(numOfChan * 2);
+  setUint16(16);
+  setUint32(0x61746164); // "data"
+  setUint32(length - pos - 4);
+
+  const channels = [];
+  for (let i = 0; i < abuffer.numberOfChannels; i++) channels.push(abuffer.getChannelData(i));
+
+  let sample = 0;
+  for (let i = 0; i < abuffer.length; i++) {
+    for (let ch = 0; ch < numOfChan; ch++) {
+      sample = Math.max(-1, Math.min(1, channels[ch][i]));
+      sample = (0.5 + sample < 0 ? sample * 32768 : sample * 32767) | 0;
+      out.setInt16(pos, sample, true);
+      pos += 2;
+    }
+  }
+  return new Blob([out.buffer], { type: "audio/wav" });
 }
 
 window.onload = function() { reloadFromStoryMaker(); };
