@@ -24,6 +24,7 @@
   --green: #10b981;
   --red: #ef4444;
   --cyan: #0284c7;
+  --studio-gray: #334155;
 }
 
 * { 
@@ -92,7 +93,7 @@ button:active { transform: scale(0.97); }
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* Top Navigation Bar */
+/* Top Navbar (Cleaned without right buttons) */
 .navbar {
   display: flex; justify-content: space-between; align-items: center;
   padding: 12px 20px; background-color: #ffffff;
@@ -106,12 +107,6 @@ button:active { transform: scale(0.97); }
   background: none; border: none; color: #1e293b;
   font-size: 1.4rem; cursor: pointer; padding: 2px 6px; border-radius: 6px;
 }
-.headerBtns { display: flex; gap: 6px; align-items: center; }
-.iconBtn {
-  width: 32px; height: 32px; padding: 0; border-radius: 8px; font-size: 13px;
-  background: #f8fafc; border: 1px solid var(--border); color: #334155;
-}
-.iconBtn:hover { background: #fef3c7; border-color: var(--gold); }
 
 /* Left Side Slide Menu & Overlay */
 .overlay {
@@ -188,15 +183,17 @@ button:active { transform: scale(0.97); }
 .chevron { font-size: 11px; color: var(--muted); transition: transform 0.2s ease; }
 .chevron.rotate { transform: rotate(180deg); }
 
-/* Preview Canvas Box */
+/* Preview Canvas Box (Studio Slate Gray Background) */
 .previewCanvasBox {
-  position: relative; width: 100%; background: #000000;
+  position: relative; width: 100%; background: var(--studio-gray);
   display: flex; align-items: center; justify-content: center;
   border-radius: 10px; overflow: hidden; border: 1px solid var(--border);
+  touch-action: none;
 }
 .previewCanvasBox.landscape { aspect-ratio: 16/9; max-height: 380px; }
 .previewCanvasBox.portrait { aspect-ratio: 9/16; max-height: 480px; margin: auto; max-width: 300px; }
-canvas#videoCanvas { width: 100%; height: 100%; object-fit: contain; display: block; }
+canvas#videoCanvas { width: 100%; height: 100%; object-fit: contain; display: block; cursor: grab; }
+canvas#videoCanvas:active { cursor: grabbing; }
 
 .canvasOverlayControls {
   position: absolute; bottom: 0; left: 0; right: 0;
@@ -211,24 +208,126 @@ canvas#videoCanvas { width: 100%; height: 100%; object-fit: contain; display: bl
 .vTimeText { font-size: 10px; font-family: ui-monospace, monospace; color: #f1f5f9; min-width: 36px; text-align: center; }
 .vSeekBar { flex: 1; accent-color: var(--gold); height: 6px; border-radius: 3px; cursor: pointer; }
 
-/* Progress Overlay */
+/* Dedicated Floating Elements Toolbar Under Video */
+.overlay-tools-bar {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+  margin-top: 10px;
+}
+.tool-tab-btn {
+  padding: 9px 8px;
+  font-size: 11.5px;
+  font-weight: 700;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: #ffffff;
+  color: #334155;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+.tool-tab-btn:hover { background: #fffbeb; border-color: var(--gold); color: var(--accent); }
+.tool-tab-btn.active {
+  background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+  color: #ffffff;
+  border-color: var(--gold-dark);
+  box-shadow: 0 3px 10px rgba(245, 158, 11, 0.3);
+}
+
+/* Dedicated Settings Drawer for Title, Custom Text & Logo */
+.overlay-settings-panel {
+  display: none;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: 12px;
+  padding: 14px;
+  margin-top: 10px;
+  box-shadow: 0 4px 15px rgba(245, 158, 11, 0.08);
+}
+.overlay-settings-panel.open { display: block; }
+.panel-head-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px dashed #fde68a;
+}
+
+/* Dual Custom Loading Animations */
 .activeProgressOverlay {
   position: absolute; inset: 0; z-index: 45;
-  background: rgba(15, 23, 42, 0.92); backdrop-filter: blur(8px);
+  background: rgba(30, 41, 59, 0.94); backdrop-filter: blur(8px);
   display: none; flex-direction: column; align-items: center; justify-content: center;
   padding: 24px; text-align: center;
 }
 .activeProgressOverlay.active { display: flex; }
 
-.pulseSpinnerRing {
-  width: 48px; height: 48px; border-radius: 50%;
-  border: 3px solid rgba(245, 158, 11, 0.2);
-  border-top-color: var(--gold); border-right-color: var(--green);
-  animation: spin 0.85s linear infinite; margin-bottom: 12px;
+/* 1. Mic Wave Recording Animation (For Voice Generation) */
+.mic-wave-box {
+  display: none;
+  position: relative;
+  width: 56px;
+  height: 56px;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 12px;
 }
+.mic-wave-circle {
+  position: absolute;
+  width: 100%; height: 100%;
+  border-radius: 50%;
+  background: rgba(245, 158, 11, 0.35);
+  animation: micWavePulse 1.4s infinite ease-out;
+}
+.mic-wave-circle:nth-child(2) { animation-delay: 0.5s; }
+@keyframes micWavePulse {
+  0% { transform: scale(0.6); opacity: 1; }
+  100% { transform: scale(1.6); opacity: 0; }
+}
+.mic-wave-icon { font-size: 26px; z-index: 2; position: relative; }
+
+/* 2. Paintbrush Drawing Animation (For Image Generation) */
+.paint-draw-box {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.brush-icon {
+  font-size: 32px;
+  display: inline-block;
+  animation: brushPaintingMotion 1.3s infinite ease-in-out alternate;
+  transform-origin: bottom left;
+}
+@keyframes brushPaintingMotion {
+  0% { transform: translate(-16px, 0) rotate(-15deg); }
+  50% { transform: translate(14px, -4px) rotate(15deg); }
+  100% { transform: translate(-16px, 0) rotate(-15deg); }
+}
+.paint-palette-line {
+  width: 120px; height: 5px;
+  background: #475569;
+  border-radius: 99px;
+  position: relative;
+  overflow: hidden;
+}
+.paint-palette-line::after {
+  content: '';
+  position: absolute; top: 0; left: -100%;
+  width: 100%; height: 100%;
+  background: linear-gradient(90deg, transparent, #f59e0b, #10b981, transparent);
+  animation: paintLineSweep 1.2s infinite linear;
+}
+@keyframes paintLineSweep { 0% { left: -100%; } 100% { left: 100%; } }
 
 .animTrack {
-  width: 100%; max-width: 280px; height: 8px; background: #334155;
+  width: 100%; max-width: 280px; height: 8px; background: #475569;
   border-radius: 99px; overflow: hidden; position: relative;
   margin: 10px 0 6px 0;
 }
@@ -340,15 +439,11 @@ canvas#videoCanvas { width: 100%; height: 100%; object-fit: contain; display: bl
 
 <body>
 
-<!-- Top Navbar -->
+<!-- Top Navbar (Cleaned without right buttons) -->
 <header class="navbar">
   <div class="nav-left">
     <button class="menu-btn" onclick="openMenu()">☰</button>
     <div class="logo">AI Studio App</div>
-  </div>
-  <div class="headerBtns">
-    <button class="iconBtn" onclick="reloadFromStoryMaker()" title="Reload from Story Maker">🔄</button>
-    <button class="iconBtn" onclick="exportFullVideo()" title="Burn Video" style="color:var(--green)">🎬</button>
   </div>
 </header>
 
@@ -392,6 +487,7 @@ canvas#videoCanvas { width: 100%; height: 100%; object-fit: contain; display: bl
         </div>
 
         <div class="body" style="padding:10px">
+          <!-- Canvas with Gray Studio Background & Touch Dragging -->
           <div class="previewCanvasBox landscape" id="canvasBox">
             <canvas id="videoCanvas" width="1280" height="720"></canvas>
 
@@ -402,10 +498,24 @@ canvas#videoCanvas { width: 100%; height: 100%; object-fit: contain; display: bl
               <span class="vTimeText" id="totalTimeText">00:00</span>
             </div>
 
+            <!-- Custom Dual Animations Overlay -->
             <div class="activeProgressOverlay" id="activeProgressOverlay">
-              <div class="pulseSpinnerRing"></div>
-              <div style="font-size:13.5px;font-weight:700;color:#fff" id="progTitle">🎨 Generating AI Images...</div>
-              <div style="font-size:11px;color:#cbd5e1;margin-top:2px" id="progDesc">Failover Engine Active...</div>
+              
+              <!-- 1. Mic Wave Animation (For Voice Generation) -->
+              <div class="mic-wave-box" id="micWaveBox">
+                <div class="mic-wave-circle"></div>
+                <div class="mic-wave-circle"></div>
+                <div class="mic-wave-icon">🎙️</div>
+              </div>
+
+              <!-- 2. Paint Brush Animation (For Image Generation) -->
+              <div class="paint-draw-box" id="paintDrawBox">
+                <div class="brush-icon">🖌️</div>
+                <div class="paint-palette-line"></div>
+              </div>
+
+              <div style="font-size:13.5px;font-weight:700;color:#fff" id="progTitle">ဖန်တီးနေပါသည်...</div>
+              <div style="font-size:11px;color:#cbd5e1;margin-top:2px" id="progDesc">Engine Active...</div>
               <div class="animTrack">
                 <div class="animBarFill" id="animBarFill"></div>
               </div>
@@ -413,7 +523,126 @@ canvas#videoCanvas { width: 100%; height: 100%; object-fit: contain; display: bl
             </div>
           </div>
 
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px">
+          <!-- Dedicated Toolbar Under Video: Title, Custom Text, Logo Buttons -->
+          <div class="overlay-tools-bar">
+            <button class="tool-tab-btn" id="btnToggleTitle" onclick="toggleOverlayTab('title')">
+              <span>📝 Add Title</span>
+            </button>
+            <button class="tool-tab-btn" id="btnToggleText" onclick="toggleOverlayTab('text')">
+              <span>➕ Custom Text</span>
+            </button>
+            <button class="tool-tab-btn" id="btnToggleLogo" onclick="toggleOverlayTab('logo')">
+              <span>🛡️ Logo</span>
+            </button>
+          </div>
+
+          <!-- 1. Dedicated Title Control Panel -->
+          <div class="overlay-settings-panel" id="panelTitle">
+            <div class="panel-head-row">
+              <span style="font-size:11px;font-weight:700;color:var(--accent)">📝 Title Text & Drag Controls</span>
+              <label style="font-size:11px;display:flex;align-items:center;gap:4px;cursor:pointer">
+                <input type="checkbox" id="showTitleCheck" checked onchange="drawCurrentFrame()"> Show Title
+              </label>
+            </div>
+            <div class="field" style="margin-bottom:8px">
+              <input type="text" id="videoTitleInput" value="တောနက်ထဲက ထူးဆန်းသောအိမ်ကြီး" oninput="drawCurrentFrame()">
+            </div>
+            <div class="settingGrid">
+              <div class="field">
+                <label>Size: <span id="titleSizeVal" style="color:var(--accent)">28px</span></label>
+                <input id="titleSize" type="range" min="16" max="64" value="28" oninput="document.getElementById('titleSizeVal').textContent=this.value+'px'; drawCurrentFrame()">
+              </div>
+              <div class="field">
+                <label>Color</label>
+                <input id="titleColor" type="color" value="#f59e0b" oninput="drawCurrentFrame()">
+              </div>
+            </div>
+            <div class="settingGrid">
+              <div class="field">
+                <label>Outline Color</label>
+                <input id="titleOutline" type="color" value="#000000" oninput="drawCurrentFrame()">
+              </div>
+              <div class="field">
+                <label>X Pos (%): <span id="titleXVal" style="color:var(--accent)">50%</span></label>
+                <input id="titleX" type="range" min="5" max="95" value="50" oninput="document.getElementById('titleXVal').textContent=this.value+'%'; drawCurrentFrame()">
+              </div>
+            </div>
+            <div class="field">
+              <label>Y Pos (%): <span id="titleYVal" style="color:var(--accent)">8%</span></label>
+              <input id="titleY" type="range" min="4" max="95" value="8" oninput="document.getElementById('titleYVal').textContent=this.value+'%'; drawCurrentFrame()">
+            </div>
+            <small style="font-size:10px;color:var(--muted);display:block;margin-top:4px">💡 ဖုန်းစခရင် Canvas ပေါ်တွင် စာသားကို လက်ဖြင့် တိုက်ရိုက်ထိပြီး ဆွဲရွှေ့နိုင်ပါသည်။</small>
+          </div>
+
+          <!-- 2. Dedicated Custom Text Control Panel -->
+          <div class="overlay-settings-panel" id="panelText">
+            <div class="panel-head-row">
+              <span style="font-size:11px;font-weight:700;color:var(--cyan)">➕ Extra Custom Text Controls</span>
+              <label style="font-size:11px;display:flex;align-items:center;gap:4px;cursor:pointer">
+                <input type="checkbox" id="showExtraTextCheck" onchange="drawCurrentFrame()"> Enable Text
+              </label>
+            </div>
+            <div class="field" style="margin-bottom:8px">
+              <input type="text" id="extraTextInput" placeholder="ဥပမာ - @mychannel သို့မဟုတ် အပိုင်း (၁)" value="အပိုင်း (၁)" oninput="drawCurrentFrame()">
+            </div>
+            <div class="settingGrid">
+              <div class="field">
+                <label>Size: <span id="extraSizeVal" style="color:var(--accent)">20px</span></label>
+                <input id="extraSize" type="range" min="12" max="50" value="20" oninput="document.getElementById('extraSizeVal').textContent=this.value+'px'; drawCurrentFrame()">
+              </div>
+              <div class="field">
+                <label>Color</label>
+                <input id="extraColor" type="color" value="#0284c7" oninput="drawCurrentFrame()">
+              </div>
+            </div>
+            <div class="settingGrid">
+              <div class="field">
+                <label>Outline Color</label>
+                <input id="extraOutline" type="color" value="#000000" oninput="drawCurrentFrame()">
+              </div>
+              <div class="field">
+                <label>X Pos (%): <span id="extraXVal" style="color:var(--accent)">50%</span></label>
+                <input id="extraX" type="range" min="5" max="95" value="50" oninput="document.getElementById('extraXVal').textContent=this.value+'%'; drawCurrentFrame()">
+              </div>
+            </div>
+            <div class="field">
+              <label>Y Pos (%): <span id="extraYVal" style="color:var(--accent)">16%</span></label>
+              <input id="extraY" type="range" min="4" max="95" value="16" oninput="document.getElementById('extraYVal').textContent=this.value+'%'; drawCurrentFrame()">
+            </div>
+            <small style="font-size:10px;color:var(--muted);display:block;margin-top:4px">💡 ဖုန်းစခရင် Canvas ပေါ်တွင် စာသားကို လက်ဖြင့် တိုက်ရိုက်ထိပြီး ဆွဲရွှေ့နိုင်ပါသည်။</small>
+          </div>
+
+          <!-- 3. Dedicated Logo Control Panel -->
+          <div class="overlay-settings-panel" id="panelLogo">
+            <div class="panel-head-row">
+              <span style="font-size:11px;font-weight:700;color:var(--accent)">🛡️ Channel Logo / Watermark</span>
+              <input type="file" id="logoFileInput" accept="image/png,image/jpeg,image/webp" hidden onchange="handleLogoUpload(event)">
+              <button onclick="document.getElementById('logoFileInput').click()" style="padding:2px 8px;font-size:10px;color:var(--accent)">📤 Upload Logo</button>
+            </div>
+            <div class="settingGrid">
+              <div class="field">
+                <label>Size: <span id="logoSizeVal" style="color:var(--accent)">60px</span></label>
+                <input id="logoSize" type="range" min="20" max="180" value="60" oninput="document.getElementById('logoSizeVal').textContent=this.value+'px'; drawCurrentFrame()">
+              </div>
+              <div class="field">
+                <label>Opacity: <span id="logoOpacityVal" style="color:var(--accent)">85%</span></label>
+                <input id="logoOpacity" type="range" min="10" max="100" value="85" oninput="document.getElementById('logoOpacityVal').textContent=this.value+'%'; drawCurrentFrame()">
+              </div>
+            </div>
+            <div class="settingGrid">
+              <div class="field">
+                <label>X Pos (%): <span id="logoXVal" style="color:var(--accent)">85%</span></label>
+                <input id="logoX" type="range" min="5" max="95" value="85" oninput="document.getElementById('logoXVal').textContent=this.value+'%'; drawCurrentFrame()">
+              </div>
+              <div class="field">
+                <label>Y Pos (%): <span id="logoYVal" style="color:var(--accent)">10%</span></label>
+                <input id="logoY" type="range" min="5" max="95" value="10" oninput="document.getElementById('logoYVal').textContent=this.value+'%'; drawCurrentFrame()">
+              </div>
+            </div>
+            <small style="font-size:10px;color:var(--muted);display:block;margin-top:4px">💡 Logo ပုံကို Canvas ပေါ်တွင် လက်ချောင်းဖြင့် စိတ်ကြိုက်ဆွဲရွှေ့ နေရာချနိုင်ပါသည်။</small>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px">
             <button class="primary" onclick="generateAllVoices()" id="genVoicesBtn">
               <span class="btnSpinner" id="voiceSpinner" style="display:none"></span>
               <span>🎙️ Generate Voices</span>
@@ -527,119 +756,6 @@ canvas#videoCanvas { width: 100%; height: 100%; object-fit: contain; display: bl
         </div>
       </div>
 
-      <div class="card" style="margin-bottom:10px">
-        <div class="cardHead" onclick="toggleCard('titleLogoBody', 'titleLogoChev')">
-          <div class="title">🏷️ Video Title, Custom Text & Logo</div>
-          <span class="chevron" id="titleLogoChev">▲</span>
-        </div>
-        <div class="body" id="titleLogoBody">
-          
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-            <label style="font-size:10.5px;color:var(--accent);font-weight:700">📝 VIDEO TITLE TEXT (ခေါင်းစဉ်စာသား)</label>
-            <label style="font-size:10px;display:flex;align-items:center;gap:4px;cursor:pointer">
-              <input type="checkbox" id="showTitleCheck" checked onchange="drawCurrentFrame()"> Show Title
-            </label>
-          </div>
-          <div class="field" style="margin-bottom:8px">
-            <input type="text" id="videoTitleInput" value="တောနက်ထဲက ထူးဆန်းသောအိမ်ကြီး" oninput="drawCurrentFrame()">
-          </div>
-
-          <div class="settingGrid">
-            <div class="field">
-              <label>Title Size: <span id="titleSizeVal" style="color:var(--accent)">28px</span></label>
-              <input id="titleSize" type="range" min="16" max="54" value="28" oninput="document.getElementById('titleSizeVal').textContent=this.value+'px'; drawCurrentFrame()">
-            </div>
-            <div class="field">
-              <label>Title Text Color</label>
-              <input id="titleColor" type="color" value="#f59e0b" oninput="drawCurrentFrame()">
-            </div>
-          </div>
-
-          <div class="settingGrid">
-            <div class="field">
-              <label>Title Outline Color</label>
-              <input id="titleOutline" type="color" value="#000000" oninput="drawCurrentFrame()">
-            </div>
-            <div class="field">
-              <label>X Pos (ဘယ်/ညာ %): <span id="titleXVal" style="color:var(--accent)">50%</span></label>
-              <input id="titleX" type="range" min="10" max="90" value="50" oninput="document.getElementById('titleXVal').textContent=this.value+'%'; drawCurrentFrame()">
-            </div>
-          </div>
-
-          <div class="field" style="margin-bottom:12px">
-            <label>Y Pos (အပေါ်/အောက် %): <span id="titleYVal" style="color:var(--accent)">8%</span></label>
-            <input id="titleY" type="range" min="4" max="95" value="8" oninput="document.getElementById('titleYVal').textContent=this.value+'%'; drawCurrentFrame()">
-          </div>
-
-          <div style="border-top:1px dashed var(--border);padding-top:10px;margin-top:8px">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-              <label style="font-size:10.5px;color:var(--cyan);font-weight:700">➕ EXTRA ADD TEXT (နောက်ထပ် စာတန်းထည့်ရန်)</label>
-              <label style="font-size:10px;display:flex;align-items:center;gap:4px;cursor:pointer">
-                <input type="checkbox" id="showExtraTextCheck" onchange="drawCurrentFrame()"> Enable Extra Text
-              </label>
-            </div>
-            <div class="field" style="margin-bottom:8px">
-              <input type="text" id="extraTextInput" placeholder="ဥပမာ - @mychannel သို့မဟုတ် အပိုင်း (၁)" value="အပိုင်း (၁)" oninput="drawCurrentFrame()">
-            </div>
-
-            <div class="settingGrid">
-              <div class="field">
-                <label>Text Size: <span id="extraSizeVal" style="color:var(--accent)">20px</span></label>
-                <input id="extraSize" type="range" min="12" max="44" value="20" oninput="document.getElementById('extraSizeVal').textContent=this.value+'px'; drawCurrentFrame()">
-              </div>
-              <div class="field">
-                <label>Text Color</label>
-                <input id="extraColor" type="color" value="#0284c7" oninput="drawCurrentFrame()">
-              </div>
-            </div>
-
-            <div class="settingGrid">
-              <div class="field">
-                <label>Outline Color</label>
-                <input id="extraOutline" type="color" value="#000000" oninput="drawCurrentFrame()">
-              </div>
-              <div class="field">
-                <label>X Pos (ဘယ်/ညာ %): <span id="extraXVal" style="color:var(--accent)">50%</span></label>
-                <input id="extraX" type="range" min="10" max="90" value="50" oninput="document.getElementById('extraXVal').textContent=this.value+'%'; drawCurrentFrame()">
-              </div>
-            </div>
-
-            <div class="field" style="margin-bottom:12px">
-              <label>Y Pos (အပေါ်/အောက် %): <span id="extraYVal" style="color:var(--accent)">16%</span></label>
-              <input id="extraY" type="range" min="4" max="95" value="16" oninput="document.getElementById('extraYVal').textContent=this.value+'%'; drawCurrentFrame()">
-            </div>
-          </div>
-
-          <div style="border-top:1px solid var(--border);padding-top:10px;margin-top:6px">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-              <label style="font-size:10.5px;color:var(--muted);font-weight:700">🛡️ CHANNEL LOGO / WATERMARK</label>
-              <input type="file" id="logoFileInput" accept="image/png,image/jpeg,image/webp" hidden onchange="handleLogoUpload(event)">
-              <button onclick="document.getElementById('logoFileInput').click()" style="padding:2px 8px;font-size:10px;color:var(--accent)">📤 Upload Logo PNG</button>
-            </div>
-
-            <div class="settingGrid">
-              <div class="field">
-                <label>Logo Size: <span id="logoSizeVal" style="color:var(--accent)">60px</span></label>
-                <input id="logoSize" type="range" min="30" max="150" value="60" oninput="document.getElementById('logoSizeVal').textContent=this.value+'px'; drawCurrentFrame()">
-              </div>
-              <div class="field">
-                <label>Logo Opacity: <span id="logoOpacityVal" style="color:var(--accent)">85%</span></label>
-                <input id="logoOpacity" type="range" min="20" max="100" value="85" oninput="document.getElementById('logoOpacityVal').textContent=this.value+'%'; drawCurrentFrame()">
-              </div>
-            </div>
-
-            <div class="field">
-              <label>Logo Position</label>
-              <select id="logoPosSelect" onchange="drawCurrentFrame()">
-                <option value="top-right" selected>↗️ Top Right</option>
-                <option value="top-left">↖️ Top Left</option>
-                <option value="bottom-right">↘️ Bottom Right</option>
-                <option value="bottom-left">↙️ Bottom Left</option>
-              </select>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
 
     <div class="card">
@@ -687,7 +803,6 @@ canvas#videoCanvas { width: 100%; height: 100%; object-fit: contain; display: bl
 </main>
 
 <script>
-// Dual-Engine Backend Architecture (Matches mmvoice.html)
 const RENDER_BACKEND_URL = "https://myanmar-tts-app.onrender.com";
 const WORKER_URL = "https://ai-studio-mm.nainelinoo-14tpro.workers.dev";
 
@@ -716,6 +831,10 @@ let previewAudioCtx = null;
 let previewGainNode = null;
 let previewAudioSources = new Map();
 
+// Interactive Touch Dragging Variables
+let draggingElement = null; // 'title', 'extra', 'logo'
+let activeOpenTab = null;
+
 const canvas = document.getElementById("videoCanvas");
 const ctx = canvas.getContext("2d");
 const canvasControls = document.getElementById("canvasControls");
@@ -725,6 +844,8 @@ const curTimeText = document.getElementById("curTimeText");
 const totalTimeText = document.getElementById("totalTimeText");
 
 const activeProgressOverlay = document.getElementById("activeProgressOverlay");
+const micWaveBox = document.getElementById("micWaveBox");
+const paintDrawBox = document.getElementById("paintDrawBox");
 const animBarFill = document.getElementById("animBarFill");
 const progPercentText = document.getElementById("progPercentText");
 const progTitle = document.getElementById("progTitle");
@@ -741,6 +862,29 @@ function openMenu() {
 function closeMenu() {
   slideMenu.classList.remove('active');
   overlay.classList.remove('active');
+}
+
+// Toggle Bottom Overlay Panels (Title, Custom Text, Logo)
+function toggleOverlayTab(tabName) {
+  const panels = ['title', 'text', 'logo'];
+  panels.forEach(p => {
+    const btn = document.getElementById(`btnToggle${p.charAt(0).toUpperCase() + p.slice(1)}`);
+    const panel = document.getElementById(`panel${p.charAt(0).toUpperCase() + p.slice(1)}`);
+    if (p === tabName) {
+      if (activeOpenTab === tabName) {
+        panel.classList.remove('open');
+        btn.classList.remove('active');
+        activeOpenTab = null;
+      } else {
+        panel.classList.add('open');
+        btn.classList.add('active');
+        activeOpenTab = tabName;
+      }
+    } else {
+      panel.classList.remove('open');
+      btn.classList.remove('active');
+    }
+  });
 }
 
 function initPreviewAudioSystem() {
@@ -764,11 +908,23 @@ function toggleCard(bodyId, chevId) {
   if (c) c.classList.toggle("rotate");
 }
 
-function showProgressBar(title, desc) {
+// Show Progress with Mode ('voice' or 'image')
+function showProgressBar(type, title, desc) {
   const preview = document.getElementById("videoPreviewCard");
   if (preview) preview.scrollIntoView({ behavior: "smooth", block: "start" });
 
   activeProgressOverlay.classList.add("active");
+  if (type === 'voice') {
+    micWaveBox.style.display = 'flex';
+    paintDrawBox.style.display = 'none';
+  } else if (type === 'image') {
+    micWaveBox.style.display = 'none';
+    paintDrawBox.style.display = 'flex';
+  } else {
+    micWaveBox.style.display = 'none';
+    paintDrawBox.style.display = 'none';
+  }
+
   animBarFill.style.width = "0%";
   progPercentText.textContent = "0%";
   progTitle.textContent = title;
@@ -784,6 +940,8 @@ function updateProgressBar(percent, desc) {
 
 function hideProgressBar() {
   activeProgressOverlay.classList.remove("active");
+  micWaveBox.style.display = 'none';
+  paintDrawBox.style.display = 'none';
 }
 
 function toast(msg) {
@@ -1321,16 +1479,22 @@ async function generateSingleAIImage(idx) {
   if (!s) return;
 
   const ratioText = currentAspect === "16/9" ? "16:9 Landscape" : "9:16 Shorts";
-  toast(`🎨 Generating Scene #${idx+1} (${ratioText})...`);
+  showProgressBar('image', `🎨 Scene #${idx+1} ပုံဆွဲနေပါသည်...`, `စုတ်တံနှင့် ပုံရိပ်များ ဖန်တီးနေသည် (${ratioText})...`);
+
   try {
     const img = await loadHybridAIImage(s.image_prompt_en || s.text_mm, idx);
     applyLoadedImage(idx, img);
+    updateProgressBar(100, `Done! Scene #${idx+1} Ready`);
+    await new Promise(r => setTimeout(r, 400));
+    hideProgressBar();
     toast(`🎉 Scene #${idx+1} Image Ready!`);
   } catch(e) {
+    hideProgressBar();
     toast(`Scene #${idx+1}: ${e.message}`);
   }
 }
 
+// Generate All Images with Paint Brush Animation
 async function generateAllAIImages() {
   if (!currentScenes.length) return;
   const btn = document.getElementById("bulkAIBtn");
@@ -1339,7 +1503,7 @@ async function generateAllAIImages() {
 
   const isLandscape = currentAspect === "16/9";
   const ratioText = isLandscape ? "16:9 Landscape" : "9:16 Shorts";
-  showProgressBar(`🎨 Generating Ep ${activeEpisode} Images...`, `Queue started (${ratioText})...`);
+  showProgressBar('image', `🎨 ပုံရိပ်များ ဖန်တီးရေးဆွဲနေပါသည်...`, `Episode ${activeEpisode} (${ratioText})...`);
 
   let completedCount = 0;
   const total = currentScenes.length;
@@ -1348,7 +1512,7 @@ async function generateAllAIImages() {
     const s = currentScenes[i];
     const promptToUse = s.image_prompt_en || s.text_mm;
     
-    updateProgressBar((i / total) * 100, `Rendering Scene ${i+1}/${total}: "${s.text_mm ? s.text_mm.slice(0, 18) : ''}..."`);
+    updateProgressBar((i / total) * 100, `Scene ${i+1}/${total} ပုံဆွဲနေပါသည်: "${s.text_mm ? s.text_mm.slice(0, 16) : ''}..."`);
 
     try {
       const img = await loadHybridAIImage(promptToUse, i);
@@ -1363,7 +1527,7 @@ async function generateAllAIImages() {
       } catch(e2) {}
     }
 
-    updateProgressBar(((i + 1) / total) * 100, `Finished Scene ${i+1}/${total}`);
+    updateProgressBar(((i + 1) / total) * 100, `Scene ${i+1}/${total} ပြီးစီးပါပြီ`);
 
     if (i < total - 1) {
       await new Promise(r => setTimeout(r, 1200));
@@ -1447,7 +1611,7 @@ function handleLogoUpload(e) {
   img.src = URL.createObjectURL(f);
 }
 
-// Dual-Engine TTS Request (Render Backend First -> Cloudflare Worker Fallback)
+// Dual-Engine TTS Request with Recording Mic Wave Animation
 async function requestTTSAudio(payload) {
   let response = null;
   try {
@@ -1483,7 +1647,8 @@ async function generateAllVoices() {
   const spinner = document.getElementById("voiceSpinner");
   btn.disabled = true; spinner.style.display = "inline-block";
 
-  showProgressBar("🎙️ Generating Boosted Myanmar Voices...", "Connecting via Dual-Engine TTS (Render & Worker)...");
+  // Show Mic Wave Recording Animation
+  showProgressBar('voice', "🎙️ မြန်မာအသံများ သွင်းယူနေပါသည်...", "Edge TTS ဖြင့် အသံလှိုင်းများ ထုတ်ယူနေသည်...");
 
   const params = getVoiceAudioParams();
   const total = currentScenes.length;
@@ -1491,7 +1656,7 @@ async function generateAllVoices() {
   for (let i = 0; i < total; i++) {
     const s = currentScenes[i];
     const pct = (i / total) * 100;
-    updateProgressBar(pct, `Synthesizing Voice ${i+1}/${total}: "${s.text_mm.slice(0, 18)}..."`);
+    updateProgressBar(pct, `အသံသွင်းယူနေသည် ${i+1}/${total}: "${s.text_mm.slice(0, 16)}..."`);
 
     try {
       const blob = await requestTTSAudio({
@@ -1633,8 +1798,9 @@ function renderMediaFrame(media, sceneTime, sceneDur, sceneIdx, alpha = 1.0) {
   ctx.restore();
 }
 
+// Draw Frame on Sleek Studio Slate Gray Canvas
 function drawCurrentFrame() {
-  ctx.fillStyle = "#000000";
+  ctx.fillStyle = "#334155"; // Neutral Studio Slate Gray
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   if (!currentScenes.length) return;
 
@@ -1660,14 +1826,15 @@ function drawCurrentFrame() {
       renderMediaFrame(media, current.sceneTime, current.sceneDur, current.index, 1.0);
     }
   } else {
-    ctx.fillStyle = "#0f172a"; ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "#334155"; 
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.fillStyle = "#f59e0b"; ctx.font = "bold 28px sans-serif"; ctx.textAlign = "center";
     ctx.fillText(`SCENE #${current.index + 1}`, canvas.width / 2, canvas.height / 2 - 15);
-    ctx.fillStyle = "#94a3b8"; ctx.font = "15px sans-serif";
+    ctx.fillStyle = "#cbd5e1"; ctx.font = "14px sans-serif";
     ctx.fillText(`Ratio: ${currentAspect} • Click 'Auto Gen All Images'`, canvas.width / 2, canvas.height / 2 + 20);
   }
 
-  // 1. Video Title Rendering
+  // 1. Video Title (Draggable & Customizable)
   const showTitle = document.getElementById("showTitleCheck").checked;
   const titleText = document.getElementById("videoTitleInput").value.trim();
   if (showTitle && titleText) {
@@ -1693,7 +1860,7 @@ function drawCurrentFrame() {
     ctx.restore();
   }
 
-  // 2. Extra Add Text Rendering
+  // 2. Extra Custom Text (Draggable & Customizable)
   const showExtra = document.getElementById("showExtraTextCheck").checked;
   const extraText = document.getElementById("extraTextInput").value.trim();
   if (showExtra && extraText) {
@@ -1719,22 +1886,19 @@ function drawCurrentFrame() {
     ctx.restore();
   }
 
-  // 3. Channel Logo Rendering
+  // 3. Channel Logo (Draggable & Customizable)
   if (logoImageObj && logoImageObj.complete) {
     const lSize = parseInt(document.getElementById("logoSize").value) || 60;
     const lOpacity = (parseInt(document.getElementById("logoOpacity").value) || 85) / 100;
-    const lPos = document.getElementById("logoPosSelect").value;
+    const logoXPercent = (parseInt(document.getElementById("logoX").value) || 85) / 100;
+    const logoYPercent = (parseInt(document.getElementById("logoY").value) || 10) / 100;
 
     const logoAspect = logoImageObj.width / logoImageObj.height;
     const lw = lSize;
     const lh = lSize / logoAspect;
-    const pad = 24;
 
-    let lx = pad, ly = pad;
-    if (lPos === "top-right") { lx = canvas.width - lw - pad; ly = pad; }
-    else if (lPos === "top-left") { lx = pad; ly = pad; }
-    else if (lPos === "bottom-right") { lx = canvas.width - lw - pad; ly = canvas.height - lh - pad; }
-    else if (lPos === "bottom-left") { lx = pad; ly = canvas.height - lh - pad; }
+    const lx = canvas.width * logoXPercent - (lw / 2);
+    const ly = canvas.height * logoYPercent - (lh / 2);
 
     ctx.save();
     ctx.globalAlpha = lOpacity;
@@ -1798,6 +1962,92 @@ function drawCurrentFrame() {
     ctx.restore();
   }
 }
+
+// Real-Time Touch / Mouse Dragging on Canvas for Title, Custom Text & Logo
+function getCanvasCoords(e) {
+  const rect = canvas.getBoundingClientRect();
+  const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+  const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+  const x = ((clientX - rect.left) / rect.width) * canvas.width;
+  const y = ((clientY - rect.top) / rect.height) * canvas.height;
+  return { x, y, xPct: Math.round((x / canvas.width) * 100), yPct: Math.round((y / canvas.height) * 100) };
+}
+
+function handlePointerDown(e) {
+  const { x, y } = getCanvasCoords(e);
+
+  // Check Title
+  if (document.getElementById("showTitleCheck").checked) {
+    const tX = canvas.width * ((parseInt(document.getElementById("titleX").value) || 50) / 100);
+    const tY = canvas.height * ((parseInt(document.getElementById("titleY").value) || 8) / 100);
+    if (Math.hypot(x - tX, y - tY) < 65) {
+      draggingElement = 'title';
+      toggleOverlayTab('title');
+      return;
+    }
+  }
+
+  // Check Extra Text
+  if (document.getElementById("showExtraTextCheck").checked) {
+    const eX = canvas.width * ((parseInt(document.getElementById("extraX").value) || 50) / 100);
+    const eY = canvas.height * ((parseInt(document.getElementById("extraY").value) || 16) / 100);
+    if (Math.hypot(x - eX, y - eY) < 60) {
+      draggingElement = 'extra';
+      toggleOverlayTab('text');
+      return;
+    }
+  }
+
+  // Check Logo
+  if (logoImageObj && logoImageObj.complete) {
+    const lX = canvas.width * ((parseInt(document.getElementById("logoX").value) || 85) / 100);
+    const lY = canvas.height * ((parseInt(document.getElementById("logoY").value) || 10) / 100);
+    if (Math.hypot(x - lX, y - lY) < 60) {
+      draggingElement = 'logo';
+      toggleOverlayTab('logo');
+      return;
+    }
+  }
+}
+
+function handlePointerMove(e) {
+  if (!draggingElement) return;
+  e.preventDefault();
+  const { xPct, yPct } = getCanvasCoords(e);
+  const clampedX = Math.max(5, Math.min(95, xPct));
+  const clampedY = Math.max(4, Math.min(95, yPct));
+
+  if (draggingElement === 'title') {
+    document.getElementById("titleX").value = clampedX;
+    document.getElementById("titleY").value = clampedY;
+    document.getElementById("titleXVal").textContent = clampedX + "%";
+    document.getElementById("titleYVal").textContent = clampedY + "%";
+  } else if (draggingElement === 'extra') {
+    document.getElementById("extraX").value = clampedX;
+    document.getElementById("extraY").value = clampedY;
+    document.getElementById("extraXVal").textContent = clampedX + "%";
+    document.getElementById("extraYVal").textContent = clampedY + "%";
+  } else if (draggingElement === 'logo') {
+    document.getElementById("logoX").value = clampedX;
+    document.getElementById("logoY").value = clampedY;
+    document.getElementById("logoXVal").textContent = clampedX + "%";
+    document.getElementById("logoYVal").textContent = clampedY + "%";
+  }
+
+  drawCurrentFrame();
+}
+
+function handlePointerUp() {
+  draggingElement = null;
+}
+
+canvas.addEventListener('mousedown', handlePointerDown);
+window.addEventListener('mousemove', handlePointerMove);
+window.addEventListener('mouseup', handlePointerUp);
+
+canvas.addEventListener('touchstart', handlePointerDown, { passive: false });
+window.addEventListener('touchmove', handlePointerMove, { passive: false });
+window.addEventListener('touchend', handlePointerUp);
 
 function togglePlayPause() {
   if (isPlaying) pausePlayback();
@@ -1923,7 +2173,7 @@ async function exportFullVideo() {
   if (!currentScenes.length) { toast("No scenes to export"); return; }
   pausePlayback();
 
-  showProgressBar("🔥 Rendering MP4 Video...", `Compositing for ${currentAspect} with Loud Audio Boost...`);
+  showProgressBar('none', "🔥 Rendering MP4 Video...", `Compositing for ${currentAspect} with Loud Audio Boost...`);
 
   const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   const dest = audioCtx.createMediaStreamDestination();
