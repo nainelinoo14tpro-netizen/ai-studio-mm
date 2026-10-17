@@ -27,7 +27,7 @@
       color: #0f172a;
       overflow-x: hidden;
       min-height: 100vh;
-      padding-bottom: 40px;
+      padding-bottom: 90px;
     }
 
     /* Top Navigation Bar */
@@ -268,7 +268,6 @@
       text-align: center;
     }
 
-    /* Mic Animation */
     .mic-anim-wrap {
       position: relative;
       width: 54px;
@@ -363,7 +362,48 @@
       cursor: pointer;
       display: inline-block;
     }
-    .dl-btn:hover { opacity: 0.95; }
+
+    /* Bottom Fixed Audio Preview Toolbar */
+    .bottom-preview-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(12px);
+      border-top: 2px solid #f59e0b;
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      z-index: 95;
+      box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.08);
+    }
+
+    .preview-btn {
+      flex: 1;
+      max-width: 240px;
+      padding: 9px 12px;
+      font-size: 12px;
+      font-weight: 700;
+      border-radius: 8px;
+      border: 1px solid #f59e0b;
+      background: #fffbeb;
+      color: #b45309;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .preview-btn:hover { background: #fef3c7; }
+    .preview-btn.playing {
+      background: #f59e0b;
+      color: #ffffff;
+      box-shadow: 0 2px 8px rgba(245, 158, 11, 0.4);
+    }
   </style>
 </head>
 <body>
@@ -390,6 +430,7 @@
       <li><a href="mmvoice.html" class="active">🎙️ Myanmar Voice TTS</a></li>
       <li><a href="story-maker.html">📖 Story Create</a></li>
       <li><a href="story-to-video.html">🎬 Story to Video Studio</a></li>
+      <li><a href="movie-recaps.html">🎬 Movie Recaps</a></li>
     </ul>
   </nav>
 
@@ -473,10 +514,23 @@
     </div>
   </div>
 
+  <!-- Bottom Fixed Sample Voice Preview Bar -->
+  <div class="bottom-preview-bar">
+    <button class="preview-btn" id="thihaSampleBtn" onclick="playSampleVoice('my-MM-ThihaNeural', 'thihaSampleBtn')">
+      <span>👨 သီဟ အသံစမ်းရန်</span>
+    </button>
+    <button class="preview-btn" id="nilarSampleBtn" onclick="playSampleVoice('my-MM-NilarNeural', 'nilarSampleBtn')">
+      <span>👩 နီလာ အသံစမ်းရန်</span>
+    </button>
+  </div>
+
   <script>
+    const RENDER_BACKEND_URL = "https://myanmar-tts-app.onrender.com";
     const WORKER_URL = "https://ai-studio-mm.nainelinoo-14tpro.workers.dev";
 
-    // Navigation Drawer Controls
+    let sampleAudio = new Audio();
+    let currentlyPlayingBtnId = null;
+
     const slideMenu = document.getElementById('slideMenu');
     const overlay = document.getElementById('overlay');
 
@@ -490,7 +544,6 @@
       overlay.classList.remove('active');
     }
 
-    // Voice Style Presets Mapping
     const presets = {
       natural: { speed: 0, pitch: 0 },
       recaps: { speed: 15, pitch: -2 },
@@ -516,7 +569,6 @@
       document.getElementById(valId).innerText = sign + v + unit;
     }
 
-    // Progress Bar Animation
     function updateProgress(percent, text) {
       const box = document.getElementById('progressBox');
       const fill = document.getElementById('progressBarFill');
@@ -534,7 +586,93 @@
       document.getElementById('progressBox').style.display = 'none';
     }
 
-    // Generate Audio using server /api/tts or Cloudflare Worker fallback
+    async function requestTTSAudio(payload) {
+      let response = null;
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 6500);
+
+        response = await fetch(`${RENDER_BACKEND_URL}/api/tts`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+          signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+      } catch (err) {
+        console.warn("Render Backend timeout or error, falling back to Cloudflare Worker:", err);
+      }
+
+      if (!response || !response.ok) {
+        response = await fetch(`${WORKER_URL}/tts`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+      }
+
+      if (!response.ok) throw new Error("TTS Generation failed on both servers");
+      return await response.blob();
+    }
+
+    async function playSampleVoice(voice, btnId) {
+      const btn = document.getElementById(btnId);
+
+      if (currentlyPlayingBtnId === btnId && !sampleAudio.paused) {
+        sampleAudio.pause();
+        sampleAudio.currentTime = 0;
+        btn.classList.remove('playing');
+        btn.innerHTML = btnId.includes('thiha') ? '👨 သီဟ အသံစမ်းရန်' : '👩 နီလာ အသံစမ်းရန်';
+        currentlyPlayingBtnId = null;
+        return;
+      }
+
+      if (!sampleAudio.paused) {
+        sampleAudio.pause();
+        if (currentlyPlayingBtnId) {
+          const prev = document.getElementById(currentlyPlayingBtnId);
+          if (prev) {
+            prev.classList.remove('playing');
+            prev.innerHTML = currentlyPlayingBtnId.includes('thiha') ? '👨 သီဟ အသံစမ်းရန်' : '👩 နီလာ အသံစမ်းရန်';
+          }
+        }
+      }
+
+      const originalHtml = btn.innerHTML;
+      btn.innerText = "⏳ ရယူနေသည်...";
+
+      const sampleText = voice.includes('Thiha') 
+        ? "မင်္ဂလာပါခင်ဗျာ၊ ကျွန်တော်ကတော့ သီဟ ဖြစ်ပါတယ်။ သင့်ဇာတ်လမ်းတွေကို ကျွန်တော်ဖတ်ပြပေးပါမယ်။"
+        : "မင်္ဂလာပါရှင်၊ ကျွန်မကတော့ နီလာ ဖြစ်ပါတယ်။ သင့်အတွက် အကောင်းဆုံး အသံထွက်ပေးပါမယ်ရှင်။";
+
+      try {
+        const blob = await requestTTSAudio({
+          text: sampleText,
+          voice: voice,
+          rate: "+0%",
+          pitch: "+0Hz",
+          volume: "+50%"
+        });
+
+        const url = URL.createObjectURL(blob);
+        sampleAudio.src = url;
+        sampleAudio.play();
+
+        btn.classList.add('playing');
+        btn.innerHTML = "⏹ ရပ်တန့်မည်";
+        currentlyPlayingBtnId = btnId;
+
+        sampleAudio.onended = () => {
+          btn.classList.remove('playing');
+          btn.innerHTML = originalHtml;
+          currentlyPlayingBtnId = null;
+        };
+      } catch (e) {
+        alert("နမူနာအသံ ဖွင့်မရပါ: " + e.message);
+        btn.innerHTML = originalHtml;
+      }
+    }
+
     async function generateAudio() {
       const text = document.getElementById('textInput').value.trim();
       if (!text) {
@@ -558,7 +696,7 @@
       btnText.innerText = "အသံဖန်တီးနေပါသည်...";
       outputBox.style.display = 'none';
 
-      updateProgress(15, "အသံစနစ် ချိတ်ဆက်ပြီး စတင်သွင်းယူနေသည်...");
+      updateProgress(15, "ဆာဗာသို့ ချိတ်ဆက်နေပါသည်...");
 
       let currentProgress = 15;
       const progressTimer = setInterval(() => {
@@ -569,42 +707,18 @@
       }, 200);
 
       try {
-        const payload = {
+        const blob = await requestTTSAudio({
           text: text,
           voice: speaker,
           rate: rateStr,
           pitch: pitchStr,
           volume: "+50%"
-        };
-
-        // 1st Priority: Local Render API
-        let response = await fetch('/api/tts', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        }).catch(() => null);
-
-        // 2nd Priority: Cloudflare Worker Fallback
-        if (!response || !response.ok) {
-          response = await fetch(WORKER_URL + '/tts', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-          });
-        }
+        });
 
         clearInterval(progressTimer);
-
-        if (!response.ok) {
-          const err = await response.json().catch(() => ({}));
-          throw new Error(err.error || "Generation failed");
-        }
-
         updateProgress(95, "အသံဖိုင် တည်ဆောက်ပြီးစီးနေသည်...");
 
-        const blob = await response.blob();
         const audioUrl = URL.createObjectURL(blob);
-
         updateProgress(100, "✅ အသံသွင်းယူမှု အောင်မြင်ပါပြီ (100%)");
 
         audioElem.src = audioUrl;
