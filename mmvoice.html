@@ -27,7 +27,7 @@
       color: #0f172a;
       overflow-x: hidden;
       min-height: 100vh;
-      padding-bottom: 90px;
+      padding-bottom: 40px;
     }
 
     /* Top Navigation Bar */
@@ -142,7 +142,7 @@
       -webkit-backdrop-filter: blur(12px);
       padding: 14px 16px;
       border-radius: 14px;
-      margin-bottom: 14px;
+      margin-bottom: 12px;
       box-shadow: 0 6px 24px rgba(31, 38, 135, 0.08);
       border: 1px solid rgba(255, 255, 255, 0.8);
       text-align: center;
@@ -157,6 +157,93 @@
     .glass-header p {
       color: #475569;
       font-size: 0.8rem;
+    }
+
+    /* Sample Voice Buttons Box (Right Under Header) */
+    .sample-bar-wrap {
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 14px;
+      padding: 12px;
+      margin-bottom: 14px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .sample-label {
+      font-size: 11.5px;
+      font-weight: 700;
+      color: #b45309;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .sample-btn-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .preview-btn {
+      padding: 9px 10px;
+      font-size: 12px;
+      font-weight: 700;
+      border-radius: 10px;
+      border: 1px solid #f59e0b;
+      background: #fffbeb;
+      color: #b45309;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .preview-btn:hover { background: #fef3c7; }
+    .preview-btn.playing {
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+      color: #ffffff;
+      box-shadow: 0 3px 10px rgba(245, 158, 11, 0.35);
+      border-color: #d97706;
+    }
+
+    /* Sample Mic Wave Animation Box */
+    .sample-active-box {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      background: #fef3c7;
+      border: 1px dashed #f59e0b;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 11.5px;
+      color: #b45309;
+      font-weight: 700;
+    }
+
+    .sample-mic-pulse {
+      position: relative;
+      width: 26px;
+      height: 26px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .sample-mic-pulse span {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background: rgba(245, 158, 11, 0.4);
+      animation: sampleWave 1.2s infinite ease-out;
+    }
+    @keyframes sampleWave {
+      0% { transform: scale(0.6); opacity: 1; }
+      100% { transform: scale(1.6); opacity: 0; }
     }
 
     /* Form & Feature Box */
@@ -348,61 +435,28 @@
       border-radius: 8px;
     }
 
+    /* Green MP3 Download Button */
     .dl-btn {
       text-align: center;
-      background: linear-gradient(135deg, #b45309, #92400e);
-      color: #fff;
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: #ffffff;
       text-decoration: none;
-      padding: 9px 12px;
+      padding: 10px 14px;
       border-radius: 8px;
-      font-weight: 600;
-      font-size: 12.5px;
-      box-shadow: 0 3px 10px rgba(180, 83, 9, 0.25);
+      font-weight: 700;
+      font-size: 13px;
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.28);
       border: none;
       cursor: pointer;
-      display: inline-block;
-    }
-
-    /* Bottom Fixed Audio Preview Toolbar */
-    .bottom-preview-bar {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      background: rgba(255, 255, 255, 0.95);
-      backdrop-filter: blur(12px);
-      border-top: 2px solid #f59e0b;
-      padding: 10px 16px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 12px;
-      z-index: 95;
-      box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.08);
-    }
-
-    .preview-btn {
-      flex: 1;
-      max-width: 240px;
-      padding: 9px 12px;
-      font-size: 12px;
-      font-weight: 700;
-      border-radius: 8px;
-      border: 1px solid #f59e0b;
-      background: #fffbeb;
-      color: #b45309;
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 6px;
-      cursor: pointer;
       transition: all 0.2s ease;
     }
-    .preview-btn:hover { background: #fef3c7; }
-    .preview-btn.playing {
-      background: #f59e0b;
-      color: #ffffff;
-      box-shadow: 0 2px 8px rgba(245, 158, 11, 0.4);
+    .dl-btn:hover {
+      background: linear-gradient(135deg, #059669, #047857);
+      box-shadow: 0 4px 14px rgba(16, 185, 129, 0.38);
     }
   </style>
 </head>
@@ -439,6 +493,30 @@
     <div class="glass-header">
       <h2>🎙️ Myanmar Voice TTS Studio</h2>
       <p>Microsoft Edge TTS အခြေပြု သဘာဝကျ မြန်မာအသံစနစ်</p>
+    </div>
+
+    <!-- Sample Voice Preview Box (Directly Under Header) -->
+    <div class="sample-bar-wrap">
+      <div class="sample-label">
+        <span>⚡ အသံနမူနာ ကြိုတင်စမ်းသပ်ရန်-</span>
+      </div>
+      <div class="sample-btn-grid">
+        <button class="preview-btn" id="thihaSampleBtn" onclick="playSampleVoice('my-MM-ThihaNeural', 'thihaSampleBtn')">
+          <span>👨 သီဟ အသံစမ်းရန်</span>
+        </button>
+        <button class="preview-btn" id="nilarSampleBtn" onclick="playSampleVoice('my-MM-NilarNeural', 'nilarSampleBtn')">
+          <span>👩 နီလာ အသံစမ်းရန်</span>
+        </button>
+      </div>
+
+      <!-- Live Mic / Audio Playing Indicator -->
+      <div class="sample-active-box" id="sampleActiveBox">
+        <div class="sample-mic-pulse">
+          <span></span>
+          <div style="font-size:14px; position:relative; z-index:2;">🎙️</div>
+        </div>
+        <span id="sampleActiveText">သီဟ အသံကို ဖွင့်ပြနေပါသည်...</span>
+      </div>
     </div>
 
     <div class="box">
@@ -509,19 +587,11 @@
       <!-- Output Audio Player -->
       <div class="output-box" id="outputBox">
         <audio id="audioElem" controls></audio>
-        <a id="downloadLink" class="dl-btn" download="myanmar-speech.mp3">⬇️ MP3 အသံဖိုင် ဒေါင်းလုဒ်ရယူရန်</a>
+        <a id="downloadLink" class="dl-btn" download="myanmar-speech.mp3">
+          <span>📥 MP3 အသံဖိုင် ဒေါင်းလုဒ်ရယူရန်</span>
+        </a>
       </div>
     </div>
-  </div>
-
-  <!-- Bottom Fixed Sample Voice Preview Bar -->
-  <div class="bottom-preview-bar">
-    <button class="preview-btn" id="thihaSampleBtn" onclick="playSampleVoice('my-MM-ThihaNeural', 'thihaSampleBtn')">
-      <span>👨 သီဟ အသံစမ်းရန်</span>
-    </button>
-    <button class="preview-btn" id="nilarSampleBtn" onclick="playSampleVoice('my-MM-NilarNeural', 'nilarSampleBtn')">
-      <span>👩 နီလာ အသံစမ်းရန်</span>
-    </button>
   </div>
 
   <script>
@@ -617,16 +687,21 @@
 
     async function playSampleVoice(voice, btnId) {
       const btn = document.getElementById(btnId);
+      const activeBox = document.getElementById('sampleActiveBox');
+      const activeText = document.getElementById('sampleActiveText');
 
+      // Stop current playback if same button is tapped
       if (currentlyPlayingBtnId === btnId && !sampleAudio.paused) {
         sampleAudio.pause();
         sampleAudio.currentTime = 0;
         btn.classList.remove('playing');
         btn.innerHTML = btnId.includes('thiha') ? '👨 သီဟ အသံစမ်းရန်' : '👩 နီလာ အသံစမ်းရန်';
+        activeBox.style.display = 'none';
         currentlyPlayingBtnId = null;
         return;
       }
 
+      // Reset previous playback
       if (!sampleAudio.paused) {
         sampleAudio.pause();
         if (currentlyPlayingBtnId) {
@@ -640,6 +715,8 @@
 
       const originalHtml = btn.innerHTML;
       btn.innerText = "⏳ ရယူနေသည်...";
+      activeBox.style.display = 'flex';
+      activeText.innerText = `${voice.includes('Thiha') ? 'သီဟ' : 'နီလာ'} အသံကို ရယူနေပါသည်...`;
 
       const sampleText = voice.includes('Thiha') 
         ? "မင်္ဂလာပါခင်ဗျာ၊ ကျွန်တော်ကတော့ သီဟ ဖြစ်ပါတယ်။ သင့်ဇာတ်လမ်းတွေကို ကျွန်တော်ဖတ်ပြပေးပါမယ်။"
@@ -661,15 +738,18 @@
         btn.classList.add('playing');
         btn.innerHTML = "⏹ ရပ်တန့်မည်";
         currentlyPlayingBtnId = btnId;
+        activeText.innerText = `🎙️ ${voice.includes('Thiha') ? 'သီဟ' : 'နီလာ'} ၏ အသံကို ဖွင့်ပြနေပါသည်...`;
 
         sampleAudio.onended = () => {
           btn.classList.remove('playing');
           btn.innerHTML = originalHtml;
+          activeBox.style.display = 'none';
           currentlyPlayingBtnId = null;
         };
       } catch (e) {
         alert("နမူနာအသံ ဖွင့်မရပါ: " + e.message);
         btn.innerHTML = originalHtml;
+        activeBox.style.display = 'none';
       }
     }
 
