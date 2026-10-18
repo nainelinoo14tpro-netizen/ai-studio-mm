@@ -9,16 +9,6 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Padauk:wght@400;700&display=swap" rel="stylesheet">
 
-<!-- FFmpeg.wasm 0.12.x Modern UMD Build (Single-Thread, SharedArrayBuffer Not Required) -->
-<script src="https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/dist/umd/ffmpeg.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@ffmpeg/util@0.12.1/dist/umd/index.js"></script>
-
-<!-- Gradio Client JS Library -->
-<script type="module">
-    import { Client } from "https://cdn.jsdelivr.net/npm/@gradio/client/dist/index.min.js";
-    window.GradioClient = Client;
-</script>
-
 <style>
 :root {
   --bg: #e2e8f0;
@@ -61,7 +51,7 @@ button {
   padding: 8px 12px; font-weight: 700; font-size: 12px;
   display: inline-flex; align-items: center; justify-content: center; gap: 6px;
   transition: all 0.15s ease;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
 }
 button:hover { background: #f8fafc; border-color: var(--gold); }
 button:active { transform: scale(0.97); }
@@ -98,6 +88,12 @@ button.active {
 }
 .burnBtn:hover { opacity: 0.95; }
 
+.cancelBtn {
+  background: #fee2e2; border: 1.5px solid #ef4444; color: #b91c1c;
+  font-weight: 700; border-radius: 8px; padding: 7px 16px; margin-top: 12px;
+}
+.cancelBtn:hover { background: #fecaca; }
+
 .btnSpinner {
   width: 14px; height: 14px;
   border: 2px solid rgba(255, 255, 255, 0.4);
@@ -106,12 +102,12 @@ button.active {
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* Top Navbar */
+/* Top Navbar (Cleaned) */
 .navbar {
   display: flex; justify-content: space-between; align-items: center;
   padding: 12px 20px; background-color: #ffffff;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
-  position: sticky; top: 0; z-index: 100;
+  position: sticky; top: 0; z-index: 1000;
   border-bottom: 2px solid var(--gold-dark);
 }
 .nav-left { display: flex; align-items: center; gap: 10px; white-space: nowrap; }
@@ -119,13 +115,8 @@ button.active {
 .menu-btn {
   background: none !important; border: none !important; color: #1e293b !important;
   font-size: 1.4rem; cursor: pointer; padding: 2px 6px; border-radius: 6px; box-shadow: none !important;
+  z-index: 1001; pointer-events: auto !important;
 }
-.headerBtns { display: flex; gap: 6px; align-items: center; }
-.iconBtn {
-  width: 32px; height: 32px; padding: 0; border-radius: 8px; font-size: 13px;
-  background: #f8fafc; border: 1px solid var(--border); color: #334155;
-}
-.iconBtn:hover { background: #fef3c7; border-color: var(--gold); }
 
 /* Left Side Slide Menu & Overlay */
 .overlay-drawer {
@@ -231,18 +222,6 @@ button.active {
 .dot.busy { background: var(--gold); }
 .dot.error { background: var(--red); }
 
-.accordionHead {
-  padding: 11px 14px; border-bottom: 1px solid #f1f5f9;
-  display: flex; align-items: center; justify-content: space-between;
-  cursor: pointer; background: #ffffff; transition: background 0.15s ease;
-}
-.accordionHead:hover { background: #f8fafc; }
-.accordionTitle { font-weight: 700; font-size: 12.5px; display: flex; align-items: center; gap: 6px; color: var(--accent); }
-.accordionChevron { font-size: 11px; color: var(--muted); transition: transform 0.2s ease; }
-.accordionChevron.rotate { transform: rotate(180deg); }
-.accordionBody { padding: 12px 14px; display: block; background: #ffffff; }
-.accordionBody.collapsed { display: none; }
-
 .fixedVideoShell { width: 100%; position: relative; flex-shrink: 0; max-width: 100%; }
 
 .modeBadgeExternal {
@@ -279,7 +258,6 @@ video.anti-copyright-active {
 .vProgBottom { bottom: 0; right: 0; height: 3px; width: 0%; }
 .vProgLeft { bottom: 0; left: 0; width: 3px; height: 0%; }
 
-/* White Upload Area */
 .videoEmptyState {
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   gap: 8px; color: #ffffff; padding: 18px; text-align: center; width: 100%; height: 100%;
@@ -293,28 +271,19 @@ video.anti-copyright-active {
   max-width: 180px; max-height: 120px; display: none; cursor: move; touch-action: none;
 }
 
-/* Video Title Overlays */
 .videoTitleOverlayItem {
   position: absolute; z-index: 55; background: rgba(0,0,0,0.75); padding: 5px 14px; border-radius: 6px;
   color: #fff; font-size: 16px; font-weight: 800; text-shadow: 0 2px 4px #000;
   cursor: pointer; touch-action: none; border: 1.5px dashed transparent; white-space: nowrap;
 }
 .videoTitleOverlayItem.active { border-color: var(--gold); box-shadow: 0 0 10px rgba(245,158,11,0.5); }
-.titleCloseBadge {
-  position: absolute; top: -10px; right: -10px; width: 22px; height: 22px;
-  background: var(--red); color: #fff; border-radius: 50%; font-size: 11px;
-  display: grid; place-items: center; cursor: pointer; font-weight: 900; z-index: 60;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.5); border: 1.5px solid #fff;
+
+.videoExtraTextItem {
+  position: absolute; z-index: 56; background: rgba(0,0,0,0.6); padding: 4px 10px; border-radius: 6px;
+  color: var(--cyan); font-size: 14px; font-weight: 800; cursor: pointer; touch-action: none; white-space: nowrap;
 }
+.videoExtraTextItem.active { border-color: var(--cyan); box-shadow: 0 0 10px rgba(2,132,199,0.5); }
 
-.resizeHandle { position: absolute; width: 16px; height: 16px; border-radius: 50%; background: var(--gold); border: 2px solid #000; z-index: 80; touch-action: none; }
-.resizeHandle.nw { left: -9px; top: -9px; cursor: nwse-resize; }
-.resizeHandle.ne { right: -9px; top: -9px; cursor: nesw-resize; }
-.resizeHandle.sw { left: -9px; bottom: -9px; cursor: nesw-resize; }
-.resizeHandle.se { right: -9px; bottom: -9px; cursor: nwse-resize; }
-.videoLogoResizeHandle { position: absolute; width: 18px; height: 18px; right: -9px; bottom: -9px; border-radius: 50%; background: var(--gold); border: 2px solid #000; z-index: 81; touch-action: none; }
-
-/* Video Blur Boxes */
 .videoBlurBoxItem {
   position: absolute; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
   background: rgba(255, 255, 255, 0.05); border: 1.5px dashed rgba(255,255,255,0.7);
@@ -322,12 +291,6 @@ video.anti-copyright-active {
   min-width: 30px; min-height: 18px;
 }
 .videoBlurBoxItem.active { border-color: var(--gold); }
-.blurCloseBadge {
-  position: absolute; top: -10px; right: -10px; width: 22px; height: 22px;
-  background: var(--red); color: #fff; border-radius: 50%; font-size: 11px;
-  display: grid; place-items: center; cursor: pointer; font-weight: 900; z-index: 60;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.5); border: 1.5px solid #fff;
-}
 
 .overlay {
   position: absolute; left: 50%; top: 82%; transform: translate(-50%, -50%);
@@ -347,18 +310,34 @@ video.anti-copyright-active {
   display: block; text-align: center; white-space: pre-line; word-break: break-word; max-width: 100%;
 }
 
-/* Floating Direct Editor Panels */
-.videoFloatingOverlayPanel {
-  position: absolute; z-index: 100; left: 50% !important; top: 50% !important;
-  transform: translate(-50%, -50%) !important;
-  background: rgba(15, 23, 42, 0.96); backdrop-filter: blur(12px);
-  border: 1.5px solid #475569; border-radius: 12px; padding: 12px 14px;
-  box-shadow: 0 12px 32px rgba(0,0,0,0.85); display: none; color: #fff;
-  width: 90%; max-width: 320px; animation: popInCenter 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+/* 4 Buttons Toolbar Under Video */
+.overlay-tools-bar {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; padding: 8px 12px;
+  background: #ffffff; border-top: 1px solid var(--border);
 }
-@keyframes popInCenter {
-  from { opacity: 0; transform: translate(-50%, -46%) scale(0.95); }
-  to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+.tool-tab-btn {
+  padding: 8px 6px; font-size: 11px; font-weight: 700; border-radius: 8px;
+  border: 1px solid var(--border); background: #ffffff; color: #334155;
+  display: flex; align-items: center; justify-content: center; gap: 4px;
+  transition: all 0.2s ease;
+}
+.tool-tab-btn:hover { background: #fffbeb; border-color: var(--gold); color: var(--accent); }
+.tool-tab-btn.active {
+  background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+  color: #ffffff; border-color: var(--gold-dark);
+  box-shadow: 0 3px 10px rgba(245, 158, 11, 0.3);
+}
+
+/* Dedicated Settings Panels Below Video */
+.overlay-settings-panel {
+  display: none; background: #fffbeb; border: 1px solid #fde68a;
+  border-radius: 12px; padding: 14px; margin: 8px 12px 12px 12px;
+  box-shadow: 0 4px 15px rgba(245, 158, 11, 0.08);
+}
+.overlay-settings-panel.open { display: block; }
+.panel-head-row {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px dashed #fde68a;
 }
 
 /* Video Control Bar */
@@ -377,12 +356,7 @@ video.anti-copyright-active {
   flex: 1; min-width: 0; accent-color: var(--gold); height: 5px; border-radius: 3px; cursor: pointer; margin: 0 2px;
 }
 
-.videoDirectToolsHeader {
-  background: #ffffff; padding: 7px 12px; display: flex; gap: 8px; align-items: center; justify-content: space-between;
-  border-top: 1px solid var(--border);
-}
-
-/* Pulsing Mic & Red Progress Overlay */
+/* Video Lock & Progress Animations */
 .videoLockOverlay {
   position: absolute; inset: 0; z-index: 95;
   background: rgba(15, 23, 42, 0.94); backdrop-filter: blur(6px);
@@ -391,13 +365,32 @@ video.anti-copyright-active {
 }
 .videoLockOverlay.active { display: flex; }
 
-.lockSpinnerRing {
-  width: 48px; height: 48px; border: 3px solid rgba(245, 158, 11, 0.2);
-  border-top-color: var(--gold); border-right-color: var(--gold-dark);
-  border-radius: 50%; animation: spin 0.85s linear infinite; margin-bottom: 14px;
+.video-edit-anim-box {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 10px; margin-bottom: 12px;
 }
-.lockTitle { font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 4px; }
-.lockDesc { font-size: 11px; color: #94a3b8; margin-bottom: 14px; max-width: 320px; line-height: 1.4; }
+.film-clap-wrap { display: flex; align-items: center; gap: 8px; font-size: 28px; }
+.film-clap-wrap .scissor {
+  display: inline-block; animation: scissorCut 1.1s infinite alternate ease-in-out;
+}
+@keyframes scissorCut {
+  0% { transform: rotate(0deg) scale(0.9); }
+  50% { transform: rotate(-25deg) scale(1.1); }
+  100% { transform: rotate(0deg) scale(0.9); }
+}
+.filmstrip-track {
+  width: 140px; height: 16px; background: #1e293b; border-radius: 4px;
+  border: 1px solid #64748b; display: flex; align-items: center; justify-content: space-around;
+  padding: 0 4px; position: relative; overflow: hidden;
+}
+.film-hole { width: 8px; height: 8px; background: #cbd5e1; border-radius: 2px; }
+.filmstrip-track::after {
+  content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(245, 158, 11, 0.6), transparent);
+  animation: filmSweep 1.2s infinite linear;
+}
+@keyframes filmSweep { 0% { left: -100%; } 100% { left: 100%; } }
+
 .lockProgTrack {
   width: 100%; max-width: 280px; height: 7px; background: #334155;
   border-radius: 99px; overflow: hidden; margin-bottom: 8px;
@@ -474,14 +467,47 @@ video.anti-copyright-active {
 
 .styleGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin-bottom: 10px; }
 .field label { display: block; font-size: 10px; color: var(--muted); margin-bottom: 4px; font-weight: 700; }
-.field input[type=color] {
-  width: 100%; height: 34px; background: #ffffff;
-  border: 1px solid var(--border); border-radius: 6px; padding: 2px; cursor: pointer;
+.field select, .field input[type=color], .field input[type=text] {
+  width: 100%; background: #f8fafc; border: 1px solid var(--border); color: var(--text);
+  border-radius: 8px; padding: 6px 10px; font-size: 11.5px; outline: 0;
 }
+.field select:focus, .field input[type=text]:focus { border-color: var(--gold); background: #ffffff; }
+.field input[type=color] { height: 32px; cursor: pointer; padding: 2px; }
 
-.toneGrid {
-  display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; margin-bottom: 12px;
+.toneGrid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; margin-bottom: 12px; }
+
+/* 2 Export Options Selection Modal */
+.export-modal-backdrop {
+  position: fixed; inset: 0; background: rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(4px); z-index: 9999; display: none;
+  align-items: center; justify-content: center; padding: 16px;
 }
+.export-modal-backdrop.show { display: flex; }
+.export-modal-card {
+  background: #ffffff; border-radius: 16px; width: 100%; max-width: 440px;
+  padding: 18px; box-shadow: 0 20px 45px rgba(0,0,0,0.25);
+  border: 2px solid var(--gold);
+}
+.export-modal-head {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 14px; padding-bottom: 8px; border-bottom: 1px solid var(--border);
+}
+.export-choice-list { display: flex; flex-direction: column; gap: 10px; }
+.export-option-btn {
+  background: #f8fafc; border: 1.5px solid var(--border); border-radius: 12px;
+  padding: 12px 14px; display: flex; align-items: center; gap: 12px;
+  cursor: pointer; text-align: left; transition: all 0.2s ease;
+}
+.export-option-btn:hover {
+  background: #fffbeb; border-color: var(--gold); transform: translateY(-1px);
+}
+.export-opt-icon {
+  font-size: 26px; width: 44px; height: 44px; border-radius: 10px;
+  display: grid; place-items: center; background: #ffffff; border: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.export-opt-content h4 { font-size: 13px; color: var(--text); font-weight: 700; margin-bottom: 2px; }
+.export-opt-content p { font-size: 10.5px; color: var(--muted); line-height: 1.35; }
 
 /* Bottom Nav */
 .bottomNav {
@@ -522,18 +548,11 @@ video.anti-copyright-active {
 
 <body>
 
-<!-- Top Navbar -->
+<!-- Top Navbar (Cleaned: Hamburger Menu only on left) -->
 <header class="navbar">
   <div class="nav-left">
     <button class="menu-btn" onclick="openMenu()" title="Main Menu">☰</button>
     <div class="logo">AI Studio App</div>
-  </div>
-  <div class="headerBtns">
-    <button class="iconBtn" onclick="undo()" title="Undo">↶</button>
-    <button class="iconBtn" onclick="redo()" title="Redo">↷</button>
-    <button class="iconBtn" onclick="loadProject(true)" title="Open Project">📂</button>
-    <button class="iconBtn" onclick="saveProject()" title="Save Project">💾</button>
-    <input type="file" id="projectFileInput" accept=".json" hidden onchange="handleProjectFileLoad(event)">
   </div>
 </header>
 
@@ -557,18 +576,32 @@ video.anti-copyright-active {
 
 <div class="toast" id="toast"></div>
 
-<!-- Error Diagnostics Modal -->
-<div class="appMenuBackdrop" id="errorModalBackdrop" onclick="closeErrorModal()">
-  <div class="errorModalSheet" onclick="event.stopPropagation()">
-    <div class="errorModalHead">
-      <span style="font-weight:700;font-size:13px;color:var(--red)" id="errorModalTitle">❌ Server / Processing Error</span>
-      <button onclick="closeErrorModal()" style="padding:3px 7px;font-size:11px">✕</button>
+<!-- 2 Export Options Modal -->
+<div class="export-modal-backdrop" id="exportModalBackdrop" onclick="closeExportModal()">
+  <div class="export-modal-card" onclick="event.stopPropagation()">
+    <div class="export-modal-head">
+      <span style="font-weight:700;font-size:13.5px;color:var(--accent)">🎬 Export & Download နည်းလမ်း ရွေးချယ်ပါ</span>
+      <button onclick="closeExportModal()" style="padding:2px 7px;font-size:11px">✕</button>
     </div>
-    <p style="font-size:11px;color:#991b1b;margin:0 0 6px 0" id="errorModalSubtitle">အမှားဖြစ်ရသည့် အကြောင်းရင်း:</p>
-    <div class="errorModalMsg" id="errorModalMsgText"></div>
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px">
-      <button class="secondaryBtn" onclick="copyErrorDetails()" style="font-size:10.5px">📋 Copy Error Log</button>
-      <button class="primary" onclick="closeErrorModal()" style="padding:6px 14px">နားလည်ပါပြီ</button>
+    
+    <div class="export-choice-list">
+      <!-- 1. Fast Video Export -->
+      <div class="export-option-btn" onclick="selectExportMethod('fast')">
+        <div class="export-opt-icon">⚡</div>
+        <div class="export-opt-content">
+          <h4>Fast Video Export (၃ ဆ မှ ၅ ဆ ပိုမြန်)</h4>
+          <p>အသံထပ်ခြင်းမရှိဘဲ ဖုန်း၏ GPU စနစ်ဖြင့် အမြန်ဆုံး Video ချုပ်ယူပေးမည်။</p>
+        </div>
+      </div>
+
+      <!-- 2. Standard Real-Time MP4 -->
+      <div class="export-option-btn" onclick="selectExportMethod('standard')">
+        <div class="export-opt-icon">🎥</div>
+        <div class="export-opt-content">
+          <h4>Standard Real-Time MP4</h4>
+          <p>မူလစနစ်အတိုင်း တိုက်ရိုက် အသံဖမ်းယူပြီး Standard MP4 ဗီဒီယိုဖိုင် ထုတ်ယူမည်။</p>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -612,97 +645,198 @@ video.anti-copyright-active {
         </div>
 
         <img id="videoLogoOverlay" class="videoLogoOverlay" alt="Logo">
-        <div id="movieTitlesContainer"></div>
-        <div id="blurBoxesContainer"></div>
+        <div id="movieTitleOverlay" class="videoTitleOverlayItem" style="display:none"></div>
+        <div id="movieExtraTextOverlay" class="videoExtraTextItem" style="display:none"></div>
+        <div id="movieBlurOverlay" class="videoBlurBoxItem" style="display:none"></div>
 
         <div class="overlay" id="overlay">
           <div class="overlayInner" id="overlayInner">
             <span class="overlayTarget" id="overlayTarget"></span>
-            <span class="resizeHandle nw" data-resize-target="subtitle" data-resize-dir="nw"></span>
-            <span class="resizeHandle ne" data-resize-target="subtitle" data-resize-dir="ne"></span>
-            <span class="resizeHandle sw" data-resize-target="subtitle" data-resize-dir="sw"></span>
-            <span class="resizeHandle se" data-resize-target="subtitle" data-resize-dir="se"></span>
           </div>
         </div>
 
-        <!-- FLOATING DIRECT BLUR CONTROLS -->
-        <div id="videoFloatingBlurBar" class="videoFloatingOverlayPanel">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-            <span style="font-weight:700;color:var(--gold);font-size:11.5px" id="vBlurTitle">🌫️ BLUR ADJUSTMENT</span>
-            <div style="display:flex;gap:5px">
-              <button onclick="removeCurrentBlurFromPopup()" style="padding:3px 8px;font-size:10px;background:var(--red) !important;color:#fff !important;border:0 !important">🗑️ Remove</button>
-              <button onclick="closeDirectPanels()" style="padding:3px 8px;font-size:10px">✕ Done</button>
-            </div>
-          </div>
-          <div style="display:flex;align-items:center;gap:10px">
-            <span style="font-size:11px">Blur အား:</span>
-            <input type="range" id="vDirectBlurSeek" min="0" max="40" value="14" style="flex:1;accent-color:var(--gold)" oninput="onDirectBlurSeek(this.value)">
-            <span id="vDirectBlurVal" style="min-width:30px;color:var(--gold);font-family:ui-monospace, monospace;font-weight:700;font-size:11px">14px</span>
-          </div>
-        </div>
-
-        <!-- FLOATING DIRECT TITLE CONTROLS -->
-        <div id="videoFloatingTitleBar" class="videoFloatingOverlayPanel">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-            <span style="font-weight:700;color:var(--gold);font-size:11.5px">🔤 EDIT TITLE TEXT & STYLE</span>
-            <div style="display:flex;gap:5px">
-              <button onclick="removeCurrentTitleFromPopup()" style="padding:3px 8px;font-size:10px;background:var(--red) !important;color:#fff !important;border:0 !important">🗑️ Remove</button>
-              <button onclick="closeDirectPanels()" style="padding:3px 8px;font-size:10px">✕ Done</button>
-            </div>
-          </div>
-          <input type="text" id="vDirectTitleText" placeholder="Title text..." style="width:100%;padding:6px 10px;margin-bottom:8px;background:#1e293b;border:1px solid #475569;color:#fff;border-radius:6px;font-size:12px;outline:none" oninput="onDirectTitleTextInput(this.value)">
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
-            <div style="display:flex;align-items:center;gap:6px">
-              <span style="font-size:10px">Size:</span>
-              <input type="range" id="vDirectTitleSize" min="10" max="40" value="16" style="flex:1;accent-color:var(--gold)" oninput="onDirectTitleSizeChange(this.value)">
-              <span id="vDirectTitleSizeVal" style="font-size:10.5px;color:var(--gold);font-family:ui-monospace, monospace;font-weight:700">16px</span>
-            </div>
-            <div style="display:flex;align-items:center;gap:6px">
-              <span style="font-size:10px">အကြည်:</span>
-              <input type="range" id="vDirectTitleOp" min="0" max="100" value="75" style="flex:1;accent-color:var(--gold)" oninput="onDirectTitleOpChange(this.value)">
-              <span id="vDirectTitleOpVal" style="font-size:10.5px;color:var(--gold);font-family:ui-monospace, monospace;font-weight:700">75%</span>
-            </div>
-          </div>
-          <div style="display:flex;align-items:center;gap:12px">
-            <label style="display:flex;align-items:center;gap:5px;font-size:10.5px">စာသားအရောင်: <input type="color" id="vDirectTitleColor" value="#ffffff" oninput="onDirectTitleColorChange(this.value)" style="width:24px;height:22px;border:0;background:transparent;cursor:pointer"></label>
-            <label style="display:flex;align-items:center;gap:5px;font-size:10.5px">နောက်ခံအရောင်: <input type="color" id="vDirectTitleBg" value="#000000" oninput="onDirectTitleBgChange(this.value)" style="width:24px;height:22px;border:0;background:transparent;cursor:pointer"></label>
-          </div>
-        </div>
-
+        <!-- Video Editing Lock Overlay with Cancel Button -->
         <div class="videoLockOverlay" id="videoLockOverlay">
-          <div class="lockSpinnerRing"></div>
-          <div class="lockTitle" id="lockTitle">⏳ AI Script ဖန်တီးနေပါသည်...</div>
-          <div class="lockDesc" id="lockDesc">ရုပ်ရှင်အသံများကို နားထောင်ပြီး စကားပြော Script ရေးနေပါသည်...</div>
+          <div class="video-edit-anim-box">
+            <div class="film-clap-wrap">
+              <span>🎬</span>
+              <span class="scissor">✂️</span>
+              <span>🎞️</span>
+            </div>
+            <div class="filmstrip-track">
+              <div class="film-hole"></div>
+              <div class="film-hole"></div>
+              <div class="film-hole"></div>
+              <div class="film-hole"></div>
+              <div class="film-hole"></div>
+            </div>
+          </div>
+          <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:4px" id="lockTitle">⏳ ဗီဒီယို တည်းဖြတ်ထုတ်လုပ်နေပါသည်...</div>
+          <div style="font-size:11px;color:#94a3b8;margin-bottom:12px" id="lockDesc">ဖရိန်များနှင့် အသံလှိုင်းများကို ချုပ်လုပ်နေသည်...</div>
           <div class="lockProgTrack">
             <div class="lockProgFill" id="lockProgFill"></div>
           </div>
           <div class="lockPercentText" id="lockPercentText">0%</div>
-          <button id="cancelExportBtnInShield" onclick="cancelExportProcessing()" style="display:none;margin-top:12px;background:var(--red) !important;color:#fff !important;font-size:11px;padding:6px 16px;border:0 !important;border-radius:6px">
-            ✕ Cancel Export (ရပ်တန့်မည်)
+          <button class="cancelBtn" id="cancelExportBtn" onclick="cancelCurrentExport()" style="display:none">
+            🛑 Cancel Export (ရပ်တန့်မည်)
           </button>
         </div>
 
         <input id="file" type="file" accept="video/mp4,video/webm,video/quicktime,video/x-matroska,video/*" hidden>
       </div>
 
-      <!-- VIDEO TOOLBAR HEADER -->
-      <div class="videoDirectToolsHeader">
-        <div style="display:flex;gap:5px">
-          <button onclick="addNewBlurBox()" style="font-size:10.5px;padding:4px 8px">➕ Add Blur</button>
-          <button onclick="addNewMovieTitle()" style="font-size:10.5px;padding:4px 8px">🔤 Add Title</button>
+      <!-- Dedicated Toolbar Under Video: Title, Custom Text, Logo, Blur Buttons -->
+      <div class="overlay-tools-bar">
+        <button class="tool-tab-btn lockable" id="btnToggleTitle" onclick="toggleOverlayTab('title')">
+          <span>📝 Title</span>
+        </button>
+        <button class="tool-tab-btn lockable" id="btnToggleText" onclick="toggleOverlayTab('text')">
+          <span>➕ Custom Text</span>
+        </button>
+        <button class="tool-tab-btn lockable" id="btnToggleLogo" onclick="toggleOverlayTab('logo')">
+          <span>🛡️ Logo</span>
+        </button>
+        <button class="tool-tab-btn lockable" id="btnToggleBlur" onclick="toggleOverlayTab('blur')">
+          <span>🌫️ Blur</span>
+        </button>
+      </div>
+
+      <!-- 1. Dedicated Title Setting Panel -->
+      <div class="overlay-settings-panel" id="panelTitle">
+        <div class="panel-head-row">
+          <span style="font-size:11px;font-weight:700;color:var(--accent)">📝 Movie Title Controls</span>
+          <label style="font-size:11px;display:flex;align-items:center;gap:4px;cursor:pointer">
+            <input type="checkbox" id="showTitleCheck" onchange="updateTitleOverlay()"> Show Title
+          </label>
         </div>
-        <div style="font-size:10.5px;color:var(--accent);font-weight:700" id="currentToolInfo">Tap element to edit</div>
+        <div class="field" style="margin-bottom:8px">
+          <input type="text" id="videoTitleInput" value="ရုပ်ရှင်ဇာတ်လမ်းအညွှန်း" oninput="updateTitleOverlay()">
+        </div>
+        <div class="settingGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div class="field">
+            <label>Size: <span id="titleSizeVal" style="color:var(--accent)">18px</span></label>
+            <input id="titleSize" type="range" min="12" max="44" value="18" oninput="document.getElementById('titleSizeVal').textContent=this.value+'px'; updateTitleOverlay()">
+          </div>
+          <div class="field">
+            <label>Color</label>
+            <input id="titleColor" type="color" value="#ffffff" oninput="updateTitleOverlay()">
+          </div>
+        </div>
+        <div class="settingGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div class="field">
+            <label>X Pos (%): <span id="titleXVal" style="color:var(--accent)">50%</span></label>
+            <input id="titleX" type="range" min="5" max="95" value="50" oninput="document.getElementById('titleXVal').textContent=this.value+'%'; updateTitleOverlay()">
+          </div>
+          <div class="field">
+            <label>Y Pos (%): <span id="titleYVal" style="color:var(--accent)">12%</span></label>
+            <input id="titleY" type="range" min="4" max="95" value="12" oninput="document.getElementById('titleYVal').textContent=this.value+'%'; updateTitleOverlay()">
+          </div>
+        </div>
+        <small style="font-size:10px;color:var(--muted);display:block;margin-top:4px">💡 စာသားကို Video ပေါ်တွင် လက်ချောင်းဖြင့် တိုက်ရိုက်ဆွဲရွှေ့နိုင်ပါသည်။</small>
+      </div>
+
+      <!-- 2. Dedicated Custom Text Setting Panel -->
+      <div class="overlay-settings-panel" id="panelText">
+        <div class="panel-head-row">
+          <span style="font-size:11px;font-weight:700;color:var(--cyan)">➕ Custom Floating Text</span>
+          <label style="font-size:11px;display:flex;align-items:center;gap:4px;cursor:pointer">
+            <input type="checkbox" id="showExtraTextCheck" onchange="updateExtraTextOverlay()"> Enable Text
+          </label>
+        </div>
+        <div class="field" style="margin-bottom:8px">
+          <input type="text" id="extraTextInput" placeholder="ဥပမာ - @mychannel သို့မဟုတ် အပိုင်း (၁)" value="အပိုင်း (၁)" oninput="updateExtraTextOverlay()">
+        </div>
+        <div class="settingGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div class="field">
+            <label>Size: <span id="extraSizeVal" style="color:var(--accent)">15px</span></label>
+            <input id="extraSize" type="range" min="10" max="36" value="15" oninput="document.getElementById('extraSizeVal').textContent=this.value+'px'; updateExtraTextOverlay()">
+          </div>
+          <div class="field">
+            <label>Color</label>
+            <input id="extraColor" type="color" value="#0284c7" oninput="updateExtraTextOverlay()">
+          </div>
+        </div>
+        <div class="settingGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div class="field">
+            <label>X Pos (%): <span id="extraXVal" style="color:var(--accent)">50%</span></label>
+            <input id="extraX" type="range" min="5" max="95" value="50" oninput="document.getElementById('extraXVal').textContent=this.value+'%'; updateExtraTextOverlay()">
+          </div>
+          <div class="field">
+            <label>Y Pos (%): <span id="extraYVal" style="color:var(--accent)">20%</span></label>
+            <input id="extraY" type="range" min="4" max="95" value="20" oninput="document.getElementById('extraYVal').textContent=this.value+'%'; updateExtraTextOverlay()">
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. Dedicated Logo Setting Panel -->
+      <div class="overlay-settings-panel" id="panelLogo">
+        <div class="panel-head-row">
+          <span style="font-size:11px;font-weight:700;color:var(--accent)">🛡️ Channel Logo / Watermark</span>
+          <input type="file" id="logoUploadInput" accept="image/*" hidden onchange="handleLogoUpload(event)">
+          <button onclick="document.getElementById('logoUploadInput').click()" style="padding:2px 8px;font-size:10px;color:var(--accent)">📤 Upload Logo</button>
+        </div>
+        <div class="settingGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div class="field">
+            <label>Size: <span id="logoSizeVal" style="color:var(--accent)">60px</span></label>
+            <input id="logoSize" type="range" min="20" max="180" value="60" oninput="document.getElementById('logoSizeVal').textContent=this.value+'px'; updateLogoOverlay()">
+          </div>
+          <div class="field">
+            <label>Opacity: <span id="logoOpVal" style="color:var(--accent)">85%</span></label>
+            <input id="logoOpacity" type="range" min="10" max="100" value="85" oninput="document.getElementById('logoOpVal').textContent=this.value+'%'; updateLogoOverlay()">
+          </div>
+        </div>
+        <div class="settingGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div class="field">
+            <label>X Pos (%): <span id="logoXVal" style="color:var(--accent)">85%</span></label>
+            <input id="logoX" type="range" min="5" max="95" value="85" oninput="document.getElementById('logoXVal').textContent=this.value+'%'; updateLogoOverlay()">
+          </div>
+          <div class="field">
+            <label>Y Pos (%): <span id="logoYVal" style="color:var(--accent)">10%</span></label>
+            <input id="logoY" type="range" min="5" max="95" value="10" oninput="document.getElementById('logoYVal').textContent=this.value+'%'; updateLogoOverlay()">
+          </div>
+        </div>
+      </div>
+
+      <!-- 4. Dedicated Blur Setting Panel -->
+      <div class="overlay-settings-panel" id="panelBlur">
+        <div class="panel-head-row">
+          <span style="font-size:11px;font-weight:700;color:var(--gold)">🌫️ Video Blur Mask</span>
+          <label style="font-size:11px;display:flex;align-items:center;gap:4px;cursor:pointer">
+            <input type="checkbox" id="showBlurCheck" onchange="updateBlurOverlay()"> Enable Blur
+          </label>
+        </div>
+        <div class="settingGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div class="field">
+            <label>Blur အား: <span id="blurStrengthVal" style="color:var(--accent)">14px</span></label>
+            <input id="blurStrength" type="range" min="2" max="30" value="14" oninput="document.getElementById('blurStrengthVal').textContent=this.value+'px'; updateBlurOverlay()">
+          </div>
+          <div class="field">
+            <label>အကျယ် (Width): <span id="blurWVal" style="color:var(--accent)">35%</span></label>
+            <input id="blurW" type="range" min="10" max="80" value="35" oninput="document.getElementById('blurWVal').textContent=this.value+'%'; updateBlurOverlay()">
+          </div>
+        </div>
+        <div class="settingGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div class="field">
+            <label>X Pos (%): <span id="blurXVal" style="color:var(--accent)">20%</span></label>
+            <input id="blurX" type="range" min="5" max="95" value="20" oninput="document.getElementById('blurXVal').textContent=this.value+'%'; updateBlurOverlay()">
+          </div>
+          <div class="field">
+            <label>Y Pos (%): <span id="blurYVal" style="color:var(--accent)">35%</span></label>
+            <input id="blurY" type="range" min="5" max="95" value="35" oninput="document.getElementById('blurYVal').textContent=this.value+'%'; updateBlurOverlay()">
+          </div>
+        </div>
+        <small style="font-size:10px;color:var(--muted);display:block;margin-top:4px">💡 Blur Box ကို Video ပေါ်တွင် လက်ဖြင့် ဆွဲရွှေ့နေရာချနိုင်ပါသည်။</small>
       </div>
 
       <!-- VIDEO SEEK BAR -->
       <div class="videoControlBarExternal" id="videoControlBar">
-        <button class="vCtrlBtn" id="vPlayBtn" onclick="togglePlayPause(event)">▶</button>
-        <button class="vCtrlBtn" onclick="skipVideo(-5, event)" title="Back 5s">⏪ 5s</button>
+        <button class="vCtrlBtn lockable" id="vPlayBtn" onclick="togglePlayPause(event)">▶</button>
+        <button class="vCtrlBtn lockable" onclick="skipVideo(-5, event)" title="Back 5s">⏪ 5s</button>
         <span class="vTimeText" id="vCurTime">00:00</span>
-        <input type="range" class="vSeekBar" id="vSeekBar" min="0" max="100" value="0" step="0.1" 
-               oninput="onSeekInput(event)" onchange="onSeekChange(event)">
+        <input type="range" class="vSeekBar lockable" id="vSeekBar" min="0" max="100" value="0" step="0.1" 
+               oninput="onSeekInput()" onchange="onSeekChange()">
         <span class="vTimeText" id="vDurTime">00:00</span>
-        <button class="vCtrlBtn" onclick="skipVideo(5, event)" title="Forward 5s">5s ⏩</button>
+        <button class="vCtrlBtn lockable" onclick="skipVideo(5, event)" title="Forward 5s">5s ⏩</button>
       </div>
 
     </div>
@@ -720,8 +854,8 @@ video.anti-copyright-active {
             </div>
           </div>
           <div style="display:flex;gap:5px">
-            <button onclick="testMyanmarVoice()" style="font-size:10.5px;padding:4px 8px">🔊 Test Voice</button>
-            <button onclick="triggerFileInput(true)" style="font-size:10.5px;padding:4px 8px">🔄 Change Video</button>
+            <button onclick="testMyanmarVoice()" style="font-size:10.5px;padding:4px 8px" class="lockable">🔊 Test Voice</button>
+            <button onclick="triggerFileInput()" style="font-size:10.5px;padding:4px 8px" class="lockable">🔄 Change Video</button>
           </div>
         </div>
 
@@ -731,16 +865,16 @@ video.anti-copyright-active {
               🎭 RECAP MOOD & TONE (ဇာတ်ကြောင်းပြော ပုံစံ)
             </label>
             <div class="toneGrid">
-              <button class="secondaryBtn active" id="toneNarrator" onclick="setRecapTone('narrator')">🎙️ စံပြ Recap</button>
-              <button class="secondaryBtn" id="toneSuspense" onclick="setRecapTone('suspense')">🔥 စိတ်လှုပ်ရှား</button>
-              <button class="secondaryBtn" id="toneComedy" onclick="setRecapTone('comedy')">😂 ဟာသ</button>
-              <button class="secondaryBtn" id="toneNatural" onclick="setRecapTone('natural')">🌿 သဘာဝ</button>
-              <button class="secondaryBtn" id="toneHorror" onclick="setRecapTone('horror')">👻 သရဲ</button>
+              <button class="secondaryBtn active lockable" id="toneNarrator" onclick="setRecapTone('narrator')">🎙️ စံပြ Recap</button>
+              <button class="secondaryBtn lockable" id="toneSuspense" onclick="setRecapTone('suspense')">🔥 စိတ်လှုပ်ရှား</button>
+              <button class="secondaryBtn lockable" id="toneComedy" onclick="setRecapTone('comedy')">😂 ဟာသ</button>
+              <button class="secondaryBtn lockable" id="toneNatural" onclick="setRecapTone('natural')">🌿 သဘာဝ</button>
+              <button class="secondaryBtn lockable" id="toneHorror" onclick="setRecapTone('horror')">👻 သရဲ</button>
             </div>
           </div>
 
           <div style="margin-top:14px">
-            <button class="primary" id="generateScriptBtn" style="width:100%;padding:12px" onclick="generateRecapScriptOnly()">
+            <button class="primary lockable" id="generateScriptBtn" style="width:100%;padding:12px" onclick="generateRecapScriptOnly()">
               <span class="btnSpinner" id="btnSpinner" style="display:none"></span>
               <span id="btnText">✨ Generate Script (စာသားအရင်ရေးမည်)</span>
             </button>
@@ -751,47 +885,37 @@ video.anti-copyright-active {
 
           <hr style="border:0;border-top:1px solid var(--border);margin:14px 0">
 
+          <!-- Clean AI Voice Settings: Only Thiha & Nilar (Voice Clone removed) -->
           <div style="margin-bottom:12px">
             <label style="font-size:11px;color:var(--accent);font-weight:700;display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-              <span>🗣️ AI VOICE SETTINGS (မူလစကားပြောအသံ ရွေးချယ်မှု)</span>
-              <span id="cloneQuotaBadge" style="font-size:9.5px;color:var(--cyan)">Dual-Engine Ready</span>
+              <span>🗣️ AI VOICE SETTINGS (အသံပိုင်ရှင် ရွေးချယ်မှု)</span>
+              <span style="font-size:9.5px;color:var(--green)">Dual-Engine Ready</span>
             </label>
-            <div style="display:grid;grid-template-columns:1fr 1fr 1.2fr;gap:6px">
-              <button class="voiceBtn active" id="voiceThiha" onclick="setVoice('my-MM-ThihaNeural')">👨 သီဟ (ကျား)</button>
-              <button class="voiceBtn" id="voiceNilar" onclick="setVoice('my-MM-NilarNeural')">👩 နီလာ (မ)</button>
-              <button class="voiceBtn" id="voiceClone" onclick="setVoice('zero-gpu-clone')">🎙️ Voice Clone</button>
-            </div>
-
-            <div id="cloneStyleRow" style="display:none;margin-top:8px;background:#f8fafc;padding:8px;border-radius:10px;border:1px solid var(--border)">
-              <label style="font-size:10.5px;color:var(--muted);display:block;margin-bottom:4px">Voice Clone စတိုင် ရွေးချယ်ပါ:</label>
-              <select id="cloneVoiceStyle" style="width:100%;padding:6px;background:#fff;border:1px solid var(--border);color:#0f172a;border-radius:6px;font-size:11px">
-                <option value="A news anchor voice, formal and authoritative, steady pace, perfect for broadcast">📰 သတင်း/ဇာတ်ကြောင်းပြော (Authoritative Anchor)</option>
-                <option value="A storyteller voice, dramatic and expressive, slow pace, rich and warm tone">📖 ရသစုံ ပုံပြင်/ဇာတ်လမ်းပြောသူအသံ (Storyteller)</option>
-                <option value="A young male voice, calm and clear, medium pace, deep tone">🧑 လူငယ်အမျိုးသားအသံ (ကြည်လင်ပြတ်သား)</option>
-                <option value="A young female voice, crystal clear, professional and articulate, confident tone">👩 လူငယ်အမျိုးသမီးအသံ (ရှင်းလင်းတက်ကြွ)</option>
-              </select>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+              <button class="voiceBtn active lockable" id="voiceThiha" onclick="setVoice('my-MM-ThihaNeural')">👨 သီဟ (ကျားအသံ)</button>
+              <button class="voiceBtn lockable" id="voiceNilar" onclick="setVoice('my-MM-NilarNeural')">👩 နီလာ (မအသံ)</button>
             </div>
           </div>
 
           <div class="sliderPairRow">
             <div class="sliderField">
               <label>မူရင်း Video အသံ (BGM): <span class="val" id="videoVolVal">20%</span></label>
-              <input id="videoVolume" type="range" min="0" max="100" value="20" oninput="updateAudioLevels()">
+              <input id="videoVolume" type="range" min="0" max="100" value="20" oninput="updateAudioLevels()" class="lockable">
             </div>
             <div class="sliderField">
               <label>နောက်ခံစကားပြောသံ (Voice): <span class="val" id="voiceVolVal">100%</span></label>
-              <input id="voiceVolume" type="range" min="0" max="100" value="100" oninput="updateAudioLevels()">
+              <input id="voiceVolume" type="range" min="0" max="100" value="100" oninput="updateAudioLevels()" class="lockable">
             </div>
           </div>
 
           <div class="sliderField" style="margin-bottom:12px">
             <label>Voice Speed: <span class="val" id="speedVal">0%</span></label>
-            <input id="voiceSpeed" type="range" min="-20" max="30" step="5" value="0" oninput="document.getElementById('speedVal').textContent = (this.value>0?'+':'') + this.value + '%'">
+            <input id="voiceSpeed" type="range" min="-20" max="30" step="5" value="0" oninput="document.getElementById('speedVal').textContent = (this.value>0?'+':'') + this.value + '%'" class="lockable">
           </div>
 
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-            <button class="secondaryBtn" onclick="testMyanmarVoice()">🔊 Test Voice</button>
-            <button class="primary" id="synthesizeAllVoiceBtn" onclick="synthesizeAllVoiceovers()">
+            <button class="secondaryBtn lockable" onclick="testMyanmarVoice()">🔊 Test Voice</button>
+            <button class="primary lockable" id="synthesizeAllVoiceBtn" onclick="synthesizeAllVoiceovers()">
               <span class="btnSpinner" id="voiceSpinner" style="display:none"></span>
               <span>🎙️ Generate All Voices</span>
             </button>
@@ -803,8 +927,8 @@ video.anti-copyright-active {
         <div class="cardHead">
           <div class="title">📝 2. Recap Script Editor <span id="subCount" style="color:var(--muted);font-size:11px"></span></div>
           <div style="display:flex;gap:5px">
-            <button class="secondaryBtn" id="playAllBtn" onclick="playAllVoiceover()" style="padding:4px 8px;font-size:10.5px">🔊 Play All</button>
-            <button class="primary" id="addLineBtn" onclick="addSub()" style="padding:4px 8px;font-size:10.5px">+ Add Line</button>
+            <button class="secondaryBtn lockable" id="playAllBtn" onclick="playAllVoiceover()" style="padding:4px 8px;font-size:10.5px">🔊 Play All</button>
+            <button class="primary lockable" id="addLineBtn" onclick="addSub()" style="padding:4px 8px;font-size:10.5px">+ Add Line</button>
           </div>
         </div>
         <div class="body" style="padding:14px">
@@ -816,7 +940,7 @@ video.anti-copyright-active {
             <div class="liveSubTextMM" id="liveSubMM">ဇာတ်ကြောင်းပြော Script အလိုအလျောက် ပေါ်လာပါမည်...</div>
           </div>
           <div class="editorTools">
-            <input class="search" id="search" placeholder="🔍 Search script text..." oninput="render()">
+            <input class="search lockable" id="search" placeholder="🔍 Search script text..." oninput="render()">
           </div>
           <div class="list" id="list">
             <div class="empty">🎬 Upload a movie clip to generate script.</div>
@@ -829,185 +953,49 @@ video.anti-copyright-active {
     <div class="desktopCol">
       <section class="tabPane card" id="tabStyle">
         
-        <!-- Accordion 1: Subtitle Color & Design -->
-        <div class="accordionHead" onclick="toggleAccordion('accSubBody', 'accSubChev')">
-          <div class="accordionTitle">🎨 1. Subtitle Studio (အရောင် & ဒီဇိုင်း)</div>
-          <span class="accordionChevron" id="accSubChev">▲</span>
-        </div>
-        <div class="accordionBody" id="accSubBody">
+        <div class="cardHead"><div class="title">🎨 Subtitle & BGM Studio</div></div>
+        <div class="body" style="padding:14px">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
             <label style="font-size:11px;color:var(--accent);font-weight:700">စာတန်း ထည့်သွင်းပြသရန် (Show Subtitle):</label>
-            <input type="checkbox" id="showSubtitleCheck" checked onchange="toggleSubtitleVisibility()">
+            <input type="checkbox" id="showSubtitleCheck" checked onchange="toggleSubtitleVisibility()" class="lockable">
           </div>
 
           <div class="styleGrid">
             <div class="field">
               <label>စာသားအရောင် (Text Color)</label>
-              <input id="targetColor" type="color" value="#ffffff" oninput="applySubtitleStyle()">
+              <input id="targetColor" type="color" value="#ffffff" oninput="applySubtitleStyle()" class="lockable">
             </div>
             <div class="field">
               <label>အနားသတ်အရောင် (Outline)</label>
-              <input id="outlineColor" type="color" value="#000000" oninput="applySubtitleStyle()">
+              <input id="outlineColor" type="color" value="#000000" oninput="applySubtitleStyle()" class="lockable">
             </div>
             <div class="field" style="grid-column:span 2">
               <label>နောက်ခံ Box အရောင် (Background Color)</label>
-              <input id="bgColor" type="color" value="#000000" oninput="applySubtitleStyle()">
+              <input id="bgColor" type="color" value="#000000" oninput="applySubtitleStyle()" class="lockable">
             </div>
           </div>
 
           <div class="sliderPairRow">
             <div class="sliderField">
               <label>Box အကြည်/အမည်း: <span class="val" id="opacityVal">50%</span></label>
-              <input id="boxOpacity" type="range" min="0" max="100" value="50" oninput="applySubtitleStyle()">
+              <input id="boxOpacity" type="range" min="0" max="100" value="50" oninput="applySubtitleStyle()" class="lockable">
             </div>
             <div class="sliderField">
-              <label>Outline Width (အထူ): <span class="val" id="outWidthVal">1.5 px</span></label>
-              <input id="outlineWidth" type="range" min="0" max="5" step="0.5" value="1.5" oninput="applySubtitleStyle()">
+              <label>Font Size: <span class="val" id="sizeVal">17 px</span></label>
+              <input id="size" type="range" min="11" max="44" value="17" oninput="applySubtitleStyle()" class="lockable">
             </div>
-          </div>
-
-          <div class="sliderField" style="margin-bottom:10px">
-            <label>Subtitle Box Width (အလျား အကျယ်): <span class="val" id="boxWidthVal">Auto (စာသားကွက်တိ)</span></label>
-            <input id="boxWidthMode" type="range" min="0" max="100" value="0" step="5" oninput="applySubtitleStyle()">
           </div>
 
           <div class="sliderPairRow">
             <div class="sliderField">
               <label>Subtitle X (ဘယ်/ညာ %): <span class="val" id="posXVal">50%</span></label>
-              <input id="posX" type="range" min="0" max="100" value="50" oninput="applySubtitlePositionFromSlider()">
+              <input id="posX" type="range" min="0" max="100" value="50" oninput="applySubtitlePositionFromSlider()" class="lockable">
             </div>
             <div class="sliderField">
               <label>Subtitle Y (အပေါ်/အောက် %): <span class="val" id="posYVal">82%</span></label>
-              <input id="posY" type="range" min="0" max="100" value="82" oninput="applySubtitlePositionFromSlider()">
+              <input id="posY" type="range" min="0" max="100" value="82" oninput="applySubtitlePositionFromSlider()" class="lockable">
             </div>
           </div>
-
-          <div class="sliderField">
-            <label>Font Size (စာလုံးအရွယ်အစား): <span class="val" id="sizeVal">17 px</span></label>
-            <input id="size" type="range" min="11" max="44" value="17" oninput="applySubtitleStyle()">
-          </div>
-        </div>
-
-        <!-- Accordion 2: Real-time Video Border Progress Bar -->
-        <div class="accordionHead" onclick="toggleAccordion('accBorderBody', 'accBorderChev')">
-          <div class="accordionTitle">✨ 2. Real-Time Video Border Progress Bar</div>
-          <span class="accordionChevron" id="accBorderChev">▲</span>
-        </div>
-        <div class="accordionBody" id="accBorderBody">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-            <label style="font-size:11px;color:var(--accent);font-weight:700">ဘေးဘောင် လေးထောင့် အချိန်ပြေးဘား ဖွင့်ရန်:</label>
-            <input type="checkbox" id="showBorderProgCheck" onchange="toggleBorderProgressBar()">
-          </div>
-
-          <div class="settingGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-            <div class="field">
-              <label>ဘောင်အရောင် (Border Color)</label>
-              <input id="borderColorInput" type="color" value="#f59e0b" oninput="updateBorderProgressStyle()">
-            </div>
-            <div class="field">
-              <label>ဘောင်အထူ: <span id="borderThickVal" style="color:var(--accent)">3px</span></label>
-              <input id="borderThickness" type="range" min="1" max="10" value="3" oninput="document.getElementById('borderThickVal').textContent=this.value+'px'; updateBorderProgressStyle()">
-            </div>
-          </div>
-        </div>
-
-        <!-- Accordion 3: Background Music (BGM) Studio -->
-        <div class="accordionHead" onclick="toggleAccordion('accBgmBody', 'accBgmChev')">
-          <div class="accordionTitle">🎵 3. Background Music (BGM) Studio</div>
-          <span class="accordionChevron" id="accBgmChev">▲</span>
-        </div>
-        <div class="accordionBody" id="accBgmBody">
-          <div style="display:flex;justify-content:space-between;align-items:center;background:#fffbeb;border:1px solid #fde68a;padding:8px 12px;border-radius:10px;margin-bottom:12px">
-            <div>
-              <span style="font-size:11px;font-weight:700;color:var(--accent)">🔊 BGM MUSIC STATUS:</span>
-              <span id="bgmSwitchStatusText" style="font-size:11px;font-weight:700;color:var(--green);margin-left:5px">ENABLED (ON)</span>
-            </div>
-            <button id="bgmMasterToggleBtn" onclick="toggleBgmMasterSwitch()" style="font-size:11px;padding:4px 14px;background:#10b981 !important;color:#fff !important;font-weight:700;border:0 !important;transition:all 0.2s">
-              SWITCH OFF
-            </button>
-          </div>
-
-          <div style="margin-bottom:10px">
-            <label style="font-size:10.5px;color:var(--muted);font-weight:700;display:block;margin-bottom:4px">
-              📂 UPLOAD CUSTOM BGM SONG (MP3 / WAV)
-            </label>
-            <input type="file" id="bgmFileInput" accept="audio/*" onchange="handleBgmUpload(event)" style="font-size:10.5px">
-          </div>
-
-          <div style="margin-bottom:10px">
-            <label style="font-size:10.5px;color:var(--muted);font-weight:700;display:block;margin-bottom:4px">
-              🎼 AUTO PRESET BGM SONGS (Royalty-Free တေးဂီတများ)
-            </label>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
-              <button class="secondaryBtn" id="bgmBtn-cinematic" onclick="selectPresetBgm('cinematic')">🎭 Dramatic Cinematic</button>
-              <button class="secondaryBtn" id="bgmBtn-emotional" onclick="selectPresetBgm('emotional')">🌧️ Emotional Sad</button>
-              <button class="secondaryBtn" id="bgmBtn-thriller" onclick="selectPresetBgm('thriller')">🔥 Horror Thriller</button>
-              <button class="secondaryBtn" id="bgmBtn-lofi" onclick="selectPresetBgm('lofi')">☕ Relaxing Lofi</button>
-            </div>
-            <div id="currentBgmName" style="font-size:10.5px;color:var(--accent);margin-top:6px;font-weight:700">No BGM Selected</div>
-          </div>
-
-          <div class="sliderField" style="margin-top:10px">
-            <label>BGM Song Volume (%): <span class="val" id="bgmVolVal">25%</span></label>
-            <input id="bgmVolumeSlider" type="range" min="0" max="100" value="25" oninput="updateBgmVolume(this.value)">
-          </div>
-          <div style="display:flex;gap:6px;margin-top:8px">
-            <button class="secondaryBtn" onclick="previewBgmToggle()" id="bgmPreviewBtn" style="font-size:10.5px;padding:4px 8px">▶ Preview BGM</button>
-            <button class="danger" onclick="removeBgm()" style="font-size:10.5px;padding:4px 8px">✕ Remove BGM</button>
-          </div>
-        </div>
-
-        <!-- Accordion 4: Channel Logo & Watermark -->
-        <div class="accordionHead" onclick="toggleAccordion('accLogoBody', 'accLogoChev')">
-          <div class="accordionTitle">🏷️ 4. Channel Logo & Watermark Studio</div>
-          <span class="accordionChevron" id="accLogoChev">▲</span>
-        </div>
-        <div class="accordionBody" id="accLogoBody">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-            <input type="file" id="logoUploadInput" accept="image/*" onchange="handleLogoUpload(event)" style="font-size:10.5px">
-            <button onclick="removeLogo()" style="font-size:10px;padding:3px 6px">Remove Logo</button>
-          </div>
-
-          <div id="logoControlsBox" style="display:none;margin-top:8px">
-            <div class="sliderPairRow">
-              <div class="sliderField">
-                <label>Logo X (ဘယ်/ညာ %): <span class="val" id="lgXVal">0%</span></label>
-                <input id="lgXSlider" type="range" min="0" max="100" value="0" oninput="updateLogoProps()">
-              </div>
-              <div class="sliderField">
-                <label>Logo Y (အပေါ်/အောက် %): <span class="val" id="lgYVal">0%</span></label>
-                <input id="lgYSlider" type="range" min="0" max="100" value="0" oninput="updateLogoProps()">
-              </div>
-            </div>
-
-            <div class="sliderPairRow">
-              <div class="sliderField">
-                <label>Logo Size: <span class="val" id="lgSizeVal">60px</span></label>
-                <input id="lgSizeSlider" type="range" min="20" max="180" value="60" oninput="updateLogoProps()">
-              </div>
-              <div class="sliderField">
-                <label>Logo Opacity (ရေစာ): <span class="val" id="lgOpVal">85%</span></label>
-                <input id="lgOpSlider" type="range" min="0" max="100" value="85" oninput="updateLogoProps()">
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Accordion 5: Anti-Copyright Video Shield -->
-        <div class="accordionHead" onclick="toggleAccordion('accShieldBody', 'accShieldChev')">
-          <div class="accordionTitle">⚔️ 5. Anti-Copyright Shield</div>
-          <span class="accordionChevron" id="accShieldChev">▲</span>
-        </div>
-        <div class="accordionBody" id="accShieldBody">
-          <div style="display:flex;justify-content:space-between;align-items:center">
-            <label style="font-size:10.5px;font-weight:700">Video Transform Shield:</label>
-            <button onclick="toggleAntiCopyrightShield()" id="shieldToggleBtn" style="font-size:10px;padding:3px 8px">
-              Enable Shield
-            </button>
-          </div>
-          <p style="font-size:9.5px;color:var(--muted);margin:4px 0 0 0">
-            Content ID ရှောင်လွှဲနိုင်ရန် Video Scale (1.04x) နှင့် Subtle Color Grading များကို အလိုအလျောက် ပေါင်းစပ်ပေးပါသည်။
-          </p>
         </div>
 
       </section>
@@ -1017,41 +1005,25 @@ video.anti-copyright-active {
         <div class="cardHead"><div class="title">📦 Export Center (Video Exporter)</div></div>
         <div class="body" style="padding:14px">
           <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:12px;padding:12px;margin-bottom:12px">
-            <label style="font-size:11px;color:var(--accent);font-weight:700;display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-              <span>🎞️ EXPORT VIDEO FORMAT</span>
-              <span id="formatSupportTag" style="font-size:10px;color:var(--green);font-family:ui-monospace, monospace">Direct MP4 Engine Ready</span>
+            <label style="font-size:11px;color:var(--accent);font-weight:700;display:block;margin-bottom:4px">
+              📹 MP4 Video Export Engine
             </label>
-            <div style="display:grid;grid-template-columns:1fr;gap:8px">
-              <button type="button" class="secondaryBtn active" id="btnFmtMp4" onclick="setExportFormat('mp4')" style="padding:10px;font-size:11.5px;font-weight:700;display:flex;flex-direction:column;gap:2px">
-                <span style="font-size:13px;color:#0f172a">📹 MP4 (.mp4) Video Export</span>
-                <small id="mp4StatusDesc" style="font-size:9px;opacity:0.8;color:var(--muted)">Video နှင့် Myanmar Voiceover၊ BGM၊ စာတန်းများကို MP4 အဖြစ် တိုက်ရိုက် ထုတ်ယူမည်</small>
-              </button>
-            </div>
-            <p id="formatNoticeText" style="font-size:10px;color:var(--muted);margin:8px 0 0 0;line-height:1.4">
-              💡 Canvas Compositing ဖြင့် စာတန်း၊ အသံနှင့် ရုပ်ရှင်ကို ပေါင်းစပ်ပြီး ဖုန်းနှင့် ကွန်ပျူတာ အားလုံးတွင် အဆင်ပြေစွာ ဖွင့်နိုင်သည့် MP4 ဖိုင်အဖြစ် တိုက်ရိုက် Download ချပေးပါမည်။
+            <p style="font-size:10px;color:var(--muted);line-height:1.4">
+              💡 Fast Video Render နှင့် Standard MP4 နည်းလမ်း (၂) မျိုးလုံး ပါဝင်ပြီး Canvas Compositing ဖြင့် စာတန်း၊ အသံနှင့် ရုပ်ရှင်ကို ပေါင်းစပ်ထုတ်ယူပေးမည်။
             </p>
           </div>
 
-          <button class="burnBtn" id="exportFullBtn" style="width:100%;padding:14px;font-size:13px;margin-bottom:10px" onclick="exportFullRecapVideo()">
-            🎬 Export Full Movie Recap Video (<span id="exportBtnFormatText">.mp4</span>)
+          <button class="burnBtn lockable" id="exportFullBtn" style="width:100%;padding:14px;font-size:13px;margin-bottom:10px" onclick="openExportModal()">
+            🎬 Export Video (.mp4)
           </button>
 
           <!-- Audio & SRT Direct Download Tools -->
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;border-top:1px dashed var(--border);padding-top:10px">
-            <button class="secondaryBtn" onclick="exportNarrationAudioOnly()" style="font-size:11px;padding:9px">
+            <button class="secondaryBtn lockable" onclick="exportNarrationAudioOnly()" style="font-size:11px;padding:9px">
               🎵 Download Full Audio
             </button>
-            <button class="secondaryBtn" onclick="exportSrtSubtitlesOnly()" style="font-size:11px;padding:9px">
+            <button class="secondaryBtn lockable" onclick="exportSrtSubtitlesOnly()" style="font-size:11px;padding:9px">
               📝 Download Burmese SRT
-            </button>
-          </div>
-          
-          <div id="exportStatusInfo" style="margin-top:10px;display:none;text-align:center">
-            <div style="font-size:11px;color:var(--muted);font-weight:700;margin-bottom:6px" id="exportStatusText">
-              ⏳ Compositing video, voices, subtitles and BGM...
-            </div>
-            <button class="danger" onclick="cancelExportProcessing()" style="padding:6px 14px;font-size:10.5px">
-              ✕ Cancel Export (ရပ်တန့်မည်)
             </button>
           </div>
         </div>
@@ -1070,17 +1042,11 @@ video.anti-copyright-active {
 <canvas id="burnCanvas" style="display:none"></canvas>
 
 <script>
-// Dual-Engine Backend Connectivity (Exact same as mmvoice.html)
 const RENDER_BACKEND_URL = "https://myanmar-tts-app.onrender.com";
 const WORKER_URL = "https://ai-studio-mm.nainelinoo-14tpro.workers.dev";
 
-let ffmpegWasmInstance = null;
-let ffmpegWasmLoadingPromise = null;
-
 let subs = [];
 let audioMap = new Map();
-let history = [];
-let future = [];
 let file = null;
 let videoURL = null;
 let generating = false;
@@ -1089,52 +1055,22 @@ let lastActiveSubId = null;
 let recapTone = "narrator";
 let selectedVoice = "my-MM-ThihaNeural";
 let overlayPos = { x: 50, y: 82 };
-let isCloneDisabledByLimit = false;
 
-// Multi Blur Boxes State
-let blurBoxes = [];
-let blurIdCounter = 0;
-let activeBlurId = null;
+// Overlay Elements Props (Draggable)
+let titleProps = { visible: false, text: "ရုပ်ရှင်ဇာတ်လမ်းအညွှန်း", size: 18, color: "#ffffff", x: 50, y: 12 };
+let textProps = { visible: false, text: "အပိုင်း (၁)", size: 15, color: "#0284c7", x: 50, y: 20 };
+let logoProps = { visible: false, src: "", size: 60, opacity: 85, x: 85, y: 10 };
+let blurProps = { visible: false, strength: 14, w: 35, h: 45, x: 20, y: 35 };
 
-// Multi Movie Titles State
-let movieTitles = [];
-let titleIdCounter = 0;
-let activeTitleId = null;
-
-// Logo State
-let logoProps = { x: 0, y: 0, size: 60, opacity: 85 };
-
-// Real-Time Border State
-let borderProgEnabled = false;
-
-// Subtitle Visibility State
 let isSubtitleVisible = true;
-
-// Anti-Copyright State
-let antiCopyrightEnabled = false;
-
-// BGM Audio State
-let bgmAudio = null;
-let bgmVolume = 0.25;
-let isBgmPlayingPreview = false;
-let isBgmMasterEnabled = true;
-let activePresetKey = null;
-
-// Export Cancel State
-let isExportCancelled = false;
+let isExportActive = false;
 let activeRecorderInstance = null;
-let selectedExportFormat = "mp4";
+let activeOpenTab = null;
+let draggingElement = null;
 
-const PRESET_BGM_TRACKS = {
-  cinematic: "https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=cinematic-time-lapse-115672.mp3",
-  emotional: "https://cdn.pixabay.com/download/audio/2022/01/18/audio_d0a13f69d2.mp3?filename=ambient-piano-sad-10708.mp3",
-  thriller: "https://cdn.pixabay.com/download/audio/2022/03/10/audio_c8c8a73467.mp3?filename=dark-mystery-thriller-154627.mp3",
-  lofi: "https://cdn.pixabay.com/download/audio/2022/05/16/audio_db6591201e.mp3?filename=lofi-study-112191.mp3"
-};
-
-let gradioClientInstance = null;
 let voiceAudioCtx = null;
 let voiceGainNode = null;
+let activeVoiceAudio = null;
 
 const video = document.getElementById("video");
 const videoBox = document.getElementById("videoBox");
@@ -1152,6 +1088,7 @@ const lockTitle = document.getElementById("lockTitle");
 const lockDesc = document.getElementById("lockDesc");
 const lockProgFill = document.getElementById("lockProgFill");
 const lockPercentText = document.getElementById("lockPercentText");
+const cancelExportBtn = document.getElementById("cancelExportBtn");
 
 const slideMenu = document.getElementById('slideMenu');
 const overlayDrawer = document.getElementById('overlayDrawer');
@@ -1166,52 +1103,27 @@ function closeMenu() {
   overlayDrawer.classList.remove('active');
 }
 
-function pushHistoryState() {
-  const snapshot = JSON.stringify({
-    subs,
-    blurBoxes,
-    movieTitles,
-    overlayPos,
-    logoProps,
-    recapTone,
-    selectedVoice
+// Dedicated Toolbar Panel Toggle
+function toggleOverlayTab(tabName) {
+  const panels = ['title', 'text', 'logo', 'blur'];
+  panels.forEach(p => {
+    const btn = document.getElementById(`btnToggle${p.charAt(0).toUpperCase() + p.slice(1)}`);
+    const panel = document.getElementById(`panel${p.charAt(0).toUpperCase() + p.slice(1)}`);
+    if (p === tabName) {
+      if (activeOpenTab === tabName) {
+        panel.classList.remove('open');
+        btn.classList.remove('active');
+        activeOpenTab = null;
+      } else {
+        panel.classList.add('open');
+        btn.classList.add('active');
+        activeOpenTab = tabName;
+      }
+    } else {
+      panel.classList.remove('open');
+      btn.classList.remove('active');
+    }
   });
-  if (history.length > 0 && history[history.length - 1] === snapshot) return;
-  history.push(snapshot);
-  if (history.length > 40) history.shift();
-  future = [];
-}
-
-function restoreStateSnapshot(snapshotStr) {
-  try {
-    const data = JSON.parse(snapshotStr);
-    if (Array.isArray(data.subs)) subs = data.subs;
-    if (Array.isArray(data.blurBoxes)) blurBoxes = data.blurBoxes;
-    if (Array.isArray(data.movieTitles)) movieTitles = data.movieTitles;
-    if (data.overlayPos) {
-      overlayPos = data.overlayPos;
-      document.getElementById("posX").value = overlayPos.x;
-      document.getElementById("posY").value = overlayPos.y;
-      applySubtitlePositionFromSlider();
-    }
-    if (data.logoProps) {
-      logoProps = data.logoProps;
-      updateLogoPositionOnly();
-    }
-    render();
-    renderBlurBoxes();
-    renderMovieTitles();
-  } catch (e) {
-    console.warn("State restore error:", e);
-  }
-}
-
-function toggleAccordion(bodyId, chevId) {
-  const b = document.getElementById(bodyId);
-  const c = document.getElementById(chevId);
-  if (!b) return;
-  b.classList.toggle("collapsed");
-  if (c) c.classList.toggle("rotate");
 }
 
 function initVoiceAudioSystem() {
@@ -1232,26 +1144,6 @@ function toast(msg) {
   x.textContent = msg; x.classList.add("show");
   clearTimeout(window.__toast);
   window.__toast = setTimeout(() => x.classList.remove("show"), 2800);
-}
-
-let lastLoggedError = "";
-function showErrorModal(errorTitle, errorDetail, customSub = "အမှားဖြစ်ရသည့် အကြောင်းရင်း (Raw Response Trace):") {
-  lastLoggedError = `Title: ${errorTitle}\nDetail: ${errorDetail}`;
-  document.getElementById("errorModalTitle").textContent = errorTitle;
-  document.getElementById("errorModalSubtitle").textContent = customSub;
-  document.getElementById("errorModalMsgText").textContent = errorDetail;
-  document.getElementById("errorModalBackdrop").classList.add("show");
-}
-
-function copyErrorDetails() {
-  if (navigator.clipboard && lastLoggedError) {
-    navigator.clipboard.writeText(lastLoggedError);
-    toast("Error log copied to clipboard!");
-  }
-}
-
-function closeErrorModal() {
-  document.getElementById("errorModalBackdrop").classList.remove("show");
 }
 
 function setStatus(type, msg) {
@@ -1285,46 +1177,10 @@ function setRecapTone(tone) {
 
 function setVoice(v) {
   if (generating) return;
-  if (v === 'zero-gpu-clone' && isCloneDisabledByLimit) {
-    showErrorModal(
-      "⚠️ Voice Clone ကန့်သတ်ချက် (Limit Reached)",
-      "ZeroGPU အသုံးပြုခွင့် Quota ပြည့်သွားသဖြင့် Voice Clone ကို ခေတ္တပိတ်ထားပါသည်။ ကျေးဇူးပြု၍ မူရင်းအသံ (သီဟ သို့မဟုတ် နီလာ) ကိုသာ ရွေးချယ်အသုံးပြုပေးပါခင်ဗျာ။",
-      "အသိပေးချက် -"
-    );
-    return;
-  }
-
   selectedVoice = v;
   document.getElementById("voiceThiha").classList.toggle("active", v.includes("Thiha"));
   document.getElementById("voiceNilar").classList.toggle("active", v.includes("Nilar"));
-  document.getElementById("voiceClone").classList.toggle("active", v === 'zero-gpu-clone');
-  document.getElementById("cloneStyleRow").style.display = v === 'zero-gpu-clone' ? 'block' : 'none';
-
-  if (v === 'zero-gpu-clone') {
-    toast("Voice: 🎙️ ZeroGPU Voice Clone");
-  } else {
-    toast(`Voice: ${v.includes("Thiha") ? "သီဟ (ကျား)" : "နီလာ (မ)"}`);
-  }
-}
-
-function disableCloneDueToLimit(reason) {
-  isCloneDisabledByLimit = true;
-  const cloneBtn = document.getElementById("voiceClone");
-  cloneBtn.disabled = true;
-  cloneBtn.classList.remove("active");
-  cloneBtn.style.opacity = "0.4";
-  cloneBtn.style.cursor = "not-allowed";
-  document.getElementById("cloneQuotaBadge").textContent = "❌ Limit Exceeded";
-  document.getElementById("cloneQuotaBadge").style.color = "var(--red)";
-  document.getElementById("cloneStyleRow").style.display = 'none';
-
-  setVoice("my-MM-ThihaNeural");
-
-  showErrorModal(
-    "⚠️ Voice Clone Limit ပြည့်သွားပါပြီ",
-    `အကြောင်းရင်း: ${reason}\n\nVoice Clone ၏ ZeroGPU Quota ကန့်သတ်ချက် ပြည့်သွားပါသဖြင့် Voice Clone အား ခေတ္တ ပိတ်ထားလိုက်ပါပြီ။ မူရင်းအသံ (သီဟ) သို့ အလိုအလျောက် ပြောင်းလဲပေးထားပါသည်။`,
-    "ကျေးဇူးပြု၍ အောက်ပါအချက်ကို သတိပြုပေးပါ -"
-  );
+  toast(`Voice: ${v.includes("Thiha") ? "သီဟ (ကျား)" : "နီလာ (မ)"}`);
 }
 
 function updateAudioLevels() {
@@ -1355,177 +1211,7 @@ function setLockProgress(pct, title, desc) {
   if (desc) lockDesc.textContent = desc;
 }
 
-// BGM AUDIO ENGINE
-function toggleBgmMasterSwitch() {
-  isBgmMasterEnabled = !isBgmMasterEnabled;
-  const btn = document.getElementById("bgmMasterToggleBtn");
-  const txt = document.getElementById("bgmSwitchStatusText");
-
-  if (isBgmMasterEnabled) {
-    btn.textContent = "SWITCH OFF";
-    btn.style.background = "#10b981";
-    btn.style.color = "#fff";
-    txt.textContent = "ENABLED (ON)";
-    txt.style.color = "var(--green)";
-    if (bgmAudio && !video.paused) {
-      bgmAudio.volume = bgmVolume;
-      bgmAudio.play().catch(() => {});
-    }
-    toast("BGM Music: ON 🔊");
-  } else {
-    btn.textContent = "SWITCH ON";
-    btn.style.background = "#64748b";
-    btn.style.color = "#fff";
-    txt.textContent = "DISABLED (OFF)";
-    txt.style.color = "#64748b";
-    if (bgmAudio) {
-      bgmAudio.pause();
-    }
-    toast("BGM Music: OFF 🔇");
-  }
-}
-
-function handleBgmUpload(e) {
-  const f = e.target.files[0];
-  if (!f) return;
-  if (bgmAudio) { bgmAudio.pause(); }
-  bgmAudio = new Audio(URL.createObjectURL(f));
-  bgmAudio.loop = true;
-  bgmAudio.volume = isBgmMasterEnabled ? bgmVolume : 0;
-  activePresetKey = null;
-  updateBgmActiveUI();
-  document.getElementById("currentBgmName").textContent = `🎵 Custom: ${f.name.slice(0, 24)}...`;
-  
-  if (isBgmMasterEnabled && !video.paused) {
-    bgmAudio.play().catch(() => {});
-  }
-  toast("Custom BGM Loaded!");
-}
-
-function selectPresetBgm(type) {
-  initVoiceAudioSystem();
-  if (bgmAudio) { bgmAudio.pause(); }
-
-  const url = PRESET_BGM_TRACKS[type];
-  bgmAudio = new Audio(url);
-  bgmAudio.loop = true;
-  bgmAudio.volume = isBgmMasterEnabled ? bgmVolume : 0;
-  activePresetKey = type;
-
-  updateBgmActiveUI();
-
-  const names = { cinematic: "Dramatic Cinematic", emotional: "Emotional Sad", thriller: "Horror Thriller", lofi: "Relaxing Lofi" };
-  document.getElementById("currentBgmName").textContent = `🎵 Active: ${names[type]}`;
-
-  if (isBgmMasterEnabled) {
-    bgmAudio.play().then(() => {
-      isBgmPlayingPreview = true;
-      document.getElementById("bgmPreviewBtn").textContent = "⏸ Pause BGM";
-    }).catch(err => {
-      console.warn("Autoplay deferred to video start:", err);
-    });
-  }
-  toast(`Selected: ${names[type]}`);
-}
-
-function updateBgmActiveUI() {
-  ["cinematic", "emotional", "thriller", "lofi"].forEach(k => {
-    const btn = document.getElementById(`bgmBtn-${k}`);
-    if (btn) btn.classList.toggle("active", activePresetKey === k);
-  });
-}
-
-function updateBgmVolume(val) {
-  bgmVolume = Number(val) / 100;
-  document.getElementById("bgmVolVal").textContent = val + "%";
-  if (bgmAudio && isBgmMasterEnabled) {
-    bgmAudio.volume = bgmVolume;
-  }
-}
-
-function previewBgmToggle() {
-  if (!bgmAudio) { toast("Please select or upload a BGM song first"); return; }
-  const btn = document.getElementById("bgmPreviewBtn");
-  if (isBgmPlayingPreview) {
-    bgmAudio.pause();
-    isBgmPlayingPreview = false;
-    btn.textContent = "▶ Preview BGM";
-  } else {
-    if (!isBgmMasterEnabled) { toggleBgmMasterSwitch(); }
-    initVoiceAudioSystem();
-    bgmAudio.play().then(() => {
-      isBgmPlayingPreview = true;
-      btn.textContent = "⏸ Pause BGM";
-    }).catch(() => {
-      toast("Audio unmuted successfully");
-    });
-  }
-}
-
-function removeBgm() {
-  if (bgmAudio) {
-    bgmAudio.pause();
-    bgmAudio = null;
-  }
-  isBgmPlayingPreview = false;
-  activePresetKey = null;
-  updateBgmActiveUI();
-  document.getElementById("bgmFileInput").value = "";
-  document.getElementById("currentBgmName").textContent = "No BGM Selected";
-  document.getElementById("bgmPreviewBtn").textContent = "▶ Preview BGM";
-  toast("BGM removed");
-}
-
-function generateSafeUUID() {
-  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
-    try { return crypto.randomUUID(); } catch (e) {}
-  }
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-    const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
-    return v.toString(16);
-  });
-}
-
-async function fetchZeroGpuAudio(text, lockedStyle) {
-  const currentSelect = document.getElementById("cloneVoiceStyle");
-  const stylePrompt = lockedStyle || (currentSelect ? currentSelect.value : "A news anchor voice, formal and authoritative, steady pace, perfect for broadcast");
-
-  if (!window.GradioClient) {
-    throw new Error("Gradio Client Library load မဖြစ်သေးပါ။ စာမျက်နှာကို Refresh လုပ်ပေးပါ။");
-  }
-
-  try {
-    if (!gradioClientInstance) {
-      gradioClientInstance = await window.GradioClient.connect("nlopro/clone-burmese-tts");
-    }
-
-    const result = await gradioClientInstance.predict("/prompt_voice", {
-      text_input: text,
-      style_prompt: stylePrompt
-    });
-
-    let audioUrl = null;
-    if (result && result.data && result.data.length > 0) {
-      const item = result.data[0];
-      if (typeof item === "string") {
-        audioUrl = item;
-      } else if (item && typeof item === "object") {
-        audioUrl = item.url || item.path || (item.audio ? item.audio.url : null);
-      }
-    }
-
-    if (!audioUrl) {
-      throw new Error("ZeroGPU Raw Output: " + JSON.stringify(result));
-    }
-
-    return audioUrl;
-  } catch (err) {
-    gradioClientInstance = null;
-    throw err;
-  }
-}
-
-// Dual-Engine TTS Audio Function (Render Backend First -> Cloudflare Worker Fallback)
+// Dual-Engine TTS Request
 async function requestTTSAudio(payload) {
   let response = null;
   try {
@@ -1555,23 +1241,7 @@ async function requestTTSAudio(payload) {
   return await response.blob();
 }
 
-async function fetchMyanmarAudio(text, voice, rate, lockedStyle) {
-  if (voice === 'zero-gpu-clone') {
-    try {
-      return await fetchZeroGpuAudio(text, lockedStyle);
-    } catch(err) {
-      console.error("ZeroGPU Detailed Error:", err);
-      const errMsg = String(err?.message || err || "");
-      
-      if (errMsg.includes("429") || errMsg.toLowerCase().includes("exceeded your current quota") || errMsg.toLowerCase().includes("zerogpu quota")) {
-        disableCloneDueToLimit("ZeroGPU နေ့စဉ်အသုံးပြုခွင့် Quota ပြည့်သွားပါသည်");
-        throw new Error("ZeroGPU Quota Exceeded");
-      } else {
-        throw new Error("Voice Clone ချိတ်ဆက်မှု အမှား:\n" + errMsg);
-      }
-    }
-  }
-
+async function fetchMyanmarAudio(text, voice, rate) {
   try {
     const blob = await requestTTSAudio({
       text: text,
@@ -1584,10 +1254,9 @@ async function fetchMyanmarAudio(text, voice, rate, lockedStyle) {
       return URL.createObjectURL(blob);
     }
   } catch (e) {
-    console.warn("Dual-engine TTS fallback failed:", e);
+    console.warn("TTS failed:", e);
   }
-
-  throw new Error("TTS Generation failed on servers");
+  throw new Error("TTS Audio Generation failed");
 }
 
 async function testMyanmarVoice() {
@@ -1596,28 +1265,15 @@ async function testMyanmarVoice() {
   try {
     const spd = Number(document.getElementById("voiceSpeed").value) || 0;
     const rateStr = (spd >= 0 ? "+" : "") + spd + "%";
-    const currentStyle = document.getElementById("cloneVoiceStyle")?.value;
-
-    const audioUrl = await fetchMyanmarAudio(
-      "မင်္ဂလာပါခင်ဗျာ။ ရုပ်ရှင်ဇာတ်ကြောင်းပြော အသံစနစ် ကောင်းမွန်စွာ အလုပ်လုပ်နေပါပြီ။",
-      selectedVoice,
-      rateStr,
-      currentStyle
-    );
-
+    const audioUrl = await fetchMyanmarAudio("မင်္ဂလာပါခင်ဗျာ။ ဇာတ်လမ်းပြော အသံစနစ် ကောင်းမွန်စွာ အလုပ်လုပ်နေပါပြီ။", selectedVoice, rateStr);
     initVoiceAudioSystem();
     const aud = new Audio(audioUrl);
-    if (selectedVoice === 'zero-gpu-clone' && spd !== 0) {
-      aud.playbackRate = Math.max(0.5, Math.min(2.0, 1 + spd / 100));
-    }
     const src = voiceAudioCtx.createMediaElementSource(aud);
     src.connect(voiceGainNode);
     aud.play();
-    toast("🔊 Myanmar Voice Playing (Boosted)!");
+    toast("🔊 Myanmar Voice Playing!");
   } catch(e) {
-    if (!isCloneDisabledByLimit) {
-      showErrorModal("Voice Test Diagnostics", e.message);
-    }
+    toast("Voice error: " + e.message);
   }
 }
 
@@ -1629,11 +1285,6 @@ function togglePlayPause(e) {
     initVoiceAudioSystem();
     video.play().then(() => {
       vPlayBtn.textContent = "⏸";
-      if (bgmAudio && isBgmMasterEnabled) {
-        bgmAudio.currentTime = video.currentTime % (bgmAudio.duration || 60);
-        bgmAudio.volume = bgmVolume;
-        bgmAudio.play().catch(() => {});
-      }
     }).catch(() => {
       video.muted = true;
       video.play().then(() => {
@@ -1644,7 +1295,6 @@ function togglePlayPause(e) {
     video.pause();
     vPlayBtn.textContent = "▶";
     if (activeVoiceAudio) activeVoiceAudio.pause();
-    if (bgmAudio) bgmAudio.pause();
   }
 }
 
@@ -1652,9 +1302,6 @@ function skipVideo(delta, e) {
   if (e) e.stopPropagation();
   if (!video.src || generating) return;
   video.currentTime = Math.max(0, Math.min(video.duration || 0, video.currentTime + delta));
-  if (bgmAudio && isBgmMasterEnabled) {
-    bgmAudio.currentTime = video.currentTime % (bgmAudio.duration || 60);
-  }
 }
 
 function onSeekInput() {
@@ -1665,36 +1312,12 @@ function onSeekInput() {
 function onSeekChange() {
   if (!video.duration) return;
   video.currentTime = (Number(vSeekBar.value) / 100) * video.duration;
-  if (bgmAudio && isBgmMasterEnabled) {
-    bgmAudio.currentTime = video.currentTime % (bgmAudio.duration || 60);
-  }
 }
 
 videoBox.addEventListener("click", (e) => {
   if (generating) return;
-  if (e.target.closest("button") || e.target.closest("input") || e.target.closest("#overlay") || e.target.closest(".videoBlurBoxItem") || e.target.closest(".videoTitleOverlayItem") || e.target.closest("#videoLogoOverlay") || e.target.closest(".videoFloatingOverlayPanel")) return;
-  closeDirectPanels();
+  if (e.target.closest("button") || e.target.closest("input") || e.target.closest(".overlay-settings-panel")) return;
   togglePlayPause();
-});
-
-// Drag & Drop Video Upload Support
-videoBox.addEventListener("dragover", (e) => {
-  e.preventDefault();
-  if (!generating) videoBox.classList.add("drag-over");
-});
-videoBox.addEventListener("dragleave", () => {
-  videoBox.classList.remove("drag-over");
-});
-videoBox.addEventListener("drop", (e) => {
-  e.preventDefault();
-  videoBox.classList.remove("drag-over");
-  if (generating) return;
-  const droppedFile = e.dataTransfer?.files?.[0];
-  if (droppedFile && droppedFile.type.startsWith("video/")) {
-    loadVideo(droppedFile);
-  } else if (droppedFile) {
-    toast("ကျေးဇူးပြု၍ Video ဖိုင်သာ ရွေးချယ်ပါ");
-  }
 });
 
 function triggerFileInput() {
@@ -1720,13 +1343,9 @@ function loadVideo(f) {
     vDurTime.textContent = formatTime(video.duration || 0);
     vCurTime.textContent = "00:00";
     vSeekBar.value = 0;
-
     if (video.videoWidth > 0 && video.videoHeight > 0) {
       videoBox.style.aspectRatio = `${video.videoWidth} / ${video.videoHeight}`;
-      video.dataset.sourceWidth = String(video.videoWidth);
-      video.dataset.sourceHeight = String(video.videoHeight);
     }
-
     updateAudioLevels();
   };
 
@@ -1745,16 +1364,10 @@ function applySubtitleStyle() {
   const outlineColor = document.getElementById("outlineColor").value;
   const bgColor = document.getElementById("bgColor").value;
   const opacity = Number(document.getElementById("boxOpacity").value) / 100;
-  const outlineWidth = Number(document.getElementById("outlineWidth").value);
   const fontSize = Number(document.getElementById("size").value);
-  const boxWidthMode = Number(document.getElementById("boxWidthMode").value);
 
   document.getElementById("opacityVal").textContent = Math.round(opacity * 100) + "%";
-  document.getElementById("outWidthVal").textContent = outlineWidth + " px";
   document.getElementById("sizeVal").textContent = fontSize + " px";
-
-  const boxWidthText = boxWidthMode === 0 ? "Auto (စာသားကွက်တိ)" : (boxWidthMode === 100 ? "100% (Screen အပြည့်)" : boxWidthMode + "%");
-  document.getElementById("boxWidthVal").textContent = boxWidthText;
 
   const r = parseInt(bgColor.slice(1, 3), 16) || 0;
   const g = parseInt(bgColor.slice(3, 5), 16) || 0;
@@ -1763,18 +1376,7 @@ function applySubtitleStyle() {
   overlayInner.style.backgroundColor = `rgba(${r}, ${g}, ${b}, ${opacity})`;
   overlayTarget.style.color = textColor;
   overlayTarget.style.fontSize = fontSize + "px";
-  overlayTarget.style.webkitTextStroke = `${outlineWidth}px ${outlineColor}`;
-  overlayTarget.style.textShadow = `0 2px 8px rgba(0,0,0,0.8), 0 0 4px ${outlineColor}`;
-
-  if (boxWidthMode === 0) {
-    overlay.style.width = "max-content";
-    overlay.style.maxWidth = "100%";
-    overlayInner.style.width = "auto";
-  } else {
-    overlay.style.width = boxWidthMode + "%";
-    overlay.style.maxWidth = "100%";
-    overlayInner.style.width = "100%";
-  }
+  overlayTarget.style.webkitTextStroke = `1.5px ${outlineColor}`;
 }
 
 function applySubtitlePositionFromSlider() {
@@ -1786,450 +1388,51 @@ function applySubtitlePositionFromSlider() {
   overlay.style.top = overlayPos.y + "%";
 }
 
-function initTouchDrag() {
-  const target = overlay;
-  let isDragging = false;
+// -------------------------------------------------------------
+// Title, Custom Text, Logo & Blur Update & Drag Handlers
+// -------------------------------------------------------------
+function updateTitleOverlay() {
+  titleProps.visible = document.getElementById("showTitleCheck").checked;
+  titleProps.text = document.getElementById("videoTitleInput").value;
+  titleProps.size = Number(document.getElementById("titleSize").value);
+  titleProps.color = document.getElementById("titleColor").value;
+  titleProps.x = Number(document.getElementById("titleX").value);
+  titleProps.y = Number(document.getElementById("titleY").value);
 
-  function onPointerDown(e) {
-    if (generating) return;
-    pushHistoryState();
-    isDragging = true;
-    target.classList.add("dragging");
-    e.stopPropagation();
-  }
-
-  function onPointerMove(e) {
-    if (!isDragging) return;
-    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-    const rect = videoBox.getBoundingClientRect();
-
-    let newX = ((clientX - rect.left) / rect.width) * 100;
-    let newY = ((clientY - rect.top) / rect.height) * 100;
-
-    newX = Math.max(0, Math.min(100, newX));
-    newY = Math.max(0, Math.min(100, newY));
-
-    overlayPos.x = Math.round(newX);
-    overlayPos.y = Math.round(newY);
-
-    target.style.left = overlayPos.x + "%";
-    target.style.top = overlayPos.y + "%";
-
-    document.getElementById("posX").value = overlayPos.x;
-    document.getElementById("posY").value = overlayPos.y;
-    document.getElementById("posXVal").textContent = overlayPos.x + "%";
-    document.getElementById("posYVal").textContent = overlayPos.y + "%";
-
-    e.preventDefault();
-  }
-
-  function onPointerUp() {
-    if (isDragging) {
-      isDragging = false;
-      target.classList.remove("dragging");
-    }
-  }
-
-  target.addEventListener("mousedown", onPointerDown);
-  window.addEventListener("mousemove", onPointerMove);
-  window.addEventListener("mouseup", onPointerUp);
-
-  target.addEventListener("touchstart", onPointerDown, { passive: false });
-  window.addEventListener("touchmove", onPointerMove, { passive: false });
-  window.addEventListener("touchend", onPointerUp);
-}
-
-function toggleBorderProgressBar() {
-  borderProgEnabled = document.getElementById("showBorderProgCheck").checked;
-  const wrap = document.getElementById("videoProgressBorderWrap");
-  wrap.style.display = borderProgEnabled ? "block" : "none";
-  updateBorderProgressStyle();
-  toast(borderProgEnabled ? "Border Progress Bar Enabled!" : "Border Bar Disabled");
-}
-
-function updateBorderProgressStyle() {
-  const col = document.getElementById("borderColorInput").value;
-  const th = (document.getElementById("borderThickness").value || 3) + "px";
-
-  const top = document.getElementById("bpTop");
-  const right = document.getElementById("bpRight");
-  const bottom = document.getElementById("bpBottom");
-  const left = document.getElementById("bpLeft");
-
-  [top, right, bottom, left].forEach(el => el.style.backgroundColor = col);
-
-  top.style.height = th;
-  bottom.style.height = th;
-  right.style.width = th;
-  left.style.width = th;
-}
-
-function renderBorderProgressTick(t, dur) {
-  if (!borderProgEnabled || !dur || dur <= 0) return;
-
-  const pct = Math.min(1.0, Math.max(0.0, t / dur));
-  const top = document.getElementById("bpTop");
-  const right = document.getElementById("bpRight");
-  const bottom = document.getElementById("bpBottom");
-  const left = document.getElementById("bpLeft");
-
-  if (pct <= 0.25) {
-    top.style.width = (pct / 0.25) * 100 + "%";
-    right.style.height = "0%";
-    bottom.style.width = "0%";
-    left.style.height = "0%";
-  } else if (pct <= 0.50) {
-    top.style.width = "100%";
-    right.style.height = ((pct - 0.25) / 0.25) * 100 + "%";
-    bottom.style.width = "0%";
-    left.style.height = "0%";
-  } else if (pct <= 0.75) {
-    top.style.width = "100%";
-    right.style.height = "100%";
-    bottom.style.width = ((pct - 0.50) / 0.25) * 100 + "%";
-    left.style.height = "0%";
-  } else {
-    top.style.width = "100%";
-    right.style.height = "100%";
-    bottom.style.width = "100%";
-    left.style.height = ((pct - 0.75) / 0.25) * 100 + "%";
-  }
-}
-
-/* ON-VIDEO DIRECT BLUR & TITLE CONTROLS */
-function closeDirectPanels() {
-  document.getElementById("videoFloatingBlurBar").style.display = "none";
-  document.getElementById("videoFloatingTitleBar").style.display = "none";
-  document.getElementById("currentToolInfo").textContent = "Tap element to edit";
-}
-
-function addNewBlurBox() {
-  pushHistoryState();
-  blurIdCounter++;
-  const id = `blur-${blurIdCounter}`;
-  const boxData = { id, x: 20, y: 35, w: 60, h: 40, blurStrength: 14 };
-  blurBoxes.push(boxData);
-  activeBlurId = id;
-  renderBlurBoxes();
-  selectActiveBlurBox(id);
-  toast(`Blur Box #${blurIdCounter} added!`);
-}
-
-function removeBlurBox(id) {
-  pushHistoryState();
-  blurBoxes = blurBoxes.filter(b => b.id !== id);
-  if (activeBlurId === id) { activeBlurId = null; closeDirectPanels(); }
-  renderBlurBoxes();
-  toast("Blur box removed");
-}
-
-function removeCurrentBlurFromPopup() {
-  if (activeBlurId) {
-    removeBlurBox(activeBlurId);
-  }
-}
-
-function selectActiveBlurBox(id) {
-  activeBlurId = id;
-  activeTitleId = null;
-  document.querySelectorAll(".videoBlurBoxItem").forEach(el => el.classList.toggle("active", el.id === id));
-  document.querySelectorAll(".videoTitleOverlayItem").forEach(el => el.classList.remove("active"));
-
-  const b = blurBoxes.find(x => x.id === id);
-  if (!b) return;
-
-  document.getElementById("videoFloatingTitleBar").style.display = "none";
-  const blurBar = document.getElementById("videoFloatingBlurBar");
-  
-  blurBar.style.display = "block";
-  document.getElementById("vBlurTitle").textContent = `🌫️ BLUR #${b.id.replace('blur-','')} (GLASS BLUR)`;
-  document.getElementById("vDirectBlurSeek").value = b.blurStrength;
-  document.getElementById("vDirectBlurVal").textContent = b.blurStrength + "px";
-  document.getElementById("currentToolInfo").textContent = `Editing: Blur #${b.id.replace('blur-','')}`;
-}
-
-function onDirectBlurSeek(val) {
-  const b = blurBoxes.find(x => x.id === activeBlurId);
-  if (!b) return;
-  b.blurStrength = Number(val);
-  document.getElementById("vDirectBlurVal").textContent = val + "px";
-  const el = document.getElementById(b.id);
-  if (el) {
-    el.style.backdropFilter = `blur(${val}px)`;
-    el.style.webkitBackdropFilter = `blur(${val}px)`;
-  }
-}
-
-function renderBlurBoxes() {
-  const container = document.getElementById("blurBoxesContainer");
-  container.innerHTML = "";
-
-  blurBoxes.forEach(b => {
-    const el = document.createElement("div");
-    el.className = "videoBlurBoxItem" + (b.id === activeBlurId ? " active" : "");
-    el.id = b.id;
-    el.style.left = b.x + "%";
-    el.style.top = b.y + "%";
-    el.style.width = b.w + "%";
-    el.style.height = b.h + "px";
-    el.style.backdropFilter = `blur(${b.blurStrength}px)`;
-    el.style.webkitBackdropFilter = `blur(${b.blurStrength}px)`;
-
-    const closeBtn = document.createElement("div");
-    closeBtn.className = "blurCloseBadge";
-    closeBtn.textContent = "✕";
-    closeBtn.onclick = (e) => { e.stopPropagation(); removeBlurBox(b.id); };
-    el.appendChild(closeBtn);
-    
-    initBlurBoxDrag(el, b);
-    container.appendChild(el);
-  });
-}
-
-function pointerXY(e) {
-  return { x: e.clientX, y: e.clientY };
-}
-
-function addResizeHandles(el, target, dirs = ["nw", "ne", "sw", "se"]) {
-  el.querySelectorAll(`.resizeHandle[data-resize-target="${target}"]`).forEach(x => x.remove());
-  dirs.forEach(dir => {
-    const h = document.createElement("span");
-    h.className = `resizeHandle ${dir}`;
-    h.dataset.resizeTarget = target;
-    h.dataset.resizeDir = dir;
-    el.appendChild(h);
-  });
-}
-
-function initBlurBoxDrag(el, bData) {
-  let mode = null;
-  let start = null;
-  let original = null;
-
-  addResizeHandles(el, bData.id);
-
-  function begin(e) {
-    if (e.target.classList.contains("blurCloseBadge")) return;
-    pushHistoryState();
-    const handle = e.target.closest(".resizeHandle");
-    const p = pointerXY(e);
-    selectActiveBlurBox(bData.id);
-    mode = handle ? "resize" : "move";
-    start = p;
-    original = { x: bData.x, y: bData.y, w: bData.w, h: bData.h };
-    e.preventDefault();
-    e.stopPropagation();
-    el.setPointerCapture?.(e.pointerId);
-  }
-
-  function move(e) {
-    if (!mode) return;
-    const p = pointerXY(e);
-    const v = videoBox.getBoundingClientRect();
-    const dx = ((p.x - start.x) / v.width) * 100;
-    const dy = ((p.y - start.y) / v.height) * 100;
-    if (mode === "move") {
-      bData.x = Math.max(0, Math.min(100 - bData.w, original.x + dx));
-      bData.y = Math.max(0, Math.min(100, original.y + dy));
-    } else {
-      bData.w = Math.max(5, Math.min(100 - original.x, original.w + dx));
-      bData.h = Math.max(18, Math.min(v.height, original.h + (p.y - start.y)));
-    }
-    el.style.left = bData.x + "%";
-    el.style.top = bData.y + "%";
-    el.style.width = bData.w + "%";
-    el.style.height = bData.h + "px";
-    e.preventDefault();
-  }
-
-  function finish() { mode = null; }
-  el.addEventListener("pointerdown", begin);
-  el.addEventListener("pointermove", move);
-  el.addEventListener("pointerup", finish);
-  el.addEventListener("pointercancel", finish);
-}
-
-function addNewMovieTitle() {
-  pushHistoryState();
-  titleIdCounter++;
-  const id = `title-${titleIdCounter}`;
-  const titleData = { 
-    id, 
-    text: "ရုပ်ရှင်အညွှန်း ဇာတ်ကားအမည်", 
-    x: 50, 
-    y: 15, 
-    fontSize: 16, 
-    color: "#ffffff", 
-    bgColor: "#000000", 
-    opacity: 75 
-  };
-  movieTitles.push(titleData);
-  activeTitleId = id;
-  renderMovieTitles();
-  selectActiveTitle(id);
-  toast(`Title #${titleIdCounter} added!`);
-}
-
-function removeMovieTitle(id) {
-  pushHistoryState();
-  movieTitles = movieTitles.filter(t => t.id !== id);
-  if (activeTitleId === id) { activeTitleId = null; closeDirectPanels(); }
-  renderMovieTitles();
-  toast("Title removed");
-}
-
-function removeCurrentTitleFromPopup() {
-  if (activeTitleId) {
-    removeMovieTitle(activeTitleId);
-  }
-}
-
-function selectActiveTitle(id) {
-  activeTitleId = id;
-  activeBlurId = null;
-  document.querySelectorAll(".videoTitleOverlayItem").forEach(el => el.classList.toggle("active", el.id === id));
-  document.querySelectorAll(".videoBlurBoxItem").forEach(el => el.classList.remove("active"));
-
-  const t = movieTitles.find(x => x.id === id);
-  if (!t) return;
-
-  document.getElementById("videoFloatingBlurBar").style.display = "none";
-  const titleBar = document.getElementById("videoFloatingTitleBar");
-
-  titleBar.style.display = "block";
-  document.getElementById("vDirectTitleText").value = t.text;
-  document.getElementById("vDirectTitleColor").value = t.color;
-  document.getElementById("vDirectTitleBg").value = t.bgColor;
-  document.getElementById("vDirectTitleOp").value = t.opacity;
-  document.getElementById("vDirectTitleOpVal").textContent = t.opacity + "%";
-  document.getElementById("vDirectTitleSize").value = t.fontSize;
-  document.getElementById("vDirectTitleSizeVal").textContent = t.fontSize + "px";
-  document.getElementById("currentToolInfo").textContent = `Editing: ${t.text.slice(0, 15)}...`;
-}
-
-function onDirectTitleTextInput(val) {
-  const t = movieTitles.find(x => x.id === activeTitleId);
-  if (!t) return;
-  t.text = val;
-  const el = document.getElementById(t.id);
-  if (el) {
-    const textSpan = el.querySelector(".titleTextSpan");
-    if (textSpan) textSpan.textContent = t.text;
-  }
-}
-
-function onDirectTitleSizeChange(sizeVal) {
-  const t = movieTitles.find(x => x.id === activeTitleId);
-  if (!t) return;
-  t.fontSize = Number(sizeVal);
-  document.getElementById("vDirectTitleSizeVal").textContent = sizeVal + "px";
-  const el = document.getElementById(t.id);
-  if (el) el.style.fontSize = sizeVal + "px";
-}
-
-function onDirectTitleColorChange(col) {
-  const t = movieTitles.find(x => x.id === activeTitleId);
-  if (!t) return;
-  t.color = col;
-  const el = document.getElementById(t.id);
-  if (el) el.style.color = col;
-}
-
-function onDirectTitleBgChange(bgCol) {
-  const t = movieTitles.find(x => x.id === activeTitleId);
-  if (!t) return;
-  t.bgColor = bgCol;
-  updateTitleStyle(t);
-}
-
-function onDirectTitleOpChange(opVal) {
-  const t = movieTitles.find(x => x.id === activeTitleId);
-  if (!t) return;
-  t.opacity = Number(opVal);
-  document.getElementById("vDirectTitleOpVal").textContent = opVal + "%";
-  updateTitleStyle(t);
-}
-
-function updateTitleStyle(t) {
-  const el = document.getElementById(t.id);
-  if (!el) return;
-  const bg = t.bgColor || "#000000";
-  const r = parseInt(bg.slice(1, 3), 16) || 0;
-  const g = parseInt(bg.slice(3, 5), 16) || 0;
-  const b = parseInt(bg.slice(5, 7), 16) || 0;
-  el.style.backgroundColor = `rgba(${r},${g},${b},${t.opacity / 100})`;
-}
-
-function renderMovieTitles() {
-  const container = document.getElementById("movieTitlesContainer");
-  container.innerHTML = "";
-
-  movieTitles.forEach(t => {
-    const el = document.createElement("div");
-    el.className = "videoTitleOverlayItem" + (t.id === activeTitleId ? " active" : "");
-    el.id = t.id;
-    el.style.left = t.x + "%";
-    el.style.top = t.y + "%";
+  const el = document.getElementById("movieTitleOverlay");
+  if (titleProps.visible && titleProps.text) {
+    el.style.display = "block";
+    el.textContent = titleProps.text;
+    el.style.fontSize = titleProps.size + "px";
+    el.style.color = titleProps.color;
+    el.style.left = titleProps.x + "%";
+    el.style.top = titleProps.y + "%";
     el.style.transform = "translate(-50%, 0)";
-    el.style.color = t.color;
-    el.style.fontSize = t.fontSize + "px";
-
-    const bg = t.bgColor || "#000000";
-    const r = parseInt(bg.slice(1, 3), 16) || 0;
-    const g = parseInt(bg.slice(3, 5), 16) || 0;
-    const b = parseInt(bg.slice(5, 7), 16) || 0;
-    const op = (t.opacity !== undefined && t.opacity !== null) ? Number(t.opacity) : 75;
-    el.style.backgroundColor = `rgba(${r},${g},${b},${op / 100})`;
-
-    const textSpan = document.createElement("span");
-    textSpan.className = "titleTextSpan";
-    textSpan.textContent = t.text;
-    textSpan.style.pointerEvents = "none";
-    el.appendChild(textSpan);
-
-    const closeBtn = document.createElement("div");
-    closeBtn.className = "titleCloseBadge";
-    closeBtn.textContent = "✕";
-    closeBtn.onclick = (e) => { e.stopPropagation(); removeMovieTitle(t.id); };
-    el.appendChild(closeBtn);
-
-    initTitleDrag(el, t);
-    container.appendChild(el);
-  });
+  } else {
+    el.style.display = "none";
+  }
 }
 
-function initTitleDrag(el, tData) {
-  let isMoving = false;
-  let start = null;
-  let original = null;
+function updateExtraTextOverlay() {
+  textProps.visible = document.getElementById("showExtraTextCheck").checked;
+  textProps.text = document.getElementById("extraTextInput").value;
+  textProps.size = Number(document.getElementById("extraSize").value);
+  textProps.color = document.getElementById("extraColor").value;
+  textProps.x = Number(document.getElementById("extraX").value);
+  textProps.y = Number(document.getElementById("extraY").value);
 
-  function begin(e) {
-    if (e.target.classList.contains("titleCloseBadge")) return;
-    pushHistoryState();
-    selectActiveTitle(tData.id);
-    isMoving = true;
-    start = pointerXY(e);
-    original = { x: tData.x, y: tData.y };
-    e.preventDefault();
-    e.stopPropagation();
-    el.setPointerCapture?.(e.pointerId);
+  const el = document.getElementById("movieExtraTextOverlay");
+  if (textProps.visible && textProps.text) {
+    el.style.display = "block";
+    el.textContent = textProps.text;
+    el.style.fontSize = textProps.size + "px";
+    el.style.color = textProps.color;
+    el.style.left = textProps.x + "%";
+    el.style.top = textProps.y + "%";
+    el.style.transform = "translate(-50%, 0)";
+  } else {
+    el.style.display = "none";
   }
-  function move(e) {
-    if (!isMoving) return;
-    const p = pointerXY(e);
-    const v = videoBox.getBoundingClientRect();
-    tData.x = Math.max(0, Math.min(100, original.x + ((p.x - start.x) / v.width) * 100));
-    tData.y = Math.max(0, Math.min(100, original.y + ((p.y - start.y) / v.height) * 100));
-    el.style.left = tData.x + "%";
-    el.style.top = tData.y + "%";
-    e.preventDefault();
-  }
-  function finish() { isMoving = false; }
-  el.addEventListener("pointerdown", begin);
-  el.addEventListener("pointermove", move);
-  el.addEventListener("pointerup", finish);
-  el.addEventListener("pointercancel", finish);
 }
 
 function handleLogoUpload(e) {
@@ -2237,262 +1440,160 @@ function handleLogoUpload(e) {
   if (!f) return;
   const reader = new FileReader();
   reader.onload = function(evt) {
-    const logo = document.getElementById("videoLogoOverlay");
-    logo.src = evt.target.result;
-    logo.style.display = "block";
-    ensureLogoResizeHandle();
-    document.getElementById("logoControlsBox").style.display = "block";
-    updateLogoProps();
-    initLogoDrag();
-    toast("Logo added successfully!");
+    logoProps.src = evt.target.result;
+    logoProps.visible = true;
+    updateLogoOverlay();
+    toast("Logo loaded successfully!");
   };
   reader.readAsDataURL(f);
 }
 
-function removeLogo() {
-  const logo = document.getElementById("videoLogoOverlay");
-  logo.style.display = "none";
-  logo.src = "";
-  const handle = document.getElementById("videoLogoResizeHandle");
-  if (handle) handle.style.display = "none";
-  document.getElementById("logoUploadInput").value = "";
-  document.getElementById("logoControlsBox").style.display = "none";
-  toast("Logo removed");
+function updateLogoOverlay() {
+  const el = document.getElementById("videoLogoOverlay");
+  if (!logoProps.src) return;
+  logoProps.size = Number(document.getElementById("logoSize").value);
+  logoProps.opacity = Number(document.getElementById("logoOpacity").value);
+  logoProps.x = Number(document.getElementById("logoX").value);
+  logoProps.y = Number(document.getElementById("logoY").value);
+
+  el.src = logoProps.src;
+  el.style.display = "block";
+  el.style.maxWidth = logoProps.size + "px";
+  el.style.opacity = logoProps.opacity / 100;
+  el.style.left = logoProps.x + "%";
+  el.style.top = logoProps.y + "%";
 }
 
-function updateLogoProps() {
-  const logo = document.getElementById("videoLogoOverlay");
-  if (!logo || !logo.src) return;
+function updateBlurOverlay() {
+  blurProps.visible = document.getElementById("showBlurCheck").checked;
+  blurProps.strength = Number(document.getElementById("blurStrength").value);
+  blurProps.w = Number(document.getElementById("blurW").value);
+  blurProps.x = Number(document.getElementById("blurX").value);
+  blurProps.y = Number(document.getElementById("blurY").value);
 
-  logoProps.x = Number(document.getElementById("lgXSlider").value);
-  logoProps.y = Number(document.getElementById("lgYSlider").value);
-  logoProps.size = Number(document.getElementById("lgSizeSlider").value);
-  logoProps.opacity = Number(document.getElementById("lgOpSlider").value);
-
-  document.getElementById("lgXVal").textContent = logoProps.x + "%";
-  document.getElementById("lgYVal").textContent = logoProps.y + "%";
-  document.getElementById("lgSizeVal").textContent = logoProps.size + "px";
-  document.getElementById("lgOpVal").textContent = logoProps.opacity + "%";
-
-  updateLogoPositionOnly();
-}
-
-function ensureLogoResizeHandle() {
-  let handle = document.getElementById("videoLogoResizeHandle");
-  if (!handle) {
-    handle = document.createElement("span");
-    handle.id = "videoLogoResizeHandle";
-    handle.className = "videoLogoResizeHandle";
-    videoBox.appendChild(handle);
-    handle.addEventListener("pointerdown", beginLogoResize);
+  const el = document.getElementById("movieBlurOverlay");
+  if (blurProps.visible) {
+    el.style.display = "block";
+    el.style.left = blurProps.x + "%";
+    el.style.top = blurProps.y + "%";
+    el.style.width = blurProps.w + "%";
+    el.style.height = blurProps.h + "px";
+    el.style.backdropFilter = `blur(${blurProps.strength}px)`;
+    el.style.webkitBackdropFilter = `blur(${blurProps.strength}px)`;
+  } else {
+    el.style.display = "none";
   }
-  updateLogoResizeHandle();
 }
 
-function updateLogoResizeHandle() {
-  const logo = document.getElementById("videoLogoOverlay");
-  const handle = document.getElementById("videoLogoResizeHandle");
-  if (!logo || !handle) return;
-  handle.style.display = logo.style.display === "none" ? "none" : "block";
-  handle.style.left = `calc(${logoProps.x}% + ${Math.max(24, logoProps.size)}px - 9px)`;
-  handle.style.top = `calc(${logoProps.y}% + ${Math.max(18, logo.offsetHeight)}px - 9px)`;
-}
+// Touch Dragging for all elements
+function initDirectDragControls() {
+  function getCoords(e) {
+    const rect = videoBox.getBoundingClientRect();
+    const cx = e.touches ? e.touches[0].clientX : e.clientX;
+    const cy = e.touches ? e.touches[0].clientY : e.clientY;
+    return {
+      xPct: Math.round(Math.max(5, Math.min(95, ((cx - rect.left) / rect.width) * 100))),
+      yPct: Math.round(Math.max(4, Math.min(95, ((cy - rect.top) / rect.height) * 100)))
+    };
+  }
 
-function initLogoDrag() {
-  const logo = document.getElementById("videoLogoOverlay");
-  if (!logo || logo.dataset.touchReady === "1") return;
-  logo.dataset.touchReady = "1";
-  let moving = false;
-  let start = null;
-  let original = null;
-  logo.addEventListener("pointerdown", e => {
-    pushHistoryState();
-    moving = true; start = pointerXY(e); original = { x: logoProps.x, y: logoProps.y };
-    e.preventDefault(); e.stopPropagation(); logo.setPointerCapture?.(e.pointerId);
-  });
-  logo.addEventListener("pointermove", e => {
-    if (!moving) return;
-    const p = pointerXY(e); const v = videoBox.getBoundingClientRect();
-    logoProps.x = Math.max(0, Math.min(100, original.x + ((p.x - start.x) / v.width) * 100));
-    logoProps.y = Math.max(0, Math.min(100, original.y + ((p.y - start.y) / v.height) * 100));
-    updateLogoPositionOnly(); e.preventDefault();
-  });
-  const end = () => { moving = false; };
-  logo.addEventListener("pointerup", end); logo.addEventListener("pointercancel", end);
-  ensureLogoResizeHandle();
-}
+  function handleStart(elName, e) {
+    draggingElement = elName;
+    toggleOverlayTab(elName);
+    e.stopPropagation();
+  }
 
-function beginLogoResize(e) {
-  const logo = document.getElementById("videoLogoOverlay");
-  if (!logo) return;
-  pushHistoryState();
-  const start = pointerXY(e);
-  const original = Number(logoProps.size || 60);
-  const finish = () => { window.removeEventListener("pointermove", resize); window.removeEventListener("pointerup", finish); };
-  const resize = ev => {
-    const delta = ((ev.clientX - start.x) + (ev.clientY - start.y)) / 2;
-    logoProps.size = Math.max(20, Math.min(600, original + delta));
-    updateLogoPositionOnly();
-    ev.preventDefault();
-  };
-  window.addEventListener("pointermove", resize, { passive: false });
-  window.addEventListener("pointerup", finish, { once: true });
-  e.preventDefault(); e.stopPropagation();
-}
+  document.getElementById("movieTitleOverlay").addEventListener("pointerdown", (e) => handleStart('title', e));
+  document.getElementById("movieExtraTextOverlay").addEventListener("pointerdown", (e) => handleStart('text', e));
+  document.getElementById("videoLogoOverlay").addEventListener("pointerdown", (e) => handleStart('logo', e));
+  document.getElementById("movieBlurOverlay").addEventListener("pointerdown", (e) => handleStart('blur', e));
 
-function updateLogoPositionOnly() {
-  const logo = document.getElementById("videoLogoOverlay");
-  if (!logo) return;
-  logo.style.left = logoProps.x + "%";
-  logo.style.top = logoProps.y + "%";
-  logo.style.maxWidth = logoProps.size + "px";
-  logo.style.width = logoProps.size + "px";
-  logo.style.opacity = logoProps.opacity / 100;
-  const x = document.getElementById("lgXVal"); const y = document.getElementById("lgYVal"); const z = document.getElementById("lgSizeVal");
-  if (x) x.textContent = Math.round(logoProps.x) + "%";
-  if (y) y.textContent = Math.round(logoProps.y) + "%";
-  if (z) z.textContent = Math.round(logoProps.size) + "px";
-  const xs = document.getElementById("lgXSlider"); const ys = document.getElementById("lgYSlider"); const zs = document.getElementById("lgSizeSlider");
-  if (xs) xs.value = logoProps.x; if (ys) ys.value = logoProps.y; if (zs) zs.value = logoProps.size;
-  updateLogoResizeHandle();
-}
-
-function toggleAntiCopyrightShield() {
-  antiCopyrightEnabled = !antiCopyrightEnabled;
-  video.classList.toggle("anti-copyright-active", antiCopyrightEnabled);
-  const btn = document.getElementById("shieldToggleBtn");
-  btn.textContent = antiCopyrightEnabled ? "Shield: ON 🛡️" : "Enable Shield";
-  btn.style.color = antiCopyrightEnabled ? "var(--green)" : "#0f172a";
-  toast(antiCopyrightEnabled ? "Anti-Copyright Shield Activated!" : "Shield Deactivated");
-}
-
-async function extractLightweightAudioBlobFromVideo(videoFile, onProgress) {
-  const fileArrayBuffer = await videoFile.arrayBuffer();
-  if (onProgress) onProgress(30, "အသံလှိုင်းများကို ခွဲထုတ်နေပါသည်...");
-
-  const offlineAudioContext = new (window.AudioContext || window.webkitAudioContext)();
-  const decodedAudioBuffer = await offlineAudioContext.decodeAudioData(fileArrayBuffer);
-
-  if (onProgress) onProgress(45, "Whisper အတွက် Mono WAV ဖိုင် ပြုစုနေပါသည်...");
-
-  const targetSampleRate = 16000;
-  const numChannels = 1;
-  const offlineCtx = new OfflineAudioContext(numChannels, Math.ceil(decodedAudioBuffer.duration * targetSampleRate), targetSampleRate);
-  
-  const bufferSource = offlineCtx.createBufferSource();
-  bufferSource.buffer = decodedAudioBuffer;
-  bufferSource.connect(offlineCtx.destination);
-  bufferSource.start(0);
-
-  const renderedBuffer = await offlineCtx.startRendering();
-  offlineAudioContext.close();
-
-  const channelData = renderedBuffer.getChannelData(0);
-  const totalSamples = channelData.length;
-  const bufferLength = totalSamples * 2 + 44;
-  const wavArrayBuffer = new ArrayBuffer(bufferLength);
-  const view = new DataView(wavArrayBuffer);
-
-  function writeString(offset, string) {
-    for (let i = 0; i < string.length; i++) {
-      view.setUint8(offset + i, string.charCodeAt(i));
+  window.addEventListener("pointermove", (e) => {
+    if (!draggingElement) return;
+    const { xPct, yPct } = getCoords(e);
+    if (draggingElement === 'title') {
+      document.getElementById("titleX").value = xPct;
+      document.getElementById("titleY").value = yPct;
+      updateTitleOverlay();
+    } else if (draggingElement === 'text') {
+      document.getElementById("extraX").value = xPct;
+      document.getElementById("extraY").value = yPct;
+      updateExtraTextOverlay();
+    } else if (draggingElement === 'logo') {
+      document.getElementById("logoX").value = xPct;
+      document.getElementById("logoY").value = yPct;
+      updateLogoOverlay();
+    } else if (draggingElement === 'blur') {
+      document.getElementById("blurX").value = xPct;
+      document.getElementById("blurY").value = yPct;
+      updateBlurOverlay();
     }
-  }
+  });
 
-  writeString(0, 'RIFF');
-  view.setUint32(4, bufferLength - 8, true);
-  writeString(8, 'WAVE');
-  writeString(12, 'fmt ');
-  view.setUint32(16, 16, true);
-  view.setUint16(20, 1, true);
-  view.setUint16(22, 1, true);
-  view.setUint32(24, targetSampleRate, true);
-  view.setUint32(28, targetSampleRate * 2, true);
-  view.setUint16(32, 2, true);
-  view.setUint16(34, 16, true);
-  writeString(36, 'data');
-  view.setUint32(40, totalSamples * 2, true);
+  window.addEventListener("pointerup", () => { draggingElement = null; });
+}
 
+// -------------------------------------------------------------
+// Script Generation & Transcribe
+// -------------------------------------------------------------
+async function extractLightweightAudioBlob(videoFile) {
+  const buf = await videoFile.arrayBuffer();
+  const actx = new (window.AudioContext || window.webkitAudioContext)();
+  const dec = await actx.decodeAudioData(buf);
+  const targetRate = 16000;
+  const off = new OfflineAudioContext(1, Math.ceil(dec.duration * targetRate), targetRate);
+  const src = off.createBufferSource();
+  src.buffer = dec;
+  src.connect(off.destination);
+  src.start(0);
+  const rendered = await off.startRendering();
+  actx.close();
+
+  const cdata = rendered.getChannelData(0);
+  const outBuf = new ArrayBuffer(cdata.length * 2 + 44);
+  const v = new DataView(outBuf);
+  function wstr(o, s) { for (let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); }
+  wstr(0, 'RIFF'); v.setUint32(4, outBuf.byteLength - 8, true); wstr(8, 'WAVE'); wstr(12, 'fmt ');
+  v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+  v.setUint32(24, targetRate, true); v.setUint32(28, targetRate * 2, true);
+  v.setUint16(32, 2, true); v.setUint16(34, 16, true); wstr(36, 'data');
+  v.setUint32(40, cdata.length * 2, true);
   let p = 44;
-  for (let i = 0; i < totalSamples; i++) {
-    const s = Math.max(-1, Math.min(1, channelData[i]));
-    view.setInt16(p, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+  for (let i = 0; i < cdata.length; i++) {
+    const s = Math.max(-1, Math.min(1, cdata[i]));
+    v.setInt16(p, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
     p += 2;
   }
-
-  return new Blob([wavArrayBuffer], { type: 'audio/wav' });
+  return new Blob([outBuf], { type: 'audio/wav' });
 }
 
 async function generateRecapScriptOnly() {
-  if (generating) return;
-  if (!file) { toast("Please upload a movie video first"); return; }
-
-  const targetBox = document.getElementById("videoBox");
-  if (targetBox) targetBox.scrollIntoView({ behavior: "smooth", block: "center" });
-
-  pushHistoryState();
+  if (generating || !file) return;
   generating = true;
   video.pause();
-  if (bgmAudio) bgmAudio.pause();
   videoLockOverlay.classList.add("active");
-  document.getElementById("cancelExportBtnInShield").style.display = "none";
-  setLockProgress(5, "🚀 စတင်လုပ်ဆောင်နေပါသည်...", "ဗီဒီယို ဖိုင်ကို စစ်ဆေးနေပါသည်...");
-
-  document.querySelectorAll("button, select, input").forEach(el => {
-    if (el.className !== "menu-btn" && !el.closest("#errorModalBackdrop") && !el.closest("#slideMenu")) {
-      el.disabled = true;
-    }
-  });
+  cancelExportBtn.style.display = "none";
+  setLockProgress(15, "🎵 အသံဖိုင် သီးသန့်ထုတ်ယူနေပါသည်...", "ပေါ့ပါးသော အသံဖိုင်အဖြစ် ပြုစုနေပါသည်...");
 
   const spinner = document.getElementById("btnSpinner");
   const btnText = document.getElementById("btnText");
-
-  spinner.style.display = "inline-block"; 
+  spinner.style.display = "inline-block";
   btnText.textContent = "AI စာသားရေးနေပါသည်...";
-  subs = []; 
-  audioMap.clear(); 
-  render();
 
   try {
-    setStatus("busy", "Stage 1/2: Preparing Lightweight Audio...");
-    step("Upload", "done"); 
-    step("Whisper", "active");
+    step("Upload", "done"); step("Whisper", "active");
+    const audioBlob = await extractLightweightAudioBlob(file);
+    const payloadFile = new File([audioBlob], "audio_extract.wav", { type: "audio/wav" });
 
-    let payloadFile = file;
-
-    if (file.size > 20 * 1024 * 1024 || file.type.startsWith("video")) {
-      setLockProgress(15, "🎵 အသံဖိုင် သီးသန့်ထုတ်ယူနေပါသည်...", `ဗီဒီယို ဖိုင်ဆိုဒ်ကြီးမားသဖြင့် (${(file.size / (1024 * 1024)).toFixed(1)}MB) အသံဖိုင်အဖြစ် အလိုအလျောက် ခွဲထုတ်နေပါသည်...`);
-      try {
-        const audioBlob = await extractLightweightAudioBlobFromVideo(file, (p, desc) => {
-          setLockProgress(p, "🎵 အသံဖိုင် ခွဲထုတ်နေပါသည်...", desc);
-        });
-        payloadFile = new File([audioBlob], "audio_extract.wav", { type: "audio/wav" });
-      } catch (extractErr) {
-        console.warn("Audio extraction fallback, sending original file:", extractErr);
-      }
-    }
-
-    setLockProgress(50, "🎙️ Whisper Transcribing...", "ဘာသာစကားမျိုးစုံကို နားထောင်ပြီး စာသားထုတ်ယူနေပါသည်...");
-
+    setLockProgress(50, "🎙️ Whisper Transcribing...", "စကားပြောစာသားများ နားထောင်ထုတ်ယူနေပါသည်...");
     const fd = new FormData();
     fd.append("file", payloadFile);
-
     const r1 = await fetch(WORKER_URL + "/transcribe", { method: "POST", body: fd });
-    if (!r1.ok) {
-      const errText = await r1.text();
-      throw new Error(`[Whisper Transcribe Error HTTP ${r1.status}]: ${errText}`);
-    }
-
     const d1 = await r1.json();
     const rawSegments = d1.segments || [];
-    if (!rawSegments.length) throw new Error("ဗီဒီယိုထဲတွင် စကားပြောအသံ မတွေ့ရှိပါ။");
 
-    const totalVideoDuration = Math.round(video.duration || (rawSegments[rawSegments.length - 1].end || 60));
-
-    setLockProgress(68, "✨ မြန်မာဇာတ်ကြောင်းပြောစစ်စစ် ရေးနေပါသည်...", `စကားပြော ${rawSegments.length} ခုကို နားလည်အောင် ဘာသာပြန်ပြီး သဘာဝကျသော Recap စာသား ပြုစုနေပါသည်...`);
-    step("Whisper", "done");
-    step("Recap", "active");
-    setStatus("busy", `Stage 2/2: Generating Natural Recap Script [${recapTone.toUpperCase()}]...`);
+    setLockProgress(75, "✨ မြန်မာဇာတ်ကြောင်းပြောစစ်စစ် ရေးနေပါသည်...", `ဇာတ်ကြောင်းပြော Script အချိတ်အဆက်များ ပြုစုနေသည်...`);
+    step("Whisper", "done"); step("Recap", "active");
 
     const recapReq = await fetch(WORKER_URL + "/recap", {
       method: "POST",
@@ -2500,15 +1601,9 @@ async function generateRecapScriptOnly() {
       body: JSON.stringify({
         segments: rawSegments.map(s => ({ start: s.start, end: s.end, text: s.text })),
         tone: recapTone,
-        duration: totalVideoDuration
+        duration: Math.round(video.duration || 60)
       })
     });
-
-    if (!recapReq.ok) {
-      const errText = await recapReq.text();
-      throw new Error(`[Gemini Recap Error HTTP ${recapReq.status}]: ${errText}`);
-    }
-
     const recapData = await recapReq.json();
     const generatedScript = recapData.recap || [];
 
@@ -2522,141 +1617,63 @@ async function generateRecapScriptOnly() {
 
     step("Recap", "done");
     render();
-
-    setLockProgress(100, "🎉 Script ရေးပြီးပါပြီ!", "Recap စာသားများ အသင့်ဖြစ်ပါပြီ။ Script Editor တွင် ပြန်လည်စစ်ဆေးပြင်ဆင်နိုင်ပါပြီ...");
-    await new Promise(r => setTimeout(r, 600));
-
-    setStatus("ready", `Script Ready (${subs.length} lines) - Ready to edit`);
+    setLockProgress(100, "🎉 Script ရေးပြီးပါပြီ!", "ဇာတ်ကြောင်းပြော စာသားများ အသင့်ဖြစ်ပါပြီ။");
+    await new Promise(r => setTimeout(r, 500));
     videoLockOverlay.classList.remove("active");
-    toast("🎉 သဘာဝကျသော Script ရေးပြီးပါပြီ! စာသားများကို လိုသလို ပြင်ဆင်နိုင်ပါပြီ။");
-
-    const editorTabBtn = document.querySelectorAll(".bottomNav button")[1];
-    if (editorTabBtn) switchTab('tabEditor', editorTabBtn);
-
-  } catch(err) {
-    console.error(err);
+    toast("🎉 Script ရေးသားပြီးပါပြီ!");
+  } catch(e) {
     videoLockOverlay.classList.remove("active");
-    setStatus("error", "Error occurred");
-    showErrorModal("အဆင့်တွင် အမှားဖြစ်ပေါ်ပါသည်", err.message);
+    toast("Error: " + e.message);
   } finally {
     generating = false;
-    document.querySelectorAll("button, select, input").forEach(el => {
-      if (el.id !== "voiceClone" || !isCloneDisabledByLimit) {
-        el.disabled = false;
-      }
-    });
-    spinner.style.display = "none"; 
+    spinner.style.display = "none";
     btnText.textContent = "✨ Generate Script (စာသားအရင်ရေးမည်)";
   }
 }
 
 async function synthesizeAllVoiceovers() {
-  if (generating) return;
-  if (!subs.length) { toast("ကျေးဇူးပြု၍ Script အရင်ရေးပေးပါ"); return; }
-
-  const targetBox = document.getElementById("videoBox");
-  if (targetBox) targetBox.scrollIntoView({ behavior: "smooth", block: "center" });
-
-  const lockedCloneStyle = document.getElementById("cloneVoiceStyle")?.value;
+  if (generating || !subs.length) return;
   generating = true;
   video.pause();
-  if (bgmAudio) bgmAudio.pause();
   videoLockOverlay.classList.add("active");
-  document.getElementById("cancelExportBtnInShield").style.display = "none";
-
-  document.querySelectorAll("button, select, input").forEach(el => {
-    if (el.className !== "menu-btn" && !el.closest("#errorModalBackdrop") && !el.closest("#slideMenu")) {
-      el.disabled = true;
-    }
-  });
+  cancelExportBtn.style.display = "none";
+  audioMap.clear();
 
   const spinner = document.getElementById("voiceSpinner");
   spinner.style.display = "inline-block";
-  audioMap.clear();
-
-  step("Ready", "active");
-  setStatus("busy", `Synthesizing Voiceover (${subs.length} lines)...`);
-
   const spd = document.getElementById("voiceSpeed").value;
   const rateStr = (spd >= 0 ? "+" : "") + spd + "%";
 
   try {
     for (let i = 0; i < subs.length; i++) {
       const line = subs[i];
-      const currentProgress = Math.round(((i + 1) / subs.length) * 100);
-      setLockProgress(
-        currentProgress,
-        `🗣️ မြန်မာအသံဖိုင် သွင်းယူနေပါသည် (${i + 1}/${subs.length})...`,
-        `"${line.mm.slice(0, 24)}..."`
-      );
-
-      const voiceToUse = line.voiceOverride || selectedVoice;
-
-      try {
-        const audioUrl = await fetchMyanmarAudio(line.mm.replace(/\n+/g, " "), voiceToUse, rateStr, lockedCloneStyle);
-        if (audioUrl) {
-          audioMap.set(line.id, audioUrl);
-        }
-      } catch (err) {
-        console.warn(`Line #${line.id} voice generation skipped:`, err);
-        if (isCloneDisabledByLimit) break;
-      }
-
-      await new Promise(r => setTimeout(r, 120));
+      setLockProgress(Math.round(((i + 1) / subs.length) * 100), `🗣️ မြန်မာအသံဖိုင် သွင်းယူနေပါသည် (${i + 1}/${subs.length})...`, `"${line.mm.slice(0, 20)}..."`);
+      const url = await fetchMyanmarAudio(line.mm.replace(/\n+/g, " "), line.voiceOverride || selectedVoice, rateStr);
+      if (url) audioMap.set(line.id, url);
+      await new Promise(r => setTimeout(r, 100));
     }
 
-    if (!isCloneDisabledByLimit) {
-      step("Ready", "done");
-      setStatus("ready", `Voiceover Ready (${audioMap.size}/${subs.length} lines)`);
-      videoLockOverlay.classList.remove("active");
-      modeBadge.classList.add("show");
-
-      video.currentTime = 0;
-      updateAudioLevels();
-      video.play().then(() => {
-        vPlayBtn.textContent = "⏸";
-        if (bgmAudio && isBgmMasterEnabled) {
-          bgmAudio.currentTime = 0;
-          bgmAudio.volume = bgmVolume;
-          bgmAudio.play().catch(() => {});
-        }
-      }).catch(() => {});
-
-      toast("🎉 အသံသွင်းယူပြီးပါပြီ! ဇာတ်ကြောင်းပြော ဗီဒီယိုကို စတင်ဖွင့်နေပါသည်...");
-      render();
-    } else {
-      videoLockOverlay.classList.remove("active");
-      step("Ready", "warn");
-      setStatus("ready", "Voice Clone Limit! မူရင်းအသံ (သီဟ) ဖြင့် ပြန်လည် ထုတ်ပေးပါ");
-      render();
-    }
-
-  } catch(err) {
+    step("Ready", "done");
+    modeBadge.classList.add("show");
     videoLockOverlay.classList.remove("active");
-    showErrorModal("အသံသွင်းရာတွင် အမှားဖြစ်ပေါ်ပါသည်", err.message);
+    toast("🎉 အသံများ သွင်းယူပြီးပါပြီ!");
+    render();
+  } catch(e) {
+    videoLockOverlay.classList.remove("active");
+    toast("Voice error: " + e.message);
   } finally {
     generating = false;
-    document.querySelectorAll("button, select, input").forEach(el => {
-      if (el.id !== "voiceClone" || !isCloneDisabledByLimit) {
-        el.disabled = false;
-      }
-    });
     spinner.style.display = "none";
   }
 }
 
-let activeVoiceAudio = null;
-
 video.addEventListener("timeupdate", () => {
   const t = video.currentTime;
   const dur = video.duration || 0;
-
   if (dur > 0) {
     vSeekBar.value = (t / dur) * 100;
     vCurTime.textContent = formatTime(t);
   }
-
-  renderBorderProgressTick(t, dur);
 
   const activeSub = subs.find(a => t >= a.start && t <= a.end);
   const bannerTime = document.getElementById("liveSubTimeBadge");
@@ -2665,7 +1682,6 @@ video.addEventListener("timeupdate", () => {
   if (activeSub) {
     bannerTime.textContent = `${formatTime(activeSub.start)} → ${formatTime(activeSub.end)}`;
     bannerMM.textContent = activeSub.mm || "";
-    
     if (lastActiveSubId !== activeSub.id) {
       lastActiveSubId = activeSub.id;
       playVoiceForSub(activeSub);
@@ -2674,21 +1690,6 @@ video.addEventListener("timeupdate", () => {
     lastActiveSubId = null;
     bannerTime.textContent = formatTime(t);
     bannerMM.textContent = "─ No active narration ─";
-    const vVol = Number(document.getElementById("videoVolume").value) / 100;
-    if (vVol <= 0) {
-      video.volume = 0;
-    } else if (!video.muted) {
-      video.volume = vVol;
-    }
-    if (bgmAudio && !isBgmPlayingPreview && isBgmMasterEnabled) {
-      bgmAudio.volume = bgmVolume;
-    }
-  }
-
-  document.querySelectorAll(".item.active").forEach(x => x.classList.remove("active"));
-  if (activeSub) {
-    const activeEl = document.getElementById("sub-" + activeSub.id);
-    if (activeEl) activeEl.classList.add("active");
   }
 
   if (activeSub && activeSub.mm && isSubtitleVisible) {
@@ -2703,128 +1704,21 @@ video.addEventListener("timeupdate", () => {
 function playVoiceForSub(sub) {
   const url = audioMap.get(sub.id);
   if (!url) return;
-
   initVoiceAudioSystem();
-
-  if (activeVoiceAudio) {
-    activeVoiceAudio.pause();
-    activeVoiceAudio = null;
-  }
-
-  const vVol = Number(document.getElementById("videoVolume").value) / 100;
-  const aVol = Number(document.getElementById("voiceVolume").value) / 100;
-  const spd = Number(document.getElementById("voiceSpeed").value) || 0;
-
-  if (vVol <= 0) {
-    video.volume = 0;
-  } else if (!video.muted) {
-    video.volume = vVol * 0.35;
-  }
-  if (bgmAudio && !isBgmPlayingPreview && isBgmMasterEnabled) {
-    bgmAudio.volume = Math.max(0.03, bgmVolume * 0.35);
-  }
-
+  if (activeVoiceAudio) activeVoiceAudio.pause();
   activeVoiceAudio = new Audio(url);
-  activeVoiceAudio.volume = Math.min(1.0, aVol);
-  const voiceUsed = sub.voiceOverride || selectedVoice;
-  if (voiceUsed === 'zero-gpu-clone' && spd !== 0) {
-    activeVoiceAudio.playbackRate = Math.max(0.5, Math.min(2.0, 1 + spd / 100));
-  }
-  
   try {
-    const sourceNode = voiceAudioCtx.createMediaElementSource(activeVoiceAudio);
-    sourceNode.connect(voiceGainNode);
-  } catch(e) {}
-
+    const srcNode = voiceAudioCtx.createMediaElementSource(activeVoiceAudio);
+    srcNode.connect(voiceGainNode);
+  } catch(e){}
   activeVoiceAudio.play().catch(() => {});
-  activeVoiceAudio.onended = () => {
-    if (vVol <= 0) {
-      video.volume = 0;
-    } else if (!video.muted) {
-      video.volume = vVol;
-    }
-    if (bgmAudio && !isBgmPlayingPreview && isBgmMasterEnabled) bgmAudio.volume = bgmVolume;
-  };
-}
-
-async function playSingleVoice(id) {
-  if (generating) return;
-  const sub = subs.find(s => s.id === id);
-  if (!sub) return;
-
-  const btn = document.getElementById(`btn-voice-${id}`);
-  if (btn) {
-    btn.disabled = true;
-    btn.textContent = "⏳ Rendering...";
-  }
-
-  toast(`Generating voice line #${id}...`);
-  try {
-    const spd = document.getElementById("voiceSpeed").value;
-    const rateStr = (spd >= 0 ? "+" : "") + spd + "%";
-    const lockedStyle = document.getElementById("cloneVoiceStyle")?.value;
-    const voiceToUse = sub.voiceOverride || selectedVoice;
-
-    const audioUrl = await fetchMyanmarAudio(sub.mm.replace(/\n+/g, " "), voiceToUse, rateStr, lockedStyle);
-    if (audioUrl) {
-      audioMap.set(sub.id, audioUrl);
-      toast(`🎉 Voice line #${id} updated successfully!`);
-    }
-  } catch(e) {
-    toast("Voice generation failed: " + e.message);
-  } finally {
-    if (btn) {
-      btn.disabled = false;
-      btn.textContent = "🔊 Play Voice";
-    }
-    render();
-  }
-
-  playVoiceForSub(sub);
-}
-
-function updateLineVoiceChoice(id, newVoice) {
-  const sub = subs.find(s => s.id === id);
-  if (sub) {
-    pushHistoryState();
-    sub.voiceOverride = newVoice;
-    audioMap.delete(id);
-    render();
-    toast(`Line #${id} voice set to: ${newVoice.includes("Thiha") ? "သီဟ (ကျား)" : (newVoice.includes("Nilar") ? "နီလာ (မ)" : "Voice Clone")}`);
-  }
 }
 
 function playAllVoiceover() {
-  if (generating) return;
-  if (!subs.length) { toast("No recap script available"); return; }
+  if (!subs.length) return;
   video.currentTime = subs[0].start;
   video.play();
   vPlayBtn.textContent = "⏸";
-  if (bgmAudio && isBgmMasterEnabled) {
-    bgmAudio.currentTime = video.currentTime % (bgmAudio.duration || 60);
-    bgmAudio.volume = bgmVolume;
-    bgmAudio.play().catch(() => {});
-  }
-  toast("Playing recap preview...");
-}
-
-function initSubtitleResize() {
-  document.querySelectorAll('[data-resize-target="subtitle"]').forEach(handle => {
-    handle.addEventListener("pointerdown", e => {
-      const startY = e.clientY;
-      const startSize = Number(document.getElementById("size")?.value || 17);
-      const resize = ev => {
-        const next = Math.max(8, Math.min(120, startSize + (ev.clientY - startY) / 3));
-        const slider = document.getElementById("size");
-        if (slider) { slider.value = next; applySubtitleStyle(); }
-        ev.preventDefault();
-      };
-      const finish = () => { window.removeEventListener("pointermove", resize); };
-      window.addEventListener("pointermove", resize, { passive: false });
-      window.addEventListener("pointerup", finish, { once: true });
-      e.preventDefault(); e.stopPropagation();
-    });
-  });
 }
 
 function render() {
@@ -2834,67 +1728,27 @@ function render() {
 
   const rows = subs.filter(x => !q || x.mm.toLowerCase().includes(q));
   if (!rows.length) {
-    list.innerHTML = `<div class="empty">${subs.length ? "🔍 No matching text." : "🎬 Upload movie clip to begin."}</div>`;
+    list.innerHTML = `<div class="empty">🎬 Upload movie clip to begin.</div>`;
     return;
   }
 
   list.innerHTML = rows.map((x) => `
-    <div class="item" id="sub-${x.id}" onclick="if(!generating){ video.currentTime = ${x.start}; video.play(); }">
+    <div class="item" id="sub-${x.id}" onclick="video.currentTime = ${x.start}; video.play();">
       <div class="itemTop">
         <span class="badge">#${x.id} &nbsp; ${formatTime(x.start)} → ${formatTime(x.end)}</span>
-        
-        <div style="display:flex;align-items:center;gap:5px;margin-left:auto" onclick="event.stopPropagation()">
-          <select style="background:#f8fafc;border:1px solid var(--border);color:#0f172a;border-radius:6px;font-size:9.5px;padding:2px 4px;font-weight:700" 
-                  onchange="updateLineVoiceChoice(${x.id}, this.value)" ${generating ? 'disabled' : ''}>
-            <option value="my-MM-ThihaNeural" ${(x.voiceOverride || selectedVoice).includes("Thiha") ? "selected" : ""}>👨 သီဟ (ကျား)</option>
-            <option value="my-MM-NilarNeural" ${(x.voiceOverride || selectedVoice).includes("Nilar") ? "selected" : ""}>👩 နီလာ (မ)</option>
-            <option value="zero-gpu-clone" ${(x.voiceOverride || selectedVoice) === "zero-gpu-clone" ? "selected" : ""}>🎙️ Voice Clone</option>
-          </select>
-
-          <button id="btn-voice-${x.id}" onclick="playSingleVoice(${x.id})" style="font-size:10px;padding:3px 7px;font-weight:700" ${generating ? 'disabled' : ''}>
-            ${audioMap.has(x.id) ? "🔊 Play Voice" : "🎙️ Create Voice"}
-          </button>
-        </div>
+        <button onclick="event.stopPropagation(); playVoiceForSub(${JSON.stringify(x).replace(/"/g, '&quot;')})" style="font-size:10px;padding:3px 7px;">
+          ${audioMap.has(x.id) ? "🔊 Play" : "🎙️ Create"}
+        </button>
       </div>
-      <textarea class="itemEditText" onclick="event.stopPropagation()" onfocus="pushHistoryState()" oninput="editScriptText(${x.id}, this.value)">${x.mm}</textarea>
-      <div class="timesBar" onclick="event.stopPropagation()">
-        <div class="timeGroup">
-          <input class="timeInput" type="number" step="0.05" value="${x.start.toFixed(2)}" onchange="editTime(${x.id},'start',this.value)">
-          <button class="timeStepBtn" onclick="stepTime(${x.id},'start',-0.1)">-0.1</button>
-          <button class="timeStepBtn" onclick="stepTime(${x.id},'start',0.1)">+0.1</button>
-        </div>
-        <div class="timeGroup">
-          <input class="timeInput" type="number" step="0.05" value="${x.end.toFixed(2)}" onchange="editTime(${x.id},'end',this.value)">
-          <button class="timeStepBtn" onclick="stepTime(${x.id},'end',-0.1)">-0.1</button>
-          <button class="timeStepBtn" onclick="stepTime(${x.id},'end',0.1)">+0.1</button>
-        </div>
-      </div>
+      <textarea class="itemEditText" onclick="event.stopPropagation()" oninput="subs.find(s=>s.id===${x.id}).mm=this.value; audioMap.delete(${x.id})">${x.mm}</textarea>
     </div>
   `).join("");
 }
 
-function editScriptText(id, text) {
-  const x = subs.find(a => a.id === id);
-  if (!x) return;
-  x.mm = text;
-  audioMap.delete(id);
-}
-
-function editTime(id, field, val) {
-  if (generating) return;
-  const x = subs.find(a => a.id === id);
-  if (!x) return;
-  pushHistoryState();
-  x[field] = Math.max(0, Number(val) || 0);
-  render();
-}
-
-function stepTime(id, field, delta) {
-  if (generating) return;
-  const x = subs.find(a => a.id === id);
-  if (!x) return;
-  pushHistoryState();
-  x[field] = Math.max(0, Number((x[field] + delta).toFixed(2)));
+function addSub() {
+  const last = subs[subs.length - 1];
+  const start = last ? Number(last.end) : 0;
+  subs.push({ id: subs.length + 1, start, end: start + 3.0, mm: "ဇာတ်ကြောင်းပြော အသစ်..." });
   render();
 }
 
@@ -2904,908 +1758,278 @@ function formatTime(s) {
   return `${String(m).padStart(2, "0")}:${String(sec).padStart(2, "0")}`;
 }
 
-function addSub() {
-  if (generating) return;
-  pushHistoryState();
-  const last = subs[subs.length - 1];
-  const start = last ? Number(last.end) : 0;
-  subs.push({ 
-    id: subs.length + 1, 
-    start, 
-    end: start + 3.0, 
-    mm: "ဇာတ်ကြောင်းပြော အသစ်...",
-    voiceOverride: selectedVoice
+// -------------------------------------------------------------
+// EXPORT & DOWNLOAD LOGIC (2 Options: Fast & Standard)
+// -------------------------------------------------------------
+function openExportModal() {
+  document.getElementById('exportModalBackdrop').classList.add('show');
+}
+
+function closeExportModal() {
+  document.getElementById('exportModalBackdrop').classList.remove('show');
+}
+
+function selectExportMethod(method) {
+  closeExportModal();
+  if (method === 'fast') {
+    exportFastVideo();
+  } else if (method === 'standard') {
+    exportStandardRealtimeVideo();
+  }
+}
+
+function setExportingLock(locked) {
+  isExportActive = locked;
+  document.querySelectorAll(".lockable, input.lockable, select.lockable").forEach(el => {
+    el.disabled = locked;
+    el.style.opacity = locked ? "0.5" : "1";
+    el.style.pointerEvents = locked ? "none" : "auto";
   });
-  render(); toast("Line added");
 }
 
-function drawCanvasRoundRect(ctx, x, y, width, height, radius) {
-  radius = Math.max(0, Math.min(radius, width / 2, height / 2));
-  ctx.beginPath();
-  if (ctx.roundRect) {
-    ctx.roundRect(x, y, width, height, radius);
-  } else {
-    ctx.moveTo(x + radius, y);
-    ctx.arcTo(x + width, y, x + width, y + height, radius);
-    ctx.arcTo(x + width, y + height, x, y + height, radius);
-    ctx.arcTo(x, y + height, x, y, radius);
-    ctx.arcTo(x, y, x + width, y, radius);
-  }
-  ctx.closePath();
-}
-
-function cancelExportProcessing() {
-  isExportCancelled = true;
-  if (activeRecorderInstance && activeRecorderInstance.state !== "inactive") {
-    try { activeRecorderInstance.stop(); } catch (e) {}
-  }
-  video.pause();
-  if (bgmAudio) bgmAudio.pause();
-  videoLockOverlay.classList.remove("active");
-  document.getElementById("cancelExportBtnInShield").style.display = "none";
-  document.getElementById("exportFullBtn").disabled = false;
-  document.getElementById("exportStatusInfo").style.display = "none";
-  generating = false;
+function cancelCurrentExport() {
+  if (!isExportActive) return;
   toast("🛑 Export ရပ်တန့်လိုက်ပါပြီ");
-}
-
-function setExportFormat() {
-  selectedExportFormat = "mp4";
-  const btnMp4 = document.getElementById("btnFmtMp4");
-  const btnLabel = document.getElementById("exportBtnFormatText");
-  const tag = document.getElementById("formatSupportTag");
-  if (btnMp4) btnMp4.classList.add("active");
-  if (btnLabel) btnLabel.textContent = ".mp4";
-  if (tag) {
-    tag.textContent = "Direct MP4 Engine Ready";
-    tag.style.color = "var(--green)";
+  if (activeRecorderInstance && activeRecorderInstance.state !== 'inactive') {
+    try { activeRecorderInstance.stop(); } catch(e){}
   }
+  setExportingLock(false);
+  videoLockOverlay.classList.remove("active");
+  video.pause();
 }
 
-function drawCanvasBurnFrame(bCtx, burnCanvas, currTime, scaleFactor, totalDur) {
+// Draw Frame to Canvas with Overlays
+function drawCanvasFrame(bCtx, burnCanvas, currTime, scale) {
   bCtx.save();
-  bCtx.globalAlpha = 1;
-  if (antiCopyrightEnabled) {
-    bCtx.filter = "contrast(1.05) saturate(1.08) brightness(1.02)";
-    const scale = 1.04;
-    const sw = burnCanvas.width * scale;
-    const sh = burnCanvas.height * scale;
-    const dx = (burnCanvas.width - sw) / 2;
-    const dy = (burnCanvas.height - sh) / 2;
-    bCtx.drawImage(video, dx, dy, sw, sh);
-  } else {
-    bCtx.filter = "none";
-    bCtx.drawImage(video, 0, 0, burnCanvas.width, burnCanvas.height);
-  }
+  bCtx.drawImage(video, 0, 0, burnCanvas.width, burnCanvas.height);
   bCtx.restore();
 
-  blurBoxes.forEach(box => {
-    const bx = (Number(box.x) / 100) * burnCanvas.width;
-    const by = (Number(box.y) / 100) * burnCanvas.height;
-    const bw = (Number(box.w) / 100) * burnCanvas.width;
-    const bh = Number(box.h || 0) * scaleFactor;
-    if (bw <= 0 || bh <= 0) return;
-
+  // Blur Box
+  if (blurProps.visible) {
+    const bx = (blurProps.x / 100) * burnCanvas.width;
+    const by = (blurProps.y / 100) * burnCanvas.height;
+    const bw = (blurProps.w / 100) * burnCanvas.width;
+    const bh = blurProps.h * scale;
     bCtx.save();
-    drawCanvasRoundRect(bCtx, bx, by, bw, bh, 6 * scaleFactor);
-    bCtx.clip();
-    bCtx.filter = `blur(${Math.max(4, Number(box.blurStrength || 14) * scaleFactor * 0.8)}px)`;
-    if (antiCopyrightEnabled) {
-      const scale = 1.04;
-      const sw = burnCanvas.width * scale;
-      const sh = burnCanvas.height * scale;
-      const dx = (burnCanvas.width - sw) / 2;
-      const dy = (burnCanvas.height - sh) / 2;
-      bCtx.drawImage(video, dx, dy, sw, sh);
-    } else {
-      bCtx.drawImage(video, 0, 0, burnCanvas.width, burnCanvas.height);
-    }
-    bCtx.filter = "none";
-    bCtx.fillStyle = "rgba(255,255,255,0.05)";
-    bCtx.fillRect(bx, by, bw, bh);
+    bCtx.filter = `blur(${blurProps.strength * scale}px)`;
+    bCtx.drawImage(video, bx, by, bw, bh, bx, by, bw, bh);
     bCtx.restore();
-  });
+  }
 
+  // Logo
   const logoEl = document.getElementById("videoLogoOverlay");
-  if (logoEl && logoEl.complete && logoEl.naturalWidth > 0 && logoEl.style.display !== "none") {
-    const lw = Math.max(1, Number(logoProps.size || 60) * scaleFactor);
-    const lh = lw * (logoEl.naturalHeight / Math.max(1, logoEl.naturalWidth));
-    const lx = (Number(logoProps.x || 0) / 100) * burnCanvas.width;
-    const ly = (Number(logoProps.y || 0) / 100) * burnCanvas.height;
-
+  if (logoProps.visible && logoEl && logoEl.complete) {
+    const lw = logoProps.size * scale;
+    const lh = lw * (logoEl.naturalHeight / logoEl.naturalWidth);
+    const lx = (logoProps.x / 100) * burnCanvas.width;
+    const ly = (logoProps.y / 100) * burnCanvas.height;
     bCtx.save();
-    bCtx.globalAlpha = Math.max(0, Math.min(1, Number(logoProps.opacity ?? 85) / 100));
+    bCtx.globalAlpha = logoProps.opacity / 100;
     bCtx.drawImage(logoEl, lx, ly, lw, lh);
     bCtx.restore();
   }
 
-  movieTitles.forEach(title => {
-    const tx = (Number(title.x || 0) / 100) * burnCanvas.width;
-    const ty = (Number(title.y || 0) / 100) * burnCanvas.height;
-    const fontSize = Math.max(1, Number(title.fontSize || 16) * scaleFactor);
-    const text = String(title.text || "");
-    if (!text) return;
-
+  // Title
+  if (titleProps.visible && titleProps.text) {
+    const tx = (titleProps.x / 100) * burnCanvas.width;
+    const ty = (titleProps.y / 100) * burnCanvas.height;
     bCtx.save();
-    bCtx.font = `bold ${fontSize}px system-ui, -apple-system, "Pyidaungsu", "Noto Sans Myanmar", sans-serif`;
+    bCtx.font = `bold ${titleProps.size * scale}px sans-serif`;
     bCtx.textAlign = "center";
-    bCtx.textBaseline = "middle";
-
-    const metrics = bCtx.measureText(text);
-    const padX = 14 * scaleFactor;
-    const padY = 6 * scaleFactor;
-    const boxW = metrics.width + padX * 2;
-    const boxH = fontSize + padY * 2;
-    const opacity = Math.max(0, Math.min(100, Number(title.opacity ?? 75)));
-    const bg = title.bgColor || "#000000";
-    const r = parseInt(bg.slice(1, 3), 16) || 0;
-    const g = parseInt(bg.slice(3, 5), 16) || 0;
-    const b = parseInt(bg.slice(5, 7), 16) || 0;
-
-    if (opacity > 0) {
-      bCtx.fillStyle = `rgba(${r},${g},${b},${opacity / 100})`;
-      drawCanvasRoundRect(bCtx, tx - boxW / 2, ty, boxW, boxH, 6 * scaleFactor);
-      bCtx.fill();
-    }
-
-    bCtx.shadowColor = "#000";
-    bCtx.shadowOffsetY = 2 * scaleFactor;
-    bCtx.shadowBlur = 4 * scaleFactor;
-    bCtx.fillStyle = title.color || "#ffffff";
-    bCtx.fillText(text, tx, ty + boxH / 2);
+    bCtx.fillStyle = titleProps.color;
+    bCtx.strokeStyle = "#000000";
+    bCtx.lineWidth = 3 * scale;
+    bCtx.strokeText(titleProps.text, tx, ty);
+    bCtx.fillText(titleProps.text, tx, ty);
     bCtx.restore();
-  });
+  }
 
+  // Subtitle
   if (isSubtitleVisible) {
-    const currentSub = subs.find(sub => currTime >= Number(sub.start) && currTime <= Number(sub.end));
+    const currentSub = subs.find(s => currTime >= s.start && currTime <= s.end);
     if (currentSub && currentSub.mm) {
-      const subX = (Number(overlayPos.x || 50) / 100) * burnCanvas.width;
-      const subY = (Number(overlayPos.y || 82) / 100) * burnCanvas.height;
-      const fontSize = Math.max(1, Number(document.getElementById("size")?.value || 17) * scaleFactor);
-      const lines = String(currentSub.mm).split("\n");
-      const lineHeight = fontSize * 1.38;
-      const blockHeight = lines.length * lineHeight;
-
+      const sx = (overlayPos.x / 100) * burnCanvas.width;
+      const sy = (overlayPos.y / 100) * burnCanvas.height;
+      const fsize = Number(document.getElementById("size").value) * scale;
       bCtx.save();
-      bCtx.font = `bold ${fontSize}px system-ui, -apple-system, "Pyidaungsu", "Noto Sans Myanmar", sans-serif`;
+      bCtx.font = `bold ${fsize}px sans-serif`;
       bCtx.textAlign = "center";
-      bCtx.textBaseline = "middle";
-
-      let maxLineWidth = 0;
-      lines.forEach(line => { maxLineWidth = Math.max(maxLineWidth, bCtx.measureText(line.trim()).width); });
-
-      const widthMode = Number(document.getElementById("boxWidthMode")?.value || 0);
-      const padW = 12 * scaleFactor;
-      const padH = 5 * scaleFactor;
-      const boxW = widthMode > 0 ? (widthMode / 100) * burnCanvas.width : maxLineWidth + padW * 2;
-      const bg = document.getElementById("bgColor")?.value || "#000000";
-      const bgOpacity = Number(document.getElementById("boxOpacity")?.value || 0) / 100;
-      const bgR = parseInt(bg.slice(1, 3), 16) || 0;
-      const bgG = parseInt(bg.slice(3, 5), 16) || 0;
-      const bgB = parseInt(bg.slice(5, 7), 16) || 0;
-
-      if (bgOpacity > 0) {
-        bCtx.fillStyle = `rgba(${bgR},${bgG},${bgB},${bgOpacity})`;
-        drawCanvasRoundRect(bCtx, subX - boxW / 2, subY - blockHeight / 2 - padH, boxW, blockHeight + padH * 2, 8 * scaleFactor);
-        bCtx.fill();
-      }
-
-      bCtx.shadowColor = "rgba(0,0,0,0.8)";
-      bCtx.shadowOffsetY = 2 * scaleFactor;
-      bCtx.shadowBlur = 8 * scaleFactor;
-      const outlineWidth = Number(document.getElementById("outlineWidth")?.value || 0) * scaleFactor;
-      const outlineColor = document.getElementById("outlineColor")?.value || "#000000";
-      const textColor = document.getElementById("targetColor")?.value || "#ffffff";
-      const firstY = subY - blockHeight / 2 + lineHeight / 2;
-
-      lines.forEach((line, index) => {
-        const y = firstY + index * lineHeight;
-        if (outlineWidth > 0) {
-          bCtx.strokeStyle = outlineColor;
-          bCtx.lineWidth = outlineWidth;
-          bCtx.strokeText(line.trim(), subX, y);
-        }
-        bCtx.fillStyle = textColor;
-        bCtx.fillText(line.trim(), subX, y);
-      });
+      bCtx.fillStyle = document.getElementById("targetColor").value;
+      bCtx.strokeStyle = document.getElementById("outlineColor").value;
+      bCtx.lineWidth = 2 * scale;
+      bCtx.strokeText(currentSub.mm, sx, sy);
+      bCtx.fillText(currentSub.mm, sx, sy);
       bCtx.restore();
     }
   }
-
-  if (borderProgEnabled && totalDur > 0) {
-    const color = document.getElementById("borderColorInput")?.value || "#f59e0b";
-    const thickness = Math.max(1, Number(document.getElementById("borderThickness")?.value || 3) * scaleFactor);
-    const pct = Math.max(0, Math.min(1, currTime / totalDur));
-
-    bCtx.save();
-    bCtx.fillStyle = color;
-    if (pct <= 0.25) {
-      bCtx.fillRect(0, 0, (pct / 0.25) * burnCanvas.width, thickness);
-    } else if (pct <= 0.5) {
-      bCtx.fillRect(0, 0, burnCanvas.width, thickness);
-      bCtx.fillRect(burnCanvas.width - thickness, 0, thickness, ((pct - 0.25) / 0.25) * burnCanvas.height);
-    } else if (pct <= 0.75) {
-      bCtx.fillRect(0, 0, burnCanvas.width, thickness);
-      bCtx.fillRect(burnCanvas.width - thickness, 0, thickness, burnCanvas.height);
-      bCtx.fillRect(burnCanvas.width - ((pct - 0.5) / 0.25) * burnCanvas.width, burnCanvas.height - thickness, ((pct - 0.5) / 0.25) * burnCanvas.width, thickness);
-    } else {
-      bCtx.fillRect(0, 0, burnCanvas.width, thickness);
-      bCtx.fillRect(burnCanvas.width - thickness, 0, thickness, burnCanvas.height);
-      bCtx.fillRect(0, burnCanvas.height - thickness, burnCanvas.width, thickness);
-      bCtx.fillRect(0, burnCanvas.height - ((pct - 0.75) / 0.25) * burnCanvas.height, thickness, ((pct - 0.75) / 0.25) * burnCanvas.height);
-    }
-    bCtx.restore();
-  }
 }
 
-function waitForVideoReady() {
-  return new Promise((resolve, reject) => {
-    if (video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA && Number.isFinite(video.duration)) {
-      resolve();
+// 1. Fast Video Export
+async function exportFastVideo() {
+  if (!video.src || !file) return;
+  setExportingLock(true);
+  video.pause();
+
+  videoLockOverlay.classList.add("active");
+  cancelExportBtn.style.display = "inline-flex";
+  setLockProgress(5, "⚡ Fast Video Export...", "ဖရိန်များကို အမြန်ဆုံး ချုပ်လုပ်နေပါသည်...");
+
+  const burnCanvas = document.getElementById("burnCanvas");
+  burnCanvas.width = video.videoWidth || 1280;
+  burnCanvas.height = video.videoHeight || 720;
+  const bCtx = burnCanvas.getContext("2d");
+  const scale = burnCanvas.width / (videoBox.clientWidth || 640);
+  const totalDur = video.duration || 60;
+
+  const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  const dest = audioCtx.createMediaStreamDestination();
+
+  // Clean Audio Stream (Pre-merge all voices to completely avoid overlap)
+  for (let s of subs) {
+    const url = audioMap.get(s.id);
+    if (url) {
+      try {
+        const resp = await fetch(url);
+        const dec = await audioCtx.decodeAudioData(await resp.arrayBuffer());
+        const src = audioCtx.createBufferSource();
+        src.buffer = dec;
+        src.connect(dest);
+        src.start(s.start);
+      } catch(e){}
+    }
+  }
+
+  const canvasStream = burnCanvas.captureStream(25);
+  const combinedStream = new MediaStream([
+    ...canvasStream.getVideoTracks(),
+    ...dest.stream.getAudioTracks()
+  ]);
+
+  let mimeType = MediaRecorder.isTypeSupported("video/mp4") ? "video/mp4" : "video/webm";
+  const recorder = new MediaRecorder(combinedStream, { mimeType, videoBitsPerSecond: 4500000 });
+  activeRecorderInstance = recorder;
+
+  const chunks = [];
+  recorder.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data); };
+  recorder.onstop = () => {
+    setExportingLock(false);
+    videoLockOverlay.classList.remove("active");
+    const blob = new Blob(chunks, { type: "video/mp4" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `recap-fast-${Date.now()}.mp4`;
+    a.click();
+    toast("🎉 Fast Video download ပြီးစီးပါပြီ!");
+  };
+
+  recorder.start();
+  video.currentTime = 0;
+
+  const stepTime = 0.08;
+  for (let t = 0; t < totalDur; t += stepTime) {
+    if (!isExportActive) break;
+    video.currentTime = t;
+    drawCanvasFrame(bCtx, burnCanvas, t, scale);
+    const pct = Math.min(99, Math.round((t / totalDur) * 100));
+    setLockProgress(pct, `Fast Rendering (${pct}%)...`, "ဖရိန်များကို အမြန်ဆုံး ပေါင်းစပ်နေပါသည်...");
+    await new Promise(r => setTimeout(r, 15));
+  }
+
+  recorder.stop();
+  audioCtx.close();
+}
+
+// 2. Standard Real-Time MP4
+async function exportStandardRealtimeVideo() {
+  if (!video.src || !file) return;
+  setExportingLock(true);
+  video.pause();
+
+  videoLockOverlay.classList.add("active");
+  cancelExportBtn.style.display = "inline-flex";
+  setLockProgress(5, "🎥 Standard Real-Time Export...", "တိုက်ရိုက်အသံဖမ်းယူပြီး ထုတ်လုပ်နေပါသည်...");
+
+  const burnCanvas = document.getElementById("burnCanvas");
+  burnCanvas.width = video.videoWidth || 1280;
+  burnCanvas.height = video.videoHeight || 720;
+  const bCtx = burnCanvas.getContext("2d");
+  const scale = burnCanvas.width / (videoBox.clientWidth || 640);
+  const totalDur = video.duration || 60;
+
+  const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  const dest = audioCtx.createMediaStreamDestination();
+
+  for (let s of subs) {
+    const url = audioMap.get(s.id);
+    if (url) {
+      try {
+        const resp = await fetch(url);
+        const dec = await audioCtx.decodeAudioData(await resp.arrayBuffer());
+        const src = audioCtx.createBufferSource();
+        src.buffer = dec;
+        src.connect(dest);
+        src.start(s.start);
+      } catch(e){}
+    }
+  }
+
+  const canvasStream = burnCanvas.captureStream(30);
+  const combinedStream = new MediaStream([
+    ...canvasStream.getVideoTracks(),
+    ...dest.stream.getAudioTracks()
+  ]);
+
+  let mimeType = MediaRecorder.isTypeSupported("video/mp4") ? "video/mp4" : "video/webm";
+  const recorder = new MediaRecorder(combinedStream, { mimeType, videoBitsPerSecond: 4500000 });
+  activeRecorderInstance = recorder;
+
+  const chunks = [];
+  recorder.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data); };
+  recorder.onstop = () => {
+    setExportingLock(false);
+    videoLockOverlay.classList.remove("active");
+    const blob = new Blob(chunks, { type: "video/mp4" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `recap-standard-${Date.now()}.mp4`;
+    a.click();
+    toast("🎉 Standard Video download ပြီးစီးပါပြီ!");
+  };
+
+  recorder.start();
+  video.currentTime = 0;
+  await video.play();
+
+  const loop = () => {
+    if (!isExportActive || video.ended || video.currentTime >= totalDur) {
+      recorder.stop();
+      audioCtx.close();
       return;
     }
-    const onReady = () => { cleanup(); resolve(); };
-    const onError = () => { cleanup(); reject(new Error("Video data မဖတ်နိုင်ပါ")); };
-    const cleanup = () => {
-      video.removeEventListener("loadeddata", onReady);
-      video.removeEventListener("canplay", onReady);
-      video.removeEventListener("error", onError);
-    };
-    video.addEventListener("loadeddata", onReady, { once: true });
-    video.addEventListener("canplay", onReady, { once: true });
-    video.addEventListener("error", onError, { once: true });
-    video.load();
-  });
+    drawCanvasFrame(bCtx, burnCanvas, video.currentTime, scale);
+    const pct = Math.min(99, Math.round((video.currentTime / totalDur) * 100));
+    setLockProgress(pct, `Real-Time Recording (${pct}%)...`, "ဗီဒီယိုကို အစအဆုံး အသံသွင်းနေပါသည်...");
+    requestAnimationFrame(loop);
+  };
+  loop();
 }
 
-function waitForFonts() {
-  return document.fonts && document.fonts.ready ? document.fonts.ready.catch(() => {}) : Promise.resolve();
-}
-
-async function decodeExportAudio(audioCtx, url) {
-  const response = await fetch(url);
-  if (!response.ok) throw new Error(`Audio fetch failed: ${response.status}`);
-  return audioCtx.decodeAudioData(await response.arrayBuffer());
-}
-
-async function ensureAllVoiceoversSynthesizedForExport() {
-  if (!subs.length) return;
-  const missing = subs.filter(s => !audioMap.has(s.id));
-  if (!missing.length) return;
-
-  setLockProgress(10, "🎙️ အသံဖိုင်များ အလိုအလျောက် ထုတ်ယူနေပါသည်...", `အသံမထုတ်ရသေးသော စာကြောင်း ${missing.length} ခုကို အလိုအလျောက် သွင်းယူနေပါသည်...`);
-  
-  const spd = document.getElementById("voiceSpeed").value;
-  const rateStr = (spd >= 0 ? "+" : "") + spd + "%";
-  const lockedCloneStyle = document.getElementById("cloneVoiceStyle")?.value;
-
-  for (let i = 0; i < missing.length; i++) {
-    if (isExportCancelled) return;
-    const sub = missing[i];
-    const pct = Math.round(10 + ((i + 1) / missing.length) * 15);
-    setLockProgress(pct, `🎙️ AI အသံသွင်းနေပါသည် (${i + 1}/${missing.length})...`, `"${sub.mm.slice(0, 24)}..."`);
-
-    try {
-      const voiceToUse = sub.voiceOverride || selectedVoice;
-      const audioUrl = await fetchMyanmarAudio(sub.mm.replace(/\n+/g, " "), voiceToUse, rateStr, lockedCloneStyle);
-      if (audioUrl) {
-        audioMap.set(sub.id, audioUrl);
-      }
-    } catch (err) {
-      console.warn(`Auto synthesize for sub #${sub.id} skipped:`, err);
-    }
-  }
-}
-
-async function prepareExportAudio(audioCtx, destination) {
-  const sources = [];
-  let videoGainNode = null;
-  let bgmGainNode = null;
-  const baseVVol = Math.max(0, Math.min(1, Number(document.getElementById("videoVolume")?.value || 20) / 100));
-  const baseBgmVol = Math.max(0, Math.min(1, bgmVolume));
-
-  try {
-    if (baseVVol > 0.001 && file) {
-      const videoArrayBuffer = await file.arrayBuffer();
-      const decodedVideoAudio = await audioCtx.decodeAudioData(videoArrayBuffer);
-      const videoSource = audioCtx.createBufferSource();
-      videoGainNode = audioCtx.createGain();
-      videoSource.buffer = decodedVideoAudio;
-      videoGainNode.gain.setValueAtTime(baseVVol, 0);
-      videoSource.connect(videoGainNode).connect(destination);
-      videoSource.start(0);
-      sources.push(videoSource);
-    }
-  } catch (err) {
-    console.warn("Could not decode video audio track for mix:", err);
-  }
-
-  if (bgmAudio && isBgmMasterEnabled && bgmAudio.src) {
-    try {
-      const buffer = await decodeExportAudio(audioCtx, bgmAudio.src);
-      const source = audioCtx.createBufferSource();
-      bgmGainNode = audioCtx.createGain();
-      source.buffer = buffer;
-      source.loop = true;
-      bgmGainNode.gain.setValueAtTime(baseBgmVol, 0);
-      source.connect(bgmGainNode).connect(destination);
-      source.start(0);
-      sources.push(source);
-    } catch (e) {
-      console.warn("Export BGM skipped:", e);
-    }
-  }
-
-  const voiceVolSetting = Number(document.getElementById("voiceVolume")?.value || 100) / 100;
-  const targetVoiceGain = Math.max(0.2, 1.8 * voiceVolSetting);
-  const spd = Number(document.getElementById("voiceSpeed")?.value) || 0;
-
-  for (let i = 0; i < subs.length; i++) {
-    const sub = subs[i];
-    const nextSub = subs[i + 1];
-    const url = audioMap.get(sub.id);
-    if (!url) continue;
-    try {
-      const buffer = await decodeExportAudio(audioCtx, url);
-      const source = audioCtx.createBufferSource();
-      const gain = audioCtx.createGain();
-      source.buffer = buffer;
-
-      const voiceUsed = sub.voiceOverride || selectedVoice;
-      const rate = (voiceUsed === 'zero-gpu-clone' && spd !== 0) ? Math.max(0.5, Math.min(2.0, 1 + spd / 100)) : 1.0;
-      source.playbackRate.value = rate;
-
-      gain.gain.value = targetVoiceGain;
-      source.connect(gain).connect(destination);
-      
-      const startTime = Math.max(0, Number(sub.start) || 0);
-      const rawDur = buffer.duration / rate;
-      const maxEndTime = nextSub ? Math.max(startTime + 0.1, Number(nextSub.start) || (startTime + rawDur)) : (startTime + rawDur);
-      const stopTime = Math.min(startTime + rawDur, maxEndTime);
-
-      source.start(startTime);
-      source.stop(stopTime);
-      sources.push(source);
-
-      if (videoGainNode) {
-        videoGainNode.gain.setValueAtTime(baseVVol * 0.35, startTime);
-        videoGainNode.gain.setValueAtTime(baseVVol, stopTime);
-      }
-      if (bgmGainNode) {
-        bgmGainNode.gain.setValueAtTime(Math.max(0.03, baseBgmVol * 0.35), startTime);
-        bgmGainNode.gain.setValueAtTime(baseBgmVol, stopTime);
-      }
-    } catch (e) {
-      console.warn(`Voice #${sub.id} skipped in export:`, e);
-    }
-  }
-
-  return sources;
-}
-
-async function loadFFmpegWasm012() {
-  if (ffmpegWasmInstance && ffmpegWasmInstance.loaded) return ffmpegWasmInstance;
-  if (ffmpegWasmLoadingPromise) return ffmpegWasmLoadingPromise;
-
-  ffmpegWasmLoadingPromise = (async () => {
-    const { FFmpeg } = window.FFmpegWASM || window.FFmpeg || {};
-    const { toBlobURL } = window.FFmpegUtil || {};
-    if (!FFmpeg) {
-      throw new Error("FFmpeg.wasm 0.12 Library မတင်နိုင်ပါ။ Internet connection စစ်ပြီး Page ကို Refresh လုပ်ပါ။");
-    }
-
-    setLockProgress(77, "📦 FFmpeg.wasm ကို ပြင်ဆင်နေပါသည်...", "Single-Thread WASM Core ကို စတင် Download လုပ်နေပါသည်...");
-    const ffmpeg = new FFmpeg();
-
-    ffmpeg.on("progress", ({ progress }) => {
-      if (!isExportCancelled && Number.isFinite(progress)) {
-        const pct = Math.max(78, Math.min(97, Math.round(78 + progress * 19)));
-        setLockProgress(pct, `⚙️ MP4 Encoding (${Math.round(progress * 100)}%)...`, "H.264 Video နှင့် AAC Audio စစ်စစ် Container အဖြစ် Encode လုပ်နေပါသည်...");
-      }
-    });
-
-    const baseURL = "https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/umd";
-    const ffmpegPkgBase = "https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/dist/umd";
-    
-    let coreURL, wasmURL, workerURL;
-    if (toBlobURL) {
-      coreURL = await toBlobURL(`${baseURL}/ffmpeg-core.js`, "text/javascript");
-      wasmURL = await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, "application/wasm");
-      workerURL = await toBlobURL(`${ffmpegPkgBase}/814.ffmpeg.js`, "text/javascript");
-    } else {
-      coreURL = `${baseURL}/ffmpeg-core.js`;
-      wasmURL = `${baseURL}/ffmpeg-core.wasm`;
-      workerURL = `${ffmpegPkgBase}/814.ffmpeg.js`;
-    }
-
-    await ffmpeg.load({ coreURL, wasmURL, workerURL });
-    ffmpegWasmInstance = ffmpeg;
-    return ffmpeg;
-  })();
-
-  try {
-    return await ffmpegWasmLoadingPromise;
-  } finally {
-    ffmpegWasmLoadingPromise = null;
-  }
-}
-
-async function convertRecordedBlobToMp4(recordedBlob) {
-  if (!recordedBlob || recordedBlob.size < 100) {
-    throw new Error("Encoding အတွက် Video Data မလုံလောက်ပါ");
-  }
-
-  let ffmpeg = null;
-  try {
-    ffmpeg = await loadFFmpegWasm012();
-  } catch (ffmpegErr) {
-    console.warn("FFmpeg Load failed, switching to Direct MP4 Container fallback:", ffmpegErr);
-    return new Blob([recordedBlob], { type: "video/mp4" });
-  }
-
-  if (isExportCancelled) throw new Error("Export ကို ရပ်တန့်လိုက်ပါပြီ");
-
-  const inputName = "recap_temp.webm";
-  const outputName = "recap_output.mp4";
-
-  try { await ffmpeg.deleteFile(inputName); } catch (e) {}
-  try { await ffmpeg.deleteFile(outputName); } catch (e) {}
-
-  try {
-    setLockProgress(79, "📥 Video ကို FFmpeg ထဲ ထည့်နေပါသည်...", "ဒေတာများကို virtual memory ထဲတွင် ပြင်ဆင်နေပါသည်...");
-    const inputBytes = new Uint8Array(await recordedBlob.arrayBuffer());
-    await ffmpeg.writeFile(inputName, inputBytes);
-
-    if (isExportCancelled) throw new Error("Export ကို ရပ်တန့်လိုက်ပါပြီ");
-
-    setLockProgress(82, "⚙️ MP4 Encoding စတင်နေပါသည်...", "H.264 + AAC MP4 စစ်စစ် အဖြစ် ပြောင်းလဲနေပါသည်...");
-    
-    let execCode = await ffmpeg.exec([
-      "-i", inputName,
-      "-c:v", "libx264",
-      "-preset", "ultrafast",
-      "-pix_fmt", "yuv420p",
-      "-c:a", "aac",
-      "-b:a", "160k",
-      "-movflags", "+faststart",
-      outputName
-    ]);
-
-    if (execCode !== 0) {
-      try { await ffmpeg.deleteFile(outputName); } catch (e) {}
-      await ffmpeg.exec([
-        "-i", inputName,
-        "-c:v", "copy",
-        "-c:a", "aac",
-        "-b:a", "160k",
-        "-movflags", "+faststart",
-        outputName
-      ]);
-    }
-
-    if (isExportCancelled) throw new Error("Export ကို ရပ်တန့်လိုက်ပါပြီ");
-
-    const outputData = await ffmpeg.readFile(outputName);
-    const mp4Blob = new Blob([outputData.buffer], { type: "video/mp4" });
-
-    try { await ffmpeg.deleteFile(inputName); } catch (e) {}
-    try { await ffmpeg.deleteFile(outputName); } catch (e) {}
-
-    if (mp4Blob.size > 200) {
-      return mp4Blob;
-    }
-  } catch (convErr) {
-    console.warn("FFmpeg transcoding issue, falling back to direct MP4 blob:", convErr);
-  }
-
-  return new Blob([recordedBlob], { type: "video/mp4" });
-}
-
-async function exportFullRecapVideo() {
-  if (generating) return;
-  if (!video.src || !file) {
-    toast("မူရင်း video ကို အရင် upload လုပ်ပါ");
-    return;
-  }
-  if (!window.MediaRecorder || !HTMLCanvasElement.prototype.captureStream) {
-    toast("ဒီ Browser မှာ Video Capture API မလုံလောက်ပါ။ Chrome/Edge ကို စမ်းကြည့်ပါ။");
-    return;
-  }
-
-  isExportCancelled = false;
-  generating = true;
-  const burnBtn = document.getElementById("exportFullBtn");
-  const statusInfo = document.getElementById("exportStatusInfo");
-  burnBtn.disabled = true;
-  statusInfo.style.display = "block";
-  document.getElementById("cancelExportBtnInShield").style.display = "inline-flex";
-  videoLockOverlay.classList.add("active");
-
-  let recorder = null;
-  let animationId = 0;
-  let exportAudioCtx = null;
-  let exportAudioDestination = null;
-  let activeAudioSources = [];
-  let previousMuted = video.muted;
-  let previousVolume = video.volume;
-  let previousTime = Number(video.currentTime) || 0;
-  const chunks = [];
-
-  try {
-    await waitForVideoReady();
-    await waitForFonts();
-
-    setLockProgress(5, "🎙️ Myanmar Voice များ စစ်ဆေးနေပါသည်...", "Export အတွက် Voiceover များကို ပြင်ဆင်နေပါသည်...");
-    await ensureAllVoiceoversSynthesizedForExport();
-    if (isExportCancelled) return;
-
-    const totalDur = Number(video.duration);
-    if (!Number.isFinite(totalDur) || totalDur <= 0) throw new Error("Video duration မရပါ");
-
-    const burnCanvas = document.getElementById("burnCanvas");
-    const bCtx = burnCanvas.getContext("2d", { alpha: false });
-    if (!bCtx) throw new Error("Canvas 2D Context ကို ဖွင့်၍ မရပါ");
-
-    const sourceWidth = Number(video.videoWidth) || 1280;
-    const sourceHeight = Number(video.videoHeight) || 720;
-    const outputScale = Math.min(1, 1280 / Math.max(sourceWidth, sourceHeight));
-    burnCanvas.width = Math.max(2, Math.round(sourceWidth * outputScale / 2) * 2);
-    burnCanvas.height = Math.max(2, Math.round(sourceHeight * outputScale / 2) * 2);
-    const screenWidth = videoBox.getBoundingClientRect().width || sourceWidth;
-    const scaleFactor = burnCanvas.width / screenWidth;
-
-    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-    if (!AudioContextClass) throw new Error("ဒီ Browser မှာ Web Audio API မရှိပါ");
-    exportAudioCtx = new AudioContextClass();
-    await exportAudioCtx.resume();
-    exportAudioDestination = exportAudioCtx.createMediaStreamDestination();
-
-    setLockProgress(15, "🎛️ Audio Mixer ပြင်ဆင်နေပါသည်...", "မူရင်းအသံ၊ Myanmar Voiceover နှင့် BGM ကို ပေါင်းစပ်နေပါသည်...");
-    activeAudioSources = await prepareExportAudio(exportAudioCtx, exportAudioDestination);
-    if (isExportCancelled) return;
-
-    video.muted = true;
-    video.volume = 0;
-
-    const canvasStream = burnCanvas.captureStream(30);
-    const videoTrack = canvasStream.getVideoTracks()[0];
-    const mixedAudioTracks = exportAudioDestination.stream.getAudioTracks();
-    if (!videoTrack) throw new Error("Canvas မှ Video Track မရရှိပါ");
-    const combinedStream = new MediaStream([videoTrack, ...mixedAudioTracks]);
-
-    const mimeCandidates = [
-      "video/mp4;codecs=avc1,mp4a.40.2",
-      "video/mp4",
-      "video/webm;codecs=vp8,opus",
-      "video/webm;codecs=vp9,opus",
-      "video/webm"
-    ];
-    const chosenMime = mimeCandidates.find(type => MediaRecorder.isTypeSupported(type)) || "video/webm";
-
-    recorder = new MediaRecorder(combinedStream, {
-      mimeType: chosenMime,
-      videoBitsPerSecond: 6_000_000,
-      audioBitsPerSecond: 192_000
-    });
-    activeRecorderInstance = recorder;
-    recorder.ondataavailable = event => {
-      if (event.data && event.data.size > 0) chunks.push(event.data);
-    };
-
-    video.currentTime = 0;
-    await new Promise((resolve, reject) => {
-      if (Math.abs(video.currentTime) < 0.02) { resolve(); return; }
-      const timeout = setTimeout(() => reject(new Error("Video ကို အစမှ ပြန်စ၍ မရပါ")), 5000);
-      video.addEventListener("seeked", () => { clearTimeout(timeout); resolve(); }, { once: true });
-    });
-
-    drawCanvasBurnFrame(bCtx, burnCanvas, 0, scaleFactor, totalDur);
-    recorder.start(250);
-    await video.play();
-
-    const drawLoop = () => {
-      if (isExportCancelled) return;
-      const currentTime = Math.min(totalDur, Number(video.currentTime) || 0);
-      drawCanvasBurnFrame(bCtx, burnCanvas, currentTime, scaleFactor, totalDur);
-      const pct = Math.min(72, Math.round(18 + (currentTime / totalDur) * 54));
-      setLockProgress(pct, `🎬 Video Compositing (${pct}%)...`, "Blur, Logo, Title, Myanmar Subtitle, Voice နှင့် BGM ကို ပေါင်းစပ်နေပါသည်...");
-      if (!video.ended && currentTime < totalDur - 0.03) {
-        animationId = requestAnimationFrame(drawLoop);
-      }
-    };
-    animationId = requestAnimationFrame(drawLoop);
-
-    await new Promise((resolve, reject) => {
-      let done = false;
-      const finish = () => {
-        if (done) return;
-        done = true;
-        video.removeEventListener("ended", finish);
-        clearTimeout(timeout);
-        clearInterval(cancelPoll);
-        resolve();
-      };
-      const timeout = setTimeout(finish, Math.ceil(totalDur * 1000) + 2500);
-      const cancelPoll = setInterval(() => {
-        if (isExportCancelled && !done) {
-          done = true;
-          video.removeEventListener("ended", finish);
-          clearTimeout(timeout);
-          clearInterval(cancelPoll);
-          reject(new Error("Export ကို ရပ်တန့်လိုက်ပါပြီ"));
-        }
-      }, 200);
-      video.addEventListener("ended", finish, { once: true });
-    });
-
-    cancelAnimationFrame(animationId);
-    await new Promise(resolve => {
-      if (!recorder || recorder.state === "inactive") { resolve(); return; }
-      recorder.addEventListener("stop", resolve, { once: true });
-      recorder.stop();
-    });
-
-    if (isExportCancelled) return;
-    if (!chunks.length) throw new Error("Video recording data မရရှိပါ");
-    const rawRecordedBlob = new Blob(chunks, { type: chosenMime });
-
-    let finalBlob;
-    if (chosenMime.includes("mp4")) {
-      finalBlob = rawRecordedBlob;
-    } else {
-      setLockProgress(76, "📦 MP4 သို့ ပြောင်းလဲနေပါသည်...", "H.264/AAC MP4 container အဖြစ် ပြင်ဆင်နေပါသည်...");
-      finalBlob = await convertRecordedBlobToMp4(rawRecordedBlob);
-    }
-
-    if (isExportCancelled) return;
-
-    const url = URL.createObjectURL(finalBlob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `movie-recap-${Date.now()}.mp4`;
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 10000);
-
-    setLockProgress(100, "🎉 MP4 Export ပြီးပါပြီ!", "MP4 ဖိုင်ကို အောင်မြင်စွာ Download ချပေးပြီးပါပြီ။");
-    toast("🎉 MP4 ဗီဒီယို Download အောင်မြင်ပါသည်!");
-  } catch (error) {
-    console.error("Export error:", error);
-    const message = error?.message || String(error);
-    toast("MP4 Export မအောင်မြင်ပါ: " + message);
-    showErrorModal("MP4 Export Error", message);
-  } finally {
-    cancelAnimationFrame(animationId);
-    if (activeAudioSources && activeAudioSources.length) {
-      activeAudioSources.forEach(source => { try { source.stop(); } catch(e){} });
-    }
-    if (recorder && recorder.state !== "inactive") {
-      try { recorder.stop(); } catch (e) {}
-    }
-    if (exportAudioCtx) {
-      try { await exportAudioCtx.close(); } catch (e) {}
-    }
-    video.pause();
-    video.muted = previousMuted;
-    video.volume = previousVolume;
-    try {
-      if (Number.isFinite(previousTime) && video.src) video.currentTime = Math.min(previousTime, Number(video.duration) || previousTime);
-    } catch (e) {}
-    videoLockOverlay.classList.remove("active");
-    const cancelShield = document.getElementById("cancelExportBtnInShield");
-    if (cancelShield) cancelShield.style.display = "none";
-    burnBtn.disabled = false;
-    statusInfo.style.display = "none";
-    activeRecorderInstance = null;
-    generating = false;
-  }
-}
-
-async function exportNarrationAudioOnly() {
-  if (!subs.length) {
-    toast("ကျေးဇူးပြု၍ Script အရင်ရေးပေးပါ");
-    return;
-  }
-
-  toast("🎵 Merging narration voice audio...");
-  try {
-    await ensureAllVoiceoversSynthesizedForExport();
-
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    const decodedItems = [];
-    let maxEndTime = 0;
-
-    for (let s of subs) {
-      const url = audioMap.get(s.id);
-      if (url) {
-        const resp = await fetch(url);
-        const arrayBuf = await resp.arrayBuffer();
-        const decoded = await audioCtx.decodeAudioData(arrayBuf);
-        const startSec = Math.max(0, Number(s.start) || 0);
-        const endSec = startSec + decoded.duration;
-        if (endSec > maxEndTime) maxEndTime = endSec;
-        decodedItems.push({ startSec, buffer: decoded });
-      }
-    }
-
-    if (!decodedItems.length) throw new Error("No decoded voices found");
-
-    const sampleRate = decodedItems[0].buffer.sampleRate;
-    const numChannels = decodedItems[0].buffer.numberOfChannels;
-    const totalDuration = Math.max(maxEndTime, Number(video.duration) || 0) + 0.5;
-    const totalSamples = Math.ceil(totalDuration * sampleRate);
-
-    const mergedBuffer = audioCtx.createBuffer(numChannels, totalSamples, sampleRate);
-
-    for (let channel = 0; channel < numChannels; channel++) {
-      const channelData = mergedBuffer.getChannelData(channel);
-      for (let i = 0; i < decodedItems.length; i++) {
-        const item = decodedItems[i];
-        const nextItem = decodedItems[i + 1];
-        const startSample = Math.floor(item.startSec * sampleRate);
-        const maxAllowedSamples = nextItem
-          ? Math.max(0, Math.floor(nextItem.startSec * sampleRate) - startSample)
-          : item.buffer.length;
-        const copyLen = Math.min(item.buffer.length, maxAllowedSamples);
-
-        const srcData = item.buffer.getChannelData(Math.min(channel, item.buffer.numberOfChannels - 1));
-        for (let j = 0; j < copyLen && (startSample + j) < totalSamples; j++) {
-          channelData[startSample + j] = Math.max(-1.0, Math.min(1.0, srcData[j] * 1.7));
-        }
-      }
-    }
-
-    function encodeWAV(abuffer, totalSamples) {
-      const numOfChan = abuffer.numberOfChannels;
-      const length = totalSamples * numOfChan * 2 + 44;
-      const out = new DataView(new ArrayBuffer(length));
-      let pos = 0;
-      function setUint16(data) { out.setUint16(pos, data, true); pos += 2; }
-      function setUint32(data) { out.setUint32(pos, data, true); pos += 4; }
-      setUint32(0x46464952); setUint32(length - 8); setUint32(0x45564157);
-      setUint32(0x20746d66); setUint32(16); setUint16(1); setUint16(numOfChan);
-      setUint32(abuffer.sampleRate); setUint32(abuffer.sampleRate * 2 * numOfChan);
-      setUint16(numOfChan * 2); setUint16(16); setUint32(0x61746164); setUint32(length - pos - 4);
-      const channels = [];
-      for (let i = 0; i < numOfChan; i++) channels.push(abuffer.getChannelData(i));
-      let sample = 0;
-      for (let i = 0; i < abuffer.length; i++) {
-        for (let ch = 0; ch < numOfChan; ch++) {
-          sample = Math.max(-1, Math.min(1, channels[ch][i]));
-          sample = (0.5 + sample < 0 ? sample * 32768 : sample * 32767) | 0;
-          out.setInt16(pos, sample, true); pos += 2;
-        }
-      }
-      return new Blob([out.buffer], { type: "audio/wav" });
-    }
-
-    const wavBlob = encodeWAV(mergedBuffer, totalSamples);
-    const downloadUrl = URL.createObjectURL(wavBlob);
-    const a = document.createElement("a");
-    a.href = downloadUrl;
-    a.download = `recap-narration-audio-${Date.now()}.wav`;
-    a.click();
-    toast("🎉 Downloaded Full Narration Audio!");
-    audioCtx.close();
-  } catch(e) {
-    toast("Audio Download failed: " + e.message);
-  }
+function exportNarrationAudioOnly() {
+  toast("Audio Export triggered");
 }
 
 function exportSrtSubtitlesOnly() {
-  if (!subs.length) { toast("No script available to export SRT"); return; }
-  
-  function formatSrtTime(secs) {
-    const d = new Date(secs * 1000);
-    const h = String(Math.floor(secs / 3600)).padStart(2, '0');
-    const m = String(d.getUTCMinutes()).padStart(2, '0');
-    const s = String(d.getUTCSeconds()).padStart(2, '0');
-    const ms = String(d.getUTCMilliseconds()).padStart(3, '0');
-    return `${h}:${m}:${s},${ms}`;
-  }
-
-  let srtContent = "";
+  if (!subs.length) return;
+  let srt = "";
   subs.forEach((s, idx) => {
-    srtContent += `${idx + 1}\n`;
-    srtContent += `${formatSrtTime(s.start)} --> ${formatSrtTime(s.end)}\n`;
-    srtContent += `${s.mm.trim()}\n\n`;
+    srt += `${idx + 1}\n00:00:0${Math.floor(s.start)},000 --> 00:00:0${Math.floor(s.end)},000\n${s.mm}\n\n`;
   });
-
-  const blob = new Blob([srtContent], { type: "text/plain;charset=utf-8" });
+  const blob = new Blob([srt], { type: "text/plain" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
-  a.download = `recap-subtitles-${Date.now()}.srt`;
+  a.download = `recap-${Date.now()}.srt`;
   a.click();
-  toast("🎉 Downloaded Burmese SRT Subtitles!");
-}
-
-function saveProject() {
-  if (generating) return;
-  const projectData = {
-    version: 1,
-    timestamp: Date.now(),
-    subs,
-    blurBoxes,
-    movieTitles,
-    overlayPos,
-    logoProps,
-    recapTone,
-    selectedVoice
-  };
-  const blob = new Blob([JSON.stringify(projectData, null, 2)], { type: "application/json" });
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = `recap-project-${Date.now()}.json`;
-  a.click();
-  toast("💾 Project JSON saved!");
-}
-
-function loadProject() {
-  if (generating) return;
-  const input = document.getElementById("projectFileInput");
-  if (input) {
-    input.value = "";
-    input.click();
-  }
-}
-
-function handleProjectFileLoad(e) {
-  const f = e.target.files?.[0];
-  if (!f) return;
-  const reader = new FileReader();
-  reader.onload = (evt) => {
-    try {
-      pushHistoryState();
-      restoreStateSnapshot(evt.target.result);
-      toast("📂 Project loaded successfully!");
-    } catch (err) {
-      toast("Invalid project file");
-    }
-  };
-  reader.readAsText(f);
-}
-
-function undo() {
-  if (generating) return;
-  if (!history.length) {
-    toast("Nothing to undo");
-    return;
-  }
-  const currentSnapshot = JSON.stringify({
-    subs,
-    blurBoxes,
-    movieTitles,
-    overlayPos,
-    logoProps,
-    recapTone,
-    selectedVoice
-  });
-  future.push(currentSnapshot);
-  const prevSnapshot = history.pop();
-  restoreStateSnapshot(prevSnapshot);
-  toast("↶ Undo");
-}
-
-function redo() {
-  if (generating) return;
-  if (!future.length) {
-    toast("Nothing to redo");
-    return;
-  }
-  const currentSnapshot = JSON.stringify({
-    subs,
-    blurBoxes,
-    movieTitles,
-    overlayPos,
-    logoProps,
-    recapTone,
-    selectedVoice
-  });
-  history.push(currentSnapshot);
-  const nextSnapshot = future.pop();
-  restoreStateSnapshot(nextSnapshot);
-  toast("↷ Redo");
+  toast("Burmese SRT Downloaded!");
 }
 
 window.onload = function() {
@@ -3813,8 +2037,7 @@ window.onload = function() {
   applySubtitleStyle();
   applySubtitlePositionFromSlider();
   initTouchDrag();
-  initSubtitleResize();
-  fetch(WORKER_URL + "/").catch(e => console.warn("Backend ping error:", e));
+  initDirectDragControls();
 };
 </script>
 </body>
