@@ -31,7 +31,7 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 20px;
+  padding: 12px 16px;
   background-color: #ffffff;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
   position: sticky;
@@ -43,7 +43,7 @@ body {
 .nav-left {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 
 .back-btn {
@@ -52,13 +52,13 @@ body {
   color: #b45309;
   padding: 5px 12px;
   border-radius: 8px;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
   border: 1px solid #fde68a;
 }
 
 .logo {
-  font-size: 1.1rem;
+  font-size: 1.05rem;
   font-weight: bold;
   color: #b45309;
 }
@@ -66,7 +66,7 @@ body {
 .nav-right {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 
 .btn {
@@ -91,16 +91,15 @@ body {
   border: 1px solid #fecaca;
 }
 
-/* Main Container */
+/* Container */
 .container {
-  max-width: 1000px;
+  max-width: 1150px;
   margin: 0 auto;
-  padding: 24px 16px 40px;
+  padding: 20px 14px 40px;
   width: 100%;
   flex: 1;
 }
 
-/* Auth / Access Message Box */
 .status-card {
   background: #ffffff;
   border: 1px solid #cbd5e1;
@@ -112,7 +111,7 @@ body {
 }
 
 .status-card h3 {
-  font-size: 1.25rem;
+  font-size: 1.2rem;
   color: #0f172a;
   margin-bottom: 8px;
 }
@@ -120,10 +119,8 @@ body {
 .status-card p {
   font-size: 0.9rem;
   color: #64748b;
-  margin-bottom: 20px;
 }
 
-/* Dashboard Content */
 #dashboardContent {
   display: none;
 }
@@ -134,57 +131,71 @@ body {
   align-items: center;
   flex-wrap: wrap;
   gap: 12px;
-  background: rgba(255, 255, 255, 0.75);
+  background: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(12px);
-  padding: 16px 20px;
+  padding: 16px;
   border-radius: 16px;
-  margin-bottom: 20px;
+  margin-bottom: 18px;
   border: 1px solid #ffffff;
   box-shadow: 0 6px 20px rgba(31, 38, 135, 0.06);
+}
+
+.stat-group {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
 }
 
 .stat-item {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 
 .stat-icon {
-  width: 44px;
-  height: 44px;
+  width: 42px;
+  height: 42px;
   border-radius: 12px;
   background: #fffbeb;
   border: 1px solid #fde68a;
   display: grid;
   place-items: center;
-  font-size: 20px;
+  font-size: 18px;
 }
 
 .stat-info h4 {
-  font-size: 12px;
+  font-size: 11px;
   color: #64748b;
 }
 
 .stat-info span {
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 700;
   color: #b45309;
 }
 
+.search-controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  width: 100%;
+  max-width: 340px;
+}
+
 .search-box {
-  padding: 8px 14px;
+  flex: 1;
+  padding: 8px 12px;
   border: 1px solid #cbd5e1;
   border-radius: 10px;
   font-size: 13px;
   outline: none;
-  min-width: 220px;
 }
 
 .search-box:focus {
   border-color: #f59e0b;
 }
 
-/* User Table */
+/* User Cards / Table Layout */
 .table-card {
   background: #ffffff;
   border-radius: 16px;
@@ -201,14 +212,15 @@ body {
 table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 600px;
+  min-width: 820px;
 }
 
 th, td {
-  padding: 14px 16px;
+  padding: 14px 14px;
   text-align: left;
   border-bottom: 1px solid #f1f5f9;
   font-size: 13px;
+  vertical-align: middle;
 }
 
 th {
@@ -217,11 +229,15 @@ th {
   font-weight: 700;
   text-transform: uppercase;
   font-size: 11px;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.4px;
 }
 
 tr:hover {
   background-color: #fffbeb;
+}
+
+tr.banned-row {
+  background-color: #fef2f2;
 }
 
 .user-cell {
@@ -231,44 +247,135 @@ tr:hover {
 }
 
 .avatar {
-  width: 36px;
-  height: 36px;
+  width: 38px;
+  height: 38px;
   border-radius: 50%;
   object-fit: cover;
-  border: 1px solid #f59e0b;
+  border: 2px solid #f59e0b;
+}
+
+.user-meta {
+  display: flex;
+  flex-direction: column;
 }
 
 .user-name {
   font-weight: 700;
   color: #0f172a;
+  font-size: 13.5px;
 }
 
-.uid-badge {
-  background: #f1f5f9;
-  color: #475569;
-  padding: 3px 8px;
-  border-radius: 6px;
-  font-family: monospace;
-  font-size: 11px;
-}
-
-.time-text {
+.user-email {
+  font-size: 11.5px;
   color: #64748b;
-  font-size: 12px;
 }
 
-.delete-btn {
+/* Status Pill */
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.status-active {
+  background: #f0fdf4;
+  color: #15803d;
+  border: 1px solid #86efac;
+}
+
+.status-banned {
   background: #fee2e2;
   color: #dc2626;
   border: 1px solid #fecaca;
-  padding: 4px 10px;
-  border-radius: 6px;
-  font-size: 11px;
-  font-weight: 700;
-  cursor: pointer;
 }
 
-.delete-btn:hover {
+/* Feature Usage Grid inside Table */
+.usage-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
+  min-width: 280px;
+}
+
+.usage-badge {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 5px 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+}
+
+.usage-name {
+  font-weight: 700;
+  color: #334155;
+}
+
+.usage-stats {
+  color: #b45309;
+  font-weight: 700;
+}
+
+.total-time-badge {
+  display: inline-block;
+  margin-top: 6px;
+  font-size: 11px;
+  color: #475569;
+  background: #fef3c7;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-weight: 700;
+}
+
+/* Action Buttons */
+.action-group {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.action-btn {
+  padding: 5px 10px;
+  border-radius: 8px;
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.2s;
+}
+
+.btn-ban {
+  background: #fff7ed;
+  color: #c2410c;
+  border-color: #fed7aa;
+}
+.btn-ban:hover {
+  background: #ea580c;
+  color: #ffffff;
+}
+
+.btn-unlock {
+  background: #f0fdf4;
+  color: #15803d;
+  border-color: #bbf7d0;
+}
+.btn-unlock:hover {
+  background: #16a34a;
+  color: #ffffff;
+}
+
+.btn-del {
+  background: #fee2e2;
+  color: #dc2626;
+  border-color: #fecaca;
+}
+.btn-del:hover {
   background: #dc2626;
   color: #ffffff;
 }
@@ -289,24 +396,31 @@ tr:hover {
 
 <main class="container">
 
-  <!-- State 1: Checking / Login Required / Access Denied -->
   <div class="status-card" id="statusBox">
     <h3 id="statusTitle">စစ်ဆေးနေပါသည်...</h3>
     <p id="statusDesc">Admin အချက်အလက်များကို စစ်ဆေးနေပါသဖြင့် ခေတ္တစောင့်ဆိုင်းပေးပါ။</p>
   </div>
 
-  <!-- State 2: Admin Dashboard (Visible only to Admin) -->
   <div id="dashboardContent">
     <div class="stats-bar">
-      <div class="stat-item">
-        <div class="stat-icon">👥</div>
-        <div class="stat-info">
-          <h4>စုစုပေါင်း အသုံးပြုသူ (Total Users)</h4>
-          <span id="totalUsersCount">0</span>
+      <div class="stat-group">
+        <div class="stat-item">
+          <div class="stat-icon">👥</div>
+          <div class="stat-info">
+            <h4>စုစုပေါင်း အသုံးပြုသူ (Total Users)</h4>
+            <span id="totalUsersCount">0</span>
+          </div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-icon">🚫</div>
+          <div class="stat-info">
+            <h4>Ban ထားသူများ (Banned)</h4>
+            <span id="bannedUsersCount" style="color:#dc2626;">0</span>
+          </div>
         </div>
       </div>
 
-      <div style="display: flex; gap: 8px; align-items: center;">
+      <div class="search-controls">
         <input type="text" id="searchInput" class="search-box" placeholder="နာမည် သို့မဟုတ် Email ရှာရန်...">
         <button class="btn btn-gold" id="refreshBtn">🔄 Refresh</button>
       </div>
@@ -317,11 +431,11 @@ tr:hover {
         <table>
           <thead>
             <tr>
-              <th>အသုံးပြုသူ (User)</th>
-              <th>အီးမေးလ် (Email)</th>
-              <th>နောက်ဆုံးဝင်ချိန် (Last Login)</th>
-              <th>User ID</th>
-              <th>လုပ်ဆောင်ချက်</th>
+              <th>အသုံးပြုသူ (USER)</th>
+              <th>အခြေအနေ (STATUS)</th>
+              <th>FEATURE အသုံးပြုမှု (အကြိမ် / မိနစ်)</th>
+              <th>နောက်ဆုံးဝင်ချိန် (LAST LOGIN)</th>
+              <th>လုပ်ဆောင်ချက် (ACTIONS)</th>
             </tr>
           </thead>
           <tbody id="userTableBody">
@@ -337,7 +451,7 @@ tr:hover {
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-  import { getFirestore, collection, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { getFirestore, collection, getDocs, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyDoDB5EV3HogihQXmhk0CsIJxvnnjFWmpc",
@@ -349,7 +463,7 @@ tr:hover {
     measurementId: "G-0JL94QP83K"
   };
 
-  // ဝင်ရောက်ခွင့်ပြုမည့် Admin Gmail စာရင်း (လိုအပ်ပါက ထပ်တိုးနိုင်သည်)
+  // Admin ဝင်ခွင့်ရှိသော Gmail များ
   const ADMIN_EMAILS = [
     "nainelinnoo@gmail.com"
   ];
@@ -367,12 +481,12 @@ tr:hover {
   const adminLogoutBtn = document.getElementById("adminLogoutBtn");
   const userTableBody = document.getElementById("userTableBody");
   const totalUsersCount = document.getElementById("totalUsersCount");
+  const bannedUsersCount = document.getElementById("bannedUsersCount");
   const searchInput = document.getElementById("searchInput");
   const refreshBtn = document.getElementById("refreshBtn");
 
   let allUsersData = [];
 
-  // Admin Login
   adminLoginBtn.addEventListener("click", async () => {
     try {
       await signInWithPopup(auth, provider);
@@ -381,13 +495,9 @@ tr:hover {
     }
   });
 
-  // Admin Logout
   adminLogoutBtn.addEventListener("click", () => signOut(auth));
-
-  // Refresh Data
   refreshBtn.addEventListener("click", loadUsers);
 
-  // Check Auth State & Admin Permission
   onAuthStateChanged(auth, (user) => {
     if (!user) {
       statusBox.style.display = "block";
@@ -402,7 +512,6 @@ tr:hover {
     adminLoginBtn.style.display = "none";
     adminLogoutBtn.style.display = "inline-block";
 
-    // Check if logged-in email is in ADMIN_EMAILS list
     const userEmail = (user.email || "").toLowerCase();
     const isAllowed = ADMIN_EMAILS.some(email => email.toLowerCase() === userEmail);
 
@@ -418,18 +527,26 @@ tr:hover {
     }
   });
 
-  // Fetch Users from Firestore
+  function formatMinutes(seconds) {
+    const sec = Number(seconds) || 0;
+    if (sec === 0) return "0m";
+    if (sec < 60) return "< 1m";
+    return Math.round(sec / 60) + "m";
+  }
+
   async function loadUsers() {
     userTableBody.innerHTML = `<tr><td colspan="5" style="text-align:center;">အချက်အလက်များ ဆွဲယူနေပါသည်...</td></tr>`;
     try {
       const snap = await getDocs(collection(db, "users"));
       allUsersData = [];
+      let bannedCount = 0;
 
       snap.forEach((docSnap) => {
-        allUsersData.push({ id: docSnap.id, ...docSnap.data() });
+        const d = docSnap.data();
+        if (d.isBanned) bannedCount++;
+        allUsersData.push({ id: docSnap.id, ...d });
       });
 
-      // နောက်ဆုံးဝင်သည့် အချိန်အလိုက် အပေါ်ဆုံးမှ စီရန်
       allUsersData.sort((a, b) => {
         const timeA = a.lastLogin?.seconds || 0;
         const timeB = b.lastLogin?.seconds || 0;
@@ -437,6 +554,7 @@ tr:hover {
       });
 
       totalUsersCount.textContent = allUsersData.length;
+      bannedUsersCount.textContent = bannedCount;
       renderTable(allUsersData);
     } catch (error) {
       console.error("Error loading users:", error);
@@ -444,7 +562,6 @@ tr:hover {
     }
   }
 
-  // Render Table Rows
   function renderTable(users) {
     if (users.length === 0) {
       userTableBody.innerHTML = `<tr><td colspan="5" style="text-align:center;">အသုံးပြုသူ စာရင်း မရှိသေးပါ။</td></tr>`;
@@ -462,30 +579,109 @@ tr:hover {
         });
       }
 
+      // Feature 4 ခု၏ အကြိမ်ရေနှင့် စက္ကန့်များ တွက်ချက်ခြင်း
+      const mmCount = u.mmvoice_count || 0;
+      const mmSec = u.mmvoice_seconds || 0;
+
+      const smCount = u.storyMaker_count || 0;
+      const smSec = u.storyMaker_seconds || 0;
+
+      const svCount = u.storyToVideo_count || 0;
+      const svSec = u.storyToVideo_seconds || 0;
+
+      const mrCount = u.movieRecaps_count || 0;
+      const mrSec = u.movieRecaps_seconds || 0;
+
+      const totalCount = mmCount + smCount + svCount + mrCount;
+      const totalSec = mmSec + smSec + svSec + mrSec;
+
+      const isBanned = u.isBanned === true;
+
       const tr = document.createElement("tr");
+      if (isBanned) tr.classList.add("banned-row");
+
       tr.innerHTML = `
         <td>
           <div class="user-cell">
             <img src="${u.photoURL || 'https://cdn-icons-png.flaticon.com/512/149/149071.png'}" class="avatar" alt="Avatar">
-            <span class="user-name">${u.name || 'Unknown'}</span>
+            <div class="user-meta">
+              <span class="user-name">${u.name || 'Unknown'}</span>
+              <span class="user-email">${u.email || '-'}</span>
+            </div>
           </div>
         </td>
-        <td>${u.email || '-'}</td>
-        <td><span class="time-text">${formattedTime}</span></td>
-        <td><span class="uid-badge">${u.uid || u.id}</span></td>
         <td>
-          <button class="delete-btn" data-id="${u.id}" data-name="${u.name || 'User'}">ဖျက်မည်</button>
+          ${isBanned
+            ? `<span class="status-pill status-banned">🚫 Banned</span>`
+            : `<span class="status-pill status-active">✅ Active</span>`
+          }
+        </td>
+        <td>
+          <div class="usage-grid">
+            <div class="usage-badge">
+              <span class="usage-name">🎙️ MMVoice</span>
+              <span class="usage-stats">${mmCount} ကြိမ် (${formatMinutes(mmSec)})</span>
+            </div>
+            <div class="usage-badge">
+              <span class="usage-name">📖 StoryMaker</span>
+              <span class="usage-stats">${smCount} ကြိမ် (${formatMinutes(smSec)})</span>
+            </div>
+            <div class="usage-badge">
+              <span class="usage-name">🎬 ToVideo</span>
+              <span class="usage-stats">${svCount} ကြိမ် (${formatMinutes(svSec)})</span>
+            </div>
+            <div class="usage-badge">
+              <span class="usage-name">🎥 Recaps</span>
+              <span class="usage-stats">${mrCount} ကြိမ် (${formatMinutes(mrSec)})</span>
+            </div>
+          </div>
+          <span class="total-time-badge">⏱️ စုစုပေါင်း: ${totalCount} ကြိမ် • ${formatMinutes(totalSec)}</span>
+        </td>
+        <td>
+          <span style="font-size:12px; color:#475569;">${formattedTime}</span>
+        </td>
+        <td>
+          <div class="action-group">
+            <button class="action-btn ${isBanned ? 'btn-unlock' : 'btn-ban'} toggle-ban-btn"
+              data-id="${u.id}" data-banned="${isBanned}" data-name="${u.name || 'User'}">
+              ${isBanned ? '🔓 Unlock' : '🚫 Ban'}
+            </button>
+            <button class="action-btn btn-del delete-btn" data-id="${u.id}" data-name="${u.name || 'User'}">
+              🗑️
+            </button>
+          </div>
         </td>
       `;
       userTableBody.appendChild(tr);
     });
 
-    // Attach Delete Buttons Event
+    // Ban / Unlock Event
+    document.querySelectorAll(".toggle-ban-btn").forEach((btn) => {
+      btn.addEventListener("click", async (e) => {
+        const docId = e.currentTarget.getAttribute("data-id");
+        const currentlyBanned = e.currentTarget.getAttribute("data-banned") === "true";
+        const name = e.currentTarget.getAttribute("data-name");
+        const actionText = currentlyBanned ? "Unlock (ပြန်ဖွင့်)" : "Ban (ပိတ်ပင်)";
+
+        if (confirm(`"${name}" ကို ${actionText} လုပ်ရန် သေချာပါသလား?`)) {
+          try {
+            await updateDoc(doc(db, "users", docId), {
+              isBanned: !currentlyBanned
+            });
+            loadUsers();
+          } catch (err) {
+            alert("လုပ်ဆောင်ချက် မအောင်မြင်ပါ: " + err.message);
+          }
+        }
+      });
+    });
+
+    // Delete User Event
     document.querySelectorAll(".delete-btn").forEach((btn) => {
       btn.addEventListener("click", async (e) => {
-        const docId = e.target.getAttribute("data-id");
-        const name = e.target.getAttribute("data-name");
-        if (confirm(`"${name}" ၏ မှတ်တမ်းကို Database မှ ဖျက်ရန် သေချာပါသလား?`)) {
+        const docId = e.currentTarget.getAttribute("data-id");
+        const name = e.currentTarget.getAttribute("data-name");
+        if (confirm(`"${name}" ၏ မှတ်တမ်းကို Database မှ အပြီးတိုင်ဖျက်ရန် သေချာပါသလား?`)) {
           try {
             await deleteDoc(doc(db, "users", docId));
             loadUsers();
@@ -497,7 +693,6 @@ tr:hover {
     });
   }
 
-  // Search Filter
   searchInput.addEventListener("input", (e) => {
     const keyword = e.target.value.toLowerCase().trim();
     const filtered = allUsersData.filter(u =>
