@@ -183,7 +183,6 @@ button.active {
 .dot { width: 7px; height: 7px; border-radius: 50%; background: #64748b; }
 .dot.ready { background: var(--green); }
 .dot.busy { background: var(--gold); }
-.dot.error { background: var(--red); }
 
 .fixedVideoShell { width: 100%; position: relative; flex-shrink: 0; }
 
@@ -267,7 +266,7 @@ video { width: 100%; height: 100%; display: none; object-fit: contain; pointer-e
 /* Subtitle Overlay Box */
 .overlayInner {
   position: relative; display: inline-flex; justify-content: center; align-items: center;
-  padding: 5px 12px; border-radius: 8px; text-align: center; line-height: 1.38;
+  padding: 6px 14px; border-radius: 8px; text-align: center; line-height: 1.45;
   background: rgba(0, 0, 0, 0.5); box-shadow: 0 4px 18px rgba(0,0,0,0.4);
   border: 1.5px dashed transparent; width: 100%; max-width: 100%;
 }
@@ -2000,6 +1999,7 @@ async function generateRecapScriptOnly() {
     toast("Error: " + err.message);
   } finally {
     generating = false;
+    // Always re-enable buttons
     document.querySelectorAll(".lockable, input.lockable, select.lockable").forEach(el => {
       el.disabled = false;
     });
@@ -2200,328 +2200,13 @@ videoBox.addEventListener("click", (e) => {
   togglePlayPause();
 });
 
-// -------------------------------------------------------------
-// EXPORT & DOWNLOAD LOGIC (Canvas Compositor: Correct Layer Stack)
-// -------------------------------------------------------------
-function openExportModal() {
-  document.getElementById('exportModalBackdrop').classList.add('show');
+function triggerFileInput() {
+  if (generating) return;
+  document.getElementById("file").value = "";
+  document.getElementById("file").click();
 }
 
-function closeExportModal() {
-  document.getElementById('exportModalBackdrop').classList.remove('show');
-}
-
-function selectExportMethod(method) {
-  closeExportModal();
-  if (method === 'fast') {
-    exportFastVideo();
-  } else if (method === 'standard') {
-    exportStandardRealtimeVideo();
-  }
-}
-
-function setExportingLock(locked) {
-  isExportActive = locked;
-  document.querySelectorAll(".lockable, input.lockable, select.lockable").forEach(el => {
-    el.disabled = locked;
-    el.style.opacity = locked ? "0.5" : "1";
-    el.style.pointerEvents = locked ? "none" : "auto";
-  });
-}
-
-function cancelCurrentExport() {
-  if (!isExportActive) return;
-  toast("🛑 Export ရပ်တန့်လိုက်ပါပြီ");
-  if (activeRecorderInstance && activeRecorderInstance.state !== 'inactive') {
-    try { activeRecorderInstance.stop(); } catch(e){}
-  }
-  setExportingLock(false);
-  videoLockOverlay.classList.remove("active");
-  video.pause();
-}
-
-// Draw Frame: Layer Order Enforced (Blur never covers Texts, Logo or Border)
-function drawCanvasFrame(bCtx, burnCanvas, currTime, scale) {
-  // 1. Video Frame Base
-  bCtx.save();
-  bCtx.drawImage(video, 0, 0, burnCanvas.width, burnCanvas.height);
-  bCtx.restore();
-
-  // 2. Blur Masks Layer (Behind texts and logos)
-  blursList.forEach(b => {
-    const bx = (b.x / 100) * burnCanvas.width;
-    const by = (b.y / 100) * burnCanvas.height;
-    const bw = (b.w / 100) * burnCanvas.width;
-    const bh = b.h * scale;
-    bCtx.save();
-    bCtx.filter = `blur(${b.strength * scale}px)`;
-    bCtx.drawImage(video, bx, by, bw, bh, bx, by, bw, bh);
-    bCtx.restore();
-  });
-
-  // 3. Subtitles Layer
-  if (isSubtitleVisible) {
-    const currentSub = subs.find(s => currTime >= s.start && currTime <= s.end);
-    if (currentSub && currentSub.mm) {
-      const sx = (overlayPos.x / 100) * burnCanvas.width;
-      const sy = (overlayPos.y / 100) * burnCanvas.height;
-      const fsize = Number(document.getElementById("size").value) * scale;
-      const outW = Number(document.getElementById("outlineWidth").value) * scale;
-      bCtx.save();
-      bCtx.font = `bold ${fsize}px sans-serif`;
-      bCtx.textAlign = "center";
-      bCtx.fillStyle = document.getElementById("targetColor").value;
-      if (outW > 0) {
-        bCtx.strokeStyle = document.getElementById("outlineColor").value;
-        bCtx.lineWidth = outW;
-        bCtx.strokeText(currentSub.mm, sx, sy);
-      }
-      bCtx.fillText(currentSub.mm, sx, sy);
-      bCtx.restore();
-    }
-  }
-
-  // 4. Titles Layer
-  titlesList.forEach(t => {
-    const tx = (t.x / 100) * burnCanvas.width;
-    const ty = (t.y / 100) * burnCanvas.height;
-    bCtx.save();
-    bCtx.font = `bold ${t.size * scale}px sans-serif`;
-    bCtx.textAlign = "center";
-    bCtx.textBaseline = "middle";
-    if (t.outlineWidth > 0) {
-      bCtx.strokeStyle = t.outlineColor;
-      bCtx.lineWidth = t.outlineWidth * scale;
-      bCtx.strokeText(t.text, tx, ty);
-    }
-    bCtx.fillStyle = t.color;
-    bCtx.fillText(t.text, tx, ty);
-    bCtx.restore();
-  });
-
-  // 5. Custom Texts Layer
-  textsList.forEach(t => {
-    const tx = (t.x / 100) * burnCanvas.width;
-    const ty = (t.y / 100) * burnCanvas.height;
-    bCtx.save();
-    bCtx.font = `bold ${t.size * scale}px sans-serif`;
-    bCtx.textAlign = "center";
-    bCtx.textBaseline = "middle";
-    if (t.outlineWidth > 0) {
-      bCtx.strokeStyle = t.outlineColor;
-      bCtx.lineWidth = t.outlineWidth * scale;
-      bCtx.strokeText(t.text, tx, ty);
-    }
-    bCtx.fillStyle = t.color;
-    bCtx.fillText(t.text, tx, ty);
-    bCtx.restore();
-  });
-
-  // 6. Logo Layer
-  const logoEl = document.getElementById("videoLogoOverlay");
-  if (logoProps.visible && logoEl && logoEl.complete && logoProps.src) {
-    const lw = logoProps.size * scale;
-    const lh = lw * (logoEl.naturalHeight / logoEl.naturalWidth);
-    const lx = (logoProps.x / 100) * burnCanvas.width - (lw / 2);
-    const ly = (logoProps.y / 100) * burnCanvas.height - (lh / 2);
-    bCtx.save();
-    bCtx.globalAlpha = logoProps.opacity / 100;
-    bCtx.drawImage(logoEl, lx, ly, lw, lh);
-    bCtx.restore();
-  }
-
-  // 7. Running Border Layer (On the very top)
-  if (borderProgEnabled && video.duration) {
-    const ratio = Math.max(0, Math.min(1, currTime / video.duration));
-    const th = Number(document.getElementById("borderThickness").value) * scale;
-    const col = document.getElementById("borderColorInput").value;
-    bCtx.save();
-    bCtx.fillStyle = col;
-    if (ratio <= 0.25) {
-      bCtx.fillRect(0, 0, (ratio / 0.25) * burnCanvas.width, th);
-    } else if (ratio <= 0.5) {
-      bCtx.fillRect(0, 0, burnCanvas.width, th);
-      bCtx.fillRect(burnCanvas.width - th, 0, th, ((ratio - 0.25) / 0.25) * burnCanvas.height);
-    } else if (ratio <= 0.75) {
-      bCtx.fillRect(0, 0, burnCanvas.width, th);
-      bCtx.fillRect(burnCanvas.width - th, 0, th, burnCanvas.height);
-      bCtx.fillRect(burnCanvas.width - ((ratio - 0.5) / 0.25) * burnCanvas.width, burnCanvas.height - th, ((ratio - 0.5) / 0.25) * burnCanvas.width, th);
-    } else {
-      bCtx.fillRect(0, 0, burnCanvas.width, th);
-      bCtx.fillRect(burnCanvas.width - th, 0, th, burnCanvas.height);
-      bCtx.fillRect(0, burnCanvas.height - th, burnCanvas.width, th);
-      bCtx.fillRect(0, burnCanvas.height - ((ratio - 0.75) / 0.25) * burnCanvas.height, th, ((ratio - 0.75) / 0.25) * burnCanvas.height);
-    }
-    bCtx.restore();
-  }
-}
-
-// 1. Fast Video Export
-async function exportFastVideo() {
-  if (!video.src || !file) return;
-  setExportingLock(true);
-  video.pause();
-
-  videoLockOverlay.classList.add("active");
-  cancelExportBtn.style.display = "inline-flex";
-  setLockProgress(5, "⚡ Fast Video Export...", "ဖရိန်များကို အမြန်ဆုံး ချုပ်လုပ်နေပါသည်...");
-
-  const burnCanvas = document.getElementById("burnCanvas");
-  burnCanvas.width = video.videoWidth || 1280;
-  burnCanvas.height = video.videoHeight || 720;
-  const bCtx = burnCanvas.getContext("2d");
-  const scale = burnCanvas.width / (videoBox.clientWidth || 640);
-  const totalDur = video.duration || 60;
-
-  const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  const dest = audioCtx.createMediaStreamDestination();
-
-  for (let s of subs) {
-    const url = audioMap.get(s.id);
-    if (url) {
-      try {
-        const resp = await fetch(url);
-        const dec = await audioCtx.decodeAudioData(await resp.arrayBuffer());
-        const src = audioCtx.createBufferSource();
-        src.buffer = dec;
-        src.connect(dest);
-        src.start(s.start);
-      } catch(e){}
-    }
-  }
-
-  const canvasStream = burnCanvas.captureStream(25);
-  const combinedStream = new MediaStream([
-    ...canvasStream.getVideoTracks(),
-    ...dest.stream.getAudioTracks()
-  ]);
-
-  let mimeType = MediaRecorder.isTypeSupported("video/mp4") ? "video/mp4" : "video/webm";
-  const recorder = new MediaRecorder(combinedStream, { mimeType, videoBitsPerSecond: 4500000 });
-  activeRecorderInstance = recorder;
-
-  const chunks = [];
-  recorder.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data); };
-  recorder.onstop = () => {
-    setExportingLock(false);
-    videoLockOverlay.classList.remove("active");
-    const blob = new Blob(chunks, { type: "video/mp4" });
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = `recap-fast-${Date.now()}.mp4`;
-    a.click();
-    toast("🎉 Fast Video download ပြီးစီးပါပြီ!");
-  };
-
-  recorder.start();
-  video.currentTime = 0;
-
-  const stepTime = 0.08;
-  for (let t = 0; t < totalDur; t += stepTime) {
-    if (!isExportActive) break;
-    video.currentTime = t;
-    drawCanvasFrame(bCtx, burnCanvas, t, scale);
-    const pct = Math.min(99, Math.round((t / totalDur) * 100));
-    setLockProgress(pct, `Fast Rendering (${pct}%)...`, "ဖရိန်များကို အမြန်ဆုံး ပေါင်းစပ်နေပါသည်...");
-    await new Promise(r => setTimeout(r, 15));
-  }
-
-  recorder.stop();
-  audioCtx.close();
-}
-
-// 2. Standard Real-Time MP4
-async function exportStandardRealtimeVideo() {
-  if (!video.src || !file) return;
-  setExportingLock(true);
-  video.pause();
-
-  videoLockOverlay.classList.add("active");
-  cancelExportBtn.style.display = "inline-flex";
-  setLockProgress(5, "🎥 Standard Real-Time Export...", "တိုက်ရိုက်အသံဖမ်းယူပြီး ထုတ်လုပ်နေပါသည်...");
-
-  const burnCanvas = document.getElementById("burnCanvas");
-  burnCanvas.width = video.videoWidth || 1280;
-  burnCanvas.height = video.videoHeight || 720;
-  const bCtx = burnCanvas.getContext("2d");
-  const scale = burnCanvas.width / (videoBox.clientWidth || 640);
-  const totalDur = video.duration || 60;
-
-  const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  const dest = audioCtx.createMediaStreamDestination();
-
-  for (let s of subs) {
-    const url = audioMap.get(s.id);
-    if (url) {
-      try {
-        const resp = await fetch(url);
-        const dec = await audioCtx.decodeAudioData(await resp.arrayBuffer());
-        const src = audioCtx.createBufferSource();
-        src.buffer = dec;
-        src.connect(dest);
-        src.start(s.start);
-      } catch(e){}
-    }
-  }
-
-  const canvasStream = burnCanvas.captureStream(30);
-  const combinedStream = new MediaStream([
-    ...canvasStream.getVideoTracks(),
-    ...dest.stream.getAudioTracks()
-  ]);
-
-  let mimeType = MediaRecorder.isTypeSupported("video/mp4") ? "video/mp4" : "video/webm";
-  const recorder = new MediaRecorder(combinedStream, { mimeType, videoBitsPerSecond: 4500000 });
-  activeRecorderInstance = recorder;
-
-  const chunks = [];
-  recorder.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data); };
-  recorder.onstop = () => {
-    setExportingLock(false);
-    videoLockOverlay.classList.remove("active");
-    const blob = new Blob(chunks, { type: "video/mp4" });
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = `recap-standard-${Date.now()}.mp4`;
-    a.click();
-    toast("🎉 Standard Video download ပြီးစီးပါပြီ!");
-  };
-
-  recorder.start();
-  video.currentTime = 0;
-  await video.play();
-
-  const loop = () => {
-    if (!isExportActive || video.ended || video.currentTime >= totalDur) {
-      recorder.stop();
-      audioCtx.close();
-      return;
-    }
-    drawCanvasFrame(bCtx, burnCanvas, video.currentTime, scale);
-    const pct = Math.min(99, Math.round((video.currentTime / totalDur) * 100));
-    setLockProgress(pct, `Real-Time Recording (${pct}%)...`, "ဗီဒီယိုကို အစအဆုံး အသံသွင်းနေပါသည်...");
-    requestAnimationFrame(loop);
-  };
-  loop();
-}
-
-function exportNarrationAudioOnly() {
-  toast("Audio Export triggered");
-}
-
-function exportSrtSubtitlesOnly() {
-  if (!subs.length) return;
-  let srt = "";
-  subs.forEach((s, idx) => {
-    srt += `${idx + 1}\n00:00:0${Math.floor(s.start)},000 --> 00:00:0${Math.floor(s.end)},000\n${s.mm}\n\n`;
-  });
-  const blob = new Blob([srt], { type: "text/plain" });
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = `recap-${Date.now()}.srt`;
-  a.click();
-  toast("Burmese SRT Downloaded!");
-}
+document.getElementById("file").onchange = e => { if (e.target.files[0]) loadVideo(e.target.files[0]); };
 
 window.onload = function() {
   updateAudioLevels();
