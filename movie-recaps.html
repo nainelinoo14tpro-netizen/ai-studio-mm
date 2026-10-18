@@ -13,9 +13,7 @@
 :root {
   --bg: #e2e8f0;
   --panel: #ffffff;
-  --panel-hover: #f8fafc;
   --border: #cbd5e1;
-  --border-focus: #f59e0b;
   --text: #0f172a;
   --muted: #64748b;
   --accent: #b45309;
@@ -64,35 +62,23 @@ button:active { transform: scale(0.97); }
 .primary:hover { opacity: 0.95; }
 .primary:disabled, button:disabled, select:disabled, input:disabled { opacity: 0.45; cursor: not-allowed; }
 
-.secondaryBtn { 
-  background: #ffffff; border-color: var(--border); color: #334155; 
-}
+.secondaryBtn { background: #ffffff; border-color: var(--border); color: #334155; }
 .secondaryBtn:hover { background: #fffbeb; border-color: var(--gold); color: var(--accent); }
 
 .secondaryBtn.active,
 .voiceBtn.active,
 button.active { 
-  background: #fef3c7 !important; 
-  border-color: var(--gold) !important; 
-  color: var(--accent) !important; 
-  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.25) !important;
-  font-weight: 800 !important;
+  background: #fef3c7 !important; border-color: var(--gold) !important; color: var(--accent) !important; font-weight: 800 !important;
 }
 
 .danger { background: #fee2e2 !important; border-color: #fca5a5 !important; color: #b91c1c !important; }
-.danger:hover { background: #fecaca !important; }
-
 .burnBtn {
   background: linear-gradient(135deg, #10b981, #059669) !important; border: 0 !important; color: #fff !important;
   box-shadow: 0 4px 12px rgba(16, 185, 129, 0.28); font-weight: 700;
 }
-.burnBtn:hover { opacity: 0.95; }
-
 .cancelBtn {
-  background: #fee2e2; border: 1.5px solid #ef4444; color: #b91c1c;
-  font-weight: 700; border-radius: 8px; padding: 7px 16px; margin-top: 12px;
+  background: #fee2e2; border: 1.5px solid #ef4444; color: #b91c1c; font-weight: 700; border-radius: 8px; padding: 7px 16px; margin-top: 12px;
 }
-.cancelBtn:hover { background: #fecaca; }
 
 .btnSpinner {
   width: 14px; height: 14px;
@@ -102,7 +88,7 @@ button.active {
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* Top Navbar (Cleaned) */
+/* Top Navbar */
 .navbar {
   display: flex; justify-content: space-between; align-items: center;
   padding: 12px 20px; background-color: #ffffff;
@@ -115,10 +101,9 @@ button.active {
 .menu-btn {
   background: none !important; border: none !important; color: #1e293b !important;
   font-size: 1.4rem; cursor: pointer; padding: 2px 6px; border-radius: 6px; box-shadow: none !important;
-  z-index: 1001; pointer-events: auto !important;
 }
 
-/* Left Side Slide Menu & Overlay */
+/* Left Slide Menu */
 .overlay-drawer {
   position: fixed; top: 0; left: 0; width: 100%; height: 100%;
   background: rgba(15, 23, 42, 0.5); opacity: 0; visibility: hidden;
@@ -137,7 +122,7 @@ button.active {
   padding: 16px 18px; border-bottom: 1px solid #e2e8f0;
 }
 .menu-title { font-size: 1.05rem; font-weight: bold; color: #475569; }
-.close-btn { background: none !important; border: none !important; color: #1e293b !important; font-size: 1.3rem; cursor: pointer; box-shadow: none !important; }
+.close-btn { background: none !important; border: none !important; color: #1e293b !important; font-size: 1.3rem; cursor: pointer; }
 .menu-links { list-style: none; padding: 12px 10px; flex-grow: 1; }
 .menu-links li { margin-bottom: 6px; }
 .menu-links a {
@@ -148,7 +133,6 @@ button.active {
   background-color: #fef3c7; color: var(--accent); font-weight: 600;
 }
 
-/* Toast */
 .toast {
   position: fixed; left: 50%; top: 64px; transform: translateX(-50%) translateY(-20px);
   z-index: 10000; background: #1e293b; color: #fff;
@@ -158,7 +142,6 @@ button.active {
 }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-/* Glassmorphism Header */
 .glass-header {
   background: rgba(255, 255, 255, 0.65); backdrop-filter: blur(12px);
   padding: 14px 16px; border-radius: 14px; margin-bottom: 12px;
@@ -168,37 +151,15 @@ button.active {
 .glass-header h2 { color: var(--accent); font-size: 1.2rem; margin-bottom: 4px; }
 .glass-header p { color: #475569; font-size: 0.8rem; }
 
-/* Error Modal */
-.appMenuBackdrop {
-  position: fixed; inset: 0; background: rgba(15, 23, 42, 0.65);
-  backdrop-filter: blur(4px); z-index: 1000; display: none;
-  align-items: center; justify-content: center; padding: 20px;
-}
-.appMenuBackdrop.show { display: flex; }
-.errorModalSheet {
-  background: #ffffff; border: 2px solid var(--red);
-  border-radius: 16px; padding: 18px; width: 100%; max-width: 460px;
-  box-shadow: 0 16px 40px rgba(0,0,0,0.2);
-}
-.errorModalHead { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-.errorModalMsg {
-  background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px;
-  padding: 10px; font-size: 11px; color: #991b1b; font-family: ui-monospace, monospace;
-  white-space: pre-wrap; word-break: break-word; max-height: 220px; overflow-y: auto;
-}
-
 .container { max-width: 1350px; margin: auto; padding: 10px 14px 40px; }
 
-/* Step Navigation */
 .steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 10px; }
 .step {
   background: #ffffff; border: 1.5px solid var(--border); border-radius: 8px;
   padding: 7px 2px; text-align: center; color: #334155; font-size: 10.5px; font-weight: 700;
-  transition: 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  transition: 0.2s;
 }
-.step.active { 
-  background: #fef3c7 !important; border-color: var(--gold) !important; color: var(--accent) !important; font-weight: 800 !important;
-}
+.step.active { background: #fef3c7 !important; border-color: var(--gold) !important; color: var(--accent) !important; }
 .step.done { color: var(--green); border-color: var(--green); background: #f0fdf4; }
 
 .appBodyGrid {
@@ -220,9 +181,8 @@ button.active {
 .dot { width: 7px; height: 7px; border-radius: 50%; background: #64748b; }
 .dot.ready { background: var(--green); }
 .dot.busy { background: var(--gold); }
-.dot.error { background: var(--red); }
 
-.fixedVideoShell { width: 100%; position: relative; flex-shrink: 0; max-width: 100%; }
+.fixedVideoShell { width: 100%; position: relative; flex-shrink: 0; }
 
 .modeBadgeExternal {
   background: #fef3c7; border: 1px solid #fde68a;
@@ -240,71 +200,74 @@ button.active {
 .videoBox {
   position: relative; background: var(--studio-gray); aspect-ratio: 16/9;
   display: flex; align-items: center; justify-content: center;
-  overflow: hidden; width: 100%; user-select: none;
+  overflow: hidden; width: 100%; user-select: none; touch-action: none;
 }
-.videoBox.drag-over {
-  outline: 3px dashed var(--gold); outline-offset: -4px;
-}
-video { width: 100%; height: 100%; display: none; object-fit: contain; background: #000; pointer-events: none; }
+video { width: 100%; height: 100%; display: none; object-fit: contain; pointer-events: none; }
 
-video.anti-copyright-active {
-  transform: scale(1.04); filter: contrast(1.05) saturate(1.08) brightness(1.02);
-}
-
-.videoProgressBorderWrap { position: absolute; inset: 0; pointer-events: none; z-index: 28; display: none; }
-.vProgEdge { position: absolute; background: var(--gold); transition: width 0.1s linear, height 0.1s linear; }
-.vProgTop { top: 0; left: 0; height: 3px; width: 0%; }
-.vProgRight { top: 0; right: 0; width: 3px; height: 0%; }
-.vProgBottom { bottom: 0; right: 0; height: 3px; width: 0%; }
-.vProgLeft { bottom: 0; left: 0; width: 3px; height: 0%; }
+/* Real-Time Border Progress Bar */
+.videoProgressBorderWrap { position: absolute; inset: 0; pointer-events: none; z-index: 35; display: none; }
+.vProgEdge { position: absolute; background: var(--gold); transition: width 0.05s linear, height 0.05s linear; }
+.vProgTop { top: 0; left: 0; height: 4px; width: 0%; }
+.vProgRight { top: 0; right: 0; width: 4px; height: 0%; }
+.vProgBottom { bottom: 0; right: 0; height: 4px; width: 0%; }
+.vProgLeft { bottom: 0; left: 0; width: 4px; height: 0%; }
 
 .videoEmptyState {
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   gap: 8px; color: #ffffff; padding: 18px; text-align: center; width: 100%; height: 100%;
   cursor: pointer; background: var(--studio-gray);
 }
-.videoEmptyState span { font-size: 38px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.25)); }
+.videoEmptyState span { font-size: 38px; }
 .videoEmptyState p { margin: 0; font-size: 12.5px; font-weight: 700; color: #f1f5f9; }
 
-.videoLogoOverlay {
-  position: absolute; top: 0%; left: 0%; z-index: 26;
-  max-width: 180px; max-height: 120px; display: none; cursor: move; touch-action: none;
+/* On-Screen Touch Drag Items */
+.drag-element {
+  position: absolute; touch-action: none; cursor: grab; user-select: none;
+  z-index: 40; border: 1.5px dashed transparent;
+}
+.drag-element:active { cursor: grabbing; border-color: var(--gold); }
+.drag-element.active-selected { border-color: var(--gold); }
+
+.itemCloseBadge {
+  position: absolute; top: -10px; right: -10px; width: 22px; height: 22px;
+  background: var(--red); color: #fff; border-radius: 50%; font-size: 11px;
+  display: grid; place-items: center; cursor: pointer; font-weight: 900; z-index: 60;
+  border: 1.5px solid #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.4);
 }
 
 .videoTitleOverlayItem {
-  position: absolute; z-index: 55; background: rgba(0,0,0,0.75); padding: 5px 14px; border-radius: 6px;
-  color: #fff; font-size: 16px; font-weight: 800; text-shadow: 0 2px 4px #000;
-  cursor: pointer; touch-action: none; border: 1.5px dashed transparent; white-space: nowrap;
+  background: rgba(0,0,0,0.75); padding: 5px 12px; border-radius: 6px;
+  color: #fff; font-weight: 800; white-space: nowrap; transform: translate(-50%, 0);
 }
-.videoTitleOverlayItem.active { border-color: var(--gold); box-shadow: 0 0 10px rgba(245,158,11,0.5); }
 
 .videoExtraTextItem {
-  position: absolute; z-index: 56; background: rgba(0,0,0,0.6); padding: 4px 10px; border-radius: 6px;
-  color: var(--cyan); font-size: 14px; font-weight: 800; cursor: pointer; touch-action: none; white-space: nowrap;
+  background: rgba(0,0,0,0.6); padding: 4px 10px; border-radius: 6px;
+  color: var(--cyan); font-weight: 800; white-space: nowrap; transform: translate(-50%, 0);
 }
-.videoExtraTextItem.active { border-color: var(--cyan); box-shadow: 0 0 10px rgba(2,132,199,0.5); }
 
 .videoBlurBoxItem {
-  position: absolute; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
   background: rgba(255, 255, 255, 0.05); border: 1.5px dashed rgba(255,255,255,0.7);
-  border-radius: 6px; z-index: 40; cursor: pointer; touch-action: none;
-  min-width: 30px; min-height: 18px;
+  border-radius: 6px; min-width: 40px; min-height: 25px;
 }
-.videoBlurBoxItem.active { border-color: var(--gold); }
 
+.videoLogoOverlay {
+  display: none; transform: translate(-50%, -50%);
+}
+
+/* Subtitle Overlay Box */
 .overlay {
   position: absolute; left: 50%; top: 82%; transform: translate(-50%, -50%);
   display: flex; flex-direction: column; align-items: center; justify-content: center;
-  z-index: 30; cursor: move; touch-action: none; width: max-content; max-width: 100%; pointer-events: auto;
+  z-index: 45; cursor: grab; touch-action: none; width: max-content; max-width: 100%;
 }
+.overlay:active { cursor: grabbing; }
 .overlayInner {
   position: relative; display: inline-flex; justify-content: center; align-items: center;
   padding: 5px 12px; border-radius: 8px; text-align: center; line-height: 1.38;
   background: rgba(0, 0, 0, 0.5); box-shadow: 0 4px 18px rgba(0,0,0,0.4);
-  transition: border-color 0.15s ease; border: 1.5px dashed transparent;
-  width: 100%; max-width: 100%;
+  border: 1.5px dashed transparent; width: 100%; max-width: 100%;
 }
-.overlay.dragging .overlayInner { border-color: var(--gold); }
+.overlay:hover .overlayInner, .overlay:active .overlayInner { border-color: var(--gold); }
 .overlayTarget {
   font-size: 17px; font-weight: 700; pointer-events: none; color: #ffffff;
   display: block; text-align: center; white-space: pre-line; word-break: break-word; max-width: 100%;
@@ -316,23 +279,19 @@ video.anti-copyright-active {
   background: #ffffff; border-top: 1px solid var(--border);
 }
 .tool-tab-btn {
-  padding: 8px 6px; font-size: 11px; font-weight: 700; border-radius: 8px;
+  padding: 8px 4px; font-size: 11px; font-weight: 700; border-radius: 8px;
   border: 1px solid var(--border); background: #ffffff; color: #334155;
   display: flex; align-items: center; justify-content: center; gap: 4px;
-  transition: all 0.2s ease;
 }
 .tool-tab-btn:hover { background: #fffbeb; border-color: var(--gold); color: var(--accent); }
 .tool-tab-btn.active {
   background: linear-gradient(135deg, var(--gold), var(--gold-dark));
   color: #ffffff; border-color: var(--gold-dark);
-  box-shadow: 0 3px 10px rgba(245, 158, 11, 0.3);
 }
 
-/* Dedicated Settings Panels Below Video */
 .overlay-settings-panel {
   display: none; background: #fffbeb; border: 1px solid #fde68a;
   border-radius: 12px; padding: 14px; margin: 8px 12px 12px 12px;
-  box-shadow: 0 4px 15px rgba(245, 158, 11, 0.08);
 }
 .overlay-settings-panel.open { display: block; }
 .panel-head-row {
@@ -429,9 +388,7 @@ video.anti-copyright-active {
   border-radius: 10px; padding: 10px; transition: all 0.2s ease; position: relative; cursor: pointer;
 }
 .item:hover { border-color: var(--gold); }
-.item.active {
-  border-color: var(--gold); background: #fffbeb; box-shadow: 0 0 0 1.5px var(--gold);
-}
+.item.active { border-color: var(--gold); background: #fffbeb; }
 .itemTop { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; gap: 6px; flex-wrap: wrap; }
 .badge { font: 10px ui-monospace, monospace; color: var(--muted); }
 .item.active .badge { color: var(--accent); font-weight: 700; }
@@ -476,7 +433,7 @@ video.anti-copyright-active {
 
 .toneGrid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; margin-bottom: 12px; }
 
-/* 2 Export Options Selection Modal */
+/* Export Options Modal */
 .export-modal-backdrop {
   position: fixed; inset: 0; background: rgba(15, 23, 42, 0.7);
   backdrop-filter: blur(4px); z-index: 9999; display: none;
@@ -498,9 +455,7 @@ video.anti-copyright-active {
   padding: 12px 14px; display: flex; align-items: center; gap: 12px;
   cursor: pointer; text-align: left; transition: all 0.2s ease;
 }
-.export-option-btn:hover {
-  background: #fffbeb; border-color: var(--gold); transform: translateY(-1px);
-}
+.export-option-btn:hover { background: #fffbeb; border-color: var(--gold); transform: translateY(-1px); }
 .export-opt-icon {
   font-size: 26px; width: 44px; height: 44px; border-radius: 10px;
   display: grid; place-items: center; background: #ffffff; border: 1px solid var(--border);
@@ -548,7 +503,7 @@ video.anti-copyright-active {
 
 <body>
 
-<!-- Top Navbar (Cleaned: Hamburger Menu only on left) -->
+<!-- Top Navbar (Cleaned) -->
 <header class="navbar">
   <div class="nav-left">
     <button class="menu-btn" onclick="openMenu()" title="Main Menu">☰</button>
@@ -585,7 +540,6 @@ video.anti-copyright-active {
     </div>
     
     <div class="export-choice-list">
-      <!-- 1. Fast Video Export -->
       <div class="export-option-btn" onclick="selectExportMethod('fast')">
         <div class="export-opt-icon">⚡</div>
         <div class="export-opt-content">
@@ -594,7 +548,6 @@ video.anti-copyright-active {
         </div>
       </div>
 
-      <!-- 2. Standard Real-Time MP4 -->
       <div class="export-option-btn" onclick="selectExportMethod('standard')">
         <div class="export-opt-icon">🎥</div>
         <div class="export-opt-content">
@@ -637,6 +590,7 @@ video.anti-copyright-active {
         <video id="video" playsinline webkit-playsinline x5-playsinline x5-video-player-type="h5" 
                controlslist="nodownload nofullscreen noremoteplayback" disableremoteplayback disablepictureinpicture preload="auto"></video>
 
+        <!-- Real-Time Running Border Progress Bar -->
         <div class="videoProgressBorderWrap" id="videoProgressBorderWrap">
           <div class="vProgEdge vProgTop" id="bpTop"></div>
           <div class="vProgEdge vProgRight" id="bpRight"></div>
@@ -644,11 +598,13 @@ video.anti-copyright-active {
           <div class="vProgEdge vProgLeft" id="bpLeft"></div>
         </div>
 
-        <img id="videoLogoOverlay" class="videoLogoOverlay" alt="Logo">
-        <div id="movieTitleOverlay" class="videoTitleOverlayItem" style="display:none"></div>
-        <div id="movieExtraTextOverlay" class="videoExtraTextItem" style="display:none"></div>
-        <div id="movieBlurOverlay" class="videoBlurBoxItem" style="display:none"></div>
+        <!-- Dynamic Draggable Elements Containers -->
+        <div id="titlesContainer"></div>
+        <div id="textsContainer"></div>
+        <div id="blursContainer"></div>
+        <img id="videoLogoOverlay" class="drag-element videoLogoOverlay" alt="Logo">
 
+        <!-- Touch Draggable Subtitle Box -->
         <div class="overlay" id="overlay">
           <div class="overlayInner" id="overlayInner">
             <span class="overlayTarget" id="overlayTarget"></span>
@@ -685,13 +641,13 @@ video.anti-copyright-active {
         <input id="file" type="file" accept="video/mp4,video/webm,video/quicktime,video/x-matroska,video/*" hidden>
       </div>
 
-      <!-- Dedicated Toolbar Under Video: Title, Custom Text, Logo, Blur Buttons -->
+      <!-- 4 Buttons Toolbar Under Video -->
       <div class="overlay-tools-bar">
         <button class="tool-tab-btn lockable" id="btnToggleTitle" onclick="toggleOverlayTab('title')">
           <span>📝 Title</span>
         </button>
         <button class="tool-tab-btn lockable" id="btnToggleText" onclick="toggleOverlayTab('text')">
-          <span>➕ Custom Text</span>
+          <span>➕ Text</span>
         </button>
         <button class="tool-tab-btn lockable" id="btnToggleLogo" onclick="toggleOverlayTab('logo')">
           <span>🛡️ Logo</span>
@@ -701,70 +657,26 @@ video.anti-copyright-active {
         </button>
       </div>
 
-      <!-- 1. Dedicated Title Setting Panel -->
+      <!-- 1. Dedicated Title Setting Panel (Multi-Add Support) -->
       <div class="overlay-settings-panel" id="panelTitle">
         <div class="panel-head-row">
-          <span style="font-size:11px;font-weight:700;color:var(--accent)">📝 Movie Title Controls</span>
-          <label style="font-size:11px;display:flex;align-items:center;gap:4px;cursor:pointer">
-            <input type="checkbox" id="showTitleCheck" onchange="updateTitleOverlay()"> Show Title
-          </label>
+          <span style="font-size:11px;font-weight:700;color:var(--accent)">📝 Movie Titles (ခေါင်းစဉ်စာတန်းများ)</span>
+          <button onclick="addNewTitle()" class="primary" style="font-size:10px;padding:3px 8px">+ Add New Title</button>
         </div>
-        <div class="field" style="margin-bottom:8px">
-          <input type="text" id="videoTitleInput" value="ရုပ်ရှင်ဇာတ်လမ်းအညွှန်း" oninput="updateTitleOverlay()">
+        <div id="titleSettingsForm">
+          <p style="font-size:11px;color:var(--muted)">ခေါင်းစဉ်အသစ်ထည့်ရန် '+ Add New Title' ကို နှိပ်ပါ (သို့) မျက်နှာပြင်ပေါ်က စာသားကို နှိပ်ပါ</p>
         </div>
-        <div class="settingGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-          <div class="field">
-            <label>Size: <span id="titleSizeVal" style="color:var(--accent)">18px</span></label>
-            <input id="titleSize" type="range" min="12" max="44" value="18" oninput="document.getElementById('titleSizeVal').textContent=this.value+'px'; updateTitleOverlay()">
-          </div>
-          <div class="field">
-            <label>Color</label>
-            <input id="titleColor" type="color" value="#ffffff" oninput="updateTitleOverlay()">
-          </div>
-        </div>
-        <div class="settingGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-          <div class="field">
-            <label>X Pos (%): <span id="titleXVal" style="color:var(--accent)">50%</span></label>
-            <input id="titleX" type="range" min="5" max="95" value="50" oninput="document.getElementById('titleXVal').textContent=this.value+'%'; updateTitleOverlay()">
-          </div>
-          <div class="field">
-            <label>Y Pos (%): <span id="titleYVal" style="color:var(--accent)">12%</span></label>
-            <input id="titleY" type="range" min="4" max="95" value="12" oninput="document.getElementById('titleYVal').textContent=this.value+'%'; updateTitleOverlay()">
-          </div>
-        </div>
-        <small style="font-size:10px;color:var(--muted);display:block;margin-top:4px">💡 စာသားကို Video ပေါ်တွင် လက်ချောင်းဖြင့် တိုက်ရိုက်ဆွဲရွှေ့နိုင်ပါသည်။</small>
+        <small style="font-size:10px;color:var(--muted);display:block;margin-top:6px">💡 Title စာသားတိုင်းကို ဗီဒီယိုစခရင်ပေါ်တွင် လက်ချောင်းဖြင့် စိတ်ကြိုက်ဆွဲရွှေ့နိုင်ပါသည်။</small>
       </div>
 
-      <!-- 2. Dedicated Custom Text Setting Panel -->
+      <!-- 2. Dedicated Custom Text Setting Panel (Multi-Add Support) -->
       <div class="overlay-settings-panel" id="panelText">
         <div class="panel-head-row">
-          <span style="font-size:11px;font-weight:700;color:var(--cyan)">➕ Custom Floating Text</span>
-          <label style="font-size:11px;display:flex;align-items:center;gap:4px;cursor:pointer">
-            <input type="checkbox" id="showExtraTextCheck" onchange="updateExtraTextOverlay()"> Enable Text
-          </label>
+          <span style="font-size:11px;font-weight:700;color:var(--cyan)">➕ Custom Texts (ရေပေါ်စာတန်းများ)</span>
+          <button onclick="addNewCustomText()" class="primary" style="font-size:10px;padding:3px 8px">+ Add New Text</button>
         </div>
-        <div class="field" style="margin-bottom:8px">
-          <input type="text" id="extraTextInput" placeholder="ဥပမာ - @mychannel သို့မဟုတ် အပိုင်း (၁)" value="အပိုင်း (၁)" oninput="updateExtraTextOverlay()">
-        </div>
-        <div class="settingGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-          <div class="field">
-            <label>Size: <span id="extraSizeVal" style="color:var(--accent)">15px</span></label>
-            <input id="extraSize" type="range" min="10" max="36" value="15" oninput="document.getElementById('extraSizeVal').textContent=this.value+'px'; updateExtraTextOverlay()">
-          </div>
-          <div class="field">
-            <label>Color</label>
-            <input id="extraColor" type="color" value="#0284c7" oninput="updateExtraTextOverlay()">
-          </div>
-        </div>
-        <div class="settingGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-          <div class="field">
-            <label>X Pos (%): <span id="extraXVal" style="color:var(--accent)">50%</span></label>
-            <input id="extraX" type="range" min="5" max="95" value="50" oninput="document.getElementById('extraXVal').textContent=this.value+'%'; updateExtraTextOverlay()">
-          </div>
-          <div class="field">
-            <label>Y Pos (%): <span id="extraYVal" style="color:var(--accent)">20%</span></label>
-            <input id="extraY" type="range" min="4" max="95" value="20" oninput="document.getElementById('extraYVal').textContent=this.value+'%'; updateExtraTextOverlay()">
-          </div>
+        <div id="textSettingsForm">
+          <p style="font-size:11px;color:var(--muted)">စာတန်းအသစ်ထည့်ရန် '+ Add New Text' ကို နှိပ်ပါ</p>
         </div>
       </div>
 
@@ -785,47 +697,18 @@ video.anti-copyright-active {
             <input id="logoOpacity" type="range" min="10" max="100" value="85" oninput="document.getElementById('logoOpVal').textContent=this.value+'%'; updateLogoOverlay()">
           </div>
         </div>
-        <div class="settingGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-          <div class="field">
-            <label>X Pos (%): <span id="logoXVal" style="color:var(--accent)">85%</span></label>
-            <input id="logoX" type="range" min="5" max="95" value="85" oninput="document.getElementById('logoXVal').textContent=this.value+'%'; updateLogoOverlay()">
-          </div>
-          <div class="field">
-            <label>Y Pos (%): <span id="logoYVal" style="color:var(--accent)">10%</span></label>
-            <input id="logoY" type="range" min="5" max="95" value="10" oninput="document.getElementById('logoYVal').textContent=this.value+'%'; updateLogoOverlay()">
-          </div>
-        </div>
+        <small style="font-size:10px;color:var(--muted);display:block;margin-top:4px">💡 Logo ပုံကို Video ပေါ်တွင် လက်ချောင်းဖြင့် စိတ်ကြိုက်ဆွဲရွှေ့နိုင်ပါသည်။</small>
       </div>
 
-      <!-- 4. Dedicated Blur Setting Panel -->
+      <!-- 4. Dedicated Blur Setting Panel (Multi-Add Support) -->
       <div class="overlay-settings-panel" id="panelBlur">
         <div class="panel-head-row">
-          <span style="font-size:11px;font-weight:700;color:var(--gold)">🌫️ Video Blur Mask</span>
-          <label style="font-size:11px;display:flex;align-items:center;gap:4px;cursor:pointer">
-            <input type="checkbox" id="showBlurCheck" onchange="updateBlurOverlay()"> Enable Blur
-          </label>
+          <span style="font-size:11px;font-weight:700;color:var(--gold)">🌫️ Video Blur Masks (ဝါးကွက်များ)</span>
+          <button onclick="addNewBlurBox()" class="primary" style="font-size:10px;padding:3px 8px">+ Add New Blur</button>
         </div>
-        <div class="settingGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-          <div class="field">
-            <label>Blur အား: <span id="blurStrengthVal" style="color:var(--accent)">14px</span></label>
-            <input id="blurStrength" type="range" min="2" max="30" value="14" oninput="document.getElementById('blurStrengthVal').textContent=this.value+'px'; updateBlurOverlay()">
-          </div>
-          <div class="field">
-            <label>အကျယ် (Width): <span id="blurWVal" style="color:var(--accent)">35%</span></label>
-            <input id="blurW" type="range" min="10" max="80" value="35" oninput="document.getElementById('blurWVal').textContent=this.value+'%'; updateBlurOverlay()">
-          </div>
+        <div id="blurSettingsForm">
+          <p style="font-size:11px;color:var(--muted)">Blur အသစ်ထည့်ရန် '+ Add New Blur' ကို နှိပ်ပါ</p>
         </div>
-        <div class="settingGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-          <div class="field">
-            <label>X Pos (%): <span id="blurXVal" style="color:var(--accent)">20%</span></label>
-            <input id="blurX" type="range" min="5" max="95" value="20" oninput="document.getElementById('blurXVal').textContent=this.value+'%'; updateBlurOverlay()">
-          </div>
-          <div class="field">
-            <label>Y Pos (%): <span id="blurYVal" style="color:var(--accent)">35%</span></label>
-            <input id="blurY" type="range" min="5" max="95" value="35" oninput="document.getElementById('blurYVal').textContent=this.value+'%'; updateBlurOverlay()">
-          </div>
-        </div>
-        <small style="font-size:10px;color:var(--muted);display:block;margin-top:4px">💡 Blur Box ကို Video ပေါ်တွင် လက်ဖြင့် ဆွဲရွှေ့နေရာချနိုင်ပါသည်။</small>
       </div>
 
       <!-- VIDEO SEEK BAR -->
@@ -885,7 +768,7 @@ video.anti-copyright-active {
 
           <hr style="border:0;border-top:1px solid var(--border);margin:14px 0">
 
-          <!-- Clean AI Voice Settings: Only Thiha & Nilar (Voice Clone removed) -->
+          <!-- Clean AI Voice Settings: Only Thiha & Nilar (Dual-Engine) -->
           <div style="margin-bottom:12px">
             <label style="font-size:11px;color:var(--accent);font-weight:700;display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
               <span>🗣️ AI VOICE SETTINGS (အသံပိုင်ရှင် ရွေးချယ်မှု)</span>
@@ -949,12 +832,13 @@ video.anti-copyright-active {
       </section>
     </div>
 
-    <!-- ACCORDION CONTROLS -->
+    <!-- STYLE TAB WITH OUTLINE WIDTH SLIDER & RUNNING BORDER CONTROLS -->
     <div class="desktopCol">
       <section class="tabPane card" id="tabStyle">
         
-        <div class="cardHead"><div class="title">🎨 Subtitle & BGM Studio</div></div>
+        <div class="cardHead"><div class="title">🎨 Subtitle & Border Frame Studio</div></div>
         <div class="body" style="padding:14px">
+          
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
             <label style="font-size:11px;color:var(--accent);font-weight:700">စာတန်း ထည့်သွင်းပြသရန် (Show Subtitle):</label>
             <input type="checkbox" id="showSubtitleCheck" checked onchange="toggleSubtitleVisibility()" class="lockable">
@@ -966,7 +850,7 @@ video.anti-copyright-active {
               <input id="targetColor" type="color" value="#ffffff" oninput="applySubtitleStyle()" class="lockable">
             </div>
             <div class="field">
-              <label>အနားသတ်အရောင် (Outline)</label>
+              <label>အနားသတ်အရောင် (Outline Color)</label>
               <input id="outlineColor" type="color" value="#000000" oninput="applySubtitleStyle()" class="lockable">
             </div>
             <div class="field" style="grid-column:span 2">
@@ -975,32 +859,46 @@ video.anti-copyright-active {
             </div>
           </div>
 
+          <!-- Restored Outline Width Range Slider -->
           <div class="sliderPairRow">
+            <div class="sliderField">
+              <label>အနားသတ်အထူ (Outline Width): <span class="val" id="outlineWidthVal">1.5px</span></label>
+              <input id="outlineWidth" type="range" min="0" max="6" step="0.5" value="1.5" oninput="document.getElementById('outlineWidthVal').textContent=this.value+'px'; applySubtitleStyle()" class="lockable">
+            </div>
             <div class="sliderField">
               <label>Box အကြည်/အမည်း: <span class="val" id="opacityVal">50%</span></label>
               <input id="boxOpacity" type="range" min="0" max="100" value="50" oninput="applySubtitleStyle()" class="lockable">
             </div>
-            <div class="sliderField">
-              <label>Font Size: <span class="val" id="sizeVal">17 px</span></label>
-              <input id="size" type="range" min="11" max="44" value="17" oninput="applySubtitleStyle()" class="lockable">
+          </div>
+
+          <div class="sliderField" style="margin-bottom:10px">
+            <label>Font Size: <span class="val" id="sizeVal">17 px</span></label>
+            <input id="size" type="range" min="11" max="44" value="17" oninput="applySubtitleStyle()" class="lockable">
+          </div>
+
+          <hr style="border:0;border-top:1px solid var(--border);margin:14px 0">
+
+          <!-- Real-Time Running Border Controls -->
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <label style="font-size:11px;color:var(--accent);font-weight:700">✨ Real-Time Video Running Border (အချိန်ပြေးဘောင်):</label>
+            <input type="checkbox" id="showBorderProgCheck" checked onchange="toggleBorderProgressBar()" class="lockable">
+          </div>
+          <div class="settingGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div class="field">
+              <label>ဘောင်အရောင် (Border Color)</label>
+              <input id="borderColorInput" type="color" value="#f59e0b" oninput="updateBorderProgressStyle()" class="lockable">
+            </div>
+            <div class="field">
+              <label>ဘောင်အထူ (Thickness): <span id="borderThickVal" style="color:var(--accent)">4px</span></label>
+              <input id="borderThickness" type="range" min="2" max="10" value="4" oninput="document.getElementById('borderThickVal').textContent=this.value+'px'; updateBorderProgressStyle()" class="lockable">
             </div>
           </div>
 
-          <div class="sliderPairRow">
-            <div class="sliderField">
-              <label>Subtitle X (ဘယ်/ညာ %): <span class="val" id="posXVal">50%</span></label>
-              <input id="posX" type="range" min="0" max="100" value="50" oninput="applySubtitlePositionFromSlider()" class="lockable">
-            </div>
-            <div class="sliderField">
-              <label>Subtitle Y (အပေါ်/အောက် %): <span class="val" id="posYVal">82%</span></label>
-              <input id="posY" type="range" min="0" max="100" value="82" oninput="applySubtitlePositionFromSlider()" class="lockable">
-            </div>
-          </div>
         </div>
 
       </section>
 
-      <!-- Accurate Rendering & Export MP4 Section -->
+      <!-- Export Center -->
       <section class="tabPane card" id="tabExport">
         <div class="cardHead"><div class="title">📦 Export Center (Video Exporter)</div></div>
         <div class="body" style="padding:14px">
@@ -1017,7 +915,6 @@ video.anti-copyright-active {
             🎬 Export Video (.mp4)
           </button>
 
-          <!-- Audio & SRT Direct Download Tools -->
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;border-top:1px dashed var(--border);padding-top:10px">
             <button class="secondaryBtn lockable" onclick="exportNarrationAudioOnly()" style="font-size:11px;padding:9px">
               🎵 Download Full Audio
@@ -1054,19 +951,24 @@ let lastActiveSubId = null;
 
 let recapTone = "narrator";
 let selectedVoice = "my-MM-ThihaNeural";
+
+// Subtitle Overlay Coordinates
 let overlayPos = { x: 50, y: 82 };
 
-// Overlay Elements Props (Draggable)
-let titleProps = { visible: false, text: "ရုပ်ရှင်ဇာတ်လမ်းအညွှန်း", size: 18, color: "#ffffff", x: 50, y: 12 };
-let textProps = { visible: false, text: "အပိုင်း (၁)", size: 15, color: "#0284c7", x: 50, y: 20 };
-let logoProps = { visible: false, src: "", size: 60, opacity: 85, x: 85, y: 10 };
-let blurProps = { visible: false, strength: 14, w: 35, h: 45, x: 20, y: 35 };
+// Multi-Item Arrays for Title, Custom Text & Blur
+let titlesList = [];
+let textsList = [];
+let blursList = [];
+let activeItemType = null;
+let activeItemId = null;
 
+let logoProps = { visible: false, src: "", size: 60, opacity: 85, x: 85, y: 10 };
 let isSubtitleVisible = true;
+let borderProgEnabled = true;
+
 let isExportActive = false;
 let activeRecorderInstance = null;
 let activeOpenTab = null;
-let draggingElement = null;
 
 let voiceAudioCtx = null;
 let voiceGainNode = null;
@@ -1103,7 +1005,6 @@ function closeMenu() {
   overlayDrawer.classList.remove('active');
 }
 
-// Dedicated Toolbar Panel Toggle
 function toggleOverlayTab(tabName) {
   const panels = ['title', 'text', 'logo', 'blur'];
   panels.forEach(p => {
@@ -1211,230 +1112,364 @@ function setLockProgress(pct, title, desc) {
   if (desc) lockDesc.textContent = desc;
 }
 
-// Dual-Engine TTS Request
-async function requestTTSAudio(payload) {
-  let response = null;
-  try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 6500);
-
-    response = await fetch(`${RENDER_BACKEND_URL}/api/tts`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-      signal: controller.signal
-    });
-    clearTimeout(timeoutId);
-  } catch (err) {
-    console.warn("Render Backend timeout, switching to Cloudflare Worker:", err);
-  }
-
-  if (!response || !response.ok) {
-    response = await fetch(`${WORKER_URL}/tts`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-  }
-
-  if (!response.ok) throw new Error("TTS Generation failed on both engines");
-  return await response.blob();
+// -------------------------------------------------------------
+// Real-Time Running Border System
+// -------------------------------------------------------------
+function toggleBorderProgressBar() {
+  borderProgEnabled = document.getElementById("showBorderProgCheck").checked;
+  const wrap = document.getElementById("videoProgressBorderWrap");
+  wrap.style.display = borderProgEnabled ? "block" : "none";
+  updateBorderProgressStyle();
 }
 
-async function fetchMyanmarAudio(text, voice, rate) {
-  try {
-    const blob = await requestTTSAudio({
-      text: text,
-      voice: voice,
-      rate: rate || "+0%",
-      pitch: "+0Hz",
-      volume: "+50%"
-    });
-    if (blob && blob.size > 200) {
-      return URL.createObjectURL(blob);
-    }
-  } catch (e) {
-    console.warn("TTS failed:", e);
-  }
-  throw new Error("TTS Audio Generation failed");
+function updateBorderProgressStyle() {
+  const col = document.getElementById("borderColorInput").value;
+  const th = (document.getElementById("borderThickness").value || 4) + "px";
+
+  const top = document.getElementById("bpTop");
+  const right = document.getElementById("bpRight");
+  const bottom = document.getElementById("bpBottom");
+  const left = document.getElementById("bpLeft");
+
+  [top, right, bottom, left].forEach(el => el.style.backgroundColor = col);
+
+  top.style.height = th;
+  bottom.style.height = th;
+  right.style.width = th;
+  left.style.width = th;
 }
 
-async function testMyanmarVoice() {
-  if (generating) return;
-  toast("Testing AI voice...");
-  try {
-    const spd = Number(document.getElementById("voiceSpeed").value) || 0;
-    const rateStr = (spd >= 0 ? "+" : "") + spd + "%";
-    const audioUrl = await fetchMyanmarAudio("မင်္ဂလာပါခင်ဗျာ။ ဇာတ်လမ်းပြော အသံစနစ် ကောင်းမွန်စွာ အလုပ်လုပ်နေပါပြီ။", selectedVoice, rateStr);
-    initVoiceAudioSystem();
-    const aud = new Audio(audioUrl);
-    const src = voiceAudioCtx.createMediaElementSource(aud);
-    src.connect(voiceGainNode);
-    aud.play();
-    toast("🔊 Myanmar Voice Playing!");
-  } catch(e) {
-    toast("Voice error: " + e.message);
-  }
-}
+function renderBorderProgressTick(t, dur) {
+  if (!borderProgEnabled || !dur || dur <= 0) return;
 
-function togglePlayPause(e) {
-  if (e) e.stopPropagation();
-  if (!video.src || generating) return;
+  const pct = Math.min(1.0, Math.max(0.0, t / dur));
+  const top = document.getElementById("bpTop");
+  const right = document.getElementById("bpRight");
+  const bottom = document.getElementById("bpBottom");
+  const left = document.getElementById("bpLeft");
 
-  if (video.paused) {
-    initVoiceAudioSystem();
-    video.play().then(() => {
-      vPlayBtn.textContent = "⏸";
-    }).catch(() => {
-      video.muted = true;
-      video.play().then(() => {
-        vPlayBtn.textContent = "⏸";
-      });
-    });
+  if (pct <= 0.25) {
+    top.style.width = (pct / 0.25) * 100 + "%";
+    right.style.height = "0%";
+    bottom.style.width = "0%";
+    left.style.height = "0%";
+  } else if (pct <= 0.50) {
+    top.style.width = "100%";
+    right.style.height = ((pct - 0.25) / 0.25) * 100 + "%";
+    bottom.style.width = "0%";
+    left.style.height = "0%";
+  } else if (pct <= 0.75) {
+    top.style.width = "100%";
+    right.style.height = "100%";
+    bottom.style.width = ((pct - 0.50) / 0.25) * 100 + "%";
+    left.style.height = "0%";
   } else {
-    video.pause();
-    vPlayBtn.textContent = "▶";
-    if (activeVoiceAudio) activeVoiceAudio.pause();
+    top.style.width = "100%";
+    right.style.height = "100%";
+    bottom.style.width = "100%";
+    left.style.height = ((pct - 0.75) / 0.25) * 100 + "%";
   }
 }
 
-function skipVideo(delta, e) {
-  if (e) e.stopPropagation();
-  if (!video.src || generating) return;
-  video.currentTime = Math.max(0, Math.min(video.duration || 0, video.currentTime + delta));
+// -------------------------------------------------------------
+// Multi-Item Add, Touch-Drag, and Render (Title, Text, Blur)
+// -------------------------------------------------------------
+function makeElementDraggable(domEl, itemData, onMoveCallback, onSelectCallback) {
+  let isDragging = false;
+  let startX = 0, startY = 0;
+  let initX = 0, initY = 0;
+
+  domEl.addEventListener("pointerdown", (e) => {
+    if (e.target.classList.contains("itemCloseBadge") || isExportActive) return;
+    isDragging = true;
+    domEl.setPointerCapture(e.pointerId);
+    startX = e.clientX;
+    startY = e.clientY;
+    initX = itemData.x;
+    initY = itemData.y;
+    if (onSelectCallback) onSelectCallback();
+    e.stopPropagation();
+  });
+
+  domEl.addEventListener("pointermove", (e) => {
+    if (!isDragging) return;
+    const rect = videoBox.getBoundingClientRect();
+    const deltaXPct = ((e.clientX - startX) / rect.width) * 100;
+    const deltaYPct = ((e.clientY - startY) / rect.height) * 100;
+
+    itemData.x = Math.max(4, Math.min(96, Math.round(initX + deltaXPct)));
+    itemData.y = Math.max(4, Math.min(96, Math.round(initY + deltaYPct)));
+
+    if (onMoveCallback) onMoveCallback();
+  });
+
+  const stopDrag = () => { isDragging = false; };
+  domEl.addEventListener("pointerup", stopDrag);
+  domEl.addEventListener("pointercancel", stopDrag);
 }
 
-function onSeekInput() {
-  if (!video.duration) return;
-  vCurTime.textContent = formatTime((Number(vSeekBar.value) / 100) * video.duration);
-}
-
-function onSeekChange() {
-  if (!video.duration) return;
-  video.currentTime = (Number(vSeekBar.value) / 100) * video.duration;
-}
-
-videoBox.addEventListener("click", (e) => {
-  if (generating) return;
-  if (e.target.closest("button") || e.target.closest("input") || e.target.closest(".overlay-settings-panel")) return;
-  togglePlayPause();
-});
-
-function triggerFileInput() {
-  if (generating) return;
-  document.getElementById("file").value = "";
-  document.getElementById("file").click();
-}
-
-document.getElementById("file").onchange = e => { if (e.target.files[0]) loadVideo(e.target.files[0]); };
-
-function loadVideo(f) {
-  file = f;
-  if (videoURL) URL.revokeObjectURL(videoURL);
-  videoURL = URL.createObjectURL(f);
-  video.src = videoURL;
-  video.style.display = "block";
-  document.getElementById("emptyState").style.display = "none";
-  modeBadge.classList.remove("show");
-  video.muted = false;
-  video.load();
-
-  video.onloadedmetadata = () => {
-    vDurTime.textContent = formatTime(video.duration || 0);
-    vCurTime.textContent = "00:00";
-    vSeekBar.value = 0;
-    if (video.videoWidth > 0 && video.videoHeight > 0) {
-      videoBox.style.aspectRatio = `${video.videoWidth} / ${video.videoHeight}`;
-    }
-    updateAudioLevels();
+// 1. Titles List System
+function addNewTitle() {
+  const id = Date.now();
+  const newTitle = {
+    id,
+    text: "ရုပ်ရှင်ဇာတ်လမ်းအညွှန်း",
+    size: 18,
+    color: "#ffffff",
+    bgColor: "#000000",
+    opacity: 75,
+    x: 50,
+    y: Math.min(80, 12 + titlesList.length * 8)
   };
-
-  setStatus("ready", `Loaded: ${f.name.slice(0, 16)}...`);
-  toast("Video loaded! Tap play button to start.");
+  titlesList.push(newTitle);
+  renderTitles();
+  selectTitle(id);
+  toast("New Title Added!");
 }
 
-function toggleSubtitleVisibility() {
-  isSubtitleVisible = document.getElementById("showSubtitleCheck").checked;
-  overlay.style.display = isSubtitleVisible ? "flex" : "none";
-  toast(isSubtitleVisible ? "Subtitle Shown" : "Subtitle Hidden");
+function removeTitle(id) {
+  titlesList = titlesList.filter(t => t.id !== id);
+  renderTitles();
+  if (activeItemId === id) document.getElementById("titleSettingsForm").innerHTML = "<p style='font-size:11px;color:var(--muted)'>Title ကို ရွေးချယ်ပါ</p>";
 }
 
-function applySubtitleStyle() {
-  const textColor = document.getElementById("targetColor").value;
-  const outlineColor = document.getElementById("outlineColor").value;
-  const bgColor = document.getElementById("bgColor").value;
-  const opacity = Number(document.getElementById("boxOpacity").value) / 100;
-  const fontSize = Number(document.getElementById("size").value);
+function selectTitle(id) {
+  activeItemType = 'title';
+  activeItemId = id;
+  const t = titlesList.find(x => x.id === id);
+  if (!t) return;
 
-  document.getElementById("opacityVal").textContent = Math.round(opacity * 100) + "%";
-  document.getElementById("sizeVal").textContent = fontSize + " px";
-
-  const r = parseInt(bgColor.slice(1, 3), 16) || 0;
-  const g = parseInt(bgColor.slice(3, 5), 16) || 0;
-  const b = parseInt(bgColor.slice(5, 7), 16) || 0;
-
-  overlayInner.style.backgroundColor = `rgba(${r}, ${g}, ${b}, ${opacity})`;
-  overlayTarget.style.color = textColor;
-  overlayTarget.style.fontSize = fontSize + "px";
-  overlayTarget.style.webkitTextStroke = `1.5px ${outlineColor}`;
+  const form = document.getElementById("titleSettingsForm");
+  form.innerHTML = `
+    <div class="field" style="margin-bottom:8px">
+      <input type="text" value="${t.text}" oninput="updateCurrentTitleText(this.value)">
+    </div>
+    <div class="settingGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <div class="field">
+        <label>Size: <span>${t.size}px</span></label>
+        <input type="range" min="12" max="44" value="${t.size}" oninput="updateCurrentTitleSize(this.value)">
+      </div>
+      <div class="field">
+        <label>Color</label>
+        <input type="color" value="${t.color}" oninput="updateCurrentTitleColor(this.value)">
+      </div>
+    </div>
+  `;
+  document.querySelectorAll(".videoTitleOverlayItem").forEach(el => el.classList.toggle("active-selected", el.dataset.id == id));
 }
 
-function applySubtitlePositionFromSlider() {
-  overlayPos.x = Number(document.getElementById("posX").value);
-  overlayPos.y = Number(document.getElementById("posY").value);
-  document.getElementById("posXVal").textContent = overlayPos.x + "%";
-  document.getElementById("posYVal").textContent = overlayPos.y + "%";
-  overlay.style.left = overlayPos.x + "%";
-  overlay.style.top = overlayPos.y + "%";
+function updateCurrentTitleText(val) {
+  const t = titlesList.find(x => x.id === activeItemId);
+  if (t) { t.text = val; renderTitles(); }
+}
+function updateCurrentTitleSize(val) {
+  const t = titlesList.find(x => x.id === activeItemId);
+  if (t) { t.size = Number(val); renderTitles(); }
+}
+function updateCurrentTitleColor(val) {
+  const t = titlesList.find(x => x.id === activeItemId);
+  if (t) { t.color = val; renderTitles(); }
 }
 
-// -------------------------------------------------------------
-// Title, Custom Text, Logo & Blur Update & Drag Handlers
-// -------------------------------------------------------------
-function updateTitleOverlay() {
-  titleProps.visible = document.getElementById("showTitleCheck").checked;
-  titleProps.text = document.getElementById("videoTitleInput").value;
-  titleProps.size = Number(document.getElementById("titleSize").value);
-  titleProps.color = document.getElementById("titleColor").value;
-  titleProps.x = Number(document.getElementById("titleX").value);
-  titleProps.y = Number(document.getElementById("titleY").value);
+function renderTitles() {
+  const container = document.getElementById("titlesContainer");
+  container.innerHTML = "";
+  titlesList.forEach(t => {
+    const el = document.createElement("div");
+    el.className = "drag-element videoTitleOverlayItem" + (activeItemId === t.id ? " active-selected" : "");
+    el.dataset.id = t.id;
+    el.style.left = t.x + "%";
+    el.style.top = t.y + "%";
+    el.style.fontSize = t.size + "px";
+    el.style.color = t.color;
+    el.textContent = t.text;
 
-  const el = document.getElementById("movieTitleOverlay");
-  if (titleProps.visible && titleProps.text) {
-    el.style.display = "block";
-    el.textContent = titleProps.text;
-    el.style.fontSize = titleProps.size + "px";
-    el.style.color = titleProps.color;
-    el.style.left = titleProps.x + "%";
-    el.style.top = titleProps.y + "%";
-    el.style.transform = "translate(-50%, 0)";
-  } else {
-    el.style.display = "none";
-  }
+    const closeBtn = document.createElement("span");
+    closeBtn.className = "itemCloseBadge";
+    closeBtn.textContent = "✕";
+    closeBtn.onclick = (e) => { e.stopPropagation(); removeTitle(t.id); };
+    el.appendChild(closeBtn);
+
+    makeElementDraggable(el, t, () => {
+      el.style.left = t.x + "%";
+      el.style.top = t.y + "%";
+    }, () => selectTitle(t.id));
+
+    container.appendChild(el);
+  });
 }
 
-function updateExtraTextOverlay() {
-  textProps.visible = document.getElementById("showExtraTextCheck").checked;
-  textProps.text = document.getElementById("extraTextInput").value;
-  textProps.size = Number(document.getElementById("extraSize").value);
-  textProps.color = document.getElementById("extraColor").value;
-  textProps.x = Number(document.getElementById("extraX").value);
-  textProps.y = Number(document.getElementById("extraY").value);
-
-  const el = document.getElementById("movieExtraTextOverlay");
-  if (textProps.visible && textProps.text) {
-    el.style.display = "block";
-    el.textContent = textProps.text;
-    el.style.fontSize = textProps.size + "px";
-    el.style.color = textProps.color;
-    el.style.left = textProps.x + "%";
-    el.style.top = textProps.y + "%";
-    el.style.transform = "translate(-50%, 0)";
-  } else {
-    el.style.display = "none";
-  }
+// 2. Custom Texts List System
+function addNewCustomText() {
+  const id = Date.now();
+  const newText = {
+    id,
+    text: "အပိုင်း (၁)",
+    size: 15,
+    color: "#0284c7",
+    x: 50,
+    y: Math.min(80, 20 + textsList.length * 8)
+  };
+  textsList.push(newText);
+  renderTexts();
+  selectText(id);
+  toast("New Custom Text Added!");
 }
 
+function removeCustomText(id) {
+  textsList = textsList.filter(t => t.id !== id);
+  renderTexts();
+  if (activeItemId === id) document.getElementById("textSettingsForm").innerHTML = "<p style='font-size:11px;color:var(--muted)'>Custom Text ကို ရွေးချယ်ပါ</p>";
+}
+
+function selectText(id) {
+  activeItemType = 'text';
+  activeItemId = id;
+  const t = textsList.find(x => x.id === id);
+  if (!t) return;
+
+  const form = document.getElementById("textSettingsForm");
+  form.innerHTML = `
+    <div class="field" style="margin-bottom:8px">
+      <input type="text" value="${t.text}" oninput="updateCurrentCustomTextVal(this.value)">
+    </div>
+    <div class="settingGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <div class="field">
+        <label>Size: <span>${t.size}px</span></label>
+        <input type="range" min="10" max="36" value="${t.size}" oninput="updateCurrentCustomTextSize(this.value)">
+      </div>
+      <div class="field">
+        <label>Color</label>
+        <input type="color" value="${t.color}" oninput="updateCurrentCustomTextColor(this.value)">
+      </div>
+    </div>
+  `;
+}
+
+function updateCurrentCustomTextVal(val) {
+  const t = textsList.find(x => x.id === activeItemId);
+  if (t) { t.text = val; renderTexts(); }
+}
+function updateCurrentCustomTextSize(val) {
+  const t = textsList.find(x => x.id === activeItemId);
+  if (t) { t.size = Number(val); renderTexts(); }
+}
+function updateCurrentCustomTextColor(val) {
+  const t = textsList.find(x => x.id === activeItemId);
+  if (t) { t.color = val; renderTexts(); }
+}
+
+function renderTexts() {
+  const container = document.getElementById("textsContainer");
+  container.innerHTML = "";
+  textsList.forEach(t => {
+    const el = document.createElement("div");
+    el.className = "drag-element videoExtraTextItem" + (activeItemId === t.id ? " active-selected" : "");
+    el.dataset.id = t.id;
+    el.style.left = t.x + "%";
+    el.style.top = t.y + "%";
+    el.style.fontSize = t.size + "px";
+    el.style.color = t.color;
+    el.textContent = t.text;
+
+    const closeBtn = document.createElement("span");
+    closeBtn.className = "itemCloseBadge";
+    closeBtn.textContent = "✕";
+    closeBtn.onclick = (e) => { e.stopPropagation(); removeCustomText(t.id); };
+    el.appendChild(closeBtn);
+
+    makeElementDraggable(el, t, () => {
+      el.style.left = t.x + "%";
+      el.style.top = t.y + "%";
+    }, () => selectText(t.id));
+
+    container.appendChild(el);
+  });
+}
+
+// 3. Blur Boxes List System
+function addNewBlurBox() {
+  const id = Date.now();
+  const newBlur = {
+    id,
+    strength: 14,
+    w: 35,
+    h: 40,
+    x: 20,
+    y: Math.min(75, 30 + blursList.length * 10)
+  };
+  blursList.push(newBlur);
+  renderBlurs();
+  selectBlur(id);
+  toast("New Blur Box Added!");
+}
+
+function removeBlurBox(id) {
+  blursList = blursList.filter(b => b.id !== id);
+  renderBlurs();
+  if (activeItemId === id) document.getElementById("blurSettingsForm").innerHTML = "<p style='font-size:11px;color:var(--muted)'>Blur Box ကို ရွေးချယ်ပါ</p>";
+}
+
+function selectBlur(id) {
+  activeItemType = 'blur';
+  activeItemId = id;
+  const b = blursList.find(x => x.id === id);
+  if (!b) return;
+
+  const form = document.getElementById("blurSettingsForm");
+  form.innerHTML = `
+    <div class="settingGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <div class="field">
+        <label>Blur အား: <span>${b.strength}px</span></label>
+        <input type="range" min="2" max="30" value="${b.strength}" oninput="updateCurrentBlurStrength(this.value)">
+      </div>
+      <div class="field">
+        <label>အကျယ် (Width): <span>${b.w}%</span></label>
+        <input type="range" min="10" max="80" value="${b.w}" oninput="updateCurrentBlurWidth(this.value)">
+      </div>
+    </div>
+  `;
+}
+
+function updateCurrentBlurStrength(val) {
+  const b = blursList.find(x => x.id === activeItemId);
+  if (b) { b.strength = Number(val); renderBlurs(); }
+}
+function updateCurrentBlurWidth(val) {
+  const b = blursList.find(x => x.id === activeItemId);
+  if (b) { b.w = Number(val); renderBlurs(); }
+}
+
+function renderBlurs() {
+  const container = document.getElementById("blursContainer");
+  container.innerHTML = "";
+  blursList.forEach(b => {
+    const el = document.createElement("div");
+    el.className = "drag-element videoBlurBoxItem" + (activeItemId === b.id ? " active-selected" : "");
+    el.dataset.id = b.id;
+    el.style.left = b.x + "%";
+    el.style.top = b.y + "%";
+    el.style.width = b.w + "%";
+    el.style.height = b.h + "px";
+    el.style.backdropFilter = `blur(${b.strength}px)`;
+    el.style.webkitBackdropFilter = `blur(${b.strength}px)`;
+
+    const closeBtn = document.createElement("span");
+    closeBtn.className = "itemCloseBadge";
+    closeBtn.textContent = "✕";
+    closeBtn.onclick = (e) => { e.stopPropagation(); removeBlurBox(b.id); };
+    el.appendChild(closeBtn);
+
+    makeElementDraggable(el, b, () => {
+      el.style.left = b.x + "%";
+      el.style.top = b.y + "%";
+    }, () => selectBlur(b.id));
+
+    container.appendChild(el);
+  });
+}
+
+// 4. Logo Handling
 function handleLogoUpload(e) {
   const f = e.target.files[0];
   if (!f) return;
@@ -1443,6 +1478,7 @@ function handleLogoUpload(e) {
     logoProps.src = evt.target.result;
     logoProps.visible = true;
     updateLogoOverlay();
+    initLogoDrag();
     toast("Logo loaded successfully!");
   };
   reader.readAsDataURL(f);
@@ -1453,8 +1489,6 @@ function updateLogoOverlay() {
   if (!logoProps.src) return;
   logoProps.size = Number(document.getElementById("logoSize").value);
   logoProps.opacity = Number(document.getElementById("logoOpacity").value);
-  logoProps.x = Number(document.getElementById("logoX").value);
-  logoProps.y = Number(document.getElementById("logoY").value);
 
   el.src = logoProps.src;
   el.style.display = "block";
@@ -1464,73 +1498,47 @@ function updateLogoOverlay() {
   el.style.top = logoProps.y + "%";
 }
 
-function updateBlurOverlay() {
-  blurProps.visible = document.getElementById("showBlurCheck").checked;
-  blurProps.strength = Number(document.getElementById("blurStrength").value);
-  blurProps.w = Number(document.getElementById("blurW").value);
-  blurProps.x = Number(document.getElementById("blurX").value);
-  blurProps.y = Number(document.getElementById("blurY").value);
-
-  const el = document.getElementById("movieBlurOverlay");
-  if (blurProps.visible) {
-    el.style.display = "block";
-    el.style.left = blurProps.x + "%";
-    el.style.top = blurProps.y + "%";
-    el.style.width = blurProps.w + "%";
-    el.style.height = blurProps.h + "px";
-    el.style.backdropFilter = `blur(${blurProps.strength}px)`;
-    el.style.webkitBackdropFilter = `blur(${blurProps.strength}px)`;
-  } else {
-    el.style.display = "none";
-  }
+function initLogoDrag() {
+  const el = document.getElementById("videoLogoOverlay");
+  makeElementDraggable(el, logoProps, () => {
+    el.style.left = logoProps.x + "%";
+    el.style.top = logoProps.y + "%";
+  }, () => toggleOverlayTab('logo'));
 }
 
-// Touch Dragging for all elements
-function initDirectDragControls() {
-  function getCoords(e) {
-    const rect = videoBox.getBoundingClientRect();
-    const cx = e.touches ? e.touches[0].clientX : e.clientX;
-    const cy = e.touches ? e.touches[0].clientY : e.clientY;
-    return {
-      xPct: Math.round(Math.max(5, Math.min(95, ((cx - rect.left) / rect.width) * 100))),
-      yPct: Math.round(Math.max(4, Math.min(95, ((cy - rect.top) / rect.height) * 100)))
-    };
-  }
+// 5. Robust Subtitle Overlay Dragging
+function initSubtitleTouchDrag() {
+  let isDragging = false;
+  let startX = 0, startY = 0;
+  let initX = 50, initY = 82;
 
-  function handleStart(elName, e) {
-    draggingElement = elName;
-    toggleOverlayTab(elName);
+  overlay.addEventListener("pointerdown", (e) => {
+    if (isExportActive) return;
+    isDragging = true;
+    overlay.setPointerCapture(e.pointerId);
+    startX = e.clientX;
+    startY = e.clientY;
+    initX = overlayPos.x;
+    initY = overlayPos.y;
     e.stopPropagation();
-  }
-
-  document.getElementById("movieTitleOverlay").addEventListener("pointerdown", (e) => handleStart('title', e));
-  document.getElementById("movieExtraTextOverlay").addEventListener("pointerdown", (e) => handleStart('text', e));
-  document.getElementById("videoLogoOverlay").addEventListener("pointerdown", (e) => handleStart('logo', e));
-  document.getElementById("movieBlurOverlay").addEventListener("pointerdown", (e) => handleStart('blur', e));
-
-  window.addEventListener("pointermove", (e) => {
-    if (!draggingElement) return;
-    const { xPct, yPct } = getCoords(e);
-    if (draggingElement === 'title') {
-      document.getElementById("titleX").value = xPct;
-      document.getElementById("titleY").value = yPct;
-      updateTitleOverlay();
-    } else if (draggingElement === 'text') {
-      document.getElementById("extraX").value = xPct;
-      document.getElementById("extraY").value = yPct;
-      updateExtraTextOverlay();
-    } else if (draggingElement === 'logo') {
-      document.getElementById("logoX").value = xPct;
-      document.getElementById("logoY").value = yPct;
-      updateLogoOverlay();
-    } else if (draggingElement === 'blur') {
-      document.getElementById("blurX").value = xPct;
-      document.getElementById("blurY").value = yPct;
-      updateBlurOverlay();
-    }
   });
 
-  window.addEventListener("pointerup", () => { draggingElement = null; });
+  overlay.addEventListener("pointermove", (e) => {
+    if (!isDragging) return;
+    const rect = videoBox.getBoundingClientRect();
+    const deltaXPct = ((e.clientX - startX) / rect.width) * 100;
+    const deltaYPct = ((e.clientY - startY) / rect.height) * 100;
+
+    overlayPos.x = Math.max(5, Math.min(95, Math.round(initX + deltaXPct)));
+    overlayPos.y = Math.max(5, Math.min(95, Math.round(initY + deltaYPct)));
+
+    overlay.style.left = overlayPos.x + "%";
+    overlay.style.top = overlayPos.y + "%";
+  });
+
+  const stop = () => { isDragging = false; };
+  overlay.addEventListener("pointerup", stop);
+  overlay.addEventListener("pointercancel", stop);
 }
 
 // -------------------------------------------------------------
@@ -1631,6 +1639,74 @@ async function generateRecapScriptOnly() {
   }
 }
 
+// -------------------------------------------------------------
+// Voice Synthesis (Dual-Engine: Render + Cloudflare)
+// -------------------------------------------------------------
+async function requestTTSAudio(payload) {
+  let response = null;
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 6500);
+
+    response = await fetch(`${RENDER_BACKEND_URL}/api/tts`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+      signal: controller.signal
+    });
+    clearTimeout(timeoutId);
+  } catch (err) {
+    console.warn("Render Backend timeout, switching to Cloudflare Worker:", err);
+  }
+
+  if (!response || !response.ok) {
+    response = await fetch(`${WORKER_URL}/tts`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+  }
+
+  if (!response.ok) throw new Error("TTS Generation failed on both engines");
+  return await response.blob();
+}
+
+async function fetchMyanmarAudio(text, voice, rate) {
+  try {
+    const blob = await requestTTSAudio({
+      text: text,
+      voice: voice,
+      rate: rate || "+0%",
+      pitch: "+0Hz",
+      volume: "+50%"
+    });
+    if (blob && blob.size > 200) {
+      return URL.createObjectURL(blob);
+    }
+  } catch (e) {
+    console.warn("TTS failed:", e);
+  }
+  throw new Error("TTS Audio Generation failed");
+}
+
+async function testMyanmarVoice() {
+  if (generating) return;
+  toast("Testing AI voice...");
+  try {
+    const spd = Number(document.getElementById("voiceSpeed").value) || 0;
+    const rateStr = (spd >= 0 ? "+" : "") + spd + "%";
+    const audioUrl = await fetchMyanmarAudio("မင်္ဂလာပါခင်ဗျာ။ ဇာတ်လမ်းပြော အသံစနစ် ကောင်းမွန်စွာ အလုပ်လုပ်နေပါပြီ။", selectedVoice, rateStr);
+    initVoiceAudioSystem();
+    const aud = new Audio(audioUrl);
+    const src = voiceAudioCtx.createMediaElementSource(aud);
+    src.connect(voiceGainNode);
+    aud.play();
+    toast("🔊 Myanmar Voice Playing!");
+  } catch(e) {
+    toast("Voice error: " + e.message);
+  }
+}
+
 async function synthesizeAllVoiceovers() {
   if (generating || !subs.length) return;
   generating = true;
@@ -1674,6 +1750,9 @@ video.addEventListener("timeupdate", () => {
     vSeekBar.value = (t / dur) * 100;
     vCurTime.textContent = formatTime(t);
   }
+
+  // Real-Time Border Tick
+  renderBorderProgressTick(t, dur);
 
   const activeSub = subs.find(a => t >= a.start && t <= a.end);
   const bannerTime = document.getElementById("liveSubTimeBadge");
@@ -1758,8 +1837,109 @@ function formatTime(s) {
   return `${String(m).padStart(2, "0")}:${String(sec).padStart(2, "0")}`;
 }
 
+function togglePlayPause(e) {
+  if (e) e.stopPropagation();
+  if (!video.src || generating) return;
+
+  if (video.paused) {
+    initVoiceAudioSystem();
+    video.play().then(() => {
+      vPlayBtn.textContent = "⏸";
+    }).catch(() => {
+      video.muted = true;
+      video.play().then(() => { vPlayBtn.textContent = "⏸"; });
+    });
+  } else {
+    video.pause();
+    vPlayBtn.textContent = "▶";
+    if (activeVoiceAudio) activeVoiceAudio.pause();
+  }
+}
+
+function skipVideo(delta, e) {
+  if (e) e.stopPropagation();
+  if (!video.src || generating) return;
+  video.currentTime = Math.max(0, Math.min(video.duration || 0, video.currentTime + delta));
+}
+
+function onSeekInput() {
+  if (!video.duration) return;
+  vCurTime.textContent = formatTime((Number(vSeekBar.value) / 100) * video.duration);
+}
+
+function onSeekChange() {
+  if (!video.duration) return;
+  video.currentTime = (Number(vSeekBar.value) / 100) * video.duration;
+}
+
+videoBox.addEventListener("click", (e) => {
+  if (generating) return;
+  if (e.target.closest("button") || e.target.closest("input") || e.target.closest(".drag-element") || e.target.closest("#overlay")) return;
+  togglePlayPause();
+});
+
+function triggerFileInput() {
+  if (generating) return;
+  document.getElementById("file").value = "";
+  document.getElementById("file").click();
+}
+
+document.getElementById("file").onchange = e => { if (e.target.files[0]) loadVideo(e.target.files[0]); };
+
+function loadVideo(f) {
+  file = f;
+  if (videoURL) URL.revokeObjectURL(videoURL);
+  videoURL = URL.createObjectURL(f);
+  video.src = videoURL;
+  video.style.display = "block";
+  document.getElementById("emptyState").style.display = "none";
+  modeBadge.classList.remove("show");
+  video.muted = false;
+  video.load();
+
+  video.onloadedmetadata = () => {
+    vDurTime.textContent = formatTime(video.duration || 0);
+    vCurTime.textContent = "00:00";
+    vSeekBar.value = 0;
+    if (video.videoWidth > 0 && video.videoHeight > 0) {
+      videoBox.style.aspectRatio = `${video.videoWidth} / ${video.videoHeight}`;
+    }
+    updateAudioLevels();
+  };
+
+  setStatus("ready", `Loaded: ${f.name.slice(0, 16)}...`);
+  toast("Video loaded! Tap play button to start.");
+}
+
+function toggleSubtitleVisibility() {
+  isSubtitleVisible = document.getElementById("showSubtitleCheck").checked;
+  overlay.style.display = isSubtitleVisible ? "flex" : "none";
+  toast(isSubtitleVisible ? "Subtitle Shown" : "Subtitle Hidden");
+}
+
+function applySubtitleStyle() {
+  const textColor = document.getElementById("targetColor").value;
+  const outlineColor = document.getElementById("outlineColor").value;
+  const outlineWidth = Number(document.getElementById("outlineWidth").value);
+  const bgColor = document.getElementById("bgColor").value;
+  const opacity = Number(document.getElementById("boxOpacity").value) / 100;
+  const fontSize = Number(document.getElementById("size").value);
+
+  document.getElementById("opacityVal").textContent = Math.round(opacity * 100) + "%";
+  document.getElementById("sizeVal").textContent = fontSize + " px";
+
+  const r = parseInt(bgColor.slice(1, 3), 16) || 0;
+  const g = parseInt(bgColor.slice(3, 5), 16) || 0;
+  const b = parseInt(bgColor.slice(5, 7), 16) || 0;
+
+  overlayInner.style.backgroundColor = `rgba(${r}, ${g}, ${b}, ${opacity})`;
+  overlayTarget.style.color = textColor;
+  overlayTarget.style.fontSize = fontSize + "px";
+  overlayTarget.style.webkitTextStroke = `${outlineWidth}px ${outlineColor}`;
+}
+
 // -------------------------------------------------------------
-// EXPORT & DOWNLOAD LOGIC (2 Options: Fast & Standard)
+// EXPORT & DOWNLOAD LOGIC (Fast Video & Standard MP4)
 // -------------------------------------------------------------
 function openExportModal() {
   document.getElementById('exportModalBackdrop').classList.add('show');
@@ -1798,69 +1978,108 @@ function cancelCurrentExport() {
   video.pause();
 }
 
-// Draw Frame to Canvas with Overlays
 function drawCanvasFrame(bCtx, burnCanvas, currTime, scale) {
   bCtx.save();
   bCtx.drawImage(video, 0, 0, burnCanvas.width, burnCanvas.height);
   bCtx.restore();
 
-  // Blur Box
-  if (blurProps.visible) {
-    const bx = (blurProps.x / 100) * burnCanvas.width;
-    const by = (blurProps.y / 100) * burnCanvas.height;
-    const bw = (blurProps.w / 100) * burnCanvas.width;
-    const bh = blurProps.h * scale;
+  // Draw Multi Blurs
+  blursList.forEach(b => {
+    const bx = (b.x / 100) * burnCanvas.width;
+    const by = (b.y / 100) * burnCanvas.height;
+    const bw = (b.w / 100) * burnCanvas.width;
+    const bh = b.h * scale;
     bCtx.save();
-    bCtx.filter = `blur(${blurProps.strength * scale}px)`;
+    bCtx.filter = `blur(${b.strength * scale}px)`;
     bCtx.drawImage(video, bx, by, bw, bh, bx, by, bw, bh);
     bCtx.restore();
-  }
+  });
 
-  // Logo
+  // Draw Logo
   const logoEl = document.getElementById("videoLogoOverlay");
   if (logoProps.visible && logoEl && logoEl.complete) {
     const lw = logoProps.size * scale;
     const lh = lw * (logoEl.naturalHeight / logoEl.naturalWidth);
-    const lx = (logoProps.x / 100) * burnCanvas.width;
-    const ly = (logoProps.y / 100) * burnCanvas.height;
+    const lx = (logoProps.x / 100) * burnCanvas.width - (lw / 2);
+    const ly = (logoProps.y / 100) * burnCanvas.height - (lh / 2);
     bCtx.save();
     bCtx.globalAlpha = logoProps.opacity / 100;
     bCtx.drawImage(logoEl, lx, ly, lw, lh);
     bCtx.restore();
   }
 
-  // Title
-  if (titleProps.visible && titleProps.text) {
-    const tx = (titleProps.x / 100) * burnCanvas.width;
-    const ty = (titleProps.y / 100) * burnCanvas.height;
+  // Draw Multi Titles
+  titlesList.forEach(t => {
+    const tx = (t.x / 100) * burnCanvas.width;
+    const ty = (t.y / 100) * burnCanvas.height;
     bCtx.save();
-    bCtx.font = `bold ${titleProps.size * scale}px sans-serif`;
+    bCtx.font = `bold ${t.size * scale}px sans-serif`;
     bCtx.textAlign = "center";
-    bCtx.fillStyle = titleProps.color;
+    bCtx.fillStyle = t.color;
     bCtx.strokeStyle = "#000000";
     bCtx.lineWidth = 3 * scale;
-    bCtx.strokeText(titleProps.text, tx, ty);
-    bCtx.fillText(titleProps.text, tx, ty);
+    bCtx.strokeText(t.text, tx, ty);
+    bCtx.fillText(t.text, tx, ty);
     bCtx.restore();
-  }
+  });
 
-  // Subtitle
+  // Draw Multi Texts
+  textsList.forEach(t => {
+    const tx = (t.x / 100) * burnCanvas.width;
+    const ty = (t.y / 100) * burnCanvas.height;
+    bCtx.save();
+    bCtx.font = `bold ${t.size * scale}px sans-serif`;
+    bCtx.textAlign = "center";
+    bCtx.fillStyle = t.color;
+    bCtx.fillText(t.text, tx, ty);
+    bCtx.restore();
+  });
+
+  // Draw Subtitle
   if (isSubtitleVisible) {
     const currentSub = subs.find(s => currTime >= s.start && currTime <= s.end);
     if (currentSub && currentSub.mm) {
       const sx = (overlayPos.x / 100) * burnCanvas.width;
       const sy = (overlayPos.y / 100) * burnCanvas.height;
       const fsize = Number(document.getElementById("size").value) * scale;
+      const outW = Number(document.getElementById("outlineWidth").value) * scale;
       bCtx.save();
       bCtx.font = `bold ${fsize}px sans-serif`;
       bCtx.textAlign = "center";
       bCtx.fillStyle = document.getElementById("targetColor").value;
-      bCtx.strokeStyle = document.getElementById("outlineColor").value;
-      bCtx.lineWidth = 2 * scale;
-      bCtx.strokeText(currentSub.mm, sx, sy);
+      if (outW > 0) {
+        bCtx.strokeStyle = document.getElementById("outlineColor").value;
+        bCtx.lineWidth = outW;
+        bCtx.strokeText(currentSub.mm, sx, sy);
+      }
       bCtx.fillText(currentSub.mm, sx, sy);
       bCtx.restore();
     }
+  }
+
+  // Draw Border Progress Bar on Export
+  if (borderProgEnabled && video.duration) {
+    const ratio = Math.max(0, Math.min(1, currTime / video.duration));
+    const th = Number(document.getElementById("borderThickness").value) * scale;
+    const col = document.getElementById("borderColorInput").value;
+    bCtx.save();
+    bCtx.fillStyle = col;
+    if (ratio <= 0.25) {
+      bCtx.fillRect(0, 0, (ratio / 0.25) * burnCanvas.width, th);
+    } else if (ratio <= 0.5) {
+      bCtx.fillRect(0, 0, burnCanvas.width, th);
+      bCtx.fillRect(burnCanvas.width - th, 0, th, ((ratio - 0.25) / 0.25) * burnCanvas.height);
+    } else if (ratio <= 0.75) {
+      bCtx.fillRect(0, 0, burnCanvas.width, th);
+      bCtx.fillRect(burnCanvas.width - th, 0, th, burnCanvas.height);
+      bCtx.fillRect(burnCanvas.width - ((ratio - 0.5) / 0.25) * burnCanvas.width, burnCanvas.height - th, ((ratio - 0.5) / 0.25) * burnCanvas.width, th);
+    } else {
+      bCtx.fillRect(0, 0, burnCanvas.width, th);
+      bCtx.fillRect(burnCanvas.width - th, 0, th, burnCanvas.height);
+      bCtx.fillRect(0, burnCanvas.height - th, burnCanvas.width, th);
+      bCtx.fillRect(0, burnCanvas.height - ((ratio - 0.75) / 0.25) * burnCanvas.height, th, ((ratio - 0.75) / 0.25) * burnCanvas.height);
+    }
+    bCtx.restore();
   }
 }
 
@@ -1884,7 +2103,6 @@ async function exportFastVideo() {
   const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   const dest = audioCtx.createMediaStreamDestination();
 
-  // Clean Audio Stream (Pre-merge all voices to completely avoid overlap)
   for (let s of subs) {
     const url = audioMap.get(s.id);
     if (url) {
@@ -2035,9 +2253,9 @@ function exportSrtSubtitlesOnly() {
 window.onload = function() {
   updateAudioLevels();
   applySubtitleStyle();
-  applySubtitlePositionFromSlider();
-  initTouchDrag();
+  initSubtitleTouchDrag();
   initDirectDragControls();
+  toggleBorderProgressBar();
 };
 </script>
 </body>
