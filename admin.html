@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
 <meta name="theme-color" content="#e2e8f0">
-<title>Admin Panel - AI Studio</title>
+<title>Admin Panel - AI Studio Suite</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Padauk:wght@400;700&display=swap" rel="stylesheet">
@@ -26,7 +26,7 @@ body {
   flex-direction: column;
 }
 
-/* Top Navbar (Removed Back to Main Page Button) */
+/* Navbar (No Back Button) */
 .navbar {
   display: flex;
   justify-content: space-between;
@@ -46,12 +46,12 @@ body {
   color: #b45309;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
 }
 
 .btn {
   border: none;
-  padding: 7px 14px;
+  padding: 7px 16px;
   border-radius: 99px;
   font-size: 12px;
   font-weight: 700;
@@ -71,9 +71,9 @@ body {
   border: 1px solid #fecaca;
 }
 
-/* Main Container */
+/* Container */
 .container {
-  max-width: 680px;
+  max-width: 720px;
   margin: 0 auto;
   padding: 18px 14px 40px;
   width: 100%;
@@ -105,42 +105,35 @@ body {
   display: none;
 }
 
-/* Top Summary Stats */
-.stats-card {
-  background: #ffffff;
-  padding: 16px;
-  border-radius: 16px;
-  margin-bottom: 16px;
-  border: 1px solid #cbd5e1;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04);
-}
-
-.stats-row {
+/* Stats Summary Grid */
+.stats-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
   margin-bottom: 14px;
 }
 
-.stat-box {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  padding: 10px 12px;
+.stat-card {
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 14px 16px;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
+  border: 1px solid #cbd5e1;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
 }
 
 .stat-icon {
-  width: 38px;
-  height: 38px;
-  border-radius: 10px;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
   background: #fffbeb;
   border: 1px solid #fde68a;
   display: grid;
   place-items: center;
   font-size: 18px;
+  flex-shrink: 0;
 }
 
 .stat-info h4 {
@@ -149,22 +142,25 @@ body {
 }
 
 .stat-info span {
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 700;
   color: #b45309;
 }
 
-.search-row {
+/* Search & Refresh Bar */
+.toolbar {
   display: flex;
   gap: 8px;
+  margin-bottom: 16px;
 }
 
 .search-box {
   flex: 1;
-  padding: 9px 14px;
+  padding: 10px 14px;
   border: 1px solid #cbd5e1;
-  border-radius: 10px;
+  border-radius: 12px;
   font-size: 13px;
+  background: #ffffff;
   outline: none;
 }
 
@@ -172,7 +168,7 @@ body {
   border-color: #f59e0b;
 }
 
-/* Clean User List Cards (No Horizontal Scroll) */
+/* Clean User Cards List */
 .user-list {
   display: flex;
   flex-direction: column;
@@ -189,17 +185,13 @@ body {
   align-items: center;
   gap: 12px;
   box-shadow: 0 3px 10px rgba(0, 0, 0, 0.03);
-  cursor: pointer;
   transition: all 0.2s ease;
+  cursor: pointer;
 }
 
 .user-item-card:hover {
   border-color: #f59e0b;
-  background: #fffbeb;
-}
-
-.user-item-card:active {
-  transform: scale(0.98);
+  transform: translateY(-1px);
 }
 
 .user-item-card.banned {
@@ -211,7 +203,7 @@ body {
   display: flex;
   align-items: center;
   gap: 12px;
-  overflow: hidden;
+  min-width: 0;
 }
 
 .avatar {
@@ -226,12 +218,18 @@ body {
 .user-details {
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  min-width: 0;
+}
+
+.user-name-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .user-name {
-  font-size: 14.5px;
   font-weight: 700;
+  font-size: 14px;
   color: #0f172a;
   white-space: nowrap;
   overflow: hidden;
@@ -246,48 +244,48 @@ body {
   text-overflow: ellipsis;
 }
 
-.user-sub {
+.user-sub-meta {
   font-size: 11px;
   color: #b45309;
   font-weight: 700;
   margin-top: 2px;
 }
 
-.user-right {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 6px;
+.badge-status {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 99px;
   flex-shrink: 0;
 }
 
-.badge-status {
-  padding: 3px 9px;
-  border-radius: 99px;
-  font-size: 10.5px;
-  font-weight: 700;
-}
-
 .badge-active {
-  background: #f0fdf4;
+  background: #dcfce7;
   color: #15803d;
-  border: 1px solid #86efac;
 }
 
 .badge-banned {
   background: #fee2e2;
   color: #dc2626;
-  border: 1px solid #fecaca;
 }
 
 .manage-btn {
-  background: #fef3c7;
+  background: #fffbeb;
   color: #b45309;
   border: 1px solid #fde68a;
-  padding: 4px 10px;
-  border-radius: 8px;
-  font-size: 11px;
+  padding: 8px 14px;
+  border-radius: 10px;
+  font-size: 12px;
   font-weight: 700;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.2s;
+}
+
+.user-item-card:hover .manage-btn {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #ffffff;
+  border-color: #f59e0b;
 }
 
 /* Pop-up Modal Styles */
@@ -317,15 +315,15 @@ body {
 .modal-box {
   background: #ffffff;
   width: 100%;
-  max-width: 420px;
-  max-height: 90vh;
-  overflow-y: auto;
+  max-width: 440px;
   border-radius: 20px;
   padding: 20px 18px;
   border: 1px solid #cbd5e1;
   box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
   transform: translateY(15px) scale(0.97);
   transition: all 0.25s ease;
+  max-height: 90vh;
+  overflow-y: auto;
 }
 
 .modal-backdrop.active .modal-box {
@@ -336,7 +334,7 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-bottom: 12px;
+  padding-bottom: 14px;
   border-bottom: 1px solid #e2e8f0;
   margin-bottom: 14px;
 }
@@ -345,17 +343,17 @@ body {
   display: flex;
   align-items: center;
   gap: 10px;
-  overflow: hidden;
+  min-width: 0;
 }
 
-.modal-close {
+.modal-close-btn {
   background: #f1f5f9;
   border: none;
-  width: 30px;
-  height: 30px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   font-size: 15px;
-  color: #475569;
+  color: #334155;
   cursor: pointer;
   flex-shrink: 0;
 }
@@ -364,7 +362,6 @@ body {
   font-size: 11.5px;
   font-weight: 700;
   color: #64748b;
-  text-transform: uppercase;
   margin-bottom: 10px;
   display: block;
 }
@@ -378,103 +375,67 @@ body {
 }
 
 .feature-row {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  padding: 12px 14px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 10px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 11px 13px;
 }
 
 .feature-info {
   display: flex;
   flex-direction: column;
+  gap: 2px;
 }
 
-.feature-file {
+.feature-file-name {
   font-size: 13.5px;
   font-weight: 700;
   color: #0f172a;
 }
 
-.feature-usage {
+.feature-stats-text {
   font-size: 12px;
   color: #b45309;
   font-weight: 700;
-  margin-top: 2px;
 }
 
-/* Toggle Switch (ON / OFF) */
-.toggle-wrap {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.toggle-status-label {
-  font-size: 11px;
+/* ON / OFF Toggle Button */
+.toggle-btn {
+  border: none;
+  padding: 6px 14px;
+  border-radius: 99px;
+  font-size: 11.5px;
   font-weight: 700;
-  min-width: 28px;
-  text-align: right;
-}
-
-.label-on { color: #16a34a; }
-.label-off { color: #dc2626; }
-
-.switch {
-  position: relative;
-  display: inline-block;
-  width: 46px;
-  height: 26px;
-}
-
-.switch input {
-  opacity: 0;
-  width: 0;
-  height: 0;
-}
-
-.slider {
-  position: absolute;
   cursor: pointer;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background-color: #cbd5e1;
-  transition: 0.25s;
-  border-radius: 34px;
+  transition: all 0.2s;
+  min-width: 68px;
+  text-align: center;
 }
 
-.slider:before {
-  position: absolute;
-  content: "";
-  height: 20px;
-  width: 20px;
-  left: 3px;
-  bottom: 3px;
-  background-color: white;
-  transition: 0.25s;
-  border-radius: 50%;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+.toggle-on {
+  background: #16a34a;
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(22, 163, 74, 0.25);
 }
 
-input:checked + .slider {
-  background-color: #16a34a;
+.toggle-off {
+  background: #dc2626;
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(220, 38, 38, 0.25);
 }
 
-input:checked + .slider:before {
-  transform: translateX(20px);
-}
-
-/* Modal Footer Actions (Ban / Delete) */
+/* Modal Footer Actions */
 .modal-actions {
   display: flex;
-  gap: 10px;
-  padding-top: 12px;
+  gap: 8px;
+  padding-top: 14px;
   border-top: 1px solid #e2e8f0;
 }
 
-.modal-btn {
+.modal-action-btn {
   flex: 1;
   padding: 10px;
   border-radius: 10px;
@@ -501,6 +462,7 @@ input:checked + .slider:before {
   background: #fee2e2;
   color: #dc2626;
   border-color: #fecaca;
+  flex: 0.6;
 }
 </style>
 </head>
@@ -522,62 +484,68 @@ input:checked + .slider:before {
   </div>
 
   <div id="dashboardContent">
-    <div class="stats-card">
-      <div class="stats-row">
-        <div class="stat-box">
-          <div class="stat-icon">👥</div>
-          <div class="stat-info">
-            <h4>စုစုပေါင်း အသုံးပြုသူ</h4>
-            <span id="totalUsersCount">0</span>
-          </div>
-        </div>
-        <div class="stat-box">
-          <div class="stat-icon">🚫</div>
-          <div class="stat-info">
-            <h4>Ban ထားသူများ</h4>
-            <span id="bannedUsersCount" style="color:#dc2626;">0</span>
-          </div>
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon">👥</div>
+        <div class="stat-info">
+          <h4>စုစုပေါင်း အသုံးပြုသူ</h4>
+          <span id="totalUsersCount">0</span>
         </div>
       </div>
-
-      <div class="search-row">
-        <input type="text" id="searchInput" class="search-box" placeholder="နာမည် သို့မဟုတ် Email ရှာရန်...">
-        <button class="btn btn-gold" id="refreshBtn">🔄 Refresh</button>
+      <div class="stat-card">
+        <div class="stat-icon">🚫</div>
+        <div class="stat-info">
+          <h4>Ban ထားသူများ</h4>
+          <span id="bannedUsersCount" style="color:#dc2626;">0</span>
+        </div>
       </div>
     </div>
 
-    <!-- User List Container -->
-    <div class="user-list" id="userListContainer"></div>
+    <div class="toolbar">
+      <input type="text" id="searchInput" class="search-box" placeholder="နာမည် သို့မဟုတ် Email ရှာရန်...">
+      <button class="btn btn-gold" id="refreshBtn">🔄 Refresh</button>
+    </div>
+
+    <div class="user-list" id="userListContainer">
+      <div class="status-card"><p>အချက်အလက်များ ဆွဲယူနေပါသည်...</p></div>
+    </div>
   </div>
 
 </main>
 
-<!-- User Detail & Feature ON/OFF Pop-up Modal -->
-<div class="modal-backdrop" id="userModal">
+<!-- User Feature Control Pop-up Modal -->
+<div class="modal-backdrop" id="userModal" onclick="if(event.target === this) closeUserModal()">
   <div class="modal-box">
     <div class="modal-top">
       <div class="modal-user-header">
-        <img src="" id="modalAvatar" class="avatar" alt="Avatar">
+        <img src="" id="modalAvatar" class="avatar" alt="User">
         <div class="user-details">
           <span class="user-name" id="modalName">User Name</span>
           <span class="user-email" id="modalEmail">user@gmail.com</span>
         </div>
       </div>
-      <button class="modal-close" id="closeModalBtn">✕</button>
+      <button class="modal-close-btn" onclick="closeUserModal()">✕</button>
     </div>
 
-    <span class="section-label">🎛️ Feature အသုံးပြုမှု နှင့် အပိတ်/အဖွင့် (ON / OFF)</span>
+    <span class="section-label">FEATURE အသုံးပြုမှု နှင့် ခွင့်ပြုချက် (ON / OFF)</span>
 
     <div class="feature-control-list" id="modalFeatureList">
-      <!-- Populated dynamically via JS -->
+      <!-- Dynamically populated -->
     </div>
 
     <div class="modal-actions">
-      <button class="modal-btn" id="modalBanBtn">🚫 Ban Account</button>
-      <button class="modal-btn btn-delete-user" id="modalDeleteBtn">🗑️ အကောင့်ဖျက်မည်</button>
+      <button class="modal-action-btn" id="modalBanBtn">🚫 Ban Account</button>
+      <button class="modal-action-btn btn-delete-user" id="modalDeleteBtn">🗑️ ဖျက်မည်</button>
     </div>
   </div>
 </div>
+
+<script>
+  const userModal = document.getElementById("userModal");
+  function closeUserModal() {
+    userModal.classList.remove("active");
+  }
+</script>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -599,12 +567,11 @@ input:checked + .slider:before {
     "apriloo.nlo@gmail.com"
   ];
 
-  // Feature 4 ခု သတ်မှတ်ချက်
   const FEATURES = [
-    { key: "mmvoice", file: "mmvoice.html", icon: "🎙️", title: "Myanmar Voice TTS" },
-    { key: "storyMaker", file: "story-maker.html", icon: "📖", title: "Story Maker" },
-    { key: "storyToVideo", file: "story-to-video.html", icon: "🎬", title: "Story to Video" },
-    { key: "movieRecaps", file: "movie-recaps.html", icon: "🎥", title: "Movie Recaps" }
+    { key: "mmvoice", file: "mmvoice.html", icon: "🎙️" },
+    { key: "storyMaker", file: "story-maker.html", icon: "📖" },
+    { key: "storyToVideo", file: "story-to-video.html", icon: "🎬" },
+    { key: "movieRecaps", file: "movie-recaps.html", icon: "🎥" }
   ];
 
   const app = initializeApp(firebaseConfig);
@@ -624,9 +591,6 @@ input:checked + .slider:before {
   const searchInput = document.getElementById("searchInput");
   const refreshBtn = document.getElementById("refreshBtn");
 
-  // Modal Elements
-  const userModal = document.getElementById("userModal");
-  const closeModalBtn = document.getElementById("closeModalBtn");
   const modalAvatar = document.getElementById("modalAvatar");
   const modalName = document.getElementById("modalName");
   const modalEmail = document.getElementById("modalEmail");
@@ -637,14 +601,16 @@ input:checked + .slider:before {
   let allUsersData = [];
   let selectedUser = null;
 
-  adminLoginBtn.addEventListener("click", () => signInWithPopup(auth, provider));
+  adminLoginBtn.addEventListener("click", async () => {
+    try {
+      await signInWithPopup(auth, provider);
+    } catch (err) {
+      alert("Login Error: " + err.message);
+    }
+  });
+
   adminLogoutBtn.addEventListener("click", () => signOut(auth));
   refreshBtn.addEventListener("click", loadUsers);
-
-  closeModalBtn.addEventListener("click", () => userModal.classList.remove("active"));
-  userModal.addEventListener("click", (e) => {
-    if (e.target === userModal) userModal.classList.remove("active");
-  });
 
   onAuthStateChanged(auth, (user) => {
     if (!user) {
@@ -653,7 +619,7 @@ input:checked + .slider:before {
       adminLoginBtn.style.display = "inline-block";
       adminLogoutBtn.style.display = "none";
       statusTitle.textContent = "🔒 Admin Login လိုအပ်ပါသည်";
-      statusDesc.textContent = "User စာရင်းများကို စီမံရန် Admin Login ခလုတ်ဖြင့် ဝင်ရောက်ပါ။";
+      statusDesc.textContent = "User စာရင်းများကို စီမံရန် ညာဘက်အပေါ်ထောင့်ရှိ Admin Login ခလုတ်ဖြင့် ဝင်ရောက်ပါ။";
       return;
     }
 
@@ -670,7 +636,7 @@ input:checked + .slider:before {
     } else {
       statusBox.style.display = "block";
       dashboardContent.style.display = "none";
-      statusTitle.textContent = "⛔ ဝင်ရောက်ခွင့် မရှိပါ";
+      statusTitle.textContent = "⛔ ဝင်ရောက်ခွင့် မရှိပါ (Access Denied)";
       statusDesc.textContent = `သင့်အကောင့် (${user.email}) သည် Admin ခွင့်ပြုချက် မရှိပါ။`;
     }
   });
@@ -695,57 +661,60 @@ input:checked + .slider:before {
         allUsersData.push({ id: docSnap.id, ...d });
       });
 
-      allUsersData.sort((a, b) => (b.lastLogin?.seconds || 0) - (a.lastLogin?.seconds || 0));
+      allUsersData.sort((a, b) => {
+        const timeA = a.lastLogin?.seconds || 0;
+        const timeB = b.lastLogin?.seconds || 0;
+        return timeB - timeA;
+      });
 
       totalUsersCount.textContent = allUsersData.length;
       bannedUsersCount.textContent = bannedCount;
       renderUserList(allUsersData);
 
-      // Modal ပွင့်နေချိန် Refresh ဖြစ်ပါက Modal ဒေတာပါ အသစ်ပြန်ပြရန်
+      // Update open modal if active
       if (selectedUser) {
         const updated = allUsersData.find(u => u.id === selectedUser.id);
         if (updated) openUserModal(updated);
       }
     } catch (error) {
+      console.error("Error loading users:", error);
       userListContainer.innerHTML = `<div class="status-card"><p style="color:#dc2626;">Error: ${error.message}</p></div>`;
     }
   }
 
   function renderUserList(users) {
     if (users.length === 0) {
-      userListContainer.innerHTML = `<div class="status-card"><p>အသုံးပြုသူ မရှိသေးပါ။</p></div>`;
+      userListContainer.innerHTML = `<div class="status-card"><p>အသုံးပြုသူ စာရင်း မရှိသေးပါ။</p></div>`;
       return;
     }
 
     userListContainer.innerHTML = "";
-    const defaultAvatar = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
-
     users.forEach((u) => {
-      const totalCount =
+      const totalUses =
         (u.mmvoice_count || 0) +
         (u.storyMaker_count || 0) +
         (u.storyToVideo_count || 0) +
         (u.movieRecaps_count || 0);
 
       const isBanned = u.isBanned === true;
-
       const card = document.createElement("div");
-      card.className = `user-item-card ${isBanned ? "banned" : ""}`;
+      card.className = `user-item-card ${isBanned ? 'banned' : ''}`;
+
       card.innerHTML = `
         <div class="user-left">
-          <img src="${u.photoURL || defaultAvatar}" class="avatar" alt="Avatar">
+          <img src="${u.photoURL || 'https://cdn-icons-png.flaticon.com/512/149/149071.png'}" class="avatar" alt="Avatar">
           <div class="user-details">
-            <span class="user-name">${u.name || "Unknown"}</span>
-            <span class="user-email">${u.email || "-"}</span>
-            <span class="user-sub">📊 စုစုပေါင်း သုံးစွဲမှု: ${totalCount} ကြိမ်</span>
+            <div class="user-name-row">
+              <span class="user-name">${u.name || 'Unknown'}</span>
+              <span class="badge-status ${isBanned ? 'badge-banned' : 'badge-active'}">
+                ${isBanned ? 'Banned' : 'Active'}
+              </span>
+            </div>
+            <span class="user-email">${u.email || '-'}</span>
+            <span class="user-sub-meta">စုစုပေါင်း အသုံးပြုမှု: ${totalUses} ကြိမ်</span>
           </div>
         </div>
-        <div class="user-right">
-          <span class="badge-status ${isBanned ? "badge-banned" : "badge-active"}">
-            ${isBanned ? "🚫 Banned" : "✅ Active"}
-          </span>
-          <span class="manage-btn">⚙️ စီမံရန်</span>
-        </div>
+        <button class="manage-btn">⚙️ စီမံရန်</button>
       `;
 
       card.addEventListener("click", () => openUserModal(u));
@@ -756,82 +725,84 @@ input:checked + .slider:before {
   function openUserModal(user) {
     selectedUser = user;
     const defaultAvatar = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
-
     modalAvatar.src = user.photoURL || defaultAvatar;
     modalName.textContent = user.name || "Unknown";
     modalEmail.textContent = user.email || "-";
 
     modalFeatureList.innerHTML = "";
 
-    FEATURES.forEach((feat) => {
-      const count = user[`${feat.key}_count`] || 0;
-      const seconds = user[`${feat.key}_seconds`] || 0;
-      // Default သည် ON (enabled !== false)
-      const isEnabled = user[`${feat.key}_enabled`] !== false;
+    FEATURES.forEach((f) => {
+      const count = user[`${f.key}_count`] || 0;
+      const secs = user[`${f.key}_seconds`] || 0;
+      // Default is true (ON) unless explicitly set to false
+      const isEnabled = user[`${f.key}_enabled`] !== false;
 
       const row = document.createElement("div");
       row.className = "feature-row";
       row.innerHTML = `
         <div class="feature-info">
-          <span class="feature-file">${feat.icon} ${feat.file}</span>
-          <span class="feature-usage">အသုံးပြုမှု: ${count} ကြိမ် • ${formatMinutes(seconds)}</span>
+          <span class="feature-file-name">${f.icon} ${f.file}</span>
+          <span class="feature-stats-text">အသုံးပြုမှု: ${count} ကြိမ် (${formatMinutes(secs)})</span>
         </div>
-        <div class="toggle-wrap">
-          <span class="toggle-status-label ${isEnabled ? "label-on" : "label-off"}" id="lbl_${feat.key}">
-            ${isEnabled ? "ON" : "OFF"}
-          </span>
-          <label class="switch">
-            <input type="checkbox" data-key="${feat.key}" ${isEnabled ? "checked" : ""}>
-            <span class="slider"></span>
-          </label>
-        </div>
+        <button class="toggle-btn ${isEnabled ? 'toggle-on' : 'toggle-off'}" data-key="${f.key}" data-enabled="${isEnabled}">
+          ${isEnabled ? 'ON' : 'OFF'}
+        </button>
       `;
 
-      const checkbox = row.querySelector("input");
-      const statusLbl = row.querySelector(`#lbl_${feat.key}`);
-
-      checkbox.addEventListener("change", async (e) => {
-        const newState = e.target.checked;
-        statusLbl.textContent = newState ? "ON" : "OFF";
-        statusLbl.className = `toggle-status-label ${newState ? "label-on" : "label-off"}`;
+      const toggleBtn = row.querySelector(".toggle-btn");
+      toggleBtn.addEventListener("click", async () => {
+        const currentState = toggleBtn.getAttribute("data-enabled") === "true";
+        const newState = !currentState;
+        toggleBtn.disabled = true;
+        toggleBtn.textContent = "...";
 
         try {
           await updateDoc(doc(db, "users", user.id), {
-            [`${feat.key}_enabled`]: newState
+            [`${f.key}_enabled`]: newState
           });
-          user[`${feat.key}_enabled`] = newState;
+          user[`${f.key}_enabled`] = newState;
+          openUserModal(user);
         } catch (err) {
-          alert("ပြောင်းလဲမှု မအောင်မြင်ပါ: " + err.message);
-          e.target.checked = !newState;
+          alert("ပြောင်းလဲ၍ မရပါ: " + err.message);
+          toggleBtn.disabled = false;
         }
       });
 
       modalFeatureList.appendChild(row);
     });
 
-    // Update Ban/Unlock Button inside Modal
     const isBanned = user.isBanned === true;
-    modalBanBtn.textContent = isBanned ? "🔓 Unlock ပြန်ဖွင့်ပေးမည်" : "🚫 User ကို Ban မည်";
-    modalBanBtn.className = `modal-btn ${isBanned ? "btn-unlock-user" : "btn-ban-user"}`;
+    modalBanBtn.className = `modal-action-btn ${isBanned ? 'btn-unlock-user' : 'btn-ban-user'}`;
+    modalBanBtn.textContent = isBanned ? "🔓 Unlock Account" : "🚫 Ban Account";
 
     modalBanBtn.onclick = async () => {
       const actionText = isBanned ? "Unlock (ပြန်ဖွင့်)" : "Ban (ပိတ်ပင်)";
       if (confirm(`"${user.name}" ကို ${actionText} လုပ်ရန် သေချာပါသလား?`)) {
-        await updateDoc(doc(db, "users", user.id), { isBanned: !isBanned });
-        await loadUsers();
+        try {
+          await updateDoc(doc(db, "users", user.id), {
+            isBanned: !isBanned
+          });
+          await loadUsers();
+        } catch (err) {
+          alert("Error: " + err.message);
+        }
       }
     };
 
     modalDeleteBtn.onclick = async () => {
-      if (confirm(`"${user.name}" ၏ အကောင့်မှတ်တမ်းကို အပြီးတိုင်ဖျက်ရန် သေချာပါသလား?`)) {
-        await deleteDoc(doc(db, "users", user.id));
-        userModal.classList.remove("active");
-        selectedUser = null;
-        await loadUsers();
+      if (confirm(`"${user.name}" ၏ မှတ်တမ်းကို Database မှ အပြီးတိုင်ဖျက်ရန် သေချာပါသလား?`)) {
+        try {
+          await deleteDoc(doc(db, "users", user.id));
+          selectedUser = null;
+          document.getElementById("userModal").classList.remove("active");
+          await loadUsers();
+        } catch (err) {
+          alert("ဖျက်၍မရပါ: " + err.message);
+        }
       }
     };
 
-    userModal.classList.add("active");
+    document.getElementById("userModal").classList.add("active");
   }
 
   searchInput.addEventListener("input", (e) => {
