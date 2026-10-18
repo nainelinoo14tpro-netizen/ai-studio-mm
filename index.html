@@ -36,7 +36,7 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 20px;
+  padding: 12px 16px;
   background-color: #ffffff;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
   position: sticky;
@@ -92,11 +92,30 @@ body {
 }
 @keyframes pulseBlink { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
 
-/* --- Added Google Auth Styles --- */
+/* Navbar Right & Auth Buttons */
 .nav-right {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
+}
+
+.contact-top-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: #fffbeb;
+  color: #b45309;
+  border: 1px solid #fde68a;
+  padding: 6px 12px;
+  border-radius: 99px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.contact-top-btn:hover {
+  background: #fef3c7;
 }
 
 .google-login-btn {
@@ -141,7 +160,7 @@ body {
   font-size: 12px;
   font-weight: 700;
   color: #334155;
-  max-width: 90px;
+  max-width: 85px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -158,10 +177,9 @@ body {
   cursor: pointer;
 }
 
-@media (max-width: 480px) {
+@media (max-width: 600px) {
   .status-badge { display: none; }
 }
-/* -------------------------------- */
 
 /* Background Overlay */
 .overlay {
@@ -204,7 +222,7 @@ body {
 }
 .menu-title { font-size: 1.05rem; font-weight: bold; color: #475569; }
 .close-btn { background: none; border: none; color: #1e293b; font-size: 1.3rem; cursor: pointer; }
-.menu-links { list-style: none; padding: 12px 10px; flex-grow: 1; }
+.menu-links { list-style: none; padding: 12px 10px; flex-grow: 1; overflow-y: auto; }
 .menu-links li { margin-bottom: 6px; }
 .menu-links a {
   display: flex;
@@ -216,11 +234,91 @@ body {
   border-radius: 10px;
   font-size: 0.9rem;
   transition: all 0.2s;
+  cursor: pointer;
 }
 .menu-links a:hover, .menu-links a.active {
   background-color: #fef3c7;
   color: #b45309;
   font-weight: 600;
+}
+
+/* Slide Menu Bottom Auth Section */
+.menu-footer-auth {
+  padding: 14px 16px;
+  border-top: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+
+.menu-login-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #ffffff;
+  border: none;
+  padding: 10px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 3px 10px rgba(217, 119, 6, 0.25);
+}
+
+.menu-user-box {
+  display: none;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.menu-user-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.menu-user-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 2px solid #f59e0b;
+  object-fit: cover;
+}
+
+.menu-user-details {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.menu-user-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: #0f172a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.menu-user-email {
+  font-size: 11px;
+  color: #64748b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.menu-logout-btn {
+  width: 100%;
+  background: #fee2e2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+  padding: 7px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
 }
 
 /* Main Container */
@@ -274,6 +372,7 @@ body {
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04);
   transition: all 0.25s ease;
   position: relative;
+  cursor: pointer;
 }
 
 .studio-card:hover {
@@ -284,6 +383,11 @@ body {
 
 .studio-card:active {
   transform: scale(0.98);
+}
+
+/* Lock Indicator when Logged Out */
+body.logged-out .launch-btn::after {
+  content: " 🔒";
 }
 
 .card-top-row {
@@ -379,6 +483,125 @@ body {
   box-shadow: 0 4px 12px rgba(217, 119, 6, 0.25);
 }
 
+/* Modal Pop-up Styles (Contacts & Login Required) */
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(3px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  z-index: 1000;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.25s ease;
+}
+
+.modal-backdrop.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.modal-box {
+  background: #ffffff;
+  width: 100%;
+  max-width: 360px;
+  border-radius: 18px;
+  padding: 22px 20px;
+  border: 1px solid #cbd5e1;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18);
+  transform: translateY(15px) scale(0.97);
+  transition: all 0.25s ease;
+}
+
+.modal-backdrop.active .modal-box {
+  transform: translateY(0) scale(1);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.modal-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #b45309;
+}
+
+.modal-close {
+  background: #f1f5f9;
+  border: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  font-size: 14px;
+  color: #475569;
+  cursor: pointer;
+}
+
+.contact-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.contact-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  text-decoration: none;
+  color: #0f172a;
+  transition: all 0.2s ease;
+}
+
+.contact-item:hover {
+  border-color: #f59e0b;
+  background: #fffbeb;
+}
+
+.contact-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: #ffffff;
+  border: 1px solid #fde68a;
+  display: grid;
+  place-items: center;
+  font-size: 18px;
+}
+
+.contact-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.contact-label {
+  font-size: 11px;
+  color: #64748b;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.contact-value {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
 /* Footer Area */
 .app-footer {
   text-align: center;
@@ -411,7 +634,7 @@ body {
 </script>
 </head>
 
-<body>
+<body class="logged-out">
 
 <!-- Top Navbar -->
 <header class="navbar">
@@ -426,12 +649,17 @@ body {
       <span>Studio Online</span>
     </div>
 
-    <!-- Google Login Button -->
+    <!-- Contacts Button -->
+    <button class="contact-top-btn" onclick="openContactModal()">
+      <span>📞 Contacts</span>
+    </button>
+
+    <!-- Google Login Button (Navbar) -->
     <button class="google-login-btn" id="googleLoginBtn">
       <span>🔑 Login</span>
     </button>
 
-    <!-- User Profile Display (After Login) -->
+    <!-- User Profile Display (Navbar) -->
     <div class="user-profile" id="userProfile">
       <img src="" alt="User" class="user-avatar" id="userAvatar">
       <span class="user-name" id="userName"></span>
@@ -451,11 +679,30 @@ body {
   </div>
   <ul class="menu-links">
     <li><a href="index.html" class="active">🏠 Main Page</a></li>
-    <li><a href="mmvoice.html">🎙️ Myanmar Voice TTS</a></li>
-    <li><a href="story-maker.html">📖 Story Create</a></li>
-    <li><a href="story-to-video.html">🎬 Story to Video Studio</a></li>
-    <li><a href="movie-recaps.html">🎬 Movie Recaps</a></li>
+    <li><a href="mmvoice.html" class="protected-link">🎙️ Myanmar Voice TTS</a></li>
+    <li><a href="story-maker.html" class="protected-link">📖 Story Create</a></li>
+    <li><a href="story-to-video.html" class="protected-link">🎬 Story to Video Studio</a></li>
+    <li><a href="movie-recaps.html" class="protected-link">🎬 Movie Recaps</a></li>
+    <li><a onclick="closeMenu(); openContactModal();">📞 Contacts (ဆက်သွယ်ရန်)</a></li>
   </ul>
+
+  <!-- Bottom Auth Section inside Slide Menu -->
+  <div class="menu-footer-auth">
+    <button class="menu-login-btn" id="menuLoginBtn">
+      <span>🔑 Sign in with Google</span>
+    </button>
+
+    <div class="menu-user-box" id="menuUserBox">
+      <div class="menu-user-info">
+        <img src="" alt="Avatar" class="menu-user-avatar" id="menuUserAvatar">
+        <div class="menu-user-details">
+          <span class="menu-user-name" id="menuUserName"></span>
+          <span class="menu-user-email" id="menuUserEmail"></span>
+        </div>
+      </div>
+      <button class="menu-logout-btn" id="menuLogoutBtn">အကောင့်မှ ထွက်မည်</button>
+    </div>
+  </div>
 </nav>
 
 <!-- Main Container -->
@@ -470,14 +717,14 @@ body {
   <!-- Studio Cards Grid -->
   <div class="studio-grid">
 
-    <!-- Card 1: Myanmar Voice TTS (Replaced voice-clone) -->
-    <a href="mmvoice.html" class="studio-card">
+    <!-- Card 1: Myanmar Voice TTS -->
+    <a href="mmvoice.html" class="studio-card protected-link">
       <div class="card-top-row">
         <div class="card-icon">🎙️</div>
         <span class="card-pill pill-gold">Voice AI</span>
       </div>
       <h3 class="card-title">Myanmar Voice TTS</h3>
-      <p class="cardDesc">Microsoft Edge TTS အခြေပြု သဘာဝကျသော စတိုင်စုံ မြန်မာအသံ ထုတ်လုပ်မှု စနစ်။</p>
+      <p class="card-desc">Microsoft Edge TTS အခြေပြု သဘာဝကျသော စတိုင်စုံ မြန်မာအသံ ထုတ်လုပ်မှု စနစ်။</p>
       <div class="card-features">
         <div class="feature-item"><span class="feature-dot"></span> နီလာ နှင့် သီဟ မြန်မာအသံများ</div>
         <div class="feature-item"><span class="feature-dot"></span> Natural / Story / Horror စတိုင်များ</div>
@@ -489,7 +736,7 @@ body {
     </a>
 
     <!-- Card 2: Story Maker -->
-    <a href="story-maker.html" class="studio-card">
+    <a href="story-maker.html" class="studio-card protected-link">
       <div class="card-top-row">
         <div class="card-icon">📖</div>
         <span class="card-pill pill-orange">Story Engine</span>
@@ -507,7 +754,7 @@ body {
     </a>
 
     <!-- Card 3: Story to Video -->
-    <a href="story-to-video.html" class="studio-card">
+    <a href="story-to-video.html" class="studio-card protected-link">
       <div class="card-top-row">
         <div class="card-icon">🎬</div>
         <span class="card-pill pill-green">Video Studio</span>
@@ -525,7 +772,7 @@ body {
     </a>
 
     <!-- Card 4: Movie Recaps -->
-    <a href="movie-recaps.html" class="studio-card">
+    <a href="movie-recaps.html" class="studio-card protected-link">
       <div class="card-top-row">
         <div class="card-icon">🎥</div>
         <span class="card-pill pill-blue">Recap Studio</span>
@@ -551,9 +798,61 @@ body {
 
 </main>
 
+<!-- Contacts Pop-up Modal -->
+<div class="modal-backdrop" id="contactModal" onclick="if(event.target === this) closeContactModal()">
+  <div class="modal-box">
+    <div class="modal-header">
+      <span class="modal-title">📞 ဆက်သွယ်ရန် (Contacts)</span>
+      <button class="modal-close" onclick="closeContactModal()">✕</button>
+    </div>
+    <div class="contact-list">
+      <a href="tel:+66827516171" class="contact-item">
+        <div class="contact-icon">📱</div>
+        <div class="contact-text">
+          <span class="contact-label">Phone</span>
+          <span class="contact-value">+66827516171</span>
+        </div>
+      </a>
+      <a href="https://m.me/nainelinnoo" target="_blank" rel="noopener" class="contact-item">
+        <div class="contact-icon">💬</div>
+        <div class="contact-text">
+          <span class="contact-label">Facebook</span>
+          <span class="contact-value">https://m.me/nainelinnoo</span>
+        </div>
+      </a>
+      <a href="mailto:nainelinnoo@gmail.com" class="contact-item">
+        <div class="contact-icon">✉️</div>
+        <div class="contact-text">
+          <span class="contact-label">Gmail</span>
+          <span class="contact-value">nainelinnoo@gmail.com</span>
+        </div>
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- Login Required Alert Pop-up Modal -->
+<div class="modal-backdrop" id="loginPromptModal" onclick="if(event.target === this) closeLoginPrompt()">
+  <div class="modal-box" style="text-align: center;">
+    <div style="font-size: 38px; margin-bottom: 8px;">🔒</div>
+    <h3 style="color: #b45309; margin-bottom: 6px; font-size: 1.15rem;">Login အရင်ဝင်ပေးပါ</h3>
+    <p style="font-size: 13px; color: #475569; margin-bottom: 18px; line-height: 1.5;">
+      AI Studio Feature များကို အသုံးပြုနိုင်ရန် Google အကောင့်ဖြင့် Login အရင်ဝင်ရောက်ပေးပါခင်ဗျာ။
+    </p>
+    <button class="menu-login-btn" id="promptLoginBtn" style="margin-bottom: 8px;">
+      <span>🔑 Sign in with Google</span>
+    </button>
+    <button onclick="closeLoginPrompt()" style="background:none; border:none; color:#64748b; font-size:12px; cursor:pointer; padding:4px;">
+      ပိတ်မည်
+    </button>
+  </div>
+</div>
+
 <script>
   const slideMenu = document.getElementById('slideMenu');
   const overlay = document.getElementById('overlay');
+  const contactModal = document.getElementById('contactModal');
+  const loginPromptModal = document.getElementById('loginPromptModal');
 
   function openMenu() {
     slideMenu.classList.add('active');
@@ -564,9 +863,25 @@ body {
     slideMenu.classList.remove('active');
     overlay.classList.remove('active');
   }
+
+  function openContactModal() {
+    contactModal.classList.add('active');
+  }
+
+  function closeContactModal() {
+    contactModal.classList.remove('active');
+  }
+
+  function openLoginPrompt() {
+    loginPromptModal.classList.add('active');
+  }
+
+  function closeLoginPrompt() {
+    loginPromptModal.classList.remove('active');
+  }
 </script>
 
-<!-- Firebase Google Authentication & Firestore Integration -->
+<!-- Firebase Google Authentication & Feature Lock Integration -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
@@ -587,19 +902,33 @@ body {
   const db = getFirestore(app);
   const provider = new GoogleAuthProvider();
 
+  // Navbar Auth Elements
   const loginBtn = document.getElementById("googleLoginBtn");
   const userProfile = document.getElementById("userProfile");
   const userAvatar = document.getElementById("userAvatar");
   const userName = document.getElementById("userName");
   const logoutBtn = document.getElementById("logoutBtn");
 
-  // Google Login နှိပ်သည့်အခါ အလုပ်လုပ်မည့်အပိုင်း
-  loginBtn.addEventListener("click", async () => {
+  // Slide Menu Auth Elements
+  const menuLoginBtn = document.getElementById("menuLoginBtn");
+  const menuUserBox = document.getElementById("menuUserBox");
+  const menuUserAvatar = document.getElementById("menuUserAvatar");
+  const menuUserName = document.getElementById("menuUserName");
+  const menuUserEmail = document.getElementById("menuUserEmail");
+  const menuLogoutBtn = document.getElementById("menuLogoutBtn");
+
+  // Modal Login Button
+  const promptLoginBtn = document.getElementById("promptLoginBtn");
+
+  let currentUser = null;
+  let pendingRedirectUrl = null;
+
+  // Shared Google Login Function
+  async function handleGoogleLogin() {
     try {
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
 
-      // Firestore Database ထဲသို့ User အချက်အလက် သိမ်းဆည်းခြင်း
       await setDoc(doc(db, "users", user.uid), {
         uid: user.uid,
         name: user.displayName || "Unknown User",
@@ -608,31 +937,78 @@ body {
         lastLogin: serverTimestamp()
       }, { merge: true });
 
+      closeLoginPrompt();
+
+      // အကယ်၍ Feature တစ်ခုကို နှိပ်ထားပြီးမှ Login ဝင်လိုက်ပါက ထို Feature သို့ တိုက်ရိုက်ပို့ပေးမည်
+      if (pendingRedirectUrl) {
+        const target = pendingRedirectUrl;
+        pendingRedirectUrl = null;
+        window.location.href = target;
+      }
     } catch (error) {
       console.error("Google Login Error:", error);
       alert("Login ဝင်ရောက်မှု မအောင်မြင်ပါ: " + error.message);
     }
-  });
+  }
 
-  // Logout နှိပ်သည့်အခါ အလုပ်လုပ်မည့်အပိုင်း
-  logoutBtn.addEventListener("click", async () => {
+  // Shared Logout Function
+  async function handleLogout() {
     try {
       await signOut(auth);
     } catch (error) {
       console.error("Logout Error:", error);
     }
+  }
+
+  loginBtn.addEventListener("click", handleGoogleLogin);
+  menuLoginBtn.addEventListener("click", handleGoogleLogin);
+  promptLoginBtn.addEventListener("click", handleGoogleLogin);
+
+  logoutBtn.addEventListener("click", handleLogout);
+  menuLogoutBtn.addEventListener("click", handleLogout);
+
+  // Feature Links Lock Check
+  document.querySelectorAll(".protected-link").forEach((link) => {
+    link.addEventListener("click", (e) => {
+      if (!currentUser) {
+        e.preventDefault();
+        pendingRedirectUrl = link.getAttribute("href");
+        closeMenu();
+        openLoginPrompt();
+      }
+    });
   });
 
-  // User အခြေအနေ (Login ဝင်ထား/မထား) စစ်ဆေးခြင်း
+  // Monitor Auth Status
   onAuthStateChanged(auth, (user) => {
+    currentUser = user;
+    const defaultAvatar = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
+
     if (user) {
+      document.body.classList.remove("logged-out");
+
+      // Top Navbar Update
       loginBtn.style.display = "none";
       userProfile.style.display = "flex";
       userName.textContent = user.displayName || "User";
-      userAvatar.src = user.photoURL || "https://cdn-icons-png.flaticon.com/512/149/149071.png";
+      userAvatar.src = user.photoURL || defaultAvatar;
+
+      // Slide Menu Update
+      menuLoginBtn.style.display = "none";
+      menuUserBox.style.display = "flex";
+      menuUserName.textContent = user.displayName || "User";
+      menuUserEmail.textContent = user.email || "";
+      menuUserAvatar.src = user.photoURL || defaultAvatar;
     } else {
+      document.body.classList.add("logged-out");
+
+      // Top Navbar Update
       loginBtn.style.display = "flex";
       userProfile.style.display = "none";
+
+      // Slide Menu Update
+      menuLoginBtn.style.display = "flex";
+      menuUserBox.style.display = "none";
     }
   });
 </script>
