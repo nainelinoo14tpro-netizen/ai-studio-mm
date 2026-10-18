@@ -92,6 +92,77 @@ body {
 }
 @keyframes pulseBlink { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
 
+/* --- Added Google Auth Styles --- */
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.google-login-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #ffffff;
+  border: none;
+  padding: 6px 14px;
+  border-radius: 99px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(217, 119, 6, 0.25);
+  transition: all 0.2s ease;
+}
+
+.google-login-btn:active {
+  transform: scale(0.96);
+}
+
+.user-profile {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  padding: 3px 10px 3px 4px;
+  border-radius: 99px;
+}
+
+.user-avatar {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid #f59e0b;
+}
+
+.user-name {
+  font-size: 12px;
+  font-weight: 700;
+  color: #334155;
+  max-width: 90px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.logout-btn {
+  background: #fee2e2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+  padding: 2px 8px;
+  border-radius: 99px;
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+@media (max-width: 480px) {
+  .status-badge { display: none; }
+}
+/* -------------------------------- */
+
 /* Background Overlay */
 .overlay {
   position: fixed;
@@ -348,9 +419,24 @@ body {
     <button class="menu-btn" onclick="openMenu()">☰</button>
     <div class="logo">AI Studio App</div>
   </div>
-  <div class="status-badge">
-    <span class="pulse-dot"></span>
-    <span>Studio Online</span>
+
+  <div class="nav-right">
+    <div class="status-badge">
+      <span class="pulse-dot"></span>
+      <span>Studio Online</span>
+    </div>
+
+    <!-- Google Login Button -->
+    <button class="google-login-btn" id="googleLoginBtn">
+      <span>🔑 Login</span>
+    </button>
+
+    <!-- User Profile Display (After Login) -->
+    <div class="user-profile" id="userProfile">
+      <img src="" alt="User" class="user-avatar" id="userAvatar">
+      <span class="user-name" id="userName"></span>
+      <button class="logout-btn" id="logoutBtn">ထွက်မည်</button>
+    </div>
   </div>
 </header>
 
@@ -479,5 +565,77 @@ body {
     overlay.classList.remove('active');
   }
 </script>
+
+<!-- Firebase Google Authentication & Firestore Integration -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  import { getFirestore, doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDoDB5EV3HogihQXmhk0CsIJxvnnjFWmpc",
+    authDomain: "ai-studio-nlo.firebaseapp.com",
+    projectId: "ai-studio-nlo",
+    storageBucket: "ai-studio-nlo.firebasestorage.app",
+    messagingSenderId: "904606018542",
+    appId: "1:904606018542:web:7de09d3d406dd5d586fcff",
+    measurementId: "G-0JL94QP83K"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+  const provider = new GoogleAuthProvider();
+
+  const loginBtn = document.getElementById("googleLoginBtn");
+  const userProfile = document.getElementById("userProfile");
+  const userAvatar = document.getElementById("userAvatar");
+  const userName = document.getElementById("userName");
+  const logoutBtn = document.getElementById("logoutBtn");
+
+  // Google Login နှိပ်သည့်အခါ အလုပ်လုပ်မည့်အပိုင်း
+  loginBtn.addEventListener("click", async () => {
+    try {
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+
+      // Firestore Database ထဲသို့ User အချက်အလက် သိမ်းဆည်းခြင်း
+      await setDoc(doc(db, "users", user.uid), {
+        uid: user.uid,
+        name: user.displayName || "Unknown User",
+        email: user.email || "",
+        photoURL: user.photoURL || "",
+        lastLogin: serverTimestamp()
+      }, { merge: true });
+
+    } catch (error) {
+      console.error("Google Login Error:", error);
+      alert("Login ဝင်ရောက်မှု မအောင်မြင်ပါ: " + error.message);
+    }
+  });
+
+  // Logout နှိပ်သည့်အခါ အလုပ်လုပ်မည့်အပိုင်း
+  logoutBtn.addEventListener("click", async () => {
+    try {
+      await signOut(auth);
+    } catch (error) {
+      console.error("Logout Error:", error);
+    }
+  });
+
+  // User အခြေအနေ (Login ဝင်ထား/မထား) စစ်ဆေးခြင်း
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      loginBtn.style.display = "none";
+      userProfile.style.display = "flex";
+      userName.textContent = user.displayName || "User";
+      userAvatar.src = user.photoURL || "https://cdn-icons-png.flaticon.com/512/149/149071.png";
+    } else {
+      loginBtn.style.display = "flex";
+      userProfile.style.display = "none";
+    }
+  });
+</script>
+
 </body>
 </html>
