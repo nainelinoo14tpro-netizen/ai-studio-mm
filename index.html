@@ -139,7 +139,6 @@ body {
   transform: scale(0.96);
 }
 
-/* Profile Photo Only in Navbar */
 .user-profile {
   display: none;
   align-items: center;
@@ -176,7 +175,7 @@ body {
 }
 .overlay.active { opacity: 1; visibility: visible; }
 
-/* Left Side Slide Menu (Fixed to exact mobile screen height) */
+/* Left Side Slide Menu */
 .slide-menu {
   position: fixed;
   top: 0;
@@ -231,7 +230,7 @@ body {
   font-weight: 600;
 }
 
-/* Slide Menu Bottom Auth Section (Pinned cleanly to bottom) */
+/* Slide Menu Bottom Auth Section */
 .menu-footer-auth {
   flex-shrink: 0;
   margin-top: auto;
@@ -314,10 +313,6 @@ body {
   transition: all 0.2s;
 }
 
-.menu-logout-btn:active {
-  transform: scale(0.98);
-}
-
 /* Main Container */
 .container {
   max-width: 1100px;
@@ -327,7 +322,6 @@ body {
   flex: 1;
 }
 
-/* Glassmorphism Header Box */
 .glass-header {
   background: rgba(255, 255, 255, 0.65);
   backdrop-filter: blur(12px);
@@ -612,26 +606,10 @@ body.logged-out .launch-btn::after {
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="AI Studio">
 <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/1179/1179069.png">
-
-<script>
-  if ("serviceWorker" in navigator) {
-    window.addEventListener("load", () => {
-      const swCode = `
-        self.addEventListener('install', e => self.skipWaiting());
-        self.addEventListener('activate', e => self.clients.claim());
-        self.addEventListener('fetch', e => e.respondWith(fetch(e.request)));
-      `;
-      const blob = new Blob([swCode], { type: "application/javascript" });
-      navigator.serviceWorker.register(URL.createObjectURL(blob))
-        .catch(() => {});
-    });
-  }
-</script>
 </head>
 
 <body class="logged-out">
 
-<!-- Top Navbar -->
 <header class="navbar">
   <div class="nav-left">
     <button class="menu-btn" onclick="openMenu()">☰</button>
@@ -652,7 +630,6 @@ body.logged-out .launch-btn::after {
       <span>🔑 Login</span>
     </button>
 
-    <!-- Only Profile Photo on Main Navbar (Clicking opens Slide Menu) -->
     <div class="user-profile" id="userProfile" onclick="openMenu()" title="Menu ဖွင့်ရန်">
       <img src="" alt="User" class="user-avatar" id="userAvatar">
     </div>
@@ -661,7 +638,6 @@ body.logged-out .launch-btn::after {
 
 <div class="overlay" id="overlay" onclick="closeMenu()"></div>
 
-<!-- Left Side Slide Menu -->
 <nav class="slide-menu" id="slideMenu">
   <div class="menu-header">
     <span class="menu-title">Menu</span>
@@ -676,7 +652,6 @@ body.logged-out .launch-btn::after {
     <li><a onclick="closeMenu(); openContactModal();">📞 Contacts (ဆက်သွယ်ရန်)</a></li>
   </ul>
 
-  <!-- Fixed Bottom Login / Logout Box inside Slide Menu -->
   <div class="menu-footer-auth">
     <button class="menu-login-btn" id="menuLoginBtn">
       <span>🔑 Sign in with Google</span>
@@ -704,7 +679,6 @@ body.logged-out .launch-btn::after {
 
   <div class="studio-grid">
 
-    <!-- Card 1: Myanmar Voice TTS -->
     <a href="mmvoice.html" class="studio-card protected-link" data-feature="mmvoice">
       <div class="card-top-row">
         <div class="card-icon">🎙️</div>
@@ -722,7 +696,6 @@ body.logged-out .launch-btn::after {
       </div>
     </a>
 
-    <!-- Card 2: Story Maker -->
     <a href="story-maker.html" class="studio-card protected-link" data-feature="storyMaker">
       <div class="card-top-row">
         <div class="card-icon">📖</div>
@@ -740,7 +713,6 @@ body.logged-out .launch-btn::after {
       </div>
     </a>
 
-    <!-- Card 3: Story to Video -->
     <a href="story-to-video.html" class="studio-card protected-link" data-feature="storyToVideo">
       <div class="card-top-row">
         <div class="card-icon">🎬</div>
@@ -758,7 +730,6 @@ body.logged-out .launch-btn::after {
       </div>
     </a>
 
-    <!-- Card 4: Movie Recaps -->
     <a href="movie-recaps.html" class="studio-card protected-link" data-feature="movieRecaps">
       <div class="card-top-row">
         <div class="card-icon">🎥</div>
@@ -834,13 +805,13 @@ body.logged-out .launch-btn::after {
   </div>
 </div>
 
-<!-- Banned User Alert Modal -->
+<!-- Banned / Feature Disabled Alert Modal -->
 <div class="modal-backdrop" id="bannedModal" onclick="if(event.target === this) closeBannedModal()">
   <div class="modal-box" style="text-align: center;">
     <div style="font-size: 38px; margin-bottom: 8px;">🚫</div>
-    <h3 style="color: #dc2626; margin-bottom: 6px; font-size: 1.15rem;">အကောင့် ပိတ်ပင်ခံထားရပါသည်</h3>
-    <p style="font-size: 13px; color: #475569; margin-bottom: 18px; line-height: 1.5;">
-      သင့်အကောင့်ကို Admin မှ ယာယီပိတ်ပင် (Ban) ထားပါသဖြင့် Feature များကို အသုံးပြု၍ မရနိုင်ပါ။ အသေးစိတ်သိရှိလိုပါက Contacts မှတစ်ဆင့် ဆက်သွယ်နိုင်ပါသည်။
+    <h3 id="bannedModalTitle" style="color: #dc2626; margin-bottom: 6px; font-size: 1.15rem;">အသုံးပြုခွင့် ပိတ်ထားပါသည်</h3>
+    <p id="bannedModalDesc" style="font-size: 13px; color: #475569; margin-bottom: 18px; line-height: 1.5;">
+      သင့်အကောင့်ကို Admin မှ ယာယီပိတ်ထားပါသဖြင့် အသုံးပြု၍ မရနိုင်ပါ။
     </p>
     <button class="menu-login-btn" onclick="closeBannedModal(); openContactModal();" style="margin-bottom: 8px;">
       <span>📞 Admin သို့ ဆက်သွယ်ရန်</span>
@@ -878,7 +849,9 @@ body.logged-out .launch-btn::after {
   function closeLoginPrompt() {
     loginPromptModal.classList.remove('active');
   }
-  function openBannedModal() {
+  function openBannedModal(title, desc) {
+    if (title) document.getElementById('bannedModalTitle').textContent = title;
+    if (desc) document.getElementById('bannedModalDesc').textContent = desc;
     bannedModal.classList.add('active');
   }
   function closeBannedModal() {
@@ -919,20 +892,55 @@ body.logged-out .launch-btn::after {
   const promptLoginBtn = document.getElementById("promptLoginBtn");
 
   let currentUser = null;
-  let isUserBanned = false;
   let pendingRedirectUrl = null;
   let pendingFeatureKey = null;
 
-  async function recordFeatureClick(uid, featureKey) {
-    if (!featureKey) return;
+  async function checkAndNavigate(user, targetHref, featureKey) {
     try {
-      await setDoc(doc(db, "users", uid), {
-        [`${featureKey}_count`]: increment(1),
-        lastLogin: serverTimestamp()
-      }, { merge: true });
-      sessionStorage.setItem("tracked_" + featureKey, "1");
-    } catch (e) {
-      console.error("Track click error:", e);
+      const userRef = doc(db, "users", user.uid);
+      const snap = await getDoc(userRef);
+
+      if (snap.exists()) {
+        const data = snap.data();
+
+        // 1. Check Global Ban
+        if (data.isBanned === true) {
+          closeMenu();
+          openBannedModal(
+            "အကောင့် ပိတ်ပင်ခံထားရပါသည်",
+            "သင့်အကောင့်ကို Admin မှ ယာယီပိတ်ပင် (Ban) ထားပါသဖြင့် အသုံးပြု၍ မရနိုင်ပါ။"
+          );
+          return;
+        }
+
+        // 2. Check Specific Feature ON/OFF state
+        if (featureKey && data[`${featureKey}_enabled`] === false) {
+          closeMenu();
+          openBannedModal(
+            "Feature ပိတ်ထားပါသည် (OFF)",
+            `သင့်အကောင့်အတွက် ဤ Feature (${targetHref}) ကို Admin မှ ပိတ်ထားပါသည်။`
+          );
+          return;
+        }
+      }
+
+      // 3. Increment usage count reliably before redirecting
+      if (featureKey) {
+        await setDoc(userRef, {
+          uid: user.uid,
+          name: user.displayName || "Unknown User",
+          email: user.email || "",
+          photoURL: user.photoURL || "",
+          [`${featureKey}_count`]: increment(1),
+          lastLogin: serverTimestamp()
+        }, { merge: true });
+        sessionStorage.setItem("tracked_" + featureKey, "1");
+      }
+
+      window.location.href = targetHref;
+    } catch (err) {
+      console.error("Navigation check error:", err);
+      window.location.href = targetHref;
     }
   }
 
@@ -941,8 +949,7 @@ body.logged-out .launch-btn::after {
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
 
-      const userRef = doc(db, "users", user.uid);
-      await setDoc(userRef, {
+      await setDoc(doc(db, "users", user.uid), {
         uid: user.uid,
         name: user.displayName || "Unknown User",
         email: user.email || "",
@@ -950,24 +957,14 @@ body.logged-out .launch-btn::after {
         lastLogin: serverTimestamp()
       }, { merge: true });
 
-      const snap = await getDoc(userRef);
-      isUserBanned = snap.exists() && snap.data().isBanned === true;
-
       closeLoginPrompt();
-
-      if (isUserBanned) {
-        pendingRedirectUrl = null;
-        openBannedModal();
-        return;
-      }
 
       if (pendingRedirectUrl) {
         const target = pendingRedirectUrl;
         const feat = pendingFeatureKey;
         pendingRedirectUrl = null;
         pendingFeatureKey = null;
-        await recordFeatureClick(user.uid, feat);
-        window.location.href = target;
+        await checkAndNavigate(user, target, feat);
       }
     } catch (error) {
       console.error("Google Login Error:", error);
@@ -989,7 +986,7 @@ body.logged-out .launch-btn::after {
   promptLoginBtn.addEventListener("click", handleGoogleLogin);
   menuLogoutBtn.addEventListener("click", handleLogout);
 
-  // Feature Links Lock & Ban Check
+  // Feature Links Click Handler
   document.querySelectorAll(".protected-link").forEach((link) => {
     link.addEventListener("click", async (e) => {
       e.preventDefault();
@@ -1004,20 +1001,7 @@ body.logged-out .launch-btn::after {
         return;
       }
 
-      try {
-        const snap = await getDoc(doc(db, "users", currentUser.uid));
-        if (snap.exists() && snap.data().isBanned === true) {
-          isUserBanned = true;
-          closeMenu();
-          openBannedModal();
-          return;
-        }
-      } catch (err) {
-        console.error(err);
-      }
-
-      await recordFeatureClick(currentUser.uid, featureKey);
-      window.location.href = targetHref;
+      await checkAndNavigate(currentUser, targetHref, featureKey);
     });
   });
 
@@ -1028,24 +1012,16 @@ body.logged-out .launch-btn::after {
     if (user) {
       document.body.classList.remove("logged-out");
 
-      // Top Navbar: Show Photo Only
       loginBtn.style.display = "none";
       userProfile.style.display = "flex";
       userAvatar.src = user.photoURL || defaultAvatar;
 
-      // Slide Menu: Show Full Info + Logout
       menuLoginBtn.style.display = "none";
       menuUserBox.style.display = "flex";
       menuUserName.textContent = user.displayName || "User";
       menuUserEmail.textContent = user.email || "";
       menuUserAvatar.src = user.photoURL || defaultAvatar;
-
-      try {
-        const snap = await getDoc(doc(db, "users", user.uid));
-        isUserBanned = snap.exists() && snap.data().isBanned === true;
-      } catch (e) {}
     } else {
-      isUserBanned = false;
       document.body.classList.add("logged-out");
 
       loginBtn.style.display = "flex";
