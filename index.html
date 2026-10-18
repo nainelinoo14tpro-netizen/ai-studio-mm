@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
 <meta name="theme-color" content="#e2e8f0">
-<title>Admin Dashboard - AI Studio Suite</title>
+<title>AI Studio Suite - Central Hub</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Padauk:wght@400;700&display=swap" rel="stylesheet">
@@ -15,18 +15,23 @@
   padding: 0;
   box-sizing: border-box;
   font-family: 'Padauk', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
   -webkit-tap-highlight-color: transparent;
 }
 
 body {
   background-color: #e2e8f0;
   color: #0f172a;
+  overflow-x: hidden;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
 }
 
-/* Navbar */
+/* Top Navigation Bar */
 .navbar {
   display: flex;
   justify-content: space-between;
@@ -44,414 +49,850 @@ body {
   display: flex;
   align-items: center;
   gap: 10px;
-}
-
-.back-btn {
-  text-decoration: none;
-  background: #fef3c7;
-  color: #b45309;
-  padding: 5px 12px;
-  border-radius: 8px;
-  font-size: 12px;
-  font-weight: 700;
-  border: 1px solid #fde68a;
+  white-space: nowrap;
 }
 
 .logo {
-  font-size: 1.05rem;
+  font-size: 1.15rem;
   font-weight: bold;
   color: #b45309;
+  letter-spacing: 0.3px;
 }
 
+.menu-btn {
+  background: none;
+  border: none;
+  color: #1e293b;
+  font-size: 1.4rem;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 6px;
+}
+
+.status-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #f0fdf4;
+  border: 1px solid #86efac;
+  padding: 5px 12px;
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #15803d;
+}
+
+.pulse-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #16a34a;
+  box-shadow: 0 0 8px #16a34a;
+  animation: pulseBlink 1.8s infinite;
+}
+@keyframes pulseBlink { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+/* Navbar Right & Auth Buttons */
 .nav-right {
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-.btn {
+.contact-top-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: #fffbeb;
+  color: #b45309;
+  border: 1px solid #fde68a;
+  padding: 6px 12px;
+  border-radius: 99px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.contact-top-btn:hover {
+  background: #fef3c7;
+}
+
+.google-login-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #ffffff;
   border: none;
   padding: 6px 14px;
   border-radius: 99px;
   font-size: 12px;
   font-weight: 700;
   cursor: pointer;
-  transition: all 0.2s;
-}
-
-.btn-gold {
-  background: linear-gradient(135deg, #f59e0b, #d97706);
-  color: #ffffff;
   box-shadow: 0 2px 8px rgba(217, 119, 6, 0.25);
+  transition: all 0.2s ease;
 }
 
-.btn-danger {
+.google-login-btn:active {
+  transform: scale(0.96);
+}
+
+.user-profile {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  padding: 3px 10px 3px 4px;
+  border-radius: 99px;
+}
+
+.user-avatar {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid #f59e0b;
+}
+
+.user-name {
+  font-size: 12px;
+  font-weight: 700;
+  color: #334155;
+  max-width: 85px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.logout-btn {
   background: #fee2e2;
   color: #dc2626;
   border: 1px solid #fecaca;
+  padding: 2px 8px;
+  border-radius: 99px;
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
 }
 
-/* Container */
-.container {
-  max-width: 1150px;
-  margin: 0 auto;
-  padding: 20px 14px 40px;
+@media (max-width: 600px) {
+  .status-badge { display: none; }
+}
+
+/* Background Overlay */
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
   width: 100%;
-  flex: 1;
+  height: 100%;
+  background: rgba(15, 23, 42, 0.5);
+  opacity: 0;
+  visibility: hidden;
+  transition: 0.3s ease;
+  z-index: 998;
+  backdrop-filter: blur(2px);
 }
+.overlay.active { opacity: 1; visibility: visible; }
 
-.status-card {
-  background: #ffffff;
-  border: 1px solid #cbd5e1;
-  border-radius: 16px;
-  padding: 32px 20px;
-  text-align: center;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04);
-  margin-top: 20px;
+/* Left Side Slide Menu */
+.slide-menu {
+  position: fixed;
+  top: 0;
+  left: -300px;
+  width: 270px;
+  height: 100%;
+  background-color: #ffffff;
+  box-shadow: 5px 0 25px rgba(0, 0, 0, 0.15);
+  transition: left 0.3s ease;
+  z-index: 999;
+  display: flex;
+  flex-direction: column;
 }
+.slide-menu.active { left: 0; }
 
-.status-card h3 {
-  font-size: 1.2rem;
-  color: #0f172a;
-  margin-bottom: 8px;
-}
-
-.status-card p {
-  font-size: 0.9rem;
-  color: #64748b;
-}
-
-#dashboardContent {
-  display: none;
-}
-
-.stats-bar {
+.menu-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 12px;
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(12px);
-  padding: 16px;
-  border-radius: 16px;
-  margin-bottom: 18px;
-  border: 1px solid #ffffff;
-  box-shadow: 0 6px 20px rgba(31, 38, 135, 0.06);
+  padding: 16px 18px;
+  border-bottom: 1px solid #e2e8f0;
 }
-
-.stat-group {
+.menu-title { font-size: 1.05rem; font-weight: bold; color: #475569; }
+.close-btn { background: none; border: none; color: #1e293b; font-size: 1.3rem; cursor: pointer; }
+.menu-links { list-style: none; padding: 12px 10px; flex-grow: 1; overflow-y: auto; }
+.menu-links li { margin-bottom: 6px; }
+.menu-links a {
   display: flex;
-  gap: 20px;
-  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  color: #334155;
+  text-decoration: none;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+.menu-links a:hover, .menu-links a.active {
+  background-color: #fef3c7;
+  color: #b45309;
+  font-weight: 600;
 }
 
-.stat-item {
+/* Slide Menu Bottom Auth Section */
+.menu-footer-auth {
+  padding: 14px 16px;
+  border-top: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+
+.menu-login-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #ffffff;
+  border: none;
+  padding: 10px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 3px 10px rgba(217, 119, 6, 0.25);
+}
+
+.menu-user-box {
+  display: none;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.menu-user-info {
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
-.stat-icon {
-  width: 42px;
-  height: 42px;
+.menu-user-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 2px solid #f59e0b;
+  object-fit: cover;
+}
+
+.menu-user-details {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.menu-user-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: #0f172a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.menu-user-email {
+  font-size: 11px;
+  color: #64748b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.menu-logout-btn {
+  width: 100%;
+  background: #fee2e2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+  padding: 7px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* Main Container */
+.container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 24px 16px 40px;
+  width: 100%;
+  flex: 1;
+}
+
+/* Glassmorphism Header Box */
+.glass-header {
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(12px);
+  padding: 20px 16px;
+  border-radius: 16px;
+  margin-bottom: 24px;
+  box-shadow: 0 6px 24px rgba(31, 38, 135, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  text-align: center;
+}
+.glass-header h2 {
+  color: #b45309;
+  font-size: 1.35rem;
+  margin-bottom: 4px;
+  font-weight: 700;
+}
+.glass-header p {
+  color: #475569;
+  font-size: 0.85rem;
+}
+
+/* Studio Cards Grid */
+.studio-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.studio-card {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 16px;
+  padding: 20px 18px;
+  display: flex;
+  flex-direction: column;
+  text-decoration: none;
+  color: inherit;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04);
+  transition: all 0.25s ease;
+  position: relative;
+  cursor: pointer;
+}
+
+.studio-card:hover {
+  transform: translateY(-4px);
+  border-color: #f59e0b;
+  box-shadow: 0 8px 24px rgba(245, 158, 11, 0.15);
+}
+
+.studio-card:active {
+  transform: scale(0.98);
+}
+
+body.logged-out .launch-btn::after {
+  content: " 🔒";
+}
+
+.card-top-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.card-icon {
+  width: 48px;
+  height: 48px;
   border-radius: 12px;
+  display: grid;
+  place-items: center;
+  font-size: 24px;
   background: #fffbeb;
+  border: 1px solid #fde68a;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.15);
+}
+
+.card-pill {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 99px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.pill-orange { background: #fff7ed; color: #c2410c; border: 1px solid #ffedd5; }
+.pill-gold { background: #fffbeb; color: #b45309; border: 1px solid #fef3c7; }
+.pill-green { background: #f0fdf4; color: #15803d; border: 1px solid #dcfce7; }
+.pill-blue { background: #eff6ff; color: #1d4ed8; border: 1px solid #dbeafe; }
+
+.card-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 6px;
+}
+
+.card-desc {
+  font-size: 12px;
+  color: #64748b;
+  line-height: 1.5;
+  margin-bottom: 16px;
+  flex: 1;
+}
+
+.card-features {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 18px;
+  border-top: 1px solid #f1f5f9;
+  padding-top: 12px;
+}
+
+.feature-item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 11px;
+  color: #475569;
+}
+
+.feature-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #f59e0b;
+}
+
+.launch-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 9px 14px;
+  border-radius: 10px;
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  font-size: 12px;
+  font-weight: 700;
+  color: #334155;
+  transition: all 0.2s ease;
+}
+
+.studio-card:hover .launch-btn {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #ffffff;
+  border-color: #f59e0b;
+  box-shadow: 0 4px 12px rgba(217, 119, 6, 0.25);
+}
+
+/* Modal Pop-up Styles */
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(3px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  z-index: 1000;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.25s ease;
+}
+
+.modal-backdrop.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.modal-box {
+  background: #ffffff;
+  width: 100%;
+  max-width: 360px;
+  border-radius: 18px;
+  padding: 22px 20px;
+  border: 1px solid #cbd5e1;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18);
+  transform: translateY(15px) scale(0.97);
+  transition: all 0.25s ease;
+}
+
+.modal-backdrop.active .modal-box {
+  transform: translateY(0) scale(1);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.modal-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #b45309;
+}
+
+.modal-close {
+  background: #f1f5f9;
+  border: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  font-size: 14px;
+  color: #475569;
+  cursor: pointer;
+}
+
+.contact-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.contact-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  text-decoration: none;
+  color: #0f172a;
+  transition: all 0.2s ease;
+}
+
+.contact-item:hover {
+  border-color: #f59e0b;
+  background: #fffbeb;
+}
+
+.contact-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: #ffffff;
   border: 1px solid #fde68a;
   display: grid;
   place-items: center;
   font-size: 18px;
 }
 
-.stat-info h4 {
-  font-size: 11px;
-  color: #64748b;
-}
-
-.stat-info span {
-  font-size: 18px;
-  font-weight: 700;
-  color: #b45309;
-}
-
-.search-controls {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  width: 100%;
-  max-width: 340px;
-}
-
-.search-box {
-  flex: 1;
-  padding: 8px 12px;
-  border: 1px solid #cbd5e1;
-  border-radius: 10px;
-  font-size: 13px;
-  outline: none;
-}
-
-.search-box:focus {
-  border-color: #f59e0b;
-}
-
-/* User Cards / Table Layout */
-.table-card {
-  background: #ffffff;
-  border-radius: 16px;
-  border: 1px solid #cbd5e1;
-  overflow: hidden;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04);
-}
-
-.table-responsive {
-  width: 100%;
-  overflow-x: auto;
-}
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-  min-width: 820px;
-}
-
-th, td {
-  padding: 14px 14px;
-  text-align: left;
-  border-bottom: 1px solid #f1f5f9;
-  font-size: 13px;
-  vertical-align: middle;
-}
-
-th {
-  background: #f8fafc;
-  color: #475569;
-  font-weight: 700;
-  text-transform: uppercase;
-  font-size: 11px;
-  letter-spacing: 0.4px;
-}
-
-tr:hover {
-  background-color: #fffbeb;
-}
-
-tr.banned-row {
-  background-color: #fef2f2;
-}
-
-.user-cell {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.avatar {
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 2px solid #f59e0b;
-}
-
-.user-meta {
+.contact-text {
   display: flex;
   flex-direction: column;
 }
 
-.user-name {
+.contact-label {
+  font-size: 11px;
+  color: #64748b;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.contact-value {
+  font-size: 13.5px;
   font-weight: 700;
   color: #0f172a;
-  font-size: 13.5px;
 }
 
-.user-email {
+.app-footer {
+  text-align: center;
+  margin-top: auto;
+  padding: 20px 0;
   font-size: 11.5px;
-  color: #64748b;
-}
-
-/* Status Pill */
-.status-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 3px 10px;
-  border-radius: 99px;
-  font-size: 11px;
-  font-weight: 700;
-}
-
-.status-active {
-  background: #f0fdf4;
-  color: #15803d;
-  border: 1px solid #86efac;
-}
-
-.status-banned {
-  background: #fee2e2;
-  color: #dc2626;
-  border: 1px solid #fecaca;
-}
-
-/* Feature Usage Grid inside Table */
-.usage-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 6px;
-  min-width: 280px;
-}
-
-.usage-badge {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  padding: 5px 8px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 11px;
-}
-
-.usage-name {
-  font-weight: 700;
-  color: #334155;
-}
-
-.usage-stats {
-  color: #b45309;
-  font-weight: 700;
-}
-
-.total-time-badge {
-  display: inline-block;
-  margin-top: 6px;
-  font-size: 11px;
-  color: #475569;
-  background: #fef3c7;
-  padding: 2px 8px;
-  border-radius: 6px;
-  font-weight: 700;
-}
-
-/* Action Buttons */
-.action-group {
-  display: flex;
-  gap: 6px;
-  align-items: center;
-}
-
-.action-btn {
-  padding: 5px 10px;
-  border-radius: 8px;
-  font-size: 11.5px;
-  font-weight: 700;
-  cursor: pointer;
-  border: 1px solid transparent;
-  transition: all 0.2s;
-}
-
-.btn-ban {
-  background: #fff7ed;
-  color: #c2410c;
-  border-color: #fed7aa;
-}
-.btn-ban:hover {
-  background: #ea580c;
-  color: #ffffff;
-}
-
-.btn-unlock {
-  background: #f0fdf4;
-  color: #15803d;
-  border-color: #bbf7d0;
-}
-.btn-unlock:hover {
-  background: #16a34a;
-  color: #ffffff;
-}
-
-.btn-del {
-  background: #fee2e2;
-  color: #dc2626;
-  border-color: #fecaca;
-}
-.btn-del:hover {
-  background: #dc2626;
-  color: #ffffff;
+  color: #94a3b8;
 }
 </style>
-</head>
-<body>
 
+<link rel="manifest" href="manifest.json">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="AI Studio">
+<link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/1179/1179069.png">
+
+<script>
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      const swCode = `
+        self.addEventListener('install', e => self.skipWaiting());
+        self.addEventListener('activate', e => self.clients.claim());
+        self.addEventListener('fetch', e => e.respondWith(fetch(e.request)));
+      `;
+      const blob = new Blob([swCode], { type: "application/javascript" });
+      navigator.serviceWorker.register(URL.createObjectURL(blob))
+        .catch(() => {});
+    });
+  }
+</script>
+</head>
+
+<body class="logged-out">
+
+<!-- Top Navbar -->
 <header class="navbar">
   <div class="nav-left">
-    <a href="index.html" class="back-btn">← ပင်မစာမျက်နှာ</a>
-    <div class="logo">🛡️ Admin Panel</div>
+    <button class="menu-btn" onclick="openMenu()">☰</button>
+    <div class="logo">AI Studio App</div>
   </div>
+
   <div class="nav-right">
-    <button class="btn btn-gold" id="adminLoginBtn" style="display: none;">🔑 Admin Login</button>
-    <button class="btn btn-danger" id="adminLogoutBtn" style="display: none;">ထွက်မည်</button>
+    <div class="status-badge">
+      <span class="pulse-dot"></span>
+      <span>Studio Online</span>
+    </div>
+
+    <button class="contact-top-btn" onclick="openContactModal()">
+      <span>📞 Contacts</span>
+    </button>
+
+    <button class="google-login-btn" id="googleLoginBtn">
+      <span>🔑 Login</span>
+    </button>
+
+    <div class="user-profile" id="userProfile">
+      <img src="" alt="User" class="user-avatar" id="userAvatar">
+      <span class="user-name" id="userName"></span>
+      <button class="logout-btn" id="logoutBtn">ထွက်မည်</button>
+    </div>
   </div>
 </header>
 
+<div class="overlay" id="overlay" onclick="closeMenu()"></div>
+
+<!-- Left Side Slide Menu -->
+<nav class="slide-menu" id="slideMenu">
+  <div class="menu-header">
+    <span class="menu-title">Menu</span>
+    <button class="close-btn" onclick="closeMenu()">✕</button>
+  </div>
+  <ul class="menu-links">
+    <li><a href="index.html" class="active">🏠 Main Page</a></li>
+    <li><a href="mmvoice.html" class="protected-link" data-feature="mmvoice">🎙️ Myanmar Voice TTS</a></li>
+    <li><a href="story-maker.html" class="protected-link" data-feature="storyMaker">📖 Story Create</a></li>
+    <li><a href="story-to-video.html" class="protected-link" data-feature="storyToVideo">🎬 Story to Video Studio</a></li>
+    <li><a href="movie-recaps.html" class="protected-link" data-feature="movieRecaps">🎬 Movie Recaps</a></li>
+    <li><a onclick="closeMenu(); openContactModal();">📞 Contacts (ဆက်သွယ်ရန်)</a></li>
+  </ul>
+
+  <div class="menu-footer-auth">
+    <button class="menu-login-btn" id="menuLoginBtn">
+      <span>🔑 Sign in with Google</span>
+    </button>
+
+    <div class="menu-user-box" id="menuUserBox">
+      <div class="menu-user-info">
+        <img src="" alt="Avatar" class="menu-user-avatar" id="menuUserAvatar">
+        <div class="menu-user-details">
+          <span class="menu-user-name" id="menuUserName"></span>
+          <span class="menu-user-email" id="menuUserEmail"></span>
+        </div>
+      </div>
+      <button class="menu-logout-btn" id="menuLogoutBtn">အကောင့်မှ ထွက်မည်</button>
+    </div>
+  </div>
+</nav>
+
 <main class="container">
 
-  <div class="status-card" id="statusBox">
-    <h3 id="statusTitle">စစ်ဆေးနေပါသည်...</h3>
-    <p id="statusDesc">Admin အချက်အလက်များကို စစ်ဆေးနေပါသဖြင့် ခေတ္တစောင့်ဆိုင်းပေးပါ။</p>
+  <div class="glass-header">
+    <h2>🇲🇲 Myanmar AI Studio Suite</h2>
+    <p>မြန်မာအသံ၊ ဇာတ်လမ်းဖန်တီးမှုနှင့် ဗီဒီယို Studio စနစ်များ</p>
   </div>
 
-  <div id="dashboardContent">
-    <div class="stats-bar">
-      <div class="stat-group">
-        <div class="stat-item">
-          <div class="stat-icon">👥</div>
-          <div class="stat-info">
-            <h4>စုစုပေါင်း အသုံးပြုသူ (Total Users)</h4>
-            <span id="totalUsersCount">0</span>
-          </div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-icon">🚫</div>
-          <div class="stat-info">
-            <h4>Ban ထားသူများ (Banned)</h4>
-            <span id="bannedUsersCount" style="color:#dc2626;">0</span>
-          </div>
-        </div>
-      </div>
+  <div class="studio-grid">
 
-      <div class="search-controls">
-        <input type="text" id="searchInput" class="search-box" placeholder="နာမည် သို့မဟုတ် Email ရှာရန်...">
-        <button class="btn btn-gold" id="refreshBtn">🔄 Refresh</button>
+    <!-- Card 1: Myanmar Voice TTS -->
+    <a href="mmvoice.html" class="studio-card protected-link" data-feature="mmvoice">
+      <div class="card-top-row">
+        <div class="card-icon">🎙️</div>
+        <span class="card-pill pill-gold">Voice AI</span>
       </div>
-    </div>
+      <h3 class="card-title">Myanmar Voice TTS</h3>
+      <p class="card-desc">Microsoft Edge TTS အခြေပြု သဘာဝကျသော စတိုင်စုံ မြန်မာအသံ ထုတ်လုပ်မှု စနစ်။</p>
+      <div class="card-features">
+        <div class="feature-item"><span class="feature-dot"></span> နီလာ နှင့် သီဟ မြန်မာအသံများ</div>
+        <div class="feature-item"><span class="feature-dot"></span> Natural / Story / Horror စတိုင်များ</div>
+      </div>
+      <div class="launch-btn">
+        <span>စတင်ဖန်တီးမည်</span>
+        <span>→</span>
+      </div>
+    </a>
 
-    <div class="table-card">
-      <div class="table-responsive">
-        <table>
-          <thead>
-            <tr>
-              <th>အသုံးပြုသူ (USER)</th>
-              <th>အခြေအနေ (STATUS)</th>
-              <th>FEATURE အသုံးပြုမှု (အကြိမ် / မိနစ်)</th>
-              <th>နောက်ဆုံးဝင်ချိန် (LAST LOGIN)</th>
-              <th>လုပ်ဆောင်ချက် (ACTIONS)</th>
-            </tr>
-          </thead>
-          <tbody id="userTableBody">
-            <tr><td colspan="5" style="text-align:center;">အချက်အလက်များ ဆွဲယူနေပါသည်...</td></tr>
-          </tbody>
-        </table>
+    <!-- Card 2: Story Maker -->
+    <a href="story-maker.html" class="studio-card protected-link" data-feature="storyMaker">
+      <div class="card-top-row">
+        <div class="card-icon">📖</div>
+        <span class="card-pill pill-orange">Story Engine</span>
       </div>
-    </div>
+      <h3 class="card-title">Story Maker</h3>
+      <p class="card-desc">ခေါင်းစဉ်တစ်ခုရိုက်ထည့်ရုံဖြင့် ဇာတ်လမ်းနှင့် AI Image Prompts များကို အပိုင်းလိုက် ခွဲထုတ်ပေးခြင်း။</p>
+      <div class="card-features">
+        <div class="feature-item"><span class="feature-dot"></span> ရသစုံ စာပေအမျိုးအစားများ</div>
+        <div class="feature-item"><span class="feature-dot"></span> ၁၀ စက္ကန့်စာ အပိုင်းလိုက် Scripts</div>
+      </div>
+      <div class="launch-btn">
+        <span>စတင်ဖန်တီးမည်</span>
+        <span>→</span>
+      </div>
+    </a>
+
+    <!-- Card 3: Story to Video -->
+    <a href="story-to-video.html" class="studio-card protected-link" data-feature="storyToVideo">
+      <div class="card-top-row">
+        <div class="card-icon">🎬</div>
+        <span class="card-pill pill-green">Video Studio</span>
+      </div>
+      <h3 class="card-title">Story to Video</h3>
+      <p class="card-desc">ဓာတ်ပုံ၊ အသံ၊ စာတန်းထိုးနှင့် Motion Effect များ ပေါင်းစပ်ကာ MP4 ဗီဒီယို တိုက်ရိုက် ထုတ်ယူခြင်း။</p>
+      <div class="card-features">
+        <div class="feature-item"><span class="feature-dot"></span> 16:9 Landscape & 9:16 Shorts</div>
+        <div class="feature-item"><span class="feature-dot"></span> SRT Edit & Real-time Canvas</div>
+      </div>
+      <div class="launch-btn">
+        <span>စတင်ဖန်တီးမည်</span>
+        <span>→</span>
+      </div>
+    </a>
+
+    <!-- Card 4: Movie Recaps -->
+    <a href="movie-recaps.html" class="studio-card protected-link" data-feature="movieRecaps">
+      <div class="card-top-row">
+        <div class="card-icon">🎥</div>
+        <span class="card-pill pill-blue">Recap Studio</span>
+      </div>
+      <h3 class="card-title">Movie Recaps</h3>
+      <p class="card-desc">ရုပ်ရှင်ဇာတ်လမ်းများကို အကျဉ်းချုပ်ပြီး မြန်မာအသံဖြင့် ဇာတ်ကြောင်းပြောရန် Script များ ဖန်တီးပေးခြင်း။</p>
+      <div class="card-features">
+        <div class="feature-item"><span class="feature-dot"></span> အခန်းဆက် ဇာတ်ညွှန်းခွဲထုတ်ခြင်း</div>
+        <div class="feature-item"><span class="feature-dot"></span> အသံသွင်းရန် အဆင်သင့် Script ရရှိခြင်း</div>
+      </div>
+      <div class="launch-btn">
+        <span>စတင်ဖန်တီးမည်</span>
+        <span>→</span>
+      </div>
+    </a>
+
   </div>
+
+  <footer class="app-footer">
+    <p>© 2026 AI Studio Suite • Light Slate & Amber Gold Design</p>
+  </footer>
 
 </main>
+
+<!-- Contacts Pop-up Modal -->
+<div class="modal-backdrop" id="contactModal" onclick="if(event.target === this) closeContactModal()">
+  <div class="modal-box">
+    <div class="modal-header">
+      <span class="modal-title">📞 ဆက်သွယ်ရန် (Contacts)</span>
+      <button class="modal-close" onclick="closeContactModal()">✕</button>
+    </div>
+    <div class="contact-list">
+      <a href="tel:+66827516171" class="contact-item">
+        <div class="contact-icon">📱</div>
+        <div class="contact-text">
+          <span class="contact-label">Phone</span>
+          <span class="contact-value">+66827516171</span>
+        </div>
+      </a>
+      <a href="https://m.me/nainelinnoo" target="_blank" rel="noopener" class="contact-item">
+        <div class="contact-icon">💬</div>
+        <div class="contact-text">
+          <span class="contact-label">Facebook</span>
+          <span class="contact-value">https://m.me/nainelinnoo</span>
+        </div>
+      </a>
+      <a href="mailto:nainelinnoo@gmail.com" class="contact-item">
+        <div class="contact-icon">✉️</div>
+        <div class="contact-text">
+          <span class="contact-label">Gmail</span>
+          <span class="contact-value">nainelinnoo@gmail.com</span>
+        </div>
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- Login Required Alert Pop-up Modal -->
+<div class="modal-backdrop" id="loginPromptModal" onclick="if(event.target === this) closeLoginPrompt()">
+  <div class="modal-box" style="text-align: center;">
+    <div style="font-size: 38px; margin-bottom: 8px;">🔒</div>
+    <h3 style="color: #b45309; margin-bottom: 6px; font-size: 1.15rem;">Login အရင်ဝင်ပေးပါ</h3>
+    <p style="font-size: 13px; color: #475569; margin-bottom: 18px; line-height: 1.5;">
+      AI Studio Feature များကို အသုံးပြုနိုင်ရန် Google အကောင့်ဖြင့် Login အရင်ဝင်ရောက်ပေးပါခင်ဗျာ။
+    </p>
+    <button class="menu-login-btn" id="promptLoginBtn" style="margin-bottom: 8px;">
+      <span>🔑 Sign in with Google</span>
+    </button>
+    <button onclick="closeLoginPrompt()" style="background:none; border:none; color:#64748b; font-size:12px; cursor:pointer; padding:4px;">
+      ပိတ်မည်
+    </button>
+  </div>
+</div>
+
+<!-- Banned User Alert Modal -->
+<div class="modal-backdrop" id="bannedModal" onclick="if(event.target === this) closeBannedModal()">
+  <div class="modal-box" style="text-align: center;">
+    <div style="font-size: 38px; margin-bottom: 8px;">🚫</div>
+    <h3 style="color: #dc2626; margin-bottom: 6px; font-size: 1.15rem;">အကောင့် ပိတ်ပင်ခံထားရပါသည်</h3>
+    <p style="font-size: 13px; color: #475569; margin-bottom: 18px; line-height: 1.5;">
+      သင့်အကောင့်ကို Admin မှ ယာယီပိတ်ပင် (Ban) ထားပါသဖြင့် Feature များကို အသုံးပြု၍ မရနိုင်ပါ။ အသေးစိတ်သိရှိလိုပါက Contacts မှတစ်ဆင့် ဆက်သွယ်နိုင်ပါသည်။
+    </p>
+    <button class="menu-login-btn" onclick="closeBannedModal(); openContactModal();" style="margin-bottom: 8px;">
+      <span>📞 Admin သို့ ဆက်သွယ်ရန်</span>
+    </button>
+    <button onclick="closeBannedModal()" style="background:none; border:none; color:#64748b; font-size:12px; cursor:pointer; padding:4px;">
+      ပိတ်မည်
+    </button>
+  </div>
+</div>
+
+<script>
+  const slideMenu = document.getElementById('slideMenu');
+  const overlay = document.getElementById('overlay');
+  const contactModal = document.getElementById('contactModal');
+  const loginPromptModal = document.getElementById('loginPromptModal');
+  const bannedModal = document.getElementById('bannedModal');
+
+  function openMenu() {
+    slideMenu.classList.add('active');
+    overlay.classList.add('active');
+  }
+  function closeMenu() {
+    slideMenu.classList.remove('active');
+    overlay.classList.remove('active');
+  }
+  function openContactModal() {
+    contactModal.classList.add('active');
+  }
+  function closeContactModal() {
+    contactModal.classList.remove('active');
+  }
+  function openLoginPrompt() {
+    loginPromptModal.classList.add('active');
+  }
+  function closeLoginPrompt() {
+    loginPromptModal.classList.remove('active');
+  }
+  function openBannedModal() {
+    bannedModal.classList.add('active');
+  }
+  function closeBannedModal() {
+    bannedModal.classList.remove('active');
+  }
+</script>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-  import { getFirestore, collection, getDocs, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { getFirestore, doc, setDoc, getDoc, serverTimestamp, increment } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyDoDB5EV3HogihQXmhk0CsIJxvnnjFWmpc",
@@ -463,245 +904,162 @@ tr.banned-row {
     measurementId: "G-0JL94QP83K"
   };
 
-  // Admin ဝင်ခွင့်ရှိသော Gmail များ
-  const ADMIN_EMAILS = [
-    "nainelinnoo@gmail.com",
-    "apriloo.nlo@gmail.com"
-  ];
-
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
   const db = getFirestore(app);
   const provider = new GoogleAuthProvider();
 
-  const statusBox = document.getElementById("statusBox");
-  const statusTitle = document.getElementById("statusTitle");
-  const statusDesc = document.getElementById("statusDesc");
-  const dashboardContent = document.getElementById("dashboardContent");
-  const adminLoginBtn = document.getElementById("adminLoginBtn");
-  const adminLogoutBtn = document.getElementById("adminLogoutBtn");
-  const userTableBody = document.getElementById("userTableBody");
-  const totalUsersCount = document.getElementById("totalUsersCount");
-  const bannedUsersCount = document.getElementById("bannedUsersCount");
-  const searchInput = document.getElementById("searchInput");
-  const refreshBtn = document.getElementById("refreshBtn");
+  const loginBtn = document.getElementById("googleLoginBtn");
+  const userProfile = document.getElementById("userProfile");
+  const userAvatar = document.getElementById("userAvatar");
+  const userName = document.getElementById("userName");
+  const logoutBtn = document.getElementById("logoutBtn");
 
-  let allUsersData = [];
+  const menuLoginBtn = document.getElementById("menuLoginBtn");
+  const menuUserBox = document.getElementById("menuUserBox");
+  const menuUserAvatar = document.getElementById("menuUserAvatar");
+  const menuUserName = document.getElementById("menuUserName");
+  const menuUserEmail = document.getElementById("menuUserEmail");
+  const menuLogoutBtn = document.getElementById("menuLogoutBtn");
+  const promptLoginBtn = document.getElementById("promptLoginBtn");
 
-  adminLoginBtn.addEventListener("click", async () => {
+  let currentUser = null;
+  let isUserBanned = false;
+  let pendingRedirectUrl = null;
+  let pendingFeatureKey = null;
+
+  async function recordFeatureClick(uid, featureKey) {
+    if (!featureKey) return;
     try {
-      await signInWithPopup(auth, provider);
-    } catch (err) {
-      alert("Login Error: " + err.message);
-    }
-  });
-
-  adminLogoutBtn.addEventListener("click", () => signOut(auth));
-  refreshBtn.addEventListener("click", loadUsers);
-
-  onAuthStateChanged(auth, (user) => {
-    if (!user) {
-      statusBox.style.display = "block";
-      dashboardContent.style.display = "none";
-      adminLoginBtn.style.display = "inline-block";
-      adminLogoutBtn.style.display = "none";
-      statusTitle.textContent = "🔒 Admin Login လိုအပ်ပါသည်";
-      statusDesc.textContent = "User စာရင်းများကို ကြည့်ရှုရန် ညာဘက်အပေါ်ထောင့်ရှိ Admin Login ခလုတ်ဖြင့် ဝင်ရောက်ပါ။";
-      return;
-    }
-
-    adminLoginBtn.style.display = "none";
-    adminLogoutBtn.style.display = "inline-block";
-
-    const userEmail = (user.email || "").toLowerCase();
-    const isAllowed = ADMIN_EMAILS.some(email => email.toLowerCase() === userEmail);
-
-    if (isAllowed) {
-      statusBox.style.display = "none";
-      dashboardContent.style.display = "block";
-      loadUsers();
-    } else {
-      statusBox.style.display = "block";
-      dashboardContent.style.display = "none";
-      statusTitle.textContent = "⛔ ဝင်ရောက်ခွင့် မရှိပါ (Access Denied)";
-      statusDesc.textContent = `သင့်အကောင့် (${user.email}) သည် Admin ခွင့်ပြုချက် မရှိပါ။`;
-    }
-  });
-
-  function formatMinutes(seconds) {
-    const sec = Number(seconds) || 0;
-    if (sec === 0) return "0m";
-    if (sec < 60) return "< 1m";
-    return Math.round(sec / 60) + "m";
-  }
-
-  async function loadUsers() {
-    userTableBody.innerHTML = `<tr><td colspan="5" style="text-align:center;">အချက်အလက်များ ဆွဲယူနေပါသည်...</td></tr>`;
-    try {
-      const snap = await getDocs(collection(db, "users"));
-      allUsersData = [];
-      let bannedCount = 0;
-
-      snap.forEach((docSnap) => {
-        const d = docSnap.data();
-        if (d.isBanned) bannedCount++;
-        allUsersData.push({ id: docSnap.id, ...d });
-      });
-
-      allUsersData.sort((a, b) => {
-        const timeA = a.lastLogin?.seconds || 0;
-        const timeB = b.lastLogin?.seconds || 0;
-        return timeB - timeA;
-      });
-
-      totalUsersCount.textContent = allUsersData.length;
-      bannedUsersCount.textContent = bannedCount;
-      renderTable(allUsersData);
-    } catch (error) {
-      console.error("Error loading users:", error);
-      userTableBody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#dc2626;">Error: ${error.message}</td></tr>`;
+      await setDoc(doc(db, "users", uid), {
+        [`${featureKey}_count`]: increment(1),
+        lastLogin: serverTimestamp()
+      }, { merge: true });
+      sessionStorage.setItem("tracked_" + featureKey, "1");
+    } catch (e) {
+      console.error("Track click error:", e);
     }
   }
 
-  function renderTable(users) {
-    if (users.length === 0) {
-      userTableBody.innerHTML = `<tr><td colspan="5" style="text-align:center;">အသုံးပြုသူ စာရင်း မရှိသေးပါ။</td></tr>`;
-      return;
-    }
+  async function handleGoogleLogin() {
+    try {
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
 
-    userTableBody.innerHTML = "";
-    users.forEach((u) => {
-      let formattedTime = "မသိရပါ";
-      if (u.lastLogin && u.lastLogin.seconds) {
-        const date = new Date(u.lastLogin.seconds * 1000);
-        formattedTime = date.toLocaleString("en-GB", {
-          day: "2-digit", month: "short", year: "numeric",
-          hour: "2-digit", minute: "2-digit", hour12: true
-        });
+      const userRef = doc(db, "users", user.uid);
+      await setDoc(userRef, {
+        uid: user.uid,
+        name: user.displayName || "Unknown User",
+        email: user.email || "",
+        photoURL: user.photoURL || "",
+        lastLogin: serverTimestamp()
+      }, { merge: true });
+
+      const snap = await getDoc(userRef);
+      isUserBanned = snap.exists() && snap.data().isBanned === true;
+
+      closeLoginPrompt();
+
+      if (isUserBanned) {
+        pendingRedirectUrl = null;
+        openBannedModal();
+        return;
       }
 
-      // Feature 4 ခု၏ အကြိမ်ရေနှင့် စက္ကန့်များ တွက်ချက်ခြင်း
-      const mmCount = u.mmvoice_count || 0;
-      const mmSec = u.mmvoice_seconds || 0;
-
-      const smCount = u.storyMaker_count || 0;
-      const smSec = u.storyMaker_seconds || 0;
-
-      const svCount = u.storyToVideo_count || 0;
-      const svSec = u.storyToVideo_seconds || 0;
-
-      const mrCount = u.movieRecaps_count || 0;
-      const mrSec = u.movieRecaps_seconds || 0;
-
-      const totalCount = mmCount + smCount + svCount + mrCount;
-      const totalSec = mmSec + smSec + svSec + mrSec;
-
-      const isBanned = u.isBanned === true;
-
-      const tr = document.createElement("tr");
-      if (isBanned) tr.classList.add("banned-row");
-
-      tr.innerHTML = `
-        <td>
-          <div class="user-cell">
-            <img src="${u.photoURL || 'https://cdn-icons-png.flaticon.com/512/149/149071.png'}" class="avatar" alt="Avatar">
-            <div class="user-meta">
-              <span class="user-name">${u.name || 'Unknown'}</span>
-              <span class="user-email">${u.email || '-'}</span>
-            </div>
-          </div>
-        </td>
-        <td>
-          ${isBanned
-            ? `<span class="status-pill status-banned">🚫 Banned</span>`
-            : `<span class="status-pill status-active">✅ Active</span>`
-          }
-        </td>
-        <td>
-          <div class="usage-grid">
-            <div class="usage-badge">
-              <span class="usage-name">🎙️ MMVoice</span>
-              <span class="usage-stats">${mmCount} ကြိမ် (${formatMinutes(mmSec)})</span>
-            </div>
-            <div class="usage-badge">
-              <span class="usage-name">📖 StoryMaker</span>
-              <span class="usage-stats">${smCount} ကြိမ် (${formatMinutes(smSec)})</span>
-            </div>
-            <div class="usage-badge">
-              <span class="usage-name">🎬 ToVideo</span>
-              <span class="usage-stats">${svCount} ကြိမ် (${formatMinutes(svSec)})</span>
-            </div>
-            <div class="usage-badge">
-              <span class="usage-name">🎥 Recaps</span>
-              <span class="usage-stats">${mrCount} ကြိမ် (${formatMinutes(mrSec)})</span>
-            </div>
-          </div>
-          <span class="total-time-badge">⏱️ စုစုပေါင်း: ${totalCount} ကြိမ် • ${formatMinutes(totalSec)}</span>
-        </td>
-        <td>
-          <span style="font-size:12px; color:#475569;">${formattedTime}</span>
-        </td>
-        <td>
-          <div class="action-group">
-            <button class="action-btn ${isBanned ? 'btn-unlock' : 'btn-ban'} toggle-ban-btn"
-              data-id="${u.id}" data-banned="${isBanned}" data-name="${u.name || 'User'}">
-              ${isBanned ? '🔓 Unlock' : '🚫 Ban'}
-            </button>
-            <button class="action-btn btn-del delete-btn" data-id="${u.id}" data-name="${u.name || 'User'}">
-              🗑️
-            </button>
-          </div>
-        </td>
-      `;
-      userTableBody.appendChild(tr);
-    });
-
-    // Ban / Unlock Event
-    document.querySelectorAll(".toggle-ban-btn").forEach((btn) => {
-      btn.addEventListener("click", async (e) => {
-        const docId = e.currentTarget.getAttribute("data-id");
-        const currentlyBanned = e.currentTarget.getAttribute("data-banned") === "true";
-        const name = e.currentTarget.getAttribute("data-name");
-        const actionText = currentlyBanned ? "Unlock (ပြန်ဖွင့်)" : "Ban (ပိတ်ပင်)";
-
-        if (confirm(`"${name}" ကို ${actionText} လုပ်ရန် သေချာပါသလား?`)) {
-          try {
-            await updateDoc(doc(db, "users", docId), {
-              isBanned: !currentlyBanned
-            });
-            loadUsers();
-          } catch (err) {
-            alert("လုပ်ဆောင်ချက် မအောင်မြင်ပါ: " + err.message);
-          }
-        }
-      });
-    });
-
-    // Delete User Event
-    document.querySelectorAll(".delete-btn").forEach((btn) => {
-      btn.addEventListener("click", async (e) => {
-        const docId = e.currentTarget.getAttribute("data-id");
-        const name = e.currentTarget.getAttribute("data-name");
-        if (confirm(`"${name}" ၏ မှတ်တမ်းကို Database မှ အပြီးတိုင်ဖျက်ရန် သေချာပါသလား?`)) {
-          try {
-            await deleteDoc(doc(db, "users", docId));
-            loadUsers();
-          } catch (err) {
-            alert("ဖျက်၍မရပါ: " + err.message);
-          }
-        }
-      });
-    });
+      if (pendingRedirectUrl) {
+        const target = pendingRedirectUrl;
+        const feat = pendingFeatureKey;
+        pendingRedirectUrl = null;
+        pendingFeatureKey = null;
+        await recordFeatureClick(user.uid, feat);
+        window.location.href = target;
+      }
+    } catch (error) {
+      console.error("Google Login Error:", error);
+      alert("Login ဝင်ရောက်မှု မအောင်မြင်ပါ: " + error.message);
+    }
   }
 
-  searchInput.addEventListener("input", (e) => {
-    const keyword = e.target.value.toLowerCase().trim();
-    const filtered = allUsersData.filter(u =>
-      (u.name && u.name.toLowerCase().includes(keyword)) ||
-      (u.email && u.email.toLowerCase().includes(keyword)) ||
-      (u.uid && u.uid.toLowerCase().includes(keyword))
-    );
-    renderTable(filtered);
+  async function handleLogout() {
+    try {
+      await signOut(auth);
+    } catch (error) {
+      console.error("Logout Error:", error);
+    }
+  }
+
+  loginBtn.addEventListener("click", handleGoogleLogin);
+  menuLoginBtn.addEventListener("click", handleGoogleLogin);
+  promptLoginBtn.addEventListener("click", handleGoogleLogin);
+
+  logoutBtn.addEventListener("click", handleLogout);
+  menuLogoutBtn.addEventListener("click", handleLogout);
+
+  // Feature Links Lock & Ban Check
+  document.querySelectorAll(".protected-link").forEach((link) => {
+    link.addEventListener("click", async (e) => {
+      e.preventDefault();
+      const targetHref = link.getAttribute("href");
+      const featureKey = link.getAttribute("data-feature");
+
+      if (!currentUser) {
+        pendingRedirectUrl = targetHref;
+        pendingFeatureKey = featureKey;
+        closeMenu();
+        openLoginPrompt();
+        return;
+      }
+
+      // Check latest Ban status from Firestore
+      try {
+        const snap = await getDoc(doc(db, "users", currentUser.uid));
+        if (snap.exists() && snap.data().isBanned === true) {
+          isUserBanned = true;
+          closeMenu();
+          openBannedModal();
+          return;
+        }
+      } catch (err) {
+        console.error(err);
+      }
+
+      await recordFeatureClick(currentUser.uid, featureKey);
+      window.location.href = targetHref;
+    });
+  });
+
+  onAuthStateChanged(auth, async (user) => {
+    currentUser = user;
+    const defaultAvatar = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
+
+    if (user) {
+      document.body.classList.remove("logged-out");
+
+      loginBtn.style.display = "none";
+      userProfile.style.display = "flex";
+      userName.textContent = user.displayName || "User";
+      userAvatar.src = user.photoURL || defaultAvatar;
+
+      menuLoginBtn.style.display = "none";
+      menuUserBox.style.display = "flex";
+      menuUserName.textContent = user.displayName || "User";
+      menuUserEmail.textContent = user.email || "";
+      menuUserAvatar.src = user.photoURL || defaultAvatar;
+
+      try {
+        const snap = await getDoc(doc(db, "users", user.uid));
+        isUserBanned = snap.exists() && snap.data().isBanned === true;
+      } catch (e) {}
+    } else {
+      isUserBanned = false;
+      document.body.classList.add("logged-out");
+
+      loginBtn.style.display = "flex";
+      userProfile.style.display = "none";
+
+      menuLoginBtn.style.display = "flex";
+      menuUserBox.style.display = "none";
+    }
   });
 </script>
 
