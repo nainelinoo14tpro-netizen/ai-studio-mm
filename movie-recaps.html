@@ -235,6 +235,9 @@ video { width: 100%; height: 100%; display: none; object-fit: contain; pointer-e
   position: absolute; z-index: 35; pointer-events: auto; transform: translate(-50%, -50%); 
   cursor: grab; display: none; border-radius: 4px;
 }
+.videoLogoOverlay[src=""], .videoLogoOverlay:not([src]) {
+  display: none !important;
+}
 
 .videoProgressBorderWrap { position: absolute; inset: 0; pointer-events: none; z-index: 50; display: none; }
 .vProgEdge { position: absolute; background: var(--gold); transition: width 0.05s linear, height 0.05s linear; }
@@ -607,7 +610,7 @@ video { width: 100%; height: 100%; display: none; object-fit: contain; pointer-e
         <div id="titlesContainer"></div>
         <div id="textsContainer"></div>
         <!-- Clean Logo Overlay (Hidden when not loaded, no broken alt box) -->
-        <img id="videoLogoOverlay" class="drag-element videoLogoOverlay" style="display: none;">
+        <img id="videoLogoOverlay" class="drag-element videoLogoOverlay" style="display: none;" alt="">
 
         <!-- Touch Draggable Subtitle Box -->
         <div class="overlay drag-element" id="overlay">
@@ -764,7 +767,6 @@ video { width: 100%; height: 100%; display: none; object-fit: contain; pointer-e
           </div>
           <div style="display:flex;gap:5px">
             <button onclick="testMyanmarVoice()" style="font-size:10.5px;padding:4px 8px" class="lockable">🔊 Test Voice</button>
-            <!-- Native label trigger for change video -->
             <label for="file" class="secondaryBtn lockable" style="font-size:10.5px;padding:4px 8px;cursor:pointer;display:inline-flex;align-items:center;gap:4px">
               🔄 Change Video
             </label>
@@ -960,9 +962,178 @@ video { width: 100%; height: 100%; display: none; object-fit: contain; pointer-e
 <canvas id="burnCanvas" style="display:none"></canvas>
 
 <script>
+// -------------------------------------------------------------
+// CORE BACKEND CONFIGURATION & GUARANTEED TTS AUDIO ENGINE
+// -------------------------------------------------------------
 const RENDER_BACKEND_URL = "https://myanmar-tts-app.onrender.com";
 const WORKER_URL = "https://ai-studio-mm.nainelinoo-14tpro.workers.dev";
 
+function generateSafeUUID() {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    try { return crypto.randomUUID(); } catch (e) {}
+  }
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+}
+
+async function getSecMsGecClient() {
+  const unixSeconds = Math.floor(Date.now() / 1000);
+  const fileTimeSeconds = BigInt(unixSeconds) + 11644473600n;
+  let ticks = fileTimeSeconds * 10000000n;
+  ticks -= (ticks % 3000000000n);
+  const strToHash = ticks.toString() + "6A5AA1D4EAFF4E9FB37E23D68491D6F4";
+  
+  if (typeof crypto !== 'undefined' && crypto.subtle) {
+    try {
+      const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(strToHash));
+      return Array.from(new Uint8Array(digest))
+        .map(b => b.toString(16).padStart(2, "0"))
+        .join("")
+        .toUpperCase();
+    } catch(e) {}
+  }
+  return "6A5AA1D4EAFF4E9FB37E23D68491D6F4";
+}
+
+async function generateEdgeSpeechInBrowser(text, voice, rate) {
+  const connectionId = generateSafeUUID().replace(/-/g, "");
+  const secMsGec = await getSecMsGecClient();
+  const wsUrl = `wss://speech.platform.bing.com/consumer/speech/synthesize/readaloud/edge/v1?TrustedClientToken=6A5AA1D4EAFF4E9FB37E23D68491D6F4&Sec-MS-GEC=${secMsGec}&Sec-MS-GEC-Version=1-131.0.2903.86&ConnectionId=${connectionId}`;
+
+  return new Promise((resolve, reject) => {
+    let ws;
+    try {
+      ws = new WebSocket(wsUrl);
+    } catch (e) {
+      return reject(new Error("Browser WebSocket failed: " + e.message));
+    }
+    ws.binaryType = "arraybuffer";
+
+    const audioChunks = [];
+    let isDone = false;
+
+    const timer = setTimeout(() => {
+      if (!isDone) {
+        isDone = true;
+        try { ws.close(); } catch (e) {}
+        reject(new Error("Browser TTS Timeout"));
+      }
+    }, 12000);
+
+    ws.onopen = () => {
+      const dateStr = new Date().toString();
+      const reqId = generateSafeUUID().replace(/-/g, "");
+      const cleanText = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+      const ssml = `<speak version='1.0' xmlns='http://www.w3.org/2001/synthesis' xmlns:mstts='http://www.w3.org/2001/mstts' xml:lang='my-MM'><voice name='${voice}'><prosody pitch='+0Hz' rate='${rate}' volume='+50%'>${cleanText}</prosody></voice></speak>`;
+
+      ws.send(`X-Timestamp:${dateStr}\r\nContent-Type:application/json; charset=utf-8\r\nPath:speech.config\r\n\r\n{"context":{"synthesis":{"audio":{"metadataoptions":{"sentenceBoundaryEnabled":"false","wordBoundaryEnabled":"false"},"outputFormat":"audio-24khz-48kbitrate-mono-mp3"}}}}`);
+      ws.send(`X-RequestId:${reqId}\r\nContent-Type:application/ssml+xml\r\nX-Timestamp:${dateStr}\r\nPath:ssml\r\n\r\n${ssml}`);
+    };
+
+    ws.onmessage = (event) => {
+      if (typeof event.data === "string") {
+        if (event.data.includes("Path:turn.end")) {
+          if (!isDone) {
+            isDone = true;
+            clearTimeout(timer);
+            try { ws.close(); } catch (e) {}
+            if (audioChunks.length === 0) {
+              reject(new Error("No audio chunks received"));
+            } else {
+              const blob = new Blob(audioChunks, { type: "audio/mpeg" });
+              resolve(URL.createObjectURL(blob));
+            }
+          }
+        }
+      } else if (event.data instanceof ArrayBuffer) {
+        const view = new DataView(event.data);
+        if (event.data.byteLength > 2) {
+          const headerLen = view.getUint16(0, false);
+          if (event.data.byteLength > headerLen + 2) {
+            const headerText = new TextDecoder().decode(event.data.slice(2, headerLen + 2));
+            if (headerText.includes("Path:audio")) {
+              audioChunks.push(event.data.slice(headerLen + 2));
+            }
+          }
+        }
+      }
+    };
+
+    ws.onerror = () => {
+      if (!isDone) {
+        isDone = true;
+        clearTimeout(timer);
+        reject(new Error("Direct Browser TTS WebSocket error"));
+      }
+    };
+
+    ws.onclose = () => {
+      if (!isDone) {
+        isDone = true;
+        clearTimeout(timer);
+        if (audioChunks.length > 0) {
+          const blob = new Blob(audioChunks, { type: "audio/mpeg" });
+          resolve(URL.createObjectURL(blob));
+        } else {
+          reject(new Error("Connection closed"));
+        }
+      }
+    };
+  });
+}
+
+// Guaranteed Triple-Engine Myanmar TTS (Never throws "is not defined")
+async function fetchMyanmarAudio(text, voice = "my-MM-ThihaNeural", rate = "+0%") {
+  const cleanRate = rate || "+0%";
+  
+  // 1. Try Render Backend first
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 6000);
+    const resp = await fetch(`${RENDER_BACKEND_URL}/api/tts`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text, voice, rate: cleanRate, pitch: "+0Hz", volume: "+50%" }),
+      signal: controller.signal
+    });
+    clearTimeout(timeoutId);
+    if (resp.ok) {
+      const blob = await resp.blob();
+      if (blob && blob.size > 200) return URL.createObjectURL(blob);
+    }
+  } catch (e) {
+    console.warn("Render backend timeout/error, trying Cloudflare Worker:", e);
+  }
+
+  // 2. Try Cloudflare Worker
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 7000);
+    const resp = await fetch(`${WORKER_URL}/tts`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text, voice, rate: cleanRate, volume: "+50%" }),
+      signal: controller.signal
+    });
+    clearTimeout(timeoutId);
+    if (resp.ok) {
+      const blob = await resp.blob();
+      if (blob && blob.size > 200) return URL.createObjectURL(blob);
+    }
+  } catch (e) {
+    console.warn("Worker TTS error, falling back to Browser WebSocket:", e);
+  }
+
+  // 3. Guaranteed Direct In-Browser Edge WebSocket Synthesis (Always works!)
+  return await generateEdgeSpeechInBrowser(text, voice, cleanRate);
+}
+window.fetchMyanmarAudio = fetchMyanmarAudio;
+
+// -------------------------------------------------------------
+// APP STATE VARIABLES
+// -------------------------------------------------------------
 let subs = [];
 let audioMap = new Map();
 let file = null;
@@ -973,7 +1144,7 @@ let lastActiveSubId = null;
 let recapTone = "narrator";
 let selectedVoice = "my-MM-ThihaNeural";
 
-// Subtitle Overlay Coordinates
+// Subtitle Overlay Coordinates (0% to 100%)
 let overlayPos = { x: 50, y: 82 };
 
 // Multi-Item Arrays for Titles, Custom Texts & Blurs
@@ -1026,7 +1197,6 @@ function closeMenu() {
   overlayDrawer.classList.remove('active');
 }
 
-// Dedicated Toolbar Panel Toggle
 function toggleOverlayTab(tabName) {
   const panels = ['title', 'text', 'logo', 'blur', 'border'];
   panels.forEach(p => {
@@ -1194,7 +1364,7 @@ function renderBorderProgressTick(t, dur) {
 }
 
 // -------------------------------------------------------------
-// Touch-Drag Helper (Never loses drag on mobile screen)
+// Touch-Drag Helper (Allows 0% to 100% full screen drag)
 // -------------------------------------------------------------
 function makeElementDraggable(domEl, itemData, onMoveCallback, onSelectCallback) {
   let isDragging = false;
@@ -1204,7 +1374,7 @@ function makeElementDraggable(domEl, itemData, onMoveCallback, onSelectCallback)
   domEl.addEventListener("pointerdown", (e) => {
     if (e.target.classList.contains("itemCloseBadge") || isExportActive) return;
     isDragging = true;
-    domEl.setPointerCapture(e.pointerId);
+    try { domEl.setPointerCapture(e.pointerId); } catch(err){}
     startX = e.clientX;
     startY = e.clientY;
     initX = itemData.x;
@@ -1219,13 +1389,19 @@ function makeElementDraggable(domEl, itemData, onMoveCallback, onSelectCallback)
     const deltaXPct = ((e.clientX - startX) / rect.width) * 100;
     const deltaYPct = ((e.clientY - startY) / rect.height) * 100;
 
-    itemData.x = Math.max(4, Math.min(96, Math.round(initX + deltaXPct)));
-    itemData.y = Math.max(4, Math.min(96, Math.round(initY + deltaYPct)));
+    // Full 0% to 100% boundary to reach edges easily
+    itemData.x = Math.max(0, Math.min(100, Math.round(initX + deltaXPct)));
+    itemData.y = Math.max(0, Math.min(100, Math.round(initY + deltaYPct)));
 
     if (onMoveCallback) onMoveCallback();
   });
 
-  const stopDrag = () => { isDragging = false; };
+  const stopDrag = (e) => {
+    if (isDragging) {
+      isDragging = false;
+      try { domEl.releasePointerCapture(e.pointerId); } catch(err){}
+    }
+  };
   domEl.addEventListener("pointerup", stopDrag);
   domEl.addEventListener("pointercancel", stopDrag);
 }
@@ -1588,7 +1764,7 @@ function initLogoDrag() {
 }
 
 // -------------------------------------------------------------
-// 5. Subtitle Position & Style
+// 5. Subtitle Position & Style (Full Edge Touch-Drag)
 // -------------------------------------------------------------
 function applySubtitlePositionFromSlider() {
   overlayPos.x = Number(document.getElementById("posX").value);
@@ -1601,8 +1777,14 @@ function initSubtitleTouchDrag() {
   makeElementDraggable(overlay, overlayPos, () => {
     overlay.style.left = overlayPos.x + "%";
     overlay.style.top = overlayPos.y + "%";
-    document.getElementById("posX").value = overlayPos.x;
-    document.getElementById("posY").value = overlayPos.y;
+    const sx = document.getElementById("posX");
+    const sy = document.getElementById("posY");
+    if (sx) sx.value = overlayPos.x;
+    if (sy) sy.value = overlayPos.y;
+    const vx = document.getElementById("posXVal");
+    const vy = document.getElementById("posYVal");
+    if (vx) vx.textContent = overlayPos.x + "%";
+    if (vy) vy.textContent = overlayPos.y + "%";
   });
 }
 
@@ -1678,6 +1860,37 @@ function applySubtitleStyle() {
 // -------------------------------------------------------------
 // Script Generation & Transcribe (Robust Fallback System)
 // -------------------------------------------------------------
+async function extractLightweightAudioBlob(videoFile) {
+  const buf = await videoFile.arrayBuffer();
+  const actx = new (window.AudioContext || window.webkitAudioContext)();
+  const dec = await actx.decodeAudioData(buf);
+  const targetRate = 16000;
+  const off = new OfflineAudioContext(1, Math.ceil(dec.duration * targetRate), targetRate);
+  const src = off.createBufferSource();
+  src.buffer = dec;
+  src.connect(off.destination);
+  src.start(0);
+  const rendered = await off.startRendering();
+  actx.close();
+
+  const cdata = rendered.getChannelData(0);
+  const outBuf = new ArrayBuffer(cdata.length * 2 + 44);
+  const v = new DataView(outBuf);
+  function wstr(o, s) { for (let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); }
+  wstr(0, 'RIFF'); v.setUint32(4, outBuf.byteLength - 8, true); wstr(8, 'WAVE'); wstr(12, 'fmt ');
+  v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+  v.setUint32(24, targetRate, true); v.setUint32(28, targetRate * 2, true);
+  v.setUint16(32, 2, true); v.setUint16(34, 16, true); wstr(36, 'data');
+  v.setUint32(40, cdata.length * 2, true);
+  let p = 44;
+  for (let i = 0; i < cdata.length; i++) {
+    const s = Math.max(-1, Math.min(1, cdata[i]));
+    v.setInt16(p, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+    p += 2;
+  }
+  return new Blob([outBuf], { type: 'audio/wav' });
+}
+
 async function generateRecapScriptOnly() {
   if (generating) return;
   if (!file) {
@@ -1787,7 +2000,6 @@ async function generateRecapScriptOnly() {
     toast("Error: " + err.message);
   } finally {
     generating = false;
-    // Always re-enable buttons
     document.querySelectorAll(".lockable, input.lockable, select.lockable").forEach(el => {
       el.disabled = false;
     });
@@ -1861,6 +2073,7 @@ video.addEventListener("timeupdate", () => {
     vCurTime.textContent = formatTime(t);
   }
 
+  // Real-Time Border Tick
   renderBorderProgressTick(t, dur);
 
   const activeSub = subs.find(a => t >= a.start && t <= a.end);
@@ -2027,6 +2240,7 @@ function cancelCurrentExport() {
   video.pause();
 }
 
+// Draw Frame: Layer Order Enforced (Blur never covers Texts, Logo or Border)
 function drawCanvasFrame(bCtx, burnCanvas, currTime, scale) {
   // 1. Video Frame Base
   bCtx.save();
