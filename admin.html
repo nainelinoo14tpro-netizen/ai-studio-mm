@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
 <meta name="theme-color" content="#e2e8f0">
-<title>Admin Dashboard - AI Studio Suite</title>
+<title>Admin Panel - AI Studio</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Padauk:wght@400;700&display=swap" rel="stylesheet">
@@ -26,12 +26,12 @@ body {
   flex-direction: column;
 }
 
-/* Navbar */
+/* Top Navbar (Removed Back to Main Page Button) */
 .navbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 16px;
+  padding: 14px 18px;
   background-color: #ffffff;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
   position: sticky;
@@ -40,38 +40,18 @@ body {
   border-bottom: 2px solid #d97706;
 }
 
-.nav-left {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.back-btn {
-  text-decoration: none;
-  background: #fef3c7;
-  color: #b45309;
-  padding: 5px 12px;
-  border-radius: 8px;
-  font-size: 12px;
-  font-weight: 700;
-  border: 1px solid #fde68a;
-}
-
 .logo {
-  font-size: 1.05rem;
-  font-weight: bold;
+  font-size: 1.15rem;
+  font-weight: 700;
   color: #b45309;
-}
-
-.nav-right {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 
 .btn {
   border: none;
-  padding: 6px 14px;
+  padding: 7px 14px;
   border-radius: 99px;
   font-size: 12px;
   font-weight: 700;
@@ -91,11 +71,11 @@ body {
   border: 1px solid #fecaca;
 }
 
-/* Container */
+/* Main Container */
 .container {
-  max-width: 1150px;
+  max-width: 680px;
   margin: 0 auto;
-  padding: 20px 14px 40px;
+  padding: 18px 14px 40px;
   width: 100%;
   flex: 1;
 }
@@ -125,37 +105,37 @@ body {
   display: none;
 }
 
-.stats-bar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 12px;
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(12px);
+/* Top Summary Stats */
+.stats-card {
+  background: #ffffff;
   padding: 16px;
   border-radius: 16px;
-  margin-bottom: 18px;
-  border: 1px solid #ffffff;
-  box-shadow: 0 6px 20px rgba(31, 38, 135, 0.06);
+  margin-bottom: 16px;
+  border: 1px solid #cbd5e1;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04);
 }
 
-.stat-group {
-  display: flex;
-  gap: 20px;
-  flex-wrap: wrap;
+.stats-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 14px;
 }
 
-.stat-item {
+.stat-box {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 10px 12px;
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
 .stat-icon {
-  width: 42px;
-  height: 42px;
-  border-radius: 12px;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
   background: #fffbeb;
   border: 1px solid #fde68a;
   display: grid;
@@ -174,17 +154,14 @@ body {
   color: #b45309;
 }
 
-.search-controls {
+.search-row {
   display: flex;
   gap: 8px;
-  align-items: center;
-  width: 100%;
-  max-width: 340px;
 }
 
 .search-box {
   flex: 1;
-  padding: 8px 12px;
+  padding: 9px 14px;
   border: 1px solid #cbd5e1;
   border-radius: 10px;
   font-size: 13px;
@@ -195,200 +172,343 @@ body {
   border-color: #f59e0b;
 }
 
-/* User Cards / Table Layout */
-.table-card {
-  background: #ffffff;
-  border-radius: 16px;
-  border: 1px solid #cbd5e1;
-  overflow: hidden;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04);
-}
-
-.table-responsive {
-  width: 100%;
-  overflow-x: auto;
-}
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-  min-width: 820px;
-}
-
-th, td {
-  padding: 14px 14px;
-  text-align: left;
-  border-bottom: 1px solid #f1f5f9;
-  font-size: 13px;
-  vertical-align: middle;
-}
-
-th {
-  background: #f8fafc;
-  color: #475569;
-  font-weight: 700;
-  text-transform: uppercase;
-  font-size: 11px;
-  letter-spacing: 0.4px;
-}
-
-tr:hover {
-  background-color: #fffbeb;
-}
-
-tr.banned-row {
-  background-color: #fef2f2;
-}
-
-.user-cell {
+/* Clean User List Cards (No Horizontal Scroll) */
+.user-list {
   display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: 10px;
 }
 
+.user-item-card {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 14px;
+  padding: 14px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.03);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.user-item-card:hover {
+  border-color: #f59e0b;
+  background: #fffbeb;
+}
+
+.user-item-card:active {
+  transform: scale(0.98);
+}
+
+.user-item-card.banned {
+  background: #fef2f2;
+  border-color: #fecaca;
+}
+
+.user-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  overflow: hidden;
+}
+
 .avatar {
-  width: 38px;
-  height: 38px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   object-fit: cover;
   border: 2px solid #f59e0b;
+  flex-shrink: 0;
 }
 
-.user-meta {
+.user-details {
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 .user-name {
+  font-size: 14.5px;
   font-weight: 700;
   color: #0f172a;
-  font-size: 13.5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .user-email {
-  font-size: 11.5px;
+  font-size: 12px;
   color: #64748b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-/* Status Pill */
-.status-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 3px 10px;
-  border-radius: 99px;
+.user-sub {
   font-size: 11px;
+  color: #b45309;
+  font-weight: 700;
+  margin-top: 2px;
+}
+
+.user-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.badge-status {
+  padding: 3px 9px;
+  border-radius: 99px;
+  font-size: 10.5px;
   font-weight: 700;
 }
 
-.status-active {
+.badge-active {
   background: #f0fdf4;
   color: #15803d;
   border: 1px solid #86efac;
 }
 
-.status-banned {
+.badge-banned {
   background: #fee2e2;
   color: #dc2626;
   border: 1px solid #fecaca;
 }
 
-/* Feature Usage Grid inside Table */
-.usage-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 6px;
-  min-width: 280px;
+.manage-btn {
+  background: #fef3c7;
+  color: #b45309;
+  border: 1px solid #fde68a;
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 700;
 }
 
-.usage-badge {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  padding: 5px 8px;
+/* Pop-up Modal Styles */
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(3px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px;
+  z-index: 1000;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.25s ease;
+}
+
+.modal-backdrop.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.modal-box {
+  background: #ffffff;
+  width: 100%;
+  max-width: 420px;
+  max-height: 90vh;
+  overflow-y: auto;
+  border-radius: 20px;
+  padding: 20px 18px;
+  border: 1px solid #cbd5e1;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+  transform: translateY(15px) scale(0.97);
+  transition: all 0.25s ease;
+}
+
+.modal-backdrop.active .modal-box {
+  transform: translateY(0) scale(1);
+}
+
+.modal-top {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 11px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e2e8f0;
+  margin-bottom: 14px;
 }
 
-.usage-name {
+.modal-user-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  overflow: hidden;
+}
+
+.modal-close {
+  background: #f1f5f9;
+  border: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  font-size: 15px;
+  color: #475569;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.section-label {
+  font-size: 11.5px;
   font-weight: 700;
-  color: #334155;
+  color: #64748b;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+  display: block;
 }
 
-.usage-stats {
+/* Feature List inside Modal */
+.feature-control-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.feature-row {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 12px 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+.feature-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.feature-file {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.feature-usage {
+  font-size: 12px;
   color: #b45309;
   font-weight: 700;
+  margin-top: 2px;
 }
 
-.total-time-badge {
-  display: inline-block;
-  margin-top: 6px;
-  font-size: 11px;
-  color: #475569;
-  background: #fef3c7;
-  padding: 2px 8px;
-  border-radius: 6px;
-  font-weight: 700;
-}
-
-/* Action Buttons */
-.action-group {
+/* Toggle Switch (ON / OFF) */
+.toggle-wrap {
   display: flex;
-  gap: 6px;
   align-items: center;
+  gap: 8px;
 }
 
-.action-btn {
-  padding: 5px 10px;
-  border-radius: 8px;
-  font-size: 11.5px;
+.toggle-status-label {
+  font-size: 11px;
+  font-weight: 700;
+  min-width: 28px;
+  text-align: right;
+}
+
+.label-on { color: #16a34a; }
+.label-off { color: #dc2626; }
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 46px;
+  height: 26px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: #cbd5e1;
+  transition: 0.25s;
+  border-radius: 34px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 20px;
+  width: 20px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: 0.25s;
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+input:checked + .slider {
+  background-color: #16a34a;
+}
+
+input:checked + .slider:before {
+  transform: translateX(20px);
+}
+
+/* Modal Footer Actions (Ban / Delete) */
+.modal-actions {
+  display: flex;
+  gap: 10px;
+  padding-top: 12px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.modal-btn {
+  flex: 1;
+  padding: 10px;
+  border-radius: 10px;
+  font-size: 12.5px;
   font-weight: 700;
   cursor: pointer;
   border: 1px solid transparent;
-  transition: all 0.2s;
+  text-align: center;
 }
 
-.btn-ban {
+.btn-ban-user {
   background: #fff7ed;
   color: #c2410c;
   border-color: #fed7aa;
 }
-.btn-ban:hover {
-  background: #ea580c;
-  color: #ffffff;
-}
 
-.btn-unlock {
+.btn-unlock-user {
   background: #f0fdf4;
   color: #15803d;
-  border-color: #bbf7d0;
-}
-.btn-unlock:hover {
-  background: #16a34a;
-  color: #ffffff;
+  border-color: #86efac;
 }
 
-.btn-del {
+.btn-delete-user {
   background: #fee2e2;
   color: #dc2626;
   border-color: #fecaca;
-}
-.btn-del:hover {
-  background: #dc2626;
-  color: #ffffff;
 }
 </style>
 </head>
 <body>
 
 <header class="navbar">
-  <div class="nav-left">
-    <a href="index.html" class="back-btn">← ပင်မစာမျက်နှာ</a>
-    <div class="logo">🛡️ Admin Panel</div>
-  </div>
-  <div class="nav-right">
+  <div class="logo">🛡️ Admin Panel</div>
+  <div>
     <button class="btn btn-gold" id="adminLoginBtn" style="display: none;">🔑 Admin Login</button>
     <button class="btn btn-danger" id="adminLogoutBtn" style="display: none;">ထွက်မည်</button>
   </div>
@@ -402,51 +522,62 @@ tr.banned-row {
   </div>
 
   <div id="dashboardContent">
-    <div class="stats-bar">
-      <div class="stat-group">
-        <div class="stat-item">
+    <div class="stats-card">
+      <div class="stats-row">
+        <div class="stat-box">
           <div class="stat-icon">👥</div>
           <div class="stat-info">
-            <h4>စုစုပေါင်း အသုံးပြုသူ (Total Users)</h4>
+            <h4>စုစုပေါင်း အသုံးပြုသူ</h4>
             <span id="totalUsersCount">0</span>
           </div>
         </div>
-        <div class="stat-item">
+        <div class="stat-box">
           <div class="stat-icon">🚫</div>
           <div class="stat-info">
-            <h4>Ban ထားသူများ (Banned)</h4>
+            <h4>Ban ထားသူများ</h4>
             <span id="bannedUsersCount" style="color:#dc2626;">0</span>
           </div>
         </div>
       </div>
 
-      <div class="search-controls">
+      <div class="search-row">
         <input type="text" id="searchInput" class="search-box" placeholder="နာမည် သို့မဟုတ် Email ရှာရန်...">
         <button class="btn btn-gold" id="refreshBtn">🔄 Refresh</button>
       </div>
     </div>
 
-    <div class="table-card">
-      <div class="table-responsive">
-        <table>
-          <thead>
-            <tr>
-              <th>အသုံးပြုသူ (USER)</th>
-              <th>အခြေအနေ (STATUS)</th>
-              <th>FEATURE အသုံးပြုမှု (အကြိမ် / မိနစ်)</th>
-              <th>နောက်ဆုံးဝင်ချိန် (LAST LOGIN)</th>
-              <th>လုပ်ဆောင်ချက် (ACTIONS)</th>
-            </tr>
-          </thead>
-          <tbody id="userTableBody">
-            <tr><td colspan="5" style="text-align:center;">အချက်အလက်များ ဆွဲယူနေပါသည်...</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
+    <!-- User List Container -->
+    <div class="user-list" id="userListContainer"></div>
   </div>
 
 </main>
+
+<!-- User Detail & Feature ON/OFF Pop-up Modal -->
+<div class="modal-backdrop" id="userModal">
+  <div class="modal-box">
+    <div class="modal-top">
+      <div class="modal-user-header">
+        <img src="" id="modalAvatar" class="avatar" alt="Avatar">
+        <div class="user-details">
+          <span class="user-name" id="modalName">User Name</span>
+          <span class="user-email" id="modalEmail">user@gmail.com</span>
+        </div>
+      </div>
+      <button class="modal-close" id="closeModalBtn">✕</button>
+    </div>
+
+    <span class="section-label">🎛️ Feature အသုံးပြုမှု နှင့် အပိတ်/အဖွင့် (ON / OFF)</span>
+
+    <div class="feature-control-list" id="modalFeatureList">
+      <!-- Populated dynamically via JS -->
+    </div>
+
+    <div class="modal-actions">
+      <button class="modal-btn" id="modalBanBtn">🚫 Ban Account</button>
+      <button class="modal-btn btn-delete-user" id="modalDeleteBtn">🗑️ အကောင့်ဖျက်မည်</button>
+    </div>
+  </div>
+</div>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -463,10 +594,17 @@ tr.banned-row {
     measurementId: "G-0JL94QP83K"
   };
 
-  // Admin ဝင်ခွင့်ရှိသော Gmail များ
   const ADMIN_EMAILS = [
     "nainelinnoo@gmail.com",
     "apriloo.nlo@gmail.com"
+  ];
+
+  // Feature 4 ခု သတ်မှတ်ချက်
+  const FEATURES = [
+    { key: "mmvoice", file: "mmvoice.html", icon: "🎙️", title: "Myanmar Voice TTS" },
+    { key: "storyMaker", file: "story-maker.html", icon: "📖", title: "Story Maker" },
+    { key: "storyToVideo", file: "story-to-video.html", icon: "🎬", title: "Story to Video" },
+    { key: "movieRecaps", file: "movie-recaps.html", icon: "🎥", title: "Movie Recaps" }
   ];
 
   const app = initializeApp(firebaseConfig);
@@ -480,24 +618,33 @@ tr.banned-row {
   const dashboardContent = document.getElementById("dashboardContent");
   const adminLoginBtn = document.getElementById("adminLoginBtn");
   const adminLogoutBtn = document.getElementById("adminLogoutBtn");
-  const userTableBody = document.getElementById("userTableBody");
+  const userListContainer = document.getElementById("userListContainer");
   const totalUsersCount = document.getElementById("totalUsersCount");
   const bannedUsersCount = document.getElementById("bannedUsersCount");
   const searchInput = document.getElementById("searchInput");
   const refreshBtn = document.getElementById("refreshBtn");
 
+  // Modal Elements
+  const userModal = document.getElementById("userModal");
+  const closeModalBtn = document.getElementById("closeModalBtn");
+  const modalAvatar = document.getElementById("modalAvatar");
+  const modalName = document.getElementById("modalName");
+  const modalEmail = document.getElementById("modalEmail");
+  const modalFeatureList = document.getElementById("modalFeatureList");
+  const modalBanBtn = document.getElementById("modalBanBtn");
+  const modalDeleteBtn = document.getElementById("modalDeleteBtn");
+
   let allUsersData = [];
+  let selectedUser = null;
 
-  adminLoginBtn.addEventListener("click", async () => {
-    try {
-      await signInWithPopup(auth, provider);
-    } catch (err) {
-      alert("Login Error: " + err.message);
-    }
-  });
-
+  adminLoginBtn.addEventListener("click", () => signInWithPopup(auth, provider));
   adminLogoutBtn.addEventListener("click", () => signOut(auth));
   refreshBtn.addEventListener("click", loadUsers);
+
+  closeModalBtn.addEventListener("click", () => userModal.classList.remove("active"));
+  userModal.addEventListener("click", (e) => {
+    if (e.target === userModal) userModal.classList.remove("active");
+  });
 
   onAuthStateChanged(auth, (user) => {
     if (!user) {
@@ -506,7 +653,7 @@ tr.banned-row {
       adminLoginBtn.style.display = "inline-block";
       adminLogoutBtn.style.display = "none";
       statusTitle.textContent = "🔒 Admin Login လိုအပ်ပါသည်";
-      statusDesc.textContent = "User စာရင်းများကို ကြည့်ရှုရန် ညာဘက်အပေါ်ထောင့်ရှိ Admin Login ခလုတ်ဖြင့် ဝင်ရောက်ပါ။";
+      statusDesc.textContent = "User စာရင်းများကို စီမံရန် Admin Login ခလုတ်ဖြင့် ဝင်ရောက်ပါ။";
       return;
     }
 
@@ -523,20 +670,20 @@ tr.banned-row {
     } else {
       statusBox.style.display = "block";
       dashboardContent.style.display = "none";
-      statusTitle.textContent = "⛔ ဝင်ရောက်ခွင့် မရှိပါ (Access Denied)";
+      statusTitle.textContent = "⛔ ဝင်ရောက်ခွင့် မရှိပါ";
       statusDesc.textContent = `သင့်အကောင့် (${user.email}) သည် Admin ခွင့်ပြုချက် မရှိပါ။`;
     }
   });
 
   function formatMinutes(seconds) {
     const sec = Number(seconds) || 0;
-    if (sec === 0) return "0m";
-    if (sec < 60) return "< 1m";
-    return Math.round(sec / 60) + "m";
+    if (sec === 0) return "0 မိနစ်";
+    if (sec < 60) return "1 မိနစ်အောက်";
+    return Math.round(sec / 60) + " မိနစ်";
   }
 
   async function loadUsers() {
-    userTableBody.innerHTML = `<tr><td colspan="5" style="text-align:center;">အချက်အလက်များ ဆွဲယူနေပါသည်...</td></tr>`;
+    userListContainer.innerHTML = `<div class="status-card"><p>အချက်အလက်များ ဆွဲယူနေပါသည်...</p></div>`;
     try {
       const snap = await getDocs(collection(db, "users"));
       allUsersData = [];
@@ -548,160 +695,152 @@ tr.banned-row {
         allUsersData.push({ id: docSnap.id, ...d });
       });
 
-      allUsersData.sort((a, b) => {
-        const timeA = a.lastLogin?.seconds || 0;
-        const timeB = b.lastLogin?.seconds || 0;
-        return timeB - timeA;
-      });
+      allUsersData.sort((a, b) => (b.lastLogin?.seconds || 0) - (a.lastLogin?.seconds || 0));
 
       totalUsersCount.textContent = allUsersData.length;
       bannedUsersCount.textContent = bannedCount;
-      renderTable(allUsersData);
+      renderUserList(allUsersData);
+
+      // Modal ပွင့်နေချိန် Refresh ဖြစ်ပါက Modal ဒေတာပါ အသစ်ပြန်ပြရန်
+      if (selectedUser) {
+        const updated = allUsersData.find(u => u.id === selectedUser.id);
+        if (updated) openUserModal(updated);
+      }
     } catch (error) {
-      console.error("Error loading users:", error);
-      userTableBody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#dc2626;">Error: ${error.message}</td></tr>`;
+      userListContainer.innerHTML = `<div class="status-card"><p style="color:#dc2626;">Error: ${error.message}</p></div>`;
     }
   }
 
-  function renderTable(users) {
+  function renderUserList(users) {
     if (users.length === 0) {
-      userTableBody.innerHTML = `<tr><td colspan="5" style="text-align:center;">အသုံးပြုသူ စာရင်း မရှိသေးပါ။</td></tr>`;
+      userListContainer.innerHTML = `<div class="status-card"><p>အသုံးပြုသူ မရှိသေးပါ။</p></div>`;
       return;
     }
 
-    userTableBody.innerHTML = "";
+    userListContainer.innerHTML = "";
+    const defaultAvatar = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
+
     users.forEach((u) => {
-      let formattedTime = "မသိရပါ";
-      if (u.lastLogin && u.lastLogin.seconds) {
-        const date = new Date(u.lastLogin.seconds * 1000);
-        formattedTime = date.toLocaleString("en-GB", {
-          day: "2-digit", month: "short", year: "numeric",
-          hour: "2-digit", minute: "2-digit", hour12: true
-        });
-      }
-
-      // Feature 4 ခု၏ အကြိမ်ရေနှင့် စက္ကန့်များ တွက်ချက်ခြင်း
-      const mmCount = u.mmvoice_count || 0;
-      const mmSec = u.mmvoice_seconds || 0;
-
-      const smCount = u.storyMaker_count || 0;
-      const smSec = u.storyMaker_seconds || 0;
-
-      const svCount = u.storyToVideo_count || 0;
-      const svSec = u.storyToVideo_seconds || 0;
-
-      const mrCount = u.movieRecaps_count || 0;
-      const mrSec = u.movieRecaps_seconds || 0;
-
-      const totalCount = mmCount + smCount + svCount + mrCount;
-      const totalSec = mmSec + smSec + svSec + mrSec;
+      const totalCount =
+        (u.mmvoice_count || 0) +
+        (u.storyMaker_count || 0) +
+        (u.storyToVideo_count || 0) +
+        (u.movieRecaps_count || 0);
 
       const isBanned = u.isBanned === true;
 
-      const tr = document.createElement("tr");
-      if (isBanned) tr.classList.add("banned-row");
-
-      tr.innerHTML = `
-        <td>
-          <div class="user-cell">
-            <img src="${u.photoURL || 'https://cdn-icons-png.flaticon.com/512/149/149071.png'}" class="avatar" alt="Avatar">
-            <div class="user-meta">
-              <span class="user-name">${u.name || 'Unknown'}</span>
-              <span class="user-email">${u.email || '-'}</span>
-            </div>
+      const card = document.createElement("div");
+      card.className = `user-item-card ${isBanned ? "banned" : ""}`;
+      card.innerHTML = `
+        <div class="user-left">
+          <img src="${u.photoURL || defaultAvatar}" class="avatar" alt="Avatar">
+          <div class="user-details">
+            <span class="user-name">${u.name || "Unknown"}</span>
+            <span class="user-email">${u.email || "-"}</span>
+            <span class="user-sub">📊 စုစုပေါင်း သုံးစွဲမှု: ${totalCount} ကြိမ်</span>
           </div>
-        </td>
-        <td>
-          ${isBanned
-            ? `<span class="status-pill status-banned">🚫 Banned</span>`
-            : `<span class="status-pill status-active">✅ Active</span>`
-          }
-        </td>
-        <td>
-          <div class="usage-grid">
-            <div class="usage-badge">
-              <span class="usage-name">🎙️ MMVoice</span>
-              <span class="usage-stats">${mmCount} ကြိမ် (${formatMinutes(mmSec)})</span>
-            </div>
-            <div class="usage-badge">
-              <span class="usage-name">📖 StoryMaker</span>
-              <span class="usage-stats">${smCount} ကြိမ် (${formatMinutes(smSec)})</span>
-            </div>
-            <div class="usage-badge">
-              <span class="usage-name">🎬 ToVideo</span>
-              <span class="usage-stats">${svCount} ကြိမ် (${formatMinutes(svSec)})</span>
-            </div>
-            <div class="usage-badge">
-              <span class="usage-name">🎥 Recaps</span>
-              <span class="usage-stats">${mrCount} ကြိမ် (${formatMinutes(mrSec)})</span>
-            </div>
-          </div>
-          <span class="total-time-badge">⏱️ စုစုပေါင်း: ${totalCount} ကြိမ် • ${formatMinutes(totalSec)}</span>
-        </td>
-        <td>
-          <span style="font-size:12px; color:#475569;">${formattedTime}</span>
-        </td>
-        <td>
-          <div class="action-group">
-            <button class="action-btn ${isBanned ? 'btn-unlock' : 'btn-ban'} toggle-ban-btn"
-              data-id="${u.id}" data-banned="${isBanned}" data-name="${u.name || 'User'}">
-              ${isBanned ? '🔓 Unlock' : '🚫 Ban'}
-            </button>
-            <button class="action-btn btn-del delete-btn" data-id="${u.id}" data-name="${u.name || 'User'}">
-              🗑️
-            </button>
-          </div>
-        </td>
+        </div>
+        <div class="user-right">
+          <span class="badge-status ${isBanned ? "badge-banned" : "badge-active"}">
+            ${isBanned ? "🚫 Banned" : "✅ Active"}
+          </span>
+          <span class="manage-btn">⚙️ စီမံရန်</span>
+        </div>
       `;
-      userTableBody.appendChild(tr);
+
+      card.addEventListener("click", () => openUserModal(u));
+      userListContainer.appendChild(card);
     });
+  }
 
-    // Ban / Unlock Event
-    document.querySelectorAll(".toggle-ban-btn").forEach((btn) => {
-      btn.addEventListener("click", async (e) => {
-        const docId = e.currentTarget.getAttribute("data-id");
-        const currentlyBanned = e.currentTarget.getAttribute("data-banned") === "true";
-        const name = e.currentTarget.getAttribute("data-name");
-        const actionText = currentlyBanned ? "Unlock (ပြန်ဖွင့်)" : "Ban (ပိတ်ပင်)";
+  function openUserModal(user) {
+    selectedUser = user;
+    const defaultAvatar = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
 
-        if (confirm(`"${name}" ကို ${actionText} လုပ်ရန် သေချာပါသလား?`)) {
-          try {
-            await updateDoc(doc(db, "users", docId), {
-              isBanned: !currentlyBanned
-            });
-            loadUsers();
-          } catch (err) {
-            alert("လုပ်ဆောင်ချက် မအောင်မြင်ပါ: " + err.message);
-          }
+    modalAvatar.src = user.photoURL || defaultAvatar;
+    modalName.textContent = user.name || "Unknown";
+    modalEmail.textContent = user.email || "-";
+
+    modalFeatureList.innerHTML = "";
+
+    FEATURES.forEach((feat) => {
+      const count = user[`${feat.key}_count`] || 0;
+      const seconds = user[`${feat.key}_seconds`] || 0;
+      // Default သည် ON (enabled !== false)
+      const isEnabled = user[`${feat.key}_enabled`] !== false;
+
+      const row = document.createElement("div");
+      row.className = "feature-row";
+      row.innerHTML = `
+        <div class="feature-info">
+          <span class="feature-file">${feat.icon} ${feat.file}</span>
+          <span class="feature-usage">အသုံးပြုမှု: ${count} ကြိမ် • ${formatMinutes(seconds)}</span>
+        </div>
+        <div class="toggle-wrap">
+          <span class="toggle-status-label ${isEnabled ? "label-on" : "label-off"}" id="lbl_${feat.key}">
+            ${isEnabled ? "ON" : "OFF"}
+          </span>
+          <label class="switch">
+            <input type="checkbox" data-key="${feat.key}" ${isEnabled ? "checked" : ""}>
+            <span class="slider"></span>
+          </label>
+        </div>
+      `;
+
+      const checkbox = row.querySelector("input");
+      const statusLbl = row.querySelector(`#lbl_${feat.key}`);
+
+      checkbox.addEventListener("change", async (e) => {
+        const newState = e.target.checked;
+        statusLbl.textContent = newState ? "ON" : "OFF";
+        statusLbl.className = `toggle-status-label ${newState ? "label-on" : "label-off"}`;
+
+        try {
+          await updateDoc(doc(db, "users", user.id), {
+            [`${feat.key}_enabled`]: newState
+          });
+          user[`${feat.key}_enabled`] = newState;
+        } catch (err) {
+          alert("ပြောင်းလဲမှု မအောင်မြင်ပါ: " + err.message);
+          e.target.checked = !newState;
         }
       });
+
+      modalFeatureList.appendChild(row);
     });
 
-    // Delete User Event
-    document.querySelectorAll(".delete-btn").forEach((btn) => {
-      btn.addEventListener("click", async (e) => {
-        const docId = e.currentTarget.getAttribute("data-id");
-        const name = e.currentTarget.getAttribute("data-name");
-        if (confirm(`"${name}" ၏ မှတ်တမ်းကို Database မှ အပြီးတိုင်ဖျက်ရန် သေချာပါသလား?`)) {
-          try {
-            await deleteDoc(doc(db, "users", docId));
-            loadUsers();
-          } catch (err) {
-            alert("ဖျက်၍မရပါ: " + err.message);
-          }
-        }
-      });
-    });
+    // Update Ban/Unlock Button inside Modal
+    const isBanned = user.isBanned === true;
+    modalBanBtn.textContent = isBanned ? "🔓 Unlock ပြန်ဖွင့်ပေးမည်" : "🚫 User ကို Ban မည်";
+    modalBanBtn.className = `modal-btn ${isBanned ? "btn-unlock-user" : "btn-ban-user"}`;
+
+    modalBanBtn.onclick = async () => {
+      const actionText = isBanned ? "Unlock (ပြန်ဖွင့်)" : "Ban (ပိတ်ပင်)";
+      if (confirm(`"${user.name}" ကို ${actionText} လုပ်ရန် သေချာပါသလား?`)) {
+        await updateDoc(doc(db, "users", user.id), { isBanned: !isBanned });
+        await loadUsers();
+      }
+    };
+
+    modalDeleteBtn.onclick = async () => {
+      if (confirm(`"${user.name}" ၏ အကောင့်မှတ်တမ်းကို အပြီးတိုင်ဖျက်ရန် သေချာပါသလား?`)) {
+        await deleteDoc(doc(db, "users", user.id));
+        userModal.classList.remove("active");
+        selectedUser = null;
+        await loadUsers();
+      }
+    };
+
+    userModal.classList.add("active");
   }
 
   searchInput.addEventListener("input", (e) => {
     const keyword = e.target.value.toLowerCase().trim();
     const filtered = allUsersData.filter(u =>
       (u.name && u.name.toLowerCase().includes(keyword)) ||
-      (u.email && u.email.toLowerCase().includes(keyword)) ||
-      (u.uid && u.uid.toLowerCase().includes(keyword))
+      (u.email && u.email.toLowerCase().includes(keyword))
     );
-    renderTable(filtered);
+    renderUserList(filtered);
   });
 </script>
 
