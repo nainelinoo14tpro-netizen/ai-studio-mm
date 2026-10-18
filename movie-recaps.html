@@ -8,6 +8,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Padauk:wght@400;700&display=swap" rel="stylesheet">
+<!-- mp4-muxer for Pure Hardware H.264 + AAC .mp4 Frame-by-Frame Encoding -->
+<script src="https://cdn.jsdelivr.net/npm/mp4-muxer@5.1.3/build/mp4-muxer.min.js"></script>
 
 <style>
 :root {
@@ -554,16 +556,16 @@ video { width: 100%; height: 100%; display: none; object-fit: contain; pointer-e
       <div class="export-option-btn" onclick="selectExportMethod('fast')">
         <div class="export-opt-icon">⚡</div>
         <div class="export-opt-content">
-          <h4>Fast Video Export (၃ ဆ မှ ၅ ဆ ပိုမြန်)</h4>
-          <p>အသံထပ်ခြင်းမရှိဘဲ ဖုန်း၏ GPU စနစ်ဖြင့် အမြန်ဆုံး Video ချုပ်ယူပေးမည်။</p>
+          <h4>နည်းလမ်း (၁) - Fast MP4 (WebCodecs + mp4-muxer)</h4>
+          <p>Frame-by-Frame Encoding စနစ်ဖြင့် Video Speed လုံးဝမမြန်ဘဲ (1x Normal Speed) Pure .mp4 (H.264/AAC) ကို အမြန်ဆုံး ချုပ်ယူပေးမည်။</p>
         </div>
       </div>
 
       <div class="export-option-btn" onclick="selectExportMethod('standard')">
         <div class="export-opt-icon">🎥</div>
         <div class="export-opt-content">
-          <h4>Standard Real-Time MP4</h4>
-          <p>မူလစနစ်အတိုင်း တိုက်ရိုက် အသံဖမ်းယူပြီး Standard MP4 ဗီဒီယိုဖိုင် ထုတ်ယူမည်။</p>
+          <h4>နည်းလမ်း (၂) - Standard Real-Time MP4 (Codec Force)</h4>
+          <p>MediaRecorder MP4 Codec Force + Fallback စနစ်ဖြင့် တိုက်ရိုက် 1x အသံဖမ်းယူပြီး Standard MP4 ဗီဒီယိုဖိုင် ထုတ်ယူမည်။</p>
         </div>
       </div>
     </div>
@@ -934,10 +936,10 @@ video { width: 100%; height: 100%; display: none; object-fit: contain; pointer-e
         <div class="body" style="padding:14px">
           <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:12px;padding:12px;margin-bottom:12px">
             <label style="font-size:11px;color:var(--accent);font-weight:700;display:block;margin-bottom:4px">
-              📹 MP4 Video Export Engine
+              📹 Dual MP4 Video Export Engine (WebCodecs + MediaRecorder)
             </label>
             <p style="font-size:10px;color:var(--muted);line-height:1.4">
-              💡 Fast Video Render နှင့် Standard MP4 နည်းလမ်း (၂) မျိုးလုံး ပါဝင်ပြီး Canvas Compositing ဖြင့် စာတန်း၊ အသံနှင့် ရုပ်ရှင်ကို ပေါင်းစပ်ထုတ်ယူပေးမည်။
+              💡 <b>နည်းလမ်း (၁)</b> `mp4-muxer` + `WebCodecs` Frame-by-Frame Encoding (Video Speed မမြန်ဘဲ အမြန်ချုပ်သည့် Pure .mp4) နှင့် <b>နည်းလမ်း (၂)</b> `MediaRecorder` MP4 Codec Force နည်းလမ်း (၂) မျိုးလုံး စိတ်ကြိုက်ရွေးချယ်နိုင်ပါသည်။
             </p>
           </div>
 
@@ -2265,7 +2267,9 @@ videoBox.addEventListener("click", (e) => {
 });
 
 // -------------------------------------------------------------
-// EXPORT & DOWNLOAD LOGIC (Matches Preview 100% + Working Fast Export)
+// EXPORT & DOWNLOAD LOGIC:
+// Method 1: mp4-muxer + WebCodecs API (Frame-by-Frame Pure .mp4, Normal 1x Speed)
+// Method 2: MediaRecorder MP4 Codec Force + Fallback
 // -------------------------------------------------------------
 function openExportModal() {
   document.getElementById('exportModalBackdrop').classList.add('show');
@@ -2327,7 +2331,6 @@ function wrapCanvasText(ctx, text, maxWidth) {
     const trimmed = para.trim();
     if (!trimmed) continue;
 
-    // Split by spaces first; if a chunk is still wider than maxWidth, split by grapheme clusters
     const words = trimmed.split(/\s+/);
     let currentLine = "";
 
@@ -2342,7 +2345,6 @@ function wrapCanvasText(ctx, text, maxWidth) {
           lines.push(currentLine);
           currentLine = "";
         }
-        // If single word itself exceeds maxWidth, wrap character/cluster by cluster
         if (ctx.measureText(word).width > maxWidth) {
           let segs = [];
           if (typeof Intl !== "undefined" && Intl.Segmenter) {
@@ -2427,7 +2429,6 @@ function drawCanvasFrame(bCtx, burnCanvas, currTime, scale) {
       const boxW = Math.min(maxBoxWidth, widestLine + padX * 2);
       const boxH = (lines.length * lineHeight) + (padY * 2);
 
-      // Clamp box inside canvas horizontally & vertically so text never cuts off
       let boxX = sx - (boxW / 2);
       let boxY = sy - (boxH / 2);
       const edgeMargin = 8 * scale;
@@ -2483,7 +2484,7 @@ function drawCanvasFrame(bCtx, burnCanvas, currTime, scale) {
     const boxW = textW + padX * 2;
     const boxH = (fsize * 1.38) + padY * 2;
     const boxX = tx - (boxW / 2);
-    const boxY = ty; // Preview uses translate(-50%, 0)
+    const boxY = ty;
 
     if (t.opacity > 0) {
       const r = parseInt(t.bgColor.slice(1, 3), 16) || 0;
@@ -2523,7 +2524,7 @@ function drawCanvasFrame(bCtx, burnCanvas, currTime, scale) {
     const boxW = textW + padX * 2;
     const boxH = (fsize * 1.38) + padY * 2;
     const boxX = tx - (boxW / 2);
-    const boxY = ty; // Preview uses translate(-50%, 0)
+    const boxY = ty;
 
     if (t.opacity > 0) {
       const r = parseInt(t.bgColor.slice(1, 3), 16) || 0;
@@ -2584,7 +2585,7 @@ function drawCanvasFrame(bCtx, burnCanvas, currTime, scale) {
   }
 }
 
-// Helper: Wait for Video Frame Decode on Seek so Fast Export never freezes on Scene 1
+// Helper: Wait for Video Frame Decode on Seek
 function seekVideoAndWait(targetTime) {
   return new Promise((resolve) => {
     let resolved = false;
@@ -2604,131 +2605,301 @@ function seekVideoAndWait(targetTime) {
   });
 }
 
-// 1. Fast Video Export (Fixed: Never freezes on First Scene + Synced Audio)
+// Helper: Offline Audio Mixing (Mixes BGM + All Voiceovers in < 1 second at Normal 1x Speed)
+async function buildOfflineMixedAudioBuffer(totalDur, sampleRate = 44100) {
+  const lengthSamples = Math.max(1, Math.ceil(totalDur * sampleRate));
+  const offCtx = new OfflineAudioContext(2, lengthSamples, sampleRate);
+
+  const bgmVol = Number(document.getElementById("videoVolume").value) / 100;
+  const voiceVol = Number(document.getElementById("voiceVolume").value) / 100;
+
+  // 1. Mix Original Video Audio (BGM) if volume > 0
+  if (bgmVol > 0 && file) {
+    try {
+      const vBuf = await file.arrayBuffer();
+      const tempCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const decodedVideoAudio = await tempCtx.decodeAudioData(vBuf);
+      tempCtx.close();
+
+      const bgmSource = offCtx.createBufferSource();
+      bgmSource.buffer = decodedVideoAudio;
+      const bgmGain = offCtx.createGain();
+      bgmGain.gain.value = bgmVol;
+      bgmSource.connect(bgmGain);
+      bgmGain.connect(offCtx.destination);
+      bgmSource.start(0);
+    } catch (e) {
+      console.warn("Could not decode original video audio for BGM mix:", e);
+    }
+  }
+
+  // 2. Mix All Myanmar TTS Voiceovers at their exact start times (1x Normal Speed)
+  for (const s of subs) {
+    const url = audioMap.get(s.id);
+    if (url && voiceVol > 0) {
+      try {
+        const resp = await fetch(url);
+        const arrBuf = await resp.arrayBuffer();
+        const dec = await offCtx.decodeAudioData(arrBuf);
+        const src = offCtx.createBufferSource();
+        src.buffer = dec;
+        const gNode = offCtx.createGain();
+        gNode.gain.value = 1.6 * voiceVol;
+        src.connect(gNode);
+        gNode.connect(offCtx.destination);
+        src.start(Math.max(0, s.start));
+      } catch (e) {
+        console.warn("Voice segment decode skipped:", e);
+      }
+    }
+  }
+
+  return await offCtx.startRendering();
+}
+
+// Helper: Detect best supported MediaRecorder MIME Type (Prioritizing H.264/AAC MP4)
+function getBestMp4MimeType() {
+  const candidates = [
+    'video/mp4;codecs="avc1.42E01E, mp4a.40.2"',
+    'video/mp4;codecs="avc1.4d401f, mp4a.40.2"',
+    'video/mp4;codecs=avc1,mp4a.40.2',
+    'video/mp4;codecs=avc1',
+    'video/mp4',
+    'video/webm;codecs=h264,opus',
+    'video/webm;codecs=vp9,opus',
+    'video/webm'
+  ];
+  for (const mime of candidates) {
+    if (typeof MediaRecorder !== "undefined" && MediaRecorder.isTypeSupported(mime)) {
+      return mime;
+    }
+  }
+  return "";
+}
+
+// =============================================================
+// နည်းလမ်း (၁) - Fast Video Export (mp4-muxer + WebCodecs Frame-by-Frame Encoding)
+// Produces 100% Genuine .mp4 at Normal 1x Speed while rendering fast
+// =============================================================
 async function exportFastVideo() {
   if (!video.src || !file) return;
+
+  // Check if WebCodecs + Mp4Muxer are available on this browser
+  const hasWebCodecs = (
+    typeof Mp4Muxer !== "undefined" &&
+    typeof VideoEncoder !== "undefined" &&
+    typeof VideoFrame !== "undefined"
+  );
+
+  if (!hasWebCodecs) {
+    toast("⚠️ ဤ Browser တွင် WebCodecs မပံ့ပိုးပါသဖြင့် Method 2 (MP4 Force) ဖြင့် ထုတ်ပေးနေပါသည်...");
+    return exportStandardRealtimeVideo();
+  }
+
   setExportingLock(true);
   video.pause();
   if (activeVoiceAudio) activeVoiceAudio.pause();
 
   videoLockOverlay.classList.add("active");
   cancelExportBtn.style.display = "inline-flex";
-  setLockProgress(5, "⚡ Fast Video Export...", "ဖရိန်များကို အမြန်ဆုံး ချုပ်လုပ်နေပါသည်...");
+  setLockProgress(3, "⚡ Fast MP4 Encoding...", "WebCodecs Hardware Encoder ကို ပြင်ဆင်နေပါသည်...");
 
   if (document.fonts && document.fonts.ready) {
     try { await document.fonts.ready; } catch(e){}
   }
 
-  const burnCanvas = document.getElementById("burnCanvas");
-  burnCanvas.width = video.videoWidth || 1280;
-  burnCanvas.height = video.videoHeight || 720;
-  const bCtx = burnCanvas.getContext("2d");
-  const scale = burnCanvas.width / (videoBox.clientWidth || 360);
-  const totalDur = video.duration || 60;
-
-  // Use 2.5x Turbo Speed so Video Decoder & Audio Stay Perfectly Synced without Freezing on Scene 1
-  const FAST_SPEED = 2.5;
-
-  const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  if (audioCtx.state === "suspended") await audioCtx.resume();
-  const dest = audioCtx.createMediaStreamDestination();
-
-  const voiceVol = Number(document.getElementById("voiceVolume").value) / 100;
-
-  for (let s of subs) {
-    const url = audioMap.get(s.id);
-    if (url) {
-      try {
-        const resp = await fetch(url);
-        const dec = await audioCtx.decodeAudioData(await resp.arrayBuffer());
-        const src = audioCtx.createBufferSource();
-        src.buffer = dec;
-        src.playbackRate.value = FAST_SPEED;
-        const gNode = audioCtx.createGain();
-        gNode.gain.value = voiceVol;
-        src.connect(gNode);
-        gNode.connect(dest);
-        src.start(audioCtx.currentTime + (s.start / FAST_SPEED));
-      } catch(e){}
+  try {
+    // H.264 requires even width and height (divisible by 2)
+    let rawW = video.videoWidth || 1280;
+    let rawH = video.videoHeight || 720;
+    // Cap max dimension to 1280p for fast mobile hardware encoding stability
+    if (rawW > 1280 || rawH > 1280) {
+      const ratio = 1280 / Math.max(rawW, rawH);
+      rawW = Math.round(rawW * ratio);
+      rawH = Math.round(rawH * ratio);
     }
-  }
+    const width = rawW % 2 === 0 ? rawW : rawW - 1;
+    const height = rawH % 2 === 0 ? rawH : rawH - 1;
 
-  const canvasStream = burnCanvas.captureStream(30);
-  const combinedStream = new MediaStream([
-    ...canvasStream.getVideoTracks(),
-    ...dest.stream.getAudioTracks()
-  ]);
+    const burnCanvas = document.getElementById("burnCanvas");
+    burnCanvas.width = width;
+    burnCanvas.height = height;
+    const bCtx = burnCanvas.getContext("2d");
+    const scale = width / (videoBox.clientWidth || 360);
+    const totalDur = video.duration || 60;
+    const fps = 24;
+    const totalFrames = Math.max(1, Math.ceil(totalDur * fps));
 
-  let mimeType = MediaRecorder.isTypeSupported("video/mp4") ? "video/mp4" : "video/webm";
-  const recorder = new MediaRecorder(combinedStream, { mimeType, videoBitsPerSecond: 4500000 });
-  activeRecorderInstance = recorder;
+    // Step 1: Find supported H.264 profile for VideoEncoder
+    const h264Profiles = ["avc1.42001f", "avc1.4d001f", "avc1.42E01E", "avc1.640028"];
+    let selectedVideoConfig = null;
+    for (const codecStr of h264Profiles) {
+      try {
+        const check = await VideoEncoder.isConfigSupported({
+          codec: codecStr,
+          width,
+          height,
+          bitrate: 4_000_000,
+          framerate: fps
+        });
+        if (check.supported) {
+          selectedVideoConfig = check.config;
+          break;
+        }
+      } catch (e) {}
+    }
 
-  const chunks = [];
-  recorder.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data); };
-  recorder.onstop = () => {
-    video.playbackRate = 1.0;
+    if (!selectedVideoConfig) {
+      throw new Error("Hardware H.264 VideoEncoder not supported on this device");
+    }
+
+    // Step 2: Check AAC AudioEncoder support
+    let selectedAudioConfig = null;
+    const sampleRate = 44100;
+    if (typeof AudioEncoder !== "undefined" && typeof AudioData !== "undefined") {
+      try {
+        const aCheck = await AudioEncoder.isConfigSupported({
+          codec: "mp4a.40.2",
+          sampleRate: sampleRate,
+          numberOfChannels: 2,
+          bitrate: 128_000
+        });
+        if (aCheck.supported) selectedAudioConfig = aCheck.config;
+      } catch (e) {}
+    }
+
+    // Step 3: Initialize Mp4Muxer
+    const muxerConfig = {
+      target: new Mp4Muxer.ArrayBufferTarget(),
+      video: {
+        codec: "avc",
+        width,
+        height
+      },
+      fastStart: "in-memory"
+    };
+    if (selectedAudioConfig) {
+      muxerConfig.audio = {
+        codec: "aac",
+        sampleRate: sampleRate,
+        numberOfChannels: 2
+      };
+    }
+    const muxer = new Mp4Muxer.Muxer(muxerConfig);
+
+    // Step 4: Mix and Encode Full Audio Offline at 1x Normal Speed
+    if (selectedAudioConfig) {
+      setLockProgress(8, "🎵 Mixing Audio (1x Normal Speed)...", "မူရင်းအသံနှင့် မြန်မာ Voiceover များကို ပေါင်းစပ်နေပါသည်...");
+      const mixedBuffer = await buildOfflineMixedAudioBuffer(totalDur, sampleRate);
+
+      const audioEncoder = new AudioEncoder({
+        output: (chunk, meta) => muxer.addAudioChunk(chunk, meta),
+        error: (e) => console.warn("AudioEncoder error:", e)
+      });
+      audioEncoder.configure(selectedAudioConfig);
+
+      const leftCh = mixedBuffer.getChannelData(0);
+      const rightCh = mixedBuffer.numberOfChannels > 1 ? mixedBuffer.getChannelData(1) : leftCh;
+      const chunkFrames = 44100; // 1 second chunks
+
+      for (let offset = 0; offset < mixedBuffer.length; offset += chunkFrames) {
+        if (!isExportActive) break;
+        const size = Math.min(chunkFrames, mixedBuffer.length - offset);
+        const planarData = new Float32Array(size * 2);
+        planarData.set(leftCh.subarray(offset, offset + size), 0);
+        planarData.set(rightCh.subarray(offset, offset + size), size);
+
+        const audioData = new AudioData({
+          format: "f32-planar",
+          sampleRate: sampleRate,
+          numberOfFrames: size,
+          numberOfChannels: 2,
+          timestamp: Math.round((offset / sampleRate) * 1_000_000),
+          data: planarData
+        });
+        audioEncoder.encode(audioData);
+        audioData.close();
+      }
+      await audioEncoder.flush();
+      audioEncoder.close();
+    }
+
+    // Step 5: Frame-by-Frame Video Encoding at exact 1x timestamps
+    const videoEncoder = new VideoEncoder({
+      output: (chunk, meta) => muxer.addVideoChunk(chunk, meta),
+      error: (e) => console.error("VideoEncoder error:", e)
+    });
+    videoEncoder.configure(selectedVideoConfig);
+
+    video.muted = true;
+    const frameDurMicro = Math.round(1_000_000 / fps);
+
+    for (let i = 0; i < totalFrames; i++) {
+      if (!isExportActive) break;
+
+      const currTime = Math.min(totalDur - 0.001, i / fps);
+      await seekVideoAndWait(currTime);
+      drawCanvasFrame(bCtx, burnCanvas, currTime, scale);
+
+      const timestampMicro = Math.round(currTime * 1_000_000);
+      const frame = new VideoFrame(burnCanvas, {
+        timestamp: timestampMicro,
+        duration: frameDurMicro
+      });
+
+      const isKeyFrame = (i % (fps * 2) === 0);
+      videoEncoder.encode(frame, { keyFrame: isKeyFrame });
+      frame.close();
+
+      // Prevent hardware encoder queue overflow on mobile devices
+      if (videoEncoder.encodeQueueSize > 8) {
+        await videoEncoder.flush();
+      }
+
+      const pct = Math.min(99, 12 + Math.round(((i + 1) / totalFrames) * 87));
+      if (i % 3 === 0 || i === totalFrames - 1) {
+        setLockProgress(
+          pct,
+          `⚡ Fast MP4 Encoding (${pct}%)...`,
+          `Frame ${i + 1} / ${totalFrames} • 100% Pure .mp4 (Normal 1x Speed)`
+        );
+      }
+    }
+
+    if (!isExportActive) {
+      try { videoEncoder.close(); } catch(e){}
+      return;
+    }
+
+    await videoEncoder.flush();
+    videoEncoder.close();
+    muxer.finalize();
+
+    const { buffer } = muxer.target;
+    const mp4Blob = new Blob([buffer], { type: "video/mp4" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(mp4Blob);
+    a.download = `recap-fast-${Date.now()}.mp4`;
+    a.click();
+
+    toast("🎉 Pure .mp4 (Fast Frame-by-Frame) ဒေါင်းလုဒ် ပြီးစီးပါပြီ!");
+  } catch (err) {
+    console.warn("WebCodecs Fast Export fallback triggered:", err);
+    toast("⚡ Switching to Method 2 (MP4 Codec Force)...");
+    setExportingLock(false);
+    return exportStandardRealtimeVideo();
+  } finally {
     video.muted = false;
     updateAudioLevels();
     setExportingLock(false);
     videoLockOverlay.classList.remove("active");
-    if (chunks.length > 0) {
-      const blob = new Blob(chunks, { type: "video/mp4" });
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(blob);
-      a.download = `recap-fast-${Date.now()}.mp4`;
-      a.click();
-      toast("🎉 Fast Video download ပြီးစီးပါပြီ!");
-    }
-  };
-
-  await seekVideoAndWait(0);
-  drawCanvasFrame(bCtx, burnCanvas, 0, scale);
-
-  recorder.start(200);
-  video.muted = true;
-  video.playbackRate = FAST_SPEED;
-
-  let playWorked = true;
-  try {
-    await video.play();
-  } catch (err) {
-    playWorked = false;
   }
-
-  if (playWorked) {
-    // Smooth GPU Accelerated Fast Playback Loop (Advances all scenes seamlessly)
-    await new Promise((resolve) => {
-      const renderTick = () => {
-        if (!isExportActive || video.ended || video.currentTime >= totalDur - 0.05) {
-          resolve();
-          return;
-        }
-        drawCanvasFrame(bCtx, burnCanvas, video.currentTime, scale);
-        const pct = Math.min(99, Math.round((video.currentTime / totalDur) * 100));
-        setLockProgress(pct, `⚡ Fast Rendering (${pct}%)...`, "ဖရိန်များကို အမြန်ဆုံး ပေါင်းစပ်နေပါသည်...");
-        requestAnimationFrame(renderTick);
-      };
-      requestAnimationFrame(renderTick);
-    });
-  } else {
-    // Fallback Seek-Wait Loop if autoplay was blocked
-    const stepTime = 0.1;
-    for (let t = 0; t < totalDur; t += stepTime) {
-      if (!isExportActive) break;
-      await seekVideoAndWait(t);
-      drawCanvasFrame(bCtx, burnCanvas, t, scale);
-      const pct = Math.min(99, Math.round((t / totalDur) * 100));
-      setLockProgress(pct, `⚡ Fast Rendering (${pct}%)...`, "ဖရိန်များကို အမြန်ဆုံး ပေါင်းစပ်နေပါသည်...");
-    }
-  }
-
-  video.pause();
-  video.playbackRate = 1.0;
-  if (recorder.state !== "inactive") recorder.stop();
-  try { audioCtx.close(); } catch(e){}
 }
 
-// 2. Standard Real-Time MP4
+// =============================================================
+// နည်းလမ်း (၂) - Standard Real-Time MP4 (MediaRecorder MP4 Codec Force + Fallback)
+// Forces H.264/AAC MP4 container where supported + Includes BGM & Voiceover Mix
+// =============================================================
 async function exportStandardRealtimeVideo() {
   if (!video.src || !file) return;
   setExportingLock(true);
@@ -2737,7 +2908,7 @@ async function exportStandardRealtimeVideo() {
 
   videoLockOverlay.classList.add("active");
   cancelExportBtn.style.display = "inline-flex";
-  setLockProgress(5, "🎥 Standard Real-Time Export...", "တိုက်ရိုက်အသံဖမ်းယူပြီး ထုတ်လုပ်နေပါသည်...");
+  setLockProgress(5, "🎥 Standard Real-Time MP4...", "MP4 Codec Force စနစ်ဖြင့် တိုက်ရိုက် ဖမ်းယူနေပါသည်...");
 
   if (document.fonts && document.fonts.ready) {
     try { await document.fonts.ready; } catch(e){}
@@ -2754,22 +2925,31 @@ async function exportStandardRealtimeVideo() {
   if (audioCtx.state === "suspended") await audioCtx.resume();
   const dest = audioCtx.createMediaStreamDestination();
 
-  const voiceVol = Number(document.getElementById("voiceVolume").value) / 100;
-
-  for (let s of subs) {
-    const url = audioMap.get(s.id);
-    if (url) {
-      try {
-        const resp = await fetch(url);
-        const dec = await audioCtx.decodeAudioData(await resp.arrayBuffer());
-        const src = audioCtx.createBufferSource();
-        src.buffer = dec;
-        const gNode = audioCtx.createGain();
-        gNode.gain.value = voiceVol;
-        src.connect(gNode);
-        gNode.connect(dest);
-        src.start(audioCtx.currentTime + s.start);
-      } catch(e){}
+  // Mix both BGM and Voiceover cleanly into destination stream
+  try {
+    const mixedBuffer = await buildOfflineMixedAudioBuffer(totalDur, 44100);
+    const fullMixSource = audioCtx.createBufferSource();
+    fullMixSource.buffer = mixedBuffer;
+    fullMixSource.connect(dest);
+    fullMixSource.connect(audioCtx.destination); // Let user hear progress gently
+    fullMixSource.start(audioCtx.currentTime);
+  } catch (e) {
+    const voiceVol = Number(document.getElementById("voiceVolume").value) / 100;
+    for (let s of subs) {
+      const url = audioMap.get(s.id);
+      if (url) {
+        try {
+          const resp = await fetch(url);
+          const dec = await audioCtx.decodeAudioData(await resp.arrayBuffer());
+          const src = audioCtx.createBufferSource();
+          src.buffer = dec;
+          const gNode = audioCtx.createGain();
+          gNode.gain.value = voiceVol;
+          src.connect(gNode);
+          gNode.connect(dest);
+          src.start(audioCtx.currentTime + s.start);
+        } catch(err){}
+      }
     }
   }
 
@@ -2779,13 +2959,18 @@ async function exportStandardRealtimeVideo() {
     ...dest.stream.getAudioTracks()
   ]);
 
-  let mimeType = MediaRecorder.isTypeSupported("video/mp4") ? "video/mp4" : "video/webm";
-  const recorder = new MediaRecorder(combinedStream, { mimeType, videoBitsPerSecond: 4500000 });
+  const forcedMimeType = getBestMp4MimeType();
+  const recOptions = { videoBitsPerSecond: 4500000 };
+  if (forcedMimeType) recOptions.mimeType = forcedMimeType;
+
+  const recorder = new MediaRecorder(combinedStream, recOptions);
   activeRecorderInstance = recorder;
 
   const chunks = [];
   recorder.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data); };
   recorder.onstop = () => {
+    video.muted = false;
+    updateAudioLevels();
     setExportingLock(false);
     videoLockOverlay.classList.remove("active");
     if (chunks.length > 0) {
@@ -2794,7 +2979,7 @@ async function exportStandardRealtimeVideo() {
       a.href = URL.createObjectURL(blob);
       a.download = `recap-standard-${Date.now()}.mp4`;
       a.click();
-      toast("🎉 Standard Video download ပြီးစီးပါပြီ!");
+      toast("🎉 Standard MP4 Video download ပြီးစီးပါပြီ!");
     }
   };
 
@@ -2802,6 +2987,7 @@ async function exportStandardRealtimeVideo() {
   drawCanvasFrame(bCtx, burnCanvas, 0, scale);
 
   recorder.start(200);
+  video.muted = true; // Muted because mixedBuffer already plays BGM + Voiceover
   video.playbackRate = 1.0;
   await video.play();
 
@@ -2814,7 +3000,11 @@ async function exportStandardRealtimeVideo() {
     }
     drawCanvasFrame(bCtx, burnCanvas, video.currentTime, scale);
     const pct = Math.min(99, Math.round((video.currentTime / totalDur) * 100));
-    setLockProgress(pct, `Real-Time Recording (${pct}%)...`, "ဗီဒီယိုကို အစအဆုံး အသံသွင်းနေပါသည်...");
+    setLockProgress(
+      pct,
+      `🎥 Standard MP4 Recording (${pct}%)...`,
+      `Codec: ${forcedMimeType.includes("mp4") ? "Native H.264 MP4" : "Fallback Stream"}`
+    );
     requestAnimationFrame(loop);
   };
   loop();
