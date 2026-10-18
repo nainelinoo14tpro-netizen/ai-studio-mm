@@ -27,6 +27,7 @@ body {
   color: #0f172a;
   overflow-x: hidden;
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
 }
@@ -92,11 +93,11 @@ body {
 }
 @keyframes pulseBlink { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
 
-/* Navbar Right & Auth Buttons */
+/* Navbar Right & Auth Avatar Only */
 .nav-right {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
 }
 
 .contact-top-btn {
@@ -138,43 +139,21 @@ body {
   transform: scale(0.96);
 }
 
+/* Profile Photo Only in Navbar */
 .user-profile {
   display: none;
   align-items: center;
-  gap: 8px;
-  background: #f8fafc;
-  border: 1px solid #cbd5e1;
-  padding: 3px 10px 3px 4px;
-  border-radius: 99px;
+  justify-content: center;
+  cursor: pointer;
 }
 
 .user-avatar {
-  width: 26px;
-  height: 26px;
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
   object-fit: cover;
-  border: 1px solid #f59e0b;
-}
-
-.user-name {
-  font-size: 12px;
-  font-weight: 700;
-  color: #334155;
-  max-width: 85px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.logout-btn {
-  background: #fee2e2;
-  color: #dc2626;
-  border: 1px solid #fecaca;
-  padding: 2px 8px;
-  border-radius: 99px;
-  font-size: 10px;
-  font-weight: 700;
-  cursor: pointer;
+  border: 2px solid #f59e0b;
+  box-shadow: 0 2px 6px rgba(245, 158, 11, 0.25);
 }
 
 @media (max-width: 600px) {
@@ -197,19 +176,22 @@ body {
 }
 .overlay.active { opacity: 1; visibility: visible; }
 
-/* Left Side Slide Menu */
+/* Left Side Slide Menu (Fixed to exact mobile screen height) */
 .slide-menu {
   position: fixed;
   top: 0;
+  bottom: 0;
   left: -300px;
   width: 270px;
-  height: 100%;
+  height: 100vh;
+  height: 100dvh;
   background-color: #ffffff;
   box-shadow: 5px 0 25px rgba(0, 0, 0, 0.15);
   transition: left 0.3s ease;
   z-index: 999;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 .slide-menu.active { left: 0; }
 
@@ -219,10 +201,17 @@ body {
   align-items: center;
   padding: 16px 18px;
   border-bottom: 1px solid #e2e8f0;
+  flex-shrink: 0;
 }
 .menu-title { font-size: 1.05rem; font-weight: bold; color: #475569; }
 .close-btn { background: none; border: none; color: #1e293b; font-size: 1.3rem; cursor: pointer; }
-.menu-links { list-style: none; padding: 12px 10px; flex-grow: 1; overflow-y: auto; }
+
+.menu-links {
+  list-style: none;
+  padding: 12px 10px;
+  flex: 1;
+  overflow-y: auto;
+}
 .menu-links li { margin-bottom: 6px; }
 .menu-links a {
   display: flex;
@@ -242,9 +231,11 @@ body {
   font-weight: 600;
 }
 
-/* Slide Menu Bottom Auth Section */
+/* Slide Menu Bottom Auth Section (Pinned cleanly to bottom) */
 .menu-footer-auth {
-  padding: 14px 16px;
+  flex-shrink: 0;
+  margin-top: auto;
+  padding: 14px 16px calc(16px + env(safe-area-inset-bottom, 0px));
   border-top: 1px solid #e2e8f0;
   background: #f8fafc;
 }
@@ -258,7 +249,7 @@ body {
   background: linear-gradient(135deg, #f59e0b, #d97706);
   color: #ffffff;
   border: none;
-  padding: 10px;
+  padding: 11px;
   border-radius: 10px;
   font-size: 13px;
   font-weight: 700;
@@ -284,6 +275,7 @@ body {
   border-radius: 50%;
   border: 2px solid #f59e0b;
   object-fit: cover;
+  flex-shrink: 0;
 }
 
 .menu-user-details {
@@ -314,11 +306,16 @@ body {
   background: #fee2e2;
   color: #dc2626;
   border: 1px solid #fecaca;
-  padding: 7px;
+  padding: 8px;
   border-radius: 8px;
   font-size: 12px;
   font-weight: 700;
   cursor: pointer;
+  transition: all 0.2s;
+}
+
+.menu-logout-btn:active {
+  transform: scale(0.98);
 }
 
 /* Main Container */
@@ -655,10 +652,9 @@ body.logged-out .launch-btn::after {
       <span>🔑 Login</span>
     </button>
 
-    <div class="user-profile" id="userProfile">
+    <!-- Only Profile Photo on Main Navbar (Clicking opens Slide Menu) -->
+    <div class="user-profile" id="userProfile" onclick="openMenu()" title="Menu ဖွင့်ရန်">
       <img src="" alt="User" class="user-avatar" id="userAvatar">
-      <span class="user-name" id="userName"></span>
-      <button class="logout-btn" id="logoutBtn">ထွက်မည်</button>
     </div>
   </div>
 </header>
@@ -680,6 +676,7 @@ body.logged-out .launch-btn::after {
     <li><a onclick="closeMenu(); openContactModal();">📞 Contacts (ဆက်သွယ်ရန်)</a></li>
   </ul>
 
+  <!-- Fixed Bottom Login / Logout Box inside Slide Menu -->
   <div class="menu-footer-auth">
     <button class="menu-login-btn" id="menuLoginBtn">
       <span>🔑 Sign in with Google</span>
@@ -693,7 +690,7 @@ body.logged-out .launch-btn::after {
           <span class="menu-user-email" id="menuUserEmail"></span>
         </div>
       </div>
-      <button class="menu-logout-btn" id="menuLogoutBtn">အကောင့်မှ ထွက်မည်</button>
+      <button class="menu-logout-btn" id="menuLogoutBtn">အကောင့်မှ ထွက်မည် (Logout)</button>
     </div>
   </div>
 </nav>
@@ -912,8 +909,6 @@ body.logged-out .launch-btn::after {
   const loginBtn = document.getElementById("googleLoginBtn");
   const userProfile = document.getElementById("userProfile");
   const userAvatar = document.getElementById("userAvatar");
-  const userName = document.getElementById("userName");
-  const logoutBtn = document.getElementById("logoutBtn");
 
   const menuLoginBtn = document.getElementById("menuLoginBtn");
   const menuUserBox = document.getElementById("menuUserBox");
@@ -983,6 +978,7 @@ body.logged-out .launch-btn::after {
   async function handleLogout() {
     try {
       await signOut(auth);
+      closeMenu();
     } catch (error) {
       console.error("Logout Error:", error);
     }
@@ -991,8 +987,6 @@ body.logged-out .launch-btn::after {
   loginBtn.addEventListener("click", handleGoogleLogin);
   menuLoginBtn.addEventListener("click", handleGoogleLogin);
   promptLoginBtn.addEventListener("click", handleGoogleLogin);
-
-  logoutBtn.addEventListener("click", handleLogout);
   menuLogoutBtn.addEventListener("click", handleLogout);
 
   // Feature Links Lock & Ban Check
@@ -1010,7 +1004,6 @@ body.logged-out .launch-btn::after {
         return;
       }
 
-      // Check latest Ban status from Firestore
       try {
         const snap = await getDoc(doc(db, "users", currentUser.uid));
         if (snap.exists() && snap.data().isBanned === true) {
@@ -1035,11 +1028,12 @@ body.logged-out .launch-btn::after {
     if (user) {
       document.body.classList.remove("logged-out");
 
+      // Top Navbar: Show Photo Only
       loginBtn.style.display = "none";
       userProfile.style.display = "flex";
-      userName.textContent = user.displayName || "User";
       userAvatar.src = user.photoURL || defaultAvatar;
 
+      // Slide Menu: Show Full Info + Logout
       menuLoginBtn.style.display = "none";
       menuUserBox.style.display = "flex";
       menuUserName.textContent = user.displayName || "User";
