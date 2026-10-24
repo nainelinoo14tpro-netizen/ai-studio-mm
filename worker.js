@@ -1,6 +1,6 @@
 /**
  * AI Studio All-in-One Master Backend Worker
- * (Restored to fully verified Edge TTS engine + Multi-Episode Series Support + ZeroGPU Voice Clone + Gemini Song Karaoke Trilingual Engine)
+ * (Fixed BigInt Precision for Edge TTS + Trilingual Song Karaoke & Multi-Endpoint Engine)
  */
 
 // =====================================================
@@ -463,7 +463,6 @@ ${JSON.stringify(sampledSegments)}
 ]
 `;
         } else {
-          // Single Video duration selection (1, 2, 3, 5 mins)
           const numDur = Number(duration);
           const sceneCount = numDur === 1 ? 8 : (numDur === 2 ? 15 : (numDur === 3 ? 20 : 32));
           prompt = `
@@ -651,7 +650,6 @@ Important Rules:
           hfHeaders["Authorization"] = `Bearer ${hfToken}`;
         }
 
-        // 1. Gradio call endpoint သို့ [text, style] စနစ်တကျ ပို့ခြင်း
         const hfCallResp = await fetch("https://nlopro-clone-burmese-tts.hf.space/gradio_api/call/prompt_voice", {
           method: "POST",
           headers: hfHeaders,
@@ -672,7 +670,6 @@ Important Rules:
           return json({ error: "ZeroGPU ထံမှ event_id မရရှိပါ" }, 502);
         }
 
-        // 2. Server-Sent Events (SSE) Stream ရယူခြင်း
         const sseResp = await fetch(`https://nlopro-clone-burmese-tts.hf.space/gradio_api/call/prompt_voice/${eventId}`, {
           headers: hfHeaders
         });
@@ -685,7 +682,6 @@ Important Rules:
         const lines = sseText.split("\n");
         let resultAudioUrl = null;
 
-        // Gradio return: [AudioObject, StatusString] parsing logic
         for (const line of lines) {
           if (line.startsWith("data:")) {
             try {
@@ -811,17 +807,17 @@ async function callGeminiWithFallback(prompt, apiKey) {
 }
 
 // =====================================================
-// SEC-MS-GEC TOKEN (ORIGINAL VERIFIED LOGIC)
+// SEC-MS-GEC TOKEN (FIXED BIGINT PRECISION)
 // =====================================================
 
 async function getSecMsGec() {
-  const unixSeconds = Date.now() / 1000;
-  const windowsEpoch = 11644473600;
+  const unixSeconds = BigInt(Math.floor(Date.now() / 1000));
+  const windowsEpoch = 11644473600n;
   let ticks = unixSeconds + windowsEpoch;
-  ticks -= ticks % 300;
+  ticks -= ticks % 300n;
 
-  const integerTicks = Math.floor(ticks * 10000000);
-  const data = `${integerTicks}${TRUSTED_CLIENT_TOKEN}`;
+  const integerTicks = ticks * 10000000n;
+  const data = `${integerTicks.toString()}${TRUSTED_CLIENT_TOKEN}`;
 
   const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(data));
 
@@ -832,11 +828,12 @@ async function getSecMsGec() {
 }
 
 // =====================================================
-// EDGE TTS (ORIGINAL VERIFIED ENGINE)
+// EDGE TTS (FIXED MUID COOKIE & HANDSHAKE)
 // =====================================================
 
 async function generateEdgeSpeech(text, voice, rate, pitch, volume) {
   const connectionId = crypto.randomUUID().replace(/-/g, "");
+  const muid = crypto.randomUUID().replace(/-/g, "").toUpperCase();
   const secMsGec = await getSecMsGec();
 
   const wsUrl =
@@ -856,6 +853,7 @@ async function generateEdgeSpeech(text, voice, rate, pitch, volume) {
         `Chrome/${CHROMIUM_MAJOR_VERSION}.0.0.0 ` +
         `Safari/537.36 Edg/${CHROMIUM_MAJOR_VERSION}.0.0.0`,
       Origin: "chrome-extension://jdiccldimpdaibmpdkjnbmckianbfold",
+      Cookie: `muid=${muid};`,
       Pragma: "no-cache",
       "Cache-Control": "no-cache",
       "Sec-MS-GEC": secMsGec,
