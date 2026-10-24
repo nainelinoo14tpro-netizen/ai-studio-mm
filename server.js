@@ -11,10 +11,10 @@ app.use(express.json());
 
 // Health Check
 app.get('/', (req, res) => {
-  res.send('Myanmar TTS Server is Running (Updated Security!)');
+  res.send('Myanmar TTS Server is Running (Edge Spoofing Active!)');
 });
 
-// Microsoft Edge Security Token Generator
+// Windows Tick Time based Token Generator
 function getSecMsGec() {
   const unixSeconds = Math.floor(Date.now() / 1000);
   const fileTimeSeconds = BigInt(unixSeconds) + 11644473600n;
@@ -24,7 +24,6 @@ function getSecMsGec() {
   return crypto.createHash('sha256').update(strToHash).digest('hex').toUpperCase();
 }
 
-// Edge TTS API Endpoint
 app.post('/api/tts', async (req, res) => {
   try {
     const { text, voice = 'my-MM-NilarNeural', rate = '+0%', pitch = '+0Hz', volume = '+50%' } = req.body;
@@ -36,14 +35,19 @@ app.post('/api/tts', async (req, res) => {
     const connectionId = crypto.randomUUID().replace(/-/g, "");
     const secMsGec = getSecMsGec();
     
-    // Bypass Security with Direct WebSocket
     const wsUrl = `wss://speech.platform.bing.com/consumer/speech/synthesize/readaloud/edge/v1?TrustedClientToken=6A5AA1D4EAFF4E9FB37E23D68491D6F4&Sec-MS-GEC=${secMsGec}&Sec-MS-GEC-Version=1-131.0.2903.86&ConnectionId=${connectionId}`;
 
-    const ws = new WebSocket(wsUrl);
+    // SPOOFING: Edge Browser အဖြစ် အယောင်ဆောင်ခြင်း
+    const ws = new WebSocket(wsUrl, {
+      headers: {
+        'Origin': 'chrome-extension://jdiccldimpdaibmpdkjnbmckianbfold',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36 Edg/131.0.0.0'
+      }
+    });
+
     const audioChunks = [];
     let isDone = false;
 
-    // Timeout Fallback
     const timer = setTimeout(() => {
       if (!isDone) {
         isDone = true;
