@@ -68,6 +68,16 @@
       border-radius: 6px;
     }
 
+    .server-badge {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 99px;
+      background: #ecfdf5;
+      color: #047857;
+      border: 1px solid #a7f3d0;
+    }
+
     /* Background Overlay */
     .overlay {
       position: fixed;
@@ -128,11 +138,18 @@
       font-weight: 600;
     }
 
-    /* Main Container */
+    /* Main Container (Responsive for Phone & Laptop) */
     .container {
       padding: 16px 14px;
-      max-width: 560px;
+      max-width: 680px;
       margin: auto;
+    }
+
+    @media (min-width: 900px) {
+      .container {
+        max-width: 780px;
+        padding: 24px 20px;
+      }
     }
 
     /* Glassmorphism Header Box */
@@ -434,6 +451,19 @@
       justify-content: space-between;
     }
 
+    /* Error Box */
+    .error-box {
+      display: none;
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      color: #b91c1c;
+      padding: 10px 12px;
+      border-radius: 10px;
+      font-size: 12px;
+      line-height: 1.45;
+      word-break: break-word;
+    }
+
     /* Audio Player Output Box */
     .output-box {
       display: none;
@@ -485,6 +515,7 @@
       <button class="menu-btn" onclick="openMenu()">☰</button>
       <div class="logo">AI Studio App</div>
     </div>
+    <span class="server-badge" id="serverStatusBadge">🟢 Dual TTS Ready</span>
   </header>
 
   <!-- Overlay -->
@@ -540,9 +571,9 @@
       <!-- 1. Text Input with Real-time Character Counter -->
       <div class="text-head-row">
         <label>၁။ အသံထွက်စေချင်သော မြန်မာစာသားရိုက်ထည့်ပါ:</label>
-        <span class="char-badge" id="charBadge"><span id="charCount">၀</span> .</span>
+        <span class="char-badge" id="charBadge"><span id="charCount">၀</span> လုံး</span>
       </div>
-      <textarea id="textInput" rows="4" placeholder="ဤနေရာတွင် မြန်မာလို စာသားရိုက်ထည့်ပါ..." oninput="updateCharCount()">မင်္ဂလာပါ၊ သင်နှစ်သက်ရာ အသံပိုင်ရှင်နှင့် စတိုင်ကို ရွေးချယ်ပြီး အသံဖန်တီးနိုင်ပါပြီ။</textarea>
+      <textarea id="textInput" rows="5" placeholder="ဤနေရာတွင် မြန်မာလို စာသားရိုက်ထည့်ပါ..." oninput="updateCharCount()">မင်္ဂလာပါ၊ သင်နှစ်သက်ရာ အသံပိုင်ရှင်နှင့် စတိုင်ကို ရွေးချယ်ပြီး အသံဖန်တီးနိုင်ပါပြီ။</textarea>
 
       <!-- 2. Dropdown Grid for Speaker & Style -->
       <div class="dropdown-grid">
@@ -588,6 +619,9 @@
         <span id="btnText">✨ အသံဖန်တီးပါ (Generate Voice)</span>
       </button>
 
+      <!-- Error Diagnostic Box -->
+      <div class="error-box" id="errorBox"></div>
+
       <!-- Real % Progress Bar with Pulsing Recording Mic -->
       <div class="progress-box" id="progressBox">
         <div class="mic-anim-wrap">
@@ -615,8 +649,8 @@
   </div>
 
   <script>
-    const RENDER_BACKEND_URL = "https://myanmar-tts-app.onrender.com";
     const WORKER_URL = "https://ai-studio-mm.nainelinoo-14tpro.workers.dev";
+    const RENDER_BACKEND_URL = "https://myanmar-tts-app.onrender.com";
 
     let sampleAudio = new Audio();
     let currentlyPlayingBtnId = null;
@@ -666,7 +700,7 @@
     }
 
     function updateRange(id, valId, unit) {
-      const v = document.getElementById(id).value;
+      const v = Number(document.getElementById(id).value) || 0;
       const sign = v > 0 ? "+" : "";
       document.getElementById(valId).innerText = sign + v + unit;
     }
@@ -688,39 +722,101 @@
       document.getElementById('progressBox').style.display = 'none';
     }
 
-    async function requestTTSAudio(payload) {
-      let response = null;
+    function showError(msg) {
+      const eb = document.getElementById('errorBox');
+      if (!msg) {
+        eb.style.display = 'none';
+        eb.textContent = '';
+        return;
+      }
+      eb.style.display = 'block';
+      eb.textContent = msg;
+    }
+
+    // Silently wake up Render Server in the background when page opens
+    function wakeUpRenderServer() {
+      fetch(`${RENDER_BACKEND_URL}/`, { method: 'GET', mode: 'no-cors' }).catch(() => {});
+    }
+
+    // Multi-Engine TTS Request:
+    // 1. Try fast Cloudflare Worker (/tts) first
+    // 2. Fallback to Render Backend (/api/tts) with 50s wake-up timeout
+    async function requestTTSAudio(payload, onStatusUpdate) {
+      const errors = [];
+
+      // Normalize rate, pitch, volume strings so Worker regex validation never rejects them
+      const cleanPayload = {
+        text: String(payload.text || "").trim(),
+        voice: payload.voice || "my-MM-NilarNeural",
+        rate: /^[+-]\d+%$/.test(payload.rate) ? payload.rate : "+0%",
+        pitch: /^[+-]\d+Hz$/.test(payload.pitch) ? payload.pitch : "+0Hz",
+        volume: /^[+-]\d+%$/.test(payload.volume) ? payload.volume : "+50%"
+      };
+
+      // ENGINE 1: Fast Cloudflare Worker
       try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 6500);
+        if (onStatusUpdate) onStatusUpdate("Cloudflare Worker ဆာဗာမှ အသံထုတ်ယူနေသည်...");
+        const ctrl1 = new AbortController();
+        const t1 = setTimeout(() => ctrl1.abort(), 18000);
 
-        response = await fetch(`${RENDER_BACKEND_URL}/api/tts`, {
+        const r1 = await fetch(`${WORKER_URL}/tts`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-          signal: controller.signal
+          body: JSON.stringify(cleanPayload),
+          signal: ctrl1.signal
         });
-        clearTimeout(timeoutId);
-      } catch (err) {
-        console.warn("Render Backend timeout or error, falling back to Cloudflare Worker:", err);
+        clearTimeout(t1);
+
+        if (r1.ok) {
+          const blob = await r1.blob();
+          if (blob && blob.size > 200) {
+            return blob;
+          }
+          errors.push("Worker returned empty audio");
+        } else {
+          const errData = await r1.json().catch(() => ({}));
+          errors.push(`Worker (${r1.status}): ${errData.error || r1.statusText}`);
+        }
+      } catch (err1) {
+        errors.push(`Worker Error: ${err1.message}`);
       }
 
-      if (!response || !response.ok) {
-        response = await fetch(`${WORKER_URL}/tts`, {
+      // ENGINE 2: Render Backend (With 50-second timeout for cold-start wake-up)
+      try {
+        if (onStatusUpdate) onStatusUpdate("Render ဆာဗာကို နှိုး၍ အသံထုတ်ယူနေသည် (စက္ကန့် ၃၀ ခန့် စောင့်ပေးပါ)...");
+        const ctrl2 = new AbortController();
+        const t2 = setTimeout(() => ctrl2.abort(), 50000);
+
+        const r2 = await fetch(`${RENDER_BACKEND_URL}/api/tts`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
+          body: JSON.stringify(cleanPayload),
+          signal: ctrl2.signal
         });
+        clearTimeout(t2);
+
+        if (r2.ok) {
+          const blob = await r2.blob();
+          if (blob && blob.size > 200) {
+            return blob;
+          }
+          errors.push("Render returned empty audio");
+        } else {
+          const errData = await r2.json().catch(() => ({}));
+          errors.push(`Render (${r2.status}): ${errData.error || r2.statusText}`);
+        }
+      } catch (err2) {
+        errors.push(`Render Error: ${err2.message}`);
       }
 
-      if (!response.ok) throw new Error("TTS Generation failed on both servers");
-      return await response.blob();
+      throw new Error(errors.join(" | "));
     }
 
     async function playSampleVoice(voice, btnId) {
       const btn = document.getElementById(btnId);
       const activeBox = document.getElementById('sampleActiveBox');
       const activeText = document.getElementById('sampleActiveText');
+      showError("");
 
       if (currentlyPlayingBtnId === btnId && !sampleAudio.paused) {
         sampleAudio.pause();
@@ -759,11 +855,13 @@
           rate: "+0%",
           pitch: "+0Hz",
           volume: "+50%"
+        }, (statusMsg) => {
+          activeText.innerText = statusMsg;
         });
 
         const url = URL.createObjectURL(blob);
         sampleAudio.src = url;
-        sampleAudio.play();
+        await sampleAudio.play();
 
         btn.classList.add('playing');
         btn.innerHTML = "⏹ ရပ်တန့်မည်";
@@ -777,7 +875,7 @@
           currentlyPlayingBtnId = null;
         };
       } catch (e) {
-        alert("နမူနာအသံ ဖွင့်မရပါ: " + e.message);
+        showError("⚠️ နမူနာအသံ ဖွင့်မရပါ: " + e.message);
         btn.innerHTML = originalHtml;
         activeBox.style.display = 'none';
       }
@@ -786,13 +884,14 @@
     async function generateAudio() {
       const text = document.getElementById('textInput').value.trim();
       if (!text) {
-        alert("ကျေးဇူးပြု၍ စာသားအရင် ရိုက်ထည့်ပါ!");
+        showError("⚠️ ကျေးဇူးပြု၍ စာသားအရင် ရိုက်ထည့်ပါ!");
         return;
       }
 
+      showError("");
       const speaker = document.getElementById('speakerSelect').value;
-      const speedVal = document.getElementById('speed').value;
-      const pitchVal = document.getElementById('pitch').value;
+      const speedVal = Number(document.getElementById('speed').value) || 0;
+      const pitchVal = Number(document.getElementById('pitch').value) || 0;
       const rateStr = (speedVal >= 0 ? "+" : "") + speedVal + "%";
       const pitchStr = (pitchVal >= 0 ? "+" : "") + pitchVal + "Hz";
 
@@ -810,11 +909,11 @@
 
       let currentProgress = 15;
       const progressTimer = setInterval(() => {
-        if (currentProgress < 85) {
-          currentProgress += Math.floor(Math.random() * 8) + 4;
-          updateProgress(currentProgress, "အသံလှိုင်းများ ချိန်ညှိထုတ်လုပ်နေသည်...");
+        if (currentProgress < 88) {
+          currentProgress += Math.floor(Math.random() * 6) + 3;
+          updateProgress(currentProgress);
         }
-      }, 200);
+      }, 300);
 
       try {
         const blob = await requestTTSAudio({
@@ -823,6 +922,8 @@
           rate: rateStr,
           pitch: pitchStr,
           volume: "+50%"
+        }, (statusMsg) => {
+          document.getElementById('progressStepText').innerText = statusMsg;
         });
 
         clearInterval(progressTimer);
@@ -838,12 +939,12 @@
           hideProgress();
           outputBox.style.display = 'flex';
           audioElem.play().catch(() => {});
-        }, 500);
+        }, 400);
 
       } catch (err) {
         clearInterval(progressTimer);
         hideProgress();
-        alert("Error: " + err.message);
+        showError("❌ အသံဖန်တီးမှု အဆင်မပြေပါ: " + err.message);
       } finally {
         btn.disabled = false;
         btnText.innerText = "✨ အသံဖန်တီးပါ (Generate Voice)";
@@ -852,6 +953,7 @@
 
     window.onload = function() {
       updateCharCount();
+      wakeUpRenderServer();
     };
   </script>
 </body>
