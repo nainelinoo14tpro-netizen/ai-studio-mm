@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
 <meta name="theme-color" content="#e2e8f0">
-<title>Movie Recap Studio Pro - AI Studio App</title>
+<title>Movie Recap & Karaoke Studio Pro - AI Studio App</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Padauk:wght@400;700&display=swap" rel="stylesheet">
@@ -228,14 +228,16 @@ video { width: 100%; height: 100%; display: none; object-fit: contain; pointer-e
 }
 .videoBlurBoxItem:active { cursor: grabbing; border-color: var(--gold); }
 
-/* Centered & Responsive Subtitle Box matching Preview */
-#overlay {
+/* Independent Centered & Responsive Subtitle Boxes (Box 1 & Box 2) */
+#overlay, #overlay2 {
   position: absolute; z-index: 25; cursor: grab; touch-action: none;
   transform: translate(-50%, -50%);
   width: 92%; max-width: 92%;
   display: flex; justify-content: center; align-items: center;
   pointer-events: auto;
 }
+#overlay2 { z-index: 26; display: none; }
+
 #titlesContainer { position: absolute; inset: 0; pointer-events: none; z-index: 30; }
 #textsContainer { position: absolute; inset: 0; pointer-events: none; z-index: 32; }
 
@@ -273,7 +275,7 @@ video { width: 100%; height: 100%; display: none; object-fit: contain; pointer-e
   padding: 5px 12px; border-radius: 6px; font-weight: 800; white-space: nowrap; transform: translate(-50%, 0);
 }
 
-/* Subtitle Overlay Box */
+/* Subtitle Overlay Inner Boxes */
 .overlayInner {
   position: relative; display: inline-flex; justify-content: center; align-items: center;
   padding: 6px 14px; border-radius: 8px; text-align: center; line-height: 1.42;
@@ -284,6 +286,7 @@ video { width: 100%; height: 100%; display: none; object-fit: contain; pointer-e
 .overlayTarget {
   font-size: 17px; font-weight: 700; pointer-events: none; color: #ffffff;
   display: block; text-align: center; white-space: pre-wrap; word-break: break-word; max-width: 100%;
+  position: relative;
 }
 
 /* 5 Toolbar Buttons Under Video (Title, Text, Logo, Blur, Border) */
@@ -477,10 +480,10 @@ video { width: 100%; height: 100%; display: none; object-fit: contain; pointer-e
 .export-opt-content h4 { font-size: 13px; color: var(--text); font-weight: 700; margin-bottom: 2px; }
 .export-opt-content p { font-size: 10.5px; color: var(--muted); line-height: 1.35; }
 
-/* Bottom Nav */
+/* Bottom Nav (5 Columns: Recap, Karaoke, Script, Style, Export) */
 .bottomNav {
   position: fixed; left: 10px; right: 10px; bottom: calc(8px + var(--safe-bottom));
-  z-index: 90; display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px;
+  z-index: 90; display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px;
   padding: 5px; background: #ffffff; border: 1.5px solid var(--border);
   border-radius: 14px; box-shadow: 0 4px 15px rgba(0,0,0,0.08);
 }
@@ -491,6 +494,15 @@ video { width: 100%; height: 100%; display: none; object-fit: contain; pointer-e
 }
 .bottomNav button.active { 
   background: #fef3c7 !important; border-color: var(--gold) !important; color: var(--accent) !important; font-weight: 800 !important;
+}
+
+.karaokeSubSection {
+  background: #f8fafc; border: 1px solid var(--border); border-radius: 10px;
+  padding: 11px; margin-bottom: 12px;
+}
+.karaokeSubSectionTitle {
+  font-size: 11.5px; font-weight: 800; color: var(--accent);
+  margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;
 }
 
 @media(max-width: 900px) {
@@ -538,7 +550,7 @@ video { width: 100%; height: 100%; display: none; object-fit: contain; pointer-e
     <li><a href="mmvoice.html">🎙️ Myanmar Voice TTS</a></li>
     <li><a href="story-maker.html">📖 Story Create</a></li>
     <li><a href="story-to-video.html">🎬 Story to Video Studio</a></li>
-    <li><a href="movie-recaps.html" class="active">🎬 Movie Recaps</a></li>
+    <li><a href="movie-recaps.html" class="active">🎬 Movie Recaps & Karaoke</a></li>
   </ul>
 </nav>
 
@@ -575,8 +587,8 @@ video { width: 100%; height: 100%; display: none; object-fit: contain; pointer-e
 <main class="container">
 
   <div class="glass-header">
-    <h2>🎬 Movie Recap Studio Pro</h2>
-    <p>ရုပ်ရှင်ဇာတ်ကြောင်းပြော & မြန်မာ Voiceover စတူဒီယို • Light Slate & Amber Gold Theme</p>
+    <h2>🎬 Movie Recap & Karaoke Studio Pro</h2>
+    <p>ရုပ်ရှင်ဇာတ်ကြောင်းပြော၊ သီချင်း ကာရာအိုကေ စာတန်းထိုး (၂) ခု & မြန်မာ Voiceover စတူဒီယို</p>
   </div>
 
   <div class="steps">
@@ -589,7 +601,7 @@ video { width: 100%; height: 100%; display: none; object-fit: contain; pointer-e
   <div class="fixedVideoShell">
     
     <div class="modeBadgeExternal" id="modeBadge">
-      <span>●</span> <span>🎬 RECAP MODE: ဇာတ်ကြောင်းပြော အသင့်ဖြစ်ပါပြီ</span>
+      <span>●</span> <span id="modeBadgeText">🎬 RECAP MODE: ဇာတ်ကြောင်းပြော အသင့်ဖြစ်ပါပြီ</span>
     </div>
 
     <div class="playerOuterWrap">
@@ -598,7 +610,7 @@ video { width: 100%; height: 100%; display: none; object-fit: contain; pointer-e
         <!-- Native Label upload trigger: Never blocked on Mobile -->
         <label for="file" class="videoEmptyState" id="emptyState">
           <span>🎬</span>
-          <p>Tap or Drop Movie Video here</p>
+          <p>Tap or Drop Movie / Song Video here</p>
         </label>
         
         <video id="video" playsinline webkit-playsinline x5-playsinline x5-video-player-type="h5" 
@@ -621,10 +633,17 @@ video { width: 100%; height: 100%; display: none; object-fit: contain; pointer-e
         <!-- Clean Logo Overlay (Hidden when not loaded, no broken alt box) -->
         <img id="videoLogoOverlay" class="drag-element videoLogoOverlay" style="display: none;" alt="">
 
-        <!-- Touch Draggable Subtitle Box -->
-        <div class="overlay drag-element" id="overlay">
+        <!-- Touch Draggable Subtitle Box 1 (Primary / Myanmar Translation) -->
+        <div class="overlay drag-element" id="overlay" title="Subtitle Box 1 (Drag to move)">
           <div class="overlayInner" id="overlayInner">
             <span class="overlayTarget" id="overlayTarget"></span>
+          </div>
+        </div>
+
+        <!-- Touch Draggable Subtitle Box 2 (Secondary / Original & English Karaoke) -->
+        <div class="overlay drag-element" id="overlay2" title="Subtitle Box 2 - Karaoke / Original / English (Drag to move)">
+          <div class="overlayInner" id="overlay2Inner">
+            <span class="overlayTarget" id="overlay2Target"></span>
           </div>
         </div>
 
@@ -846,9 +865,147 @@ video { width: 100%; height: 100%; display: none; object-fit: contain; pointer-e
         </div>
       </section>
 
+      <!-- DEDICATED KARAOKE & DUAL SUBTITLES PAGE (TAB) -->
+      <section class="tabPane card" id="tabKaraoke">
+        <div class="cardHead">
+          <div>
+            <div class="title">🎤 Song Karaoke & Dual Subtitles Studio</div>
+            <div class="status">သီချင်းစာတန်းထိုး (၃) ဘာသာ၊ SRT အစားထိုးစနစ် နှင့် ကာရာအိုကေ အရောင် (၂) မျိုး</div>
+          </div>
+        </div>
+
+        <div class="body" style="padding:14px">
+          <!-- 1. Song AI Translation & SRT Import -->
+          <div class="karaokeSubSection">
+            <div class="karaokeSubSectionTitle">
+              <span>🎵 1. သီချင်းစာသား ဘာသာပြန် & SRT အစားထိုးစနစ်</span>
+            </div>
+
+            <button class="primary lockable" id="generateSongBtn" style="width:100%;padding:11px;margin-bottom:8px" onclick="generateSongKaraokeSubtitles()">
+              <span class="btnSpinner" id="songSpinner" style="display:none"></span>
+              <span id="songBtnText">🎵 Generate Song Lyrics (မူရင်း + English + မြန်မာ စာတန်းထုတ်မည်)</span>
+            </button>
+            <p style="font-size:10px;color:var(--muted);margin-bottom:10px">
+              💡 သီချင်းအသံနှင့် အချိန်ကိုက်ပြီး မူရင်းဘာသာစာသား၊ English စာသား နှင့် မြန်မာဘာသာပြန် (၃) မျိုးလုံးကို တိုက်ရိုက်ထုတ်ပေးပါမည် (BGM 100% အလိုအလျောက် ချိန်ပေးမည်)။
+            </p>
+
+            <input type="file" id="srtUploadBox1" accept=".srt,.lrc,.txt" hidden onchange="handleSrtFileUpload(event, 'box1')">
+            <input type="file" id="srtUploadBox2" accept=".srt,.lrc,.txt" hidden onchange="handleSrtFileUpload(event, 'box2')">
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+              <button class="secondaryBtn lockable" onclick="document.getElementById('srtUploadBox1').click()" style="font-size:10.5px;padding:8px">
+                📂 SRT အစားထိုး (မြန်မာ/Box 1)
+              </button>
+              <button class="secondaryBtn lockable" onclick="document.getElementById('srtUploadBox2').click()" style="font-size:10.5px;padding:8px">
+                📂 SRT အစားထိုး (Orig/EN Box 2)
+              </button>
+            </div>
+          </div>
+
+          <!-- 2. Karaoke Dual-Color Sweep Settings -->
+          <div class="karaokeSubSection">
+            <div class="karaokeSubSectionTitle">
+              <span>🌈 2. Karaoke Style အရောင် (၂) မျိုး စိတ်ကြိုက်ချိန်ညှိရန်</span>
+              <label style="font-size:11px;display:flex;align-items:center;gap:4px;cursor:pointer;color:var(--text)">
+                <input type="checkbox" id="karaokeEnabledCheck" checked onchange="applyKaraokeSettings()" class="lockable"> Enable Karaoke
+              </label>
+            </div>
+
+            <div class="styleGrid">
+              <div class="field">
+                <label>ဆိုနေချိန် အရောင် (Highlight Color 1)</label>
+                <input id="karaokeActiveColor" type="color" value="#f59e0b" oninput="applyKaraokeSettings()" class="lockable">
+              </div>
+              <div class="field">
+                <label>မဆိုရသေးမီ အရောင် (Base Color 2)</label>
+                <input id="karaokeBaseColor" type="color" value="#ffffff" oninput="applyKaraokeSettings()" class="lockable">
+              </div>
+              <div class="field">
+                <label>Karaoke ပြသမည့် စာတန်းထိုး</label>
+                <select id="karaokeTargetSelect" onchange="applyKaraokeSettings()" class="lockable">
+                  <option value="both">စာတန်း (၂) ခုလုံး (Box 1 & Box 2)</option>
+                  <option value="box2">Box 2 သာ (Original / English)</option>
+                  <option value="box1">Box 1 သာ (မြန်မာစာတန်း)</option>
+                </select>
+              </div>
+              <div class="field">
+                <label>Box 1 ပြသမည့် စာသား</label>
+                <select id="box1ContentMode" onchange="applyKaraokeSettings()" class="lockable">
+                  <option value="mm">မြန်မာဘာသာပြန် (Myanmar)</option>
+                  <option value="orig">မူရင်းဘာသာ (Original)</option>
+                  <option value="en">English စာသား</option>
+                  <option value="orig_mm">မူရင်း + မြန်မာ (၂ ကြောင်းတွဲ)</option>
+                  <option value="en_mm">English + မြန်မာ (၂ ကြောင်းတွဲ)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3. Independent Second Subtitle Box (Box 2) Settings & Position -->
+          <div class="karaokeSubSection" style="margin-bottom:0">
+            <div class="karaokeSubSectionTitle">
+              <span>🎯 3. ဒုတိယ စာတန်းထိုး (Box 2 - Original / English) သီးသန့်ချိန်ညှိရန်</span>
+              <label style="font-size:11px;display:flex;align-items:center;gap:4px;cursor:pointer;color:var(--text)">
+                <input type="checkbox" id="showSub2Check" onchange="toggleSub2Visibility()" class="lockable"> Show Box 2
+              </label>
+            </div>
+
+            <div class="styleGrid">
+              <div class="field" style="grid-column:span 2">
+                <label>Box 2 တွင် ပြသမည့် ဘာသာစကား (Content Mode)</label>
+                <select id="box2ContentMode" onchange="applyKaraokeSettings()" class="lockable">
+                  <option value="orig_en">မူရင်းဘာသာ + English (၂ ကြောင်းတွဲ)</option>
+                  <option value="orig">မူရင်းဘာသာစာသားသီးသန့် (Original Only)</option>
+                  <option value="en">English စာသားသီးသန့် (English Only)</option>
+                  <option value="mm">မြန်မာဘာသာပြန် (Myanmar Only)</option>
+                </select>
+              </div>
+              <div class="field">
+                <label>Box 2 အနားသတ်အရောင် (Outline)</label>
+                <input id="sub2OutlineColor" type="color" value="#000000" oninput="applySub2Style()" class="lockable">
+              </div>
+              <div class="field">
+                <label>Box 2 နောက်ခံအရောင် (BG Color)</label>
+                <input id="sub2BgColor" type="color" value="#000000" oninput="applySub2Style()" class="lockable">
+              </div>
+            </div>
+
+            <div class="sliderPairRow">
+              <div class="sliderField">
+                <label>Box 2 Outline အထူ: <span class="val" id="sub2OutlineWidthVal">1.5px</span></label>
+                <input id="sub2OutlineWidth" type="range" min="0" max="6" step="0.5" value="1.5" oninput="document.getElementById('sub2OutlineWidthVal').textContent=this.value+'px'; applySub2Style()" class="lockable">
+              </div>
+              <div class="sliderField">
+                <label>Box 2 အကြည်/အမည်း: <span class="val" id="sub2OpacityVal">50%</span></label>
+                <input id="sub2BoxOpacity" type="range" min="0" max="100" value="50" oninput="applySub2Style()" class="lockable">
+              </div>
+            </div>
+
+            <div class="sliderField" style="margin-bottom:10px">
+              <label>Box 2 Font Size: <span class="val" id="sub2SizeVal">15 px</span></label>
+              <input id="sub2Size" type="range" min="10" max="42" value="15" oninput="applySub2Style()" class="lockable">
+            </div>
+
+            <div class="sliderPairRow" style="margin-bottom:0">
+              <div class="sliderField">
+                <label>Box 2 X (ဘယ်/ညာ %): <span class="val" id="pos2XVal">50%</span></label>
+                <input id="pos2X" type="range" min="0" max="100" value="50" oninput="applySub2PositionFromSlider()" class="lockable">
+              </div>
+              <div class="sliderField">
+                <label>Box 2 Y (အပေါ်/အောက် %): <span class="val" id="pos2YVal">22%</span></label>
+                <input id="pos2Y" type="range" min="0" max="100" value="22" oninput="applySub2PositionFromSlider()" class="lockable">
+              </div>
+            </div>
+            <p style="font-size:10px;color:var(--muted);margin-top:6px">
+              💡 ဗီဒီယိုပေါ်ရှိ စာတန်းထိုး Box 1 နှင့် Box 2 နှစ်ခုလုံးကို လက်ဖြင့် တိုက်ရိုက် ဖိဆွဲပြီး မိမိကြိုက်နှစ်သက်ရာ နေရာအသီးသီးတွင် ထားနိုင်ပါသည်။
+            </p>
+          </div>
+        </div>
+      </section>
+
       <section class="tabPane card" id="tabEditor">
         <div class="cardHead">
-          <div class="title">📝 2. Recap Script Editor <span id="subCount" style="color:var(--muted);font-size:11px"></span></div>
+          <div class="title">📝 2. Recap & Karaoke Script Editor <span id="subCount" style="color:var(--muted);font-size:11px"></span></div>
           <div style="display:flex;gap:5px">
             <button class="secondaryBtn lockable" id="playAllBtn" onclick="playAllVoiceover()" style="padding:4px 8px;font-size:10.5px">🔊 Play All</button>
             <button class="primary lockable" id="addLineBtn" onclick="addSub()" style="padding:4px 8px;font-size:10.5px">+ Add Line</button>
@@ -857,16 +1014,16 @@ video { width: 100%; height: 100%; display: none; object-fit: contain; pointer-e
         <div class="body" style="padding:14px">
           <div class="liveSubBanner">
             <div class="liveSubHeader">
-              <span>▶ CURRENT ACTIVE NARRATION</span>
+              <span>▶ CURRENT ACTIVE NARRATION / LYRICS</span>
               <span id="liveSubTimeBadge">00:00.0</span>
             </div>
-            <div class="liveSubTextMM" id="liveSubMM">ဇာတ်ကြောင်းပြော Script အလိုအလျောက် ပေါ်လာပါမည်...</div>
+            <div class="liveSubTextMM" id="liveSubMM">ဇာတ်ကြောင်းပြော / သီချင်းစာသား အလိုအလျောက် ပေါ်လာပါမည်...</div>
           </div>
           <div class="editorTools">
-            <input class="search lockable" id="search" placeholder="🔍 Search script text..." oninput="render()">
+            <input class="search lockable" id="search" placeholder="🔍 Search script or lyrics..." oninput="render()">
           </div>
           <div class="list" id="list">
-            <div class="empty">🎬 Upload a movie clip to generate script.</div>
+            <div class="empty">🎬 Upload a movie or song clip to generate script/lyrics.</div>
           </div>
         </div>
       </section>
@@ -876,11 +1033,11 @@ video { width: 100%; height: 100%; display: none; object-fit: contain; pointer-e
     <div class="desktopCol">
       <section class="tabPane card" id="tabStyle">
         
-        <div class="cardHead"><div class="title">🎨 Subtitle Studio</div></div>
+        <div class="cardHead"><div class="title">🎨 Subtitle Studio (Box 1 - Main / Myanmar)</div></div>
         <div class="body" style="padding:14px">
           
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-            <label style="font-size:11px;color:var(--accent);font-weight:700">စာတန်း ထည့်သွင်းပြသရန် (Show Subtitle):</label>
+            <label style="font-size:11px;color:var(--accent);font-weight:700">ပင်မစာတန်း Box 1 ပြသရန် (Show Subtitle Box 1):</label>
             <input type="checkbox" id="showSubtitleCheck" checked onchange="toggleSubtitleVisibility()" class="lockable">
           </div>
 
@@ -918,11 +1075,11 @@ video { width: 100%; height: 100%; display: none; object-fit: contain; pointer-e
 
           <div class="sliderPairRow">
             <div class="sliderField">
-              <label>Subtitle X (ဘယ်/ညာ %): <span class="val" id="posXVal">50%</span></label>
+              <label>Box 1 X (ဘယ်/ညာ %): <span class="val" id="posXVal">50%</span></label>
               <input id="posX" type="range" min="0" max="100" value="50" oninput="applySubtitlePositionFromSlider()" class="lockable">
             </div>
             <div class="sliderField">
-              <label>Subtitle Y (အပေါ်/အောက် %): <span class="val" id="posYVal">82%</span></label>
+              <label>Box 1 Y (အပေါ်/အောက် %): <span class="val" id="posYVal">82%</span></label>
               <input id="posY" type="range" min="0" max="100" value="82" oninput="applySubtitlePositionFromSlider()" class="lockable">
             </div>
           </div>
@@ -939,7 +1096,7 @@ video { width: 100%; height: 100%; display: none; object-fit: contain; pointer-e
               📹 Dual MP4 Video Export Engine (WebCodecs + MediaRecorder)
             </label>
             <p style="font-size:10px;color:var(--muted);line-height:1.4">
-              💡 <b>နည်းလမ်း (၁)</b> `mp4-muxer` + `WebCodecs` Frame-by-Frame Encoding (Video Speed မမြန်ဘဲ အမြန်ချုပ်သည့် Pure .mp4) နှင့် <b>နည်းလမ်း (၂)</b> `MediaRecorder` MP4 Codec Force နည်းလမ်း (၂) မျိုးလုံး စိတ်ကြိုက်ရွေးချယ်နိုင်ပါသည်။
+              💡 <b>နည်းလမ်း (၁)</b> `mp4-muxer` + `WebCodecs` Frame-by-Frame Encoding (Video Speed မမြန်ဘဲ အမြန်ချုပ်သည့် Pure .mp4) နှင့် <b>နည်းလမ်း (၂)</b> `MediaRecorder` MP4 Codec Force နည်းလမ်း (၂) မျိုးလုံးဖြင့် စာတန်း (၂) ခု နှင့် Karaoke Effect များကို ပေါင်းစပ်ထုတ်ယူပေးမည်။
             </p>
           </div>
 
@@ -963,6 +1120,7 @@ video { width: 100%; height: 100%; display: none; object-fit: contain; pointer-e
 
 <nav class="bottomNav">
   <button class="active" onclick="switchTab('tabRecap', this)">🎬<span>Recap</span></button>
+  <button onclick="switchTab('tabKaraoke', this)">🎤<span>Karaoke</span></button>
   <button onclick="switchTab('tabEditor', this)">📝<span>Script</span></button>
   <button onclick="switchTab('tabStyle', this)">🎨<span>Style</span></button>
   <button onclick="switchTab('tabExport', this)">📦<span>Export</span></button>
@@ -1093,14 +1251,14 @@ async function generateEdgeSpeechInBrowser(text, voice, rate) {
   });
 }
 
-// Guaranteed Triple-Engine Myanmar TTS (Never throws "is not defined")
+// Guaranteed Triple-Engine Myanmar TTS (With 60s Render Cold-Start Timeout)
 async function fetchMyanmarAudio(text, voice = "my-MM-ThihaNeural", rate = "+0%") {
   const cleanRate = rate || "+0%";
   
-  // 1. Try Render Backend first
+  // 1. Try Render Backend first (60s timeout to allow Render free instance spin-up)
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 6000);
+    const timeoutId = setTimeout(() => controller.abort(), 60000);
     const resp = await fetch(`${RENDER_BACKEND_URL}/api/tts`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -1119,7 +1277,7 @@ async function fetchMyanmarAudio(text, voice = "my-MM-ThihaNeural", rate = "+0%"
   // 2. Try Cloudflare Worker
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 7000);
+    const timeoutId = setTimeout(() => controller.abort(), 15000);
     const resp = await fetch(`${WORKER_URL}/tts`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -1135,7 +1293,7 @@ async function fetchMyanmarAudio(text, voice = "my-MM-ThihaNeural", rate = "+0%"
     console.warn("Worker TTS error, falling back to Browser WebSocket:", e);
   }
 
-  // 3. Guaranteed Direct In-Browser Edge WebSocket Synthesis (Always works!)
+  // 3. Fallback Direct In-Browser Edge WebSocket Synthesis
   return await generateEdgeSpeechInBrowser(text, voice, cleanRate);
 }
 window.fetchMyanmarAudio = fetchMyanmarAudio;
@@ -1153,8 +1311,19 @@ let lastActiveSubId = null;
 let recapTone = "narrator";
 let selectedVoice = "my-MM-ThihaNeural";
 
-// Subtitle Overlay Coordinates (0% to 100%)
+// Independent Subtitle Box 1 & Box 2 Coordinates (0% to 100%)
 let overlayPos = { x: 50, y: 82 };
+let overlay2Pos = { x: 50, y: 22 };
+
+// Karaoke & Dual Subtitle State
+let isSubtitleVisible = true;
+let isSub2Visible = false;
+let karaokeEnabled = false;
+let karaokeActiveColor = "#f59e0b";
+let karaokeBaseColor = "#ffffff";
+let karaokeTarget = "both"; // 'both', 'box2', 'box1'
+let box1ContentMode = "mm"; // 'mm', 'orig', 'en', 'orig_mm', 'en_mm'
+let box2ContentMode = "orig_en"; // 'orig_en', 'orig', 'en', 'mm'
 
 // Multi-Item Arrays for Titles, Custom Texts & Blurs
 let titlesList = [];
@@ -1164,7 +1333,6 @@ let activeItemId = null;
 let activeItemType = null;
 
 let logoProps = { visible: false, src: "", size: 60, opacity: 85, x: 85, y: 10 };
-let isSubtitleVisible = true;
 let borderProgEnabled = true;
 
 let isExportActive = false;
@@ -1180,6 +1348,9 @@ const videoBox = document.getElementById("videoBox");
 const overlay = document.getElementById("overlay");
 const overlayInner = document.getElementById("overlayInner");
 const overlayTarget = document.getElementById("overlayTarget");
+const overlay2 = document.getElementById("overlay2");
+const overlay2Inner = document.getElementById("overlay2Inner");
+const overlay2Target = document.getElementById("overlay2Target");
 const vPlayBtn = document.getElementById("vPlayBtn");
 const vCurTime = document.getElementById("vCurTime");
 const vDurTime = document.getElementById("vDurTime");
@@ -1262,7 +1433,7 @@ function step(name, state) {
 
 function switchTab(tabId, btn) {
   document.querySelectorAll(".bottomNav button").forEach(b => b.classList.remove("active"));
-  btn.classList.add("active");
+  if (btn) btn.classList.add("active");
   document.querySelectorAll(".tabPane").forEach(pane => pane.classList.remove("activeTab"));
   const target = document.getElementById(tabId);
   if (target) target.classList.add("activeTab");
@@ -1773,7 +1944,7 @@ function initLogoDrag() {
 }
 
 // -------------------------------------------------------------
-// 5. Subtitle Position, Style & Auto Aspect Ratio Size Matching
+// 5. Subtitle Position, Style & Auto Aspect Ratio Size Matching (Box 1 & Box 2)
 // -------------------------------------------------------------
 function autoAdjustSubtitleForAspectRatio() {
   const vw = video.videoWidth || 1280;
@@ -1788,7 +1959,7 @@ function autoAdjustSubtitleForAspectRatio() {
   if (aspect < 0.8) {
     // Vertical Video (9:16 TikTok / Shorts / Reels)
     autoFontSize = Math.max(13, Math.min(18, Math.round(boxW * 0.044)));
-    autoPosY = 74;
+    autoPosY = 76;
     maxBoxWidthPct = 92;
   } else if (aspect <= 1.2) {
     // Square / 4:5 Video (1:1)
@@ -1804,6 +1975,8 @@ function autoAdjustSubtitleForAspectRatio() {
 
   overlay.style.width = maxBoxWidthPct + "%";
   overlay.style.maxWidth = maxBoxWidthPct + "%";
+  overlay2.style.width = maxBoxWidthPct + "%";
+  overlay2.style.maxWidth = maxBoxWidthPct + "%";
 
   const sizeSlider = document.getElementById("size");
   if (sizeSlider) {
@@ -1818,7 +1991,9 @@ function autoAdjustSubtitleForAspectRatio() {
   if (sy) sy.value = overlayPos.y;
 
   applySubtitlePositionFromSlider();
+  applySub2PositionFromSlider();
   applySubtitleStyle();
+  applySub2Style();
 }
 
 function applySubtitlePositionFromSlider() {
@@ -1832,7 +2007,19 @@ function applySubtitlePositionFromSlider() {
   overlay.style.top = overlayPos.y + "%";
 }
 
+function applySub2PositionFromSlider() {
+  overlay2Pos.x = Number(document.getElementById("pos2X").value);
+  overlay2Pos.y = Number(document.getElementById("pos2Y").value);
+  const vx = document.getElementById("pos2XVal");
+  const vy = document.getElementById("pos2YVal");
+  if (vx) vx.textContent = overlay2Pos.x + "%";
+  if (vy) vy.textContent = overlay2Pos.y + "%";
+  overlay2.style.left = overlay2Pos.x + "%";
+  overlay2.style.top = overlay2Pos.y + "%";
+}
+
 function initSubtitleTouchDrag() {
+  // Box 1 Touch Drag
   makeElementDraggable(overlay, overlayPos, () => {
     overlay.style.left = overlayPos.x + "%";
     overlay.style.top = overlayPos.y + "%";
@@ -1844,6 +2031,20 @@ function initSubtitleTouchDrag() {
     const vy = document.getElementById("posYVal");
     if (vx) vx.textContent = overlayPos.x + "%";
     if (vy) vy.textContent = overlayPos.y + "%";
+  });
+
+  // Box 2 Touch Drag (Completely Independent)
+  makeElementDraggable(overlay2, overlay2Pos, () => {
+    overlay2.style.left = overlay2Pos.x + "%";
+    overlay2.style.top = overlay2Pos.y + "%";
+    const sx2 = document.getElementById("pos2X");
+    const sy2 = document.getElementById("pos2Y");
+    if (sx2) sx2.value = overlay2Pos.x;
+    if (sy2) sy2.value = overlay2Pos.y;
+    const vx2 = document.getElementById("pos2XVal");
+    const vy2 = document.getElementById("pos2YVal");
+    if (vx2) vx2.textContent = overlay2Pos.x + "%";
+    if (vy2) vy2.textContent = overlay2Pos.y + "%";
   });
 }
 
@@ -1895,7 +2096,27 @@ function loadVideo(f) {
 function toggleSubtitleVisibility() {
   isSubtitleVisible = document.getElementById("showSubtitleCheck").checked;
   overlay.style.display = isSubtitleVisible ? "flex" : "none";
-  toast(isSubtitleVisible ? "Subtitle Shown" : "Subtitle Hidden");
+  updateLiveSubtitleOverlays(video.currentTime || 0);
+  toast(isSubtitleVisible ? "Subtitle Box 1 Shown" : "Subtitle Box 1 Hidden");
+}
+
+function toggleSub2Visibility() {
+  isSub2Visible = document.getElementById("showSub2Check").checked;
+  overlay2.style.display = isSub2Visible ? "flex" : "none";
+  updateLiveSubtitleOverlays(video.currentTime || 0);
+  toast(isSub2Visible ? "Subtitle Box 2 Shown" : "Subtitle Box 2 Hidden");
+}
+
+function applyKaraokeSettings() {
+  karaokeEnabled = document.getElementById("karaokeEnabledCheck").checked;
+  karaokeActiveColor = document.getElementById("karaokeActiveColor").value;
+  karaokeBaseColor = document.getElementById("karaokeBaseColor").value;
+  karaokeTarget = document.getElementById("karaokeTargetSelect").value;
+  box1ContentMode = document.getElementById("box1ContentMode").value;
+  box2ContentMode = document.getElementById("box2ContentMode").value;
+  applySubtitleStyle();
+  applySub2Style();
+  updateLiveSubtitleOverlays(video.currentTime || 0);
 }
 
 function applySubtitleStyle() {
@@ -1917,7 +2138,127 @@ function applySubtitleStyle() {
   overlayTarget.style.color = textColor;
   overlayTarget.style.fontSize = fontSize + "px";
   overlayTarget.style.webkitTextStroke = `${outlineWidth}px ${outlineColor}`;
+  updateLiveSubtitleOverlays(video.currentTime || 0);
 }
+
+function applySub2Style() {
+  const outlineColor = document.getElementById("sub2OutlineColor").value;
+  const outlineWidth = Number(document.getElementById("sub2OutlineWidth").value);
+  const bgColor = document.getElementById("sub2BgColor").value;
+  const opacity = Number(document.getElementById("sub2BoxOpacity").value) / 100;
+  const fontSize = Number(document.getElementById("sub2Size").value);
+
+  document.getElementById("sub2OpacityVal").textContent = Math.round(opacity * 100) + "%";
+  document.getElementById("sub2SizeVal").textContent = fontSize + " px";
+
+  const r = parseInt(bgColor.slice(1, 3), 16) || 0;
+  const g = parseInt(bgColor.slice(3, 5), 16) || 0;
+  const b = parseInt(bgColor.slice(5, 7), 16) || 0;
+
+  overlay2Inner.style.backgroundColor = `rgba(${r}, ${g}, ${b}, ${opacity})`;
+  overlay2Target.style.color = karaokeBaseColor || "#ffffff";
+  overlay2Target.style.fontSize = fontSize + "px";
+  overlay2Target.style.webkitTextStroke = `${outlineWidth}px ${outlineColor}`;
+  updateLiveSubtitleOverlays(video.currentTime || 0);
+}
+
+// Helper: Resolve text for Box 1 or Box 2 based on selected mode
+function getSubTextForMode(sub, mode) {
+  if (!sub) return "";
+  const mm = (sub.mm || "").trim();
+  const orig = (sub.orig || "").trim();
+  const en = (sub.en || "").trim();
+
+  if (mode === "mm") return mm || orig || en;
+  if (mode === "orig") return orig || en || mm;
+  if (mode === "en") return en || orig || mm;
+  if (mode === "orig_en") {
+    if (orig && en && orig.toLowerCase() !== en.toLowerCase()) return `${orig}\n${en}`;
+    return orig || en || mm;
+  }
+  if (mode === "orig_mm") {
+    if (orig && mm && orig !== mm) return `${orig}\n${mm}`;
+    return mm || orig;
+  }
+  if (mode === "en_mm") {
+    if (en && mm && en !== mm) return `${en}\n${mm}`;
+    return mm || en;
+  }
+  return mm;
+}
+
+// Helper: Apply Karaoke Sweep Effect or Normal Color to DOM Target
+function renderDomSubtitleWithKaraoke(domTarget, text, progressPct, useKaraoke, normalColor) {
+  if (!text) {
+    domTarget.textContent = "";
+    return;
+  }
+  domTarget.textContent = text;
+  if (useKaraoke) {
+    const pct = Math.max(0, Math.min(100, progressPct * 100));
+    domTarget.style.backgroundImage = `linear-gradient(90deg, ${karaokeActiveColor} ${pct}%, ${karaokeBaseColor} ${pct}%)`;
+    domTarget.style.webkitBackgroundClip = "text";
+    domTarget.style.backgroundClip = "text";
+    domTarget.style.webkitTextFillColor = "transparent";
+    domTarget.style.color = "transparent";
+  } else {
+    domTarget.style.backgroundImage = "none";
+    domTarget.style.webkitBackgroundClip = " initial";
+    domTarget.style.backgroundClip = "initial";
+    domTarget.style.webkitTextFillColor = normalColor;
+    domTarget.style.color = normalColor;
+  }
+}
+
+function updateLiveSubtitleOverlays(t) {
+  const activeSub = subs.find(a => t >= a.start && t <= a.end);
+  const progress = activeSub ? Math.max(0, Math.min(1, (t - activeSub.start) / Math.max(0.1, activeSub.end - activeSub.start))) : 0;
+
+  // Box 1 Update
+  if (activeSub && isSubtitleVisible) {
+    const text1 = getSubTextForMode(activeSub, box1ContentMode);
+    if (text1) {
+      overlayInner.style.visibility = "visible";
+      const k1 = karaokeEnabled && (karaokeTarget === "both" || karaokeTarget === "box1");
+      const c1 = document.getElementById("targetColor").value;
+      renderDomSubtitleWithKaraoke(overlayTarget, text1, progress, k1, c1);
+    } else {
+      overlayInner.style.visibility = "hidden";
+      overlayTarget.textContent = "";
+    }
+  } else {
+    overlayInner.style.visibility = "hidden";
+    overlayTarget.textContent = "";
+  }
+
+  // Box 2 Update
+  if (activeSub && isSub2Visible) {
+    const text2 = getSubTextForMode(activeSub, box2ContentMode);
+    if (text2) {
+      overlay2Inner.style.visibility = "visible";
+      const k2 = karaokeEnabled && (karaokeTarget === "both" || karaokeTarget === "box2");
+      renderDomSubtitleWithKaraoke(overlay2Target, text2, progress, k2, karaokeBaseColor);
+    } else {
+      overlay2Inner.style.visibility = "hidden";
+      overlay2Target.textContent = "";
+    }
+  } else {
+    overlay2Inner.style.visibility = "hidden";
+    overlay2Target.textContent = "";
+  }
+}
+
+// Smooth 60fps animation loop when video is playing for silky Karaoke sweep
+function startSmoothPreviewKaraokeLoop() {
+  const tick = () => {
+    if (!video.paused && !video.ended && !isExportActive) {
+      updateLiveSubtitleOverlays(video.currentTime);
+      requestAnimationFrame(tick);
+    }
+  };
+  requestAnimationFrame(tick);
+}
+video.addEventListener("play", startSmoothPreviewKaraokeLoop);
 
 // -------------------------------------------------------------
 // Script Generation & Transcribe (Robust Fallback System)
@@ -1951,6 +2292,255 @@ async function extractLightweightAudioBlob(videoFile) {
     p += 2;
   }
   return new Blob([outBuf], { type: 'audio/wav' });
+}
+
+// Helper: Fast Trilingual Translation for Song / Karaoke Mode (Original + English + Myanmar)
+async function translateTextClient(text, targetLang) {
+  if (!text || !text.trim()) return "";
+  try {
+    const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${targetLang}&dt=t&q=${encodeURIComponent(text.trim())}`;
+    const r = await fetch(url);
+    if (r.ok) {
+      const d = await r.json();
+      if (Array.isArray(d) && Array.isArray(d[0])) {
+        return d[0].map(item => item[0]).join("").trim();
+      }
+    }
+  } catch (e) {
+    console.warn("Translation fallback error:", e);
+  }
+  return text;
+}
+
+// Generate Song / Karaoke Subtitles (Preserves Exact Song Timestamps + Original + English + Myanmar)
+async function generateSongKaraokeSubtitles() {
+  if (generating) return;
+  if (!file) {
+    toast("ကျေးဇူးပြု၍ သီချင်း/Video ဖိုင်အရင် ထည့်သွင်းပါ");
+    return;
+  }
+
+  const targetBox = document.getElementById("videoBox");
+  if (targetBox) targetBox.scrollIntoView({ behavior: "smooth", block: "center" });
+
+  generating = true;
+  video.pause();
+  videoLockOverlay.classList.add("active");
+  cancelExportBtn.style.display = "none";
+  setLockProgress(10, "🎵 သီချင်းစာသားများ စတင်ထုတ်ယူနေပါသည်...", "သီချင်းအသံလှိုင်းကို စစ်ဆေးနေပါသည်...");
+
+  document.querySelectorAll(".lockable, input.lockable, select.lockable").forEach(el => {
+    el.disabled = true;
+  });
+
+  const spinner = document.getElementById("songSpinner");
+  const btnText = document.getElementById("songBtnText");
+  if (spinner) spinner.style.display = "inline-block";
+  if (btnText) btnText.textContent = "သီချင်းစာတန်း ဘာသာပြန်နေပါသည်...";
+
+  subs = [];
+  audioMap.clear();
+  render();
+
+  try {
+    step("Upload", "done"); step("Whisper", "active");
+
+    let payloadFile = file;
+    try {
+      if (file.size > 20 * 1024 * 1024) {
+        setLockProgress(25, "🎵 သီချင်းအသံဖိုင် သီးသန့်ခွဲထုတ်နေပါသည်...", "ဖိုင်ဆိုဒ်ကြီးမားသဖြင့် ပေါ့ပါးသော အသံဖိုင်အဖြစ် ပြောင်းလဲနေပါသည်...");
+        const audioBlob = await extractLightweightAudioBlob(file);
+        payloadFile = new File([audioBlob], "song_extract.wav", { type: "audio/wav" });
+      }
+    } catch (extractErr) {
+      payloadFile = file;
+    }
+
+    setLockProgress(45, "🎤 Whisper AI သီချင်းစာသား နားထောင်နေပါသည်...", "မူရင်းသီချင်းစာသားနှင့် အချိန် (Timestamps) များကို ထုတ်ယူနေပါသည်...");
+    const fd = new FormData();
+    fd.append("file", payloadFile);
+
+    const r1 = await fetch(WORKER_URL + "/transcribe", { method: "POST", body: fd });
+    if (!r1.ok) {
+      const errText = await r1.text();
+      throw new Error(`[Transcribe Error HTTP ${r1.status}]: ${errText}`);
+    }
+
+    const d1 = await r1.json();
+    const rawSegments = d1.segments || [];
+    if (!rawSegments.length) throw new Error("သီချင်း/ဗီဒီယိုထဲတွင် စာသား မတွေ့ရှိပါ။");
+
+    step("Whisper", "done"); step("Recap", "active");
+
+    const builtSubs = [];
+    for (let i = 0; i < rawSegments.length; i++) {
+      const seg = rawSegments[i];
+      const origText = (seg.text || "").trim();
+      if (!origText) continue;
+
+      const pct = 50 + Math.round(((i + 1) / rawSegments.length) * 45);
+      setLockProgress(pct, `🌏 မူရင်း + English + မြန်မာ ဘာသာပြန်နေသည် (${i + 1}/${rawSegments.length})...`, `"${origText.slice(0, 28)}..."`);
+
+      const [enText, mmText] = await Promise.all([
+        translateTextClient(origText, "en"),
+        translateTextClient(origText, "my")
+      ]);
+
+      builtSubs.push({
+        id: builtSubs.length + 1,
+        start: Number(seg.start ?? (i * 3)),
+        end: Number(seg.end ?? (i * 3 + 2.8)),
+        orig: origText,
+        en: enText || origText,
+        mm: mmText || origText,
+        voiceOverride: selectedVoice
+      });
+    }
+
+    subs = builtSubs;
+
+    // Enable Karaoke & Box 2 automatically for Song Mode, and set BGM to 100%
+    document.getElementById("karaokeEnabledCheck").checked = true;
+    document.getElementById("showSub2Check").checked = true;
+    document.getElementById("videoVolume").value = 100;
+    updateAudioLevels();
+    toggleSub2Visibility();
+    applyKaraokeSettings();
+    autoAdjustSubtitleForAspectRatio();
+
+    step("Recap", "done"); step("Ready", "done");
+    const badgeText = document.getElementById("modeBadgeText");
+    if (badgeText) badgeText.textContent = "🎤 KARAOKE SONG MODE: မူရင်း + English + မြန်မာ စာတန်းထိုး (၂) ခု အသင့်ဖြစ်ပါပြီ";
+    modeBadge.classList.add("show");
+    render();
+
+    setLockProgress(100, "🎉 သီချင်း ကာရာအိုကေ စာတန်းထိုး ပြီးပါပြီ!", "Box 1 နှင့် Box 2 ကို ဗီဒီယိုပေါ်တွင် စိတ်ကြိုက် ရွှေ့ထားနိုင်ပါပြီ...");
+    await new Promise(r => setTimeout(r, 500));
+    videoLockOverlay.classList.remove("active");
+    toast("🎉 သီချင်း Karaoke (မူရင်း + EN + MM) စာတန်းထိုး အသင့်ဖြစ်ပါပြီ!");
+  } catch (err) {
+    console.error("Song Karaoke generation error:", err);
+    videoLockOverlay.classList.remove("active");
+    setStatus("error", "Error occurred");
+    toast("Error: " + err.message);
+  } finally {
+    generating = false;
+    document.querySelectorAll(".lockable, input.lockable, select.lockable").forEach(el => {
+      el.disabled = false;
+    });
+    if (spinner) spinner.style.display = "none";
+    if (btnText) btnText.textContent = "🎵 Generate Song Lyrics (မူရင်း + English + မြန်မာ စာတန်းထုတ်မည်)";
+  }
+}
+
+// Parse .SRT or .LRC file content into timed subtitle objects
+function parseSrtOrLrcContent(rawText) {
+  const text = String(rawText || "").replace(/\r\n/g, "\n").replace(/\r/g, "\n").trim();
+  if (!text) return [];
+
+  // Check if LRC format: [mm:ss.xx]lyric
+  const lrcRegex = /^\[(\d{1,2}):(\d{2}(?:\.\d{1,3})?)\](.*)$/gm;
+  const lrcMatches = [...text.matchAll(lrcRegex)];
+  if (lrcMatches.length > 0) {
+    const items = [];
+    for (let i = 0; i < lrcMatches.length; i++) {
+      const m = lrcMatches[i];
+      const startSec = parseInt(m[1], 10) * 60 + parseFloat(m[2]);
+      const nextStart = (i + 1 < lrcMatches.length)
+        ? (parseInt(lrcMatches[i + 1][1], 10) * 60 + parseFloat(lrcMatches[i + 1][2]))
+        : (startSec + 4.0);
+      const lineText = (m[3] || "").trim();
+      if (lineText) {
+        items.push({ start: Number(startSec.toFixed(2)), end: Number(Math.max(startSec + 0.5, nextStart - 0.05).toFixed(2)), text: lineText });
+      }
+    }
+    return items;
+  }
+
+  // Standard SRT format parser
+  const blocks = text.split(/\n\s*\n/);
+  const parsed = [];
+  const timeLineRegex = /(\d{1,2}):(\d{2}):(\d{2})[,.](\d{1,3})\s*-->\s*(\d{1,2}):(\d{2}):(\d{2})[,.](\d{1,3})/;
+
+  for (const block of blocks) {
+    const lines = block.split("\n").map(l => l.trim()).filter(Boolean);
+    if (lines.length < 2) continue;
+
+    let timeIdx = lines.findIndex(l => timeLineRegex.test(l));
+    if (timeIdx === -1) continue;
+
+    const match = lines[timeIdx].match(timeLineRegex);
+    const start = parseInt(match[1], 10) * 3600 + parseInt(match[2], 10) * 60 + parseInt(match[3], 10) + parseInt(match[4].padEnd(3, '0'), 10) / 1000;
+    const end = parseInt(match[5], 10) * 3600 + parseInt(match[6], 10) * 60 + parseInt(match[7], 10) + parseInt(match[8].padEnd(3, '0'), 10) / 1000;
+    const contentLines = lines.slice(timeIdx + 1).join("\n").trim();
+
+    if (contentLines) {
+      parsed.push({ start: Number(start.toFixed(2)), end: Number(end.toFixed(2)), text: contentLines });
+    }
+  }
+  return parsed;
+}
+
+// Handle SRT / LRC File Upload for Box 1 or Box 2
+function handleSrtFileUpload(event, targetBox) {
+  const f = event.target.files && event.target.files[0];
+  if (!f) return;
+
+  const reader = new FileReader();
+  reader.onload = async function(evt) {
+    const rawContent = evt.target.result;
+    const parsedItems = parseSrtOrLrcContent(rawContent);
+
+    if (!parsedItems.length) {
+      toast("⚠️ SRT / LRC ဖိုင်ထဲတွင် အချိန်နှင့် စာသား မတွေ့ရှိပါ");
+      return;
+    }
+
+    if (targetBox === "box1" || subs.length === 0) {
+      subs = parsedItems.map((item, idx) => {
+        const parts = item.text.split("\n");
+        let mmText = item.text;
+        let origText = parts[0] || "";
+        let enText = parts.length > 1 ? parts[1] : "";
+        return {
+          id: idx + 1,
+          start: item.start,
+          end: item.end,
+          mm: mmText,
+          orig: origText,
+          en: enText,
+          voiceOverride: selectedVoice
+        };
+      });
+      toast(`✅ SRT စာကြောင်း (${subs.length}) ခုဖြင့် အစားထိုးပြီးပါပြီ!`);
+    } else if (targetBox === "box2") {
+      // Merge into Box 2 (orig / en) by matching index or timestamp
+      parsedItems.forEach((item, idx) => {
+        if (subs[idx]) {
+          subs[idx].orig = item.text;
+          subs[idx].en = item.text;
+        } else {
+          subs.push({
+            id: subs.length + 1,
+            start: item.start,
+            end: item.end,
+            mm: "",
+            orig: item.text,
+            en: item.text,
+            voiceOverride: selectedVoice
+          });
+        }
+      });
+      document.getElementById("showSub2Check").checked = true;
+      toggleSub2Visibility();
+      toast(`✅ Box 2 (Original/EN) SRT စာကြောင်း (${parsedItems.length}) ခု ထည့်သွင်းပြီးပါပြီ!`);
+    }
+
+    render();
+    updateLiveSubtitleOverlays(video.currentTime || 0);
+    event.target.value = "";
+  };
+  reader.readAsText(f, "UTF-8");
 }
 
 async function generateRecapScriptOnly() {
@@ -2041,6 +2631,8 @@ async function generateRecapScriptOnly() {
       start: Number(g.start ?? (i * 4)),
       end: Number(g.end ?? (i * 4 + 3.8)),
       mm: g.recap_mm || g.text || "ဇာတ်ကြောင်းပြော...",
+      orig: g.orig || (rawSegments[i] ? rawSegments[i].text : ""),
+      en: g.en || "",
       voiceOverride: selectedVoice
     }));
 
@@ -2055,7 +2647,7 @@ async function generateRecapScriptOnly() {
     videoLockOverlay.classList.remove("active");
     toast("🎉 သဘာဝကျသော Script ရေးပြီးပါပြီ!");
 
-    const editorTabBtn = document.querySelectorAll(".bottomNav button")[1];
+    const editorTabBtn = document.querySelectorAll(".bottomNav button")[2];
     if (editorTabBtn) switchTab('tabEditor', editorTabBtn);
 
   } catch(err) {
@@ -2078,7 +2670,7 @@ async function generateRecapScriptOnly() {
 // -------------------------------------------------------------
 async function testMyanmarVoice() {
   if (generating) return;
-  toast("Testing AI voice...");
+  toast("⏳ AI အသံ စမ်းသပ်နေပါသည် (Render ဆာဗာနှိုးနေပါက ခေတ္တစောင့်ပါ)...");
   try {
     const spd = Number(document.getElementById("voiceSpeed").value) || 0;
     const rateStr = (spd >= 0 ? "+" : "") + spd + "%";
@@ -2147,7 +2739,8 @@ video.addEventListener("timeupdate", () => {
 
   if (activeSub) {
     bannerTime.textContent = `${formatTime(activeSub.start)} → ${formatTime(activeSub.end)}`;
-    bannerMM.textContent = activeSub.mm || "";
+    const extraOrig = activeSub.orig ? ` [${activeSub.orig}]` : "";
+    bannerMM.textContent = (activeSub.mm || "") + extraOrig;
     if (!isExportActive && lastActiveSubId !== activeSub.id) {
       lastActiveSubId = activeSub.id;
       playVoiceForSub(activeSub);
@@ -2155,16 +2748,10 @@ video.addEventListener("timeupdate", () => {
   } else {
     lastActiveSubId = null;
     bannerTime.textContent = formatTime(t);
-    bannerMM.textContent = "─ No active narration ─";
+    bannerMM.textContent = "─ No active narration / lyrics ─";
   }
 
-  if (activeSub && activeSub.mm && isSubtitleVisible) {
-    overlayInner.style.visibility = "visible";
-    overlayTarget.textContent = activeSub.mm;
-  } else {
-    overlayInner.style.visibility = "hidden";
-    overlayTarget.textContent = "";
-  }
+  updateLiveSubtitleOverlays(t);
 });
 
 function playVoiceForSub(sub) {
@@ -2192,9 +2779,9 @@ function render() {
   const list = document.getElementById("list");
   document.getElementById("subCount").textContent = subs.length ? `(${subs.length})` : "";
 
-  const rows = subs.filter(x => !q || x.mm.toLowerCase().includes(q));
+  const rows = subs.filter(x => !q || (x.mm || "").toLowerCase().includes(q) || (x.orig || "").toLowerCase().includes(q) || (x.en || "").toLowerCase().includes(q));
   if (!rows.length) {
-    list.innerHTML = `<div class="empty">🎬 Upload movie clip to begin.</div>`;
+    list.innerHTML = `<div class="empty">🎬 Upload movie or song clip to begin.</div>`;
     return;
   }
 
@@ -2206,7 +2793,11 @@ function render() {
           ${audioMap.has(x.id) ? "🔊 Play" : "🎙️ Create"}
         </button>
       </div>
-      <textarea class="itemEditText" onclick="event.stopPropagation()" oninput="subs.find(s=>s.id===${x.id}).mm=this.value; audioMap.delete(${x.id})">${x.mm}</textarea>
+      <textarea class="itemEditText" placeholder="မြန်မာဘာသာပြန် / Recap စာသား (Box 1)..." onclick="event.stopPropagation()" oninput="subs.find(s=>s.id===${x.id}).mm=this.value; audioMap.delete(${x.id}); updateLiveSubtitleOverlays(video.currentTime)">${x.mm || ""}</textarea>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:4px" onclick="event.stopPropagation()">
+        <input type="text" class="itemEditText" style="margin-bottom:0;font-size:11px" placeholder="မူရင်းဘာသာစာသား (Original)..." value="${(x.orig || "").replace(/"/g, '&quot;')}" oninput="subs.find(s=>s.id===${x.id}).orig=this.value; updateLiveSubtitleOverlays(video.currentTime)">
+        <input type="text" class="itemEditText" style="margin-bottom:0;font-size:11px" placeholder="English Lyrics (Box 2)..." value="${(x.en || "").replace(/"/g, '&quot;')}" oninput="subs.find(s=>s.id===${x.id}).en=this.value; updateLiveSubtitleOverlays(video.currentTime)">
+      </div>
     </div>
   `).join("");
 }
@@ -2214,7 +2805,14 @@ function render() {
 function addSub() {
   const last = subs[subs.length - 1];
   const start = last ? Number(last.end) : 0;
-  subs.push({ id: subs.length + 1, start, end: start + 3.0, mm: "ဇာတ်ကြောင်းပြော အသစ်..." });
+  subs.push({
+    id: subs.length + 1,
+    start,
+    end: start + 3.0,
+    mm: "ဇာတ်ကြောင်းပြော / သီချင်းစာသား အသစ်...",
+    orig: "",
+    en: ""
+  });
   if (subs.length === 1) autoAdjustSubtitleForAspectRatio();
   render();
 }
@@ -2262,7 +2860,7 @@ function onSeekChange() {
 
 videoBox.addEventListener("click", (e) => {
   if (generating || isExportActive) return;
-  if (e.target.closest("button") || e.target.closest("input") || e.target.closest(".drag-element") || e.target.closest("#overlay") || e.target.closest(".itemCloseBadge") || e.target.closest("#emptyState")) return;
+  if (e.target.closest("button") || e.target.closest("input") || e.target.closest(".drag-element") || e.target.closest("#overlay") || e.target.closest("#overlay2") || e.target.closest(".itemCloseBadge") || e.target.closest("#emptyState")) return;
   togglePlayPause();
 });
 
@@ -2373,7 +2971,101 @@ function wrapCanvasText(ctx, text, maxWidth) {
   return lines.length ? lines : [""];
 }
 
-// Draw Frame: Matches Recap Preview 100% (Background Box, Multi-Line Wrap, Padauk Font, Center Alignment)
+// Helper: Draw a Subtitle Box (Box 1 or Box 2) with Optional Dual-Color Karaoke Sweep on Canvas
+function drawSubtitleBoxOnCanvas(bCtx, burnCanvas, opts) {
+  const {
+    text, posX, posY, fsize, outW, textColor, outlineColor, bgColor, boxOpacity,
+    useKaraoke, karaokeProg, kActiveColor, kBaseColor, scale
+  } = opts;
+
+  if (!text || !text.trim()) return;
+
+  const sx = (posX / 100) * burnCanvas.width;
+  const sy = (posY / 100) * burnCanvas.height;
+
+  bCtx.save();
+  bCtx.font = `700 ${fsize}px 'Padauk', 'Segoe UI', sans-serif`;
+  bCtx.textAlign = "center";
+  bCtx.textBaseline = "middle";
+  bCtx.lineJoin = "round";
+  bCtx.miterLimit = 2;
+
+  const padX = 14 * scale;
+  const padY = 6 * scale;
+  const maxBoxWidth = burnCanvas.width * 0.90;
+  const maxTextWidth = maxBoxWidth - (padX * 2);
+
+  const lines = wrapCanvasText(bCtx, text, maxTextWidth);
+  const lineHeight = fsize * 1.42;
+
+  let widestLine = 0;
+  lines.forEach(l => {
+    const w = bCtx.measureText(l).width;
+    if (w > widestLine) widestLine = w;
+  });
+
+  const boxW = Math.min(maxBoxWidth, widestLine + padX * 2);
+  const boxH = (lines.length * lineHeight) + (padY * 2);
+
+  let boxX = sx - (boxW / 2);
+  let boxY = sy - (boxH / 2);
+  const edgeMargin = 8 * scale;
+  if (boxX < edgeMargin) boxX = edgeMargin;
+  if (boxX + boxW > burnCanvas.width - edgeMargin) boxX = burnCanvas.width - edgeMargin - boxW;
+  if (boxY < edgeMargin) boxY = edgeMargin;
+  if (boxY + boxH > burnCanvas.height - edgeMargin) boxY = burnCanvas.height - edgeMargin - boxH;
+
+  const centerX = boxX + (boxW / 2);
+
+  // Draw Subtitle Background Box
+  if (boxOpacity > 0) {
+    const r = parseInt(bgColor.slice(1, 3), 16) || 0;
+    const g = parseInt(bgColor.slice(3, 5), 16) || 0;
+    const b = parseInt(bgColor.slice(5, 7), 16) || 0;
+    bCtx.fillStyle = `rgba(${r}, ${g}, ${b}, ${boxOpacity})`;
+    drawRoundedBox(bCtx, boxX, boxY, boxW, boxH, 8 * scale);
+    bCtx.fill();
+  }
+
+  // Draw Wrapped Subtitle Lines (With Optional 2-Color Karaoke Sweep)
+  const startTextY = boxY + padY + (lineHeight / 2);
+  lines.forEach((line, idx) => {
+    const ly = startTextY + (idx * lineHeight);
+    const lineW = bCtx.measureText(line).width;
+    const lineLeft = centerX - (lineW / 2);
+
+    if (outW > 0) {
+      bCtx.strokeStyle = outlineColor;
+      bCtx.lineWidth = outW * 2;
+      bCtx.strokeText(line, centerX, ly);
+    }
+
+    if (useKaraoke) {
+      // 1. Draw Base Color (Unsung text)
+      bCtx.fillStyle = kBaseColor;
+      bCtx.fillText(line, centerX, ly);
+
+      // 2. Draw Highlight Sweep Color clipped to progress
+      const sweepWidth = lineW * Math.max(0, Math.min(1, karaokeProg));
+      if (sweepWidth > 0) {
+        bCtx.save();
+        bCtx.beginPath();
+        bCtx.rect(lineLeft - 4, ly - lineHeight / 2, sweepWidth + 4, lineHeight);
+        bCtx.clip();
+        bCtx.fillStyle = kActiveColor;
+        bCtx.fillText(line, centerX, ly);
+        bCtx.restore();
+      }
+    } else {
+      bCtx.fillStyle = textColor;
+      bCtx.fillText(line, centerX, ly);
+    }
+  });
+
+  bCtx.restore();
+}
+
+// Draw Frame: Matches Recap & Karaoke Preview 100% (Both Subtitle Boxes, Karaoke Sweep, Titles, Texts, Logo, Border)
 function drawCanvasFrame(bCtx, burnCanvas, currTime, scale) {
   // 1. Video Frame Base
   bCtx.save();
@@ -2392,77 +3084,54 @@ function drawCanvasFrame(bCtx, burnCanvas, currTime, scale) {
     bCtx.restore();
   });
 
-  // 3. Subtitles Layer (Exact Match with Recap Preview)
-  if (isSubtitleVisible) {
-    const currentSub = subs.find(s => currTime >= s.start && currTime <= s.end);
-    if (currentSub && currentSub.mm) {
-      const sx = (overlayPos.x / 100) * burnCanvas.width;
-      const sy = (overlayPos.y / 100) * burnCanvas.height;
-      const fsize = Number(document.getElementById("size").value) * scale;
-      const outW = Number(document.getElementById("outlineWidth").value) * scale;
-      const textColor = document.getElementById("targetColor").value;
-      const outlineColor = document.getElementById("outlineColor").value;
-      const bgColor = document.getElementById("bgColor").value;
-      const boxOpacity = Number(document.getElementById("boxOpacity").value) / 100;
+  const currentSub = subs.find(s => currTime >= s.start && currTime <= s.end);
+  const karaokeProg = currentSub
+    ? Math.max(0, Math.min(1, (currTime - currentSub.start) / Math.max(0.1, currentSub.end - currentSub.start)))
+    : 0;
 
-      bCtx.save();
-      bCtx.font = `700 ${fsize}px 'Padauk', 'Segoe UI', sans-serif`;
-      bCtx.textAlign = "center";
-      bCtx.textBaseline = "middle";
-      bCtx.lineJoin = "round";
-      bCtx.miterLimit = 2;
-
-      const padX = 14 * scale;
-      const padY = 6 * scale;
-      const maxBoxWidth = burnCanvas.width * 0.90;
-      const maxTextWidth = maxBoxWidth - (padX * 2);
-
-      const lines = wrapCanvasText(bCtx, currentSub.mm, maxTextWidth);
-      const lineHeight = fsize * 1.42;
-
-      let widestLine = 0;
-      lines.forEach(l => {
-        const w = bCtx.measureText(l).width;
-        if (w > widestLine) widestLine = w;
+  // 3A. Subtitle Box 1 Layer (Primary / Myanmar)
+  if (isSubtitleVisible && currentSub) {
+    const text1 = getSubTextForMode(currentSub, box1ContentMode);
+    if (text1) {
+      drawSubtitleBoxOnCanvas(bCtx, burnCanvas, {
+        text: text1,
+        posX: overlayPos.x,
+        posY: overlayPos.y,
+        fsize: Number(document.getElementById("size").value) * scale,
+        outW: Number(document.getElementById("outlineWidth").value) * scale,
+        textColor: document.getElementById("targetColor").value,
+        outlineColor: document.getElementById("outlineColor").value,
+        bgColor: document.getElementById("bgColor").value,
+        boxOpacity: Number(document.getElementById("boxOpacity").value) / 100,
+        useKaraoke: karaokeEnabled && (karaokeTarget === "both" || karaokeTarget === "box1"),
+        karaokeProg,
+        kActiveColor: karaokeActiveColor,
+        kBaseColor: karaokeBaseColor,
+        scale
       });
+    }
+  }
 
-      const boxW = Math.min(maxBoxWidth, widestLine + padX * 2);
-      const boxH = (lines.length * lineHeight) + (padY * 2);
-
-      let boxX = sx - (boxW / 2);
-      let boxY = sy - (boxH / 2);
-      const edgeMargin = 8 * scale;
-      if (boxX < edgeMargin) boxX = edgeMargin;
-      if (boxX + boxW > burnCanvas.width - edgeMargin) boxX = burnCanvas.width - edgeMargin - boxW;
-      if (boxY < edgeMargin) boxY = edgeMargin;
-      if (boxY + boxH > burnCanvas.height - edgeMargin) boxY = burnCanvas.height - edgeMargin - boxH;
-
-      const centerX = boxX + (boxW / 2);
-
-      // Draw Subtitle Background Box
-      if (boxOpacity > 0) {
-        const r = parseInt(bgColor.slice(1, 3), 16) || 0;
-        const g = parseInt(bgColor.slice(3, 5), 16) || 0;
-        const b = parseInt(bgColor.slice(5, 7), 16) || 0;
-        bCtx.fillStyle = `rgba(${r}, ${g}, ${b}, ${boxOpacity})`;
-        drawRoundedBox(bCtx, boxX, boxY, boxW, boxH, 8 * scale);
-        bCtx.fill();
-      }
-
-      // Draw Wrapped Subtitle Lines
-      const startTextY = boxY + padY + (lineHeight / 2);
-      lines.forEach((line, idx) => {
-        const ly = startTextY + (idx * lineHeight);
-        if (outW > 0) {
-          bCtx.strokeStyle = outlineColor;
-          bCtx.lineWidth = outW * 2;
-          bCtx.strokeText(line, centerX, ly);
-        }
-        bCtx.fillStyle = textColor;
-        bCtx.fillText(line, centerX, ly);
+  // 3B. Subtitle Box 2 Layer (Independent Original / English Karaoke Box)
+  if (isSub2Visible && currentSub) {
+    const text2 = getSubTextForMode(currentSub, box2ContentMode);
+    if (text2) {
+      drawSubtitleBoxOnCanvas(bCtx, burnCanvas, {
+        text: text2,
+        posX: overlay2Pos.x,
+        posY: overlay2Pos.y,
+        fsize: Number(document.getElementById("sub2Size").value) * scale,
+        outW: Number(document.getElementById("sub2OutlineWidth").value) * scale,
+        textColor: karaokeBaseColor,
+        outlineColor: document.getElementById("sub2OutlineColor").value,
+        bgColor: document.getElementById("sub2BgColor").value,
+        boxOpacity: Number(document.getElementById("sub2BoxOpacity").value) / 100,
+        useKaraoke: karaokeEnabled && (karaokeTarget === "both" || karaokeTarget === "box2"),
+        karaokeProg,
+        kActiveColor: karaokeActiveColor,
+        kBaseColor: karaokeBaseColor,
+        scale
       });
-
-      bCtx.restore();
     }
   }
 
@@ -2879,7 +3548,7 @@ async function exportFastVideo() {
     const mp4Blob = new Blob([buffer], { type: "video/mp4" });
     const a = document.createElement("a");
     a.href = URL.createObjectURL(mp4Blob);
-    a.download = `recap-fast-${Date.now()}.mp4`;
+    a.download = `recap-karaoke-fast-${Date.now()}.mp4`;
     a.click();
 
     toast("🎉 Pure .mp4 (Fast Frame-by-Frame) ဒေါင်းလုဒ် ပြီးစီးပါပြီ!");
@@ -2977,7 +3646,7 @@ async function exportStandardRealtimeVideo() {
       const blob = new Blob(chunks, { type: "video/mp4" });
       const a = document.createElement("a");
       a.href = URL.createObjectURL(blob);
-      a.download = `recap-standard-${Date.now()}.mp4`;
+      a.download = `recap-karaoke-standard-${Date.now()}.mp4`;
       a.click();
       toast("🎉 Standard MP4 Video download ပြီးစီးပါပြီ!");
     }
@@ -3046,7 +3715,9 @@ window.addEventListener("resize", () => {
 window.onload = function() {
   updateAudioLevels();
   applySubtitleStyle();
+  applySub2Style();
   applySubtitlePositionFromSlider();
+  applySub2PositionFromSlider();
   initSubtitleTouchDrag();
   toggleBorderProgressBar();
 };
