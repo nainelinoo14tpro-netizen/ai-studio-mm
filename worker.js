@@ -1,6 +1,6 @@
 /**
  * AI Studio All-in-One Master Backend Worker
- * (Restored to fully verified Edge TTS engine + Multi-Episode Series Support + ZeroGPU Voice Clone)
+ * (Restored to fully verified Edge TTS engine + Multi-Episode Series Support + ZeroGPU Voice Clone + Gemini Song Karaoke Trilingual Engine)
  */
 
 // =====================================================
@@ -76,6 +76,7 @@ export default {
             "GET /voices",
             "POST /transcribe",
             "POST /translate",
+            "POST /song",
             "POST /recap",
             "POST /story",
             "POST /tts",
@@ -164,7 +165,7 @@ export default {
       }
 
       // =================================================
-      // 2. GEMINI BATCH TRANSLATION
+      // 2. GEMINI BATCH TRANSLATION (SUPPORTS MYANMAR & ENGLISH)
       // =================================================
       if (url.pathname === "/translate" && request.method === "POST") {
         if (!env.GEMINI_API_KEY) {
@@ -173,6 +174,7 @@ export default {
 
         const body = await request.json().catch(() => ({}));
         const texts = body?.texts;
+        const targetLang = body?.targetLang === "en" ? "English" : "natural spoken Myanmar Burmese";
 
         if (!Array.isArray(texts) || texts.length === 0) {
           return json({ ok: true, translations: [] });
@@ -182,24 +184,23 @@ export default {
           return json({ error: "Subtitle lines အရမ်းများပါသည်။ Max 500 lines." }, 400);
         }
 
-        const BATCH_SIZE = 40;
+        const BATCH_SIZE = 35;
         const allTranslations = [];
 
         for (let start = 0; start < texts.length; start += BATCH_SIZE) {
           const batch = texts.slice(start, start + BATCH_SIZE);
           const prompt = `
-Translate every subtitle into natural spoken Myanmar Burmese.
+You are a professional subtitle & song lyric translator.
+Translate every line in the input array into ${targetLang}.
 
-IMPORTANT:
-- Keep EXACTLY the same number of items.
+CRITICAL RULES:
+- Even if a line contains 2 mixed languages (e.g., Thai + English, Hindi/Urdu + English, Korean + English, Chinese + English), translate the ENTIRE meaning completely into ${targetLang}.
+- Never return the untranslated original foreign script when translating to Myanmar Burmese.
+- Keep EXACTLY the same number of items (${batch.length} items).
 - Keep EXACTLY the same order.
-- Do NOT merge lines.
-- Do NOT split lines.
-- Preserve names, numbers and important meanings.
-- Make Burmese natural for movie subtitles.
-- Output ONLY a valid JSON array of strings.
-- No markdown.
-- No explanation.
+- Do NOT merge lines and do NOT split lines (keep each item on 1 single line without newline characters).
+- Make the translation natural, poetic, and fitting for songs/movies.
+- Output ONLY a valid JSON array of strings. No markdown, no explanation.
 
 Input:
 ${JSON.stringify(batch)}
@@ -221,7 +222,7 @@ ${JSON.stringify(batch)}
           const normalized = batch.map((orig, i) => {
             const tr = batchTranslations[i];
             if (typeof tr === "string" && tr.trim()) {
-              return tr.trim();
+              return tr.replace(/\r?\n/g, " ").trim();
             }
             return String(orig);
           });
@@ -232,6 +233,90 @@ ${JSON.stringify(batch)}
         return json({
           ok: true,
           translations: allTranslations,
+        });
+      }
+
+      // =================================================
+      // 2B. GEMINI SONG & KARAOKE TRILINGUAL TRANSLATOR (ORIG + EN + MM)
+      // =================================================
+      if (url.pathname === "/song" && request.method === "POST") {
+        if (!env.GEMINI_API_KEY) {
+          return json({ error: "GEMINI_API_KEY မထည့်ရသေးပါ။ Cloudflare Secrets ကိုစစ်ပါ။" }, 500);
+        }
+
+        const body = await request.json().catch(() => ({}));
+        const rawSegments = Array.isArray(body?.segments) ? body.segments : [];
+
+        if (!rawSegments.length) {
+          return json({ error: "Song segments မပါရှိပါ။" }, 400);
+        }
+
+        const BATCH_SIZE = 28;
+        const allLyrics = [];
+
+        for (let start = 0; start < rawSegments.length; start += BATCH_SIZE) {
+          const batch = rawSegments.slice(start, start + BATCH_SIZE);
+          const inputPayload = batch.map((s, idx) => ({
+            idx,
+            text: String(s.text || s.orig || "").replace(/\r?\n/g, " ").trim(),
+          }));
+
+          const prompt = `
+သင်သည် ဘာသာစကားမျိုးစုံ ကျွမ်းကျင်သော သီချင်းစာသား (Song Lyrics & Karaoke) ဘာသာပြန်ပညာရှင် ဖြစ်သည်။
+
+အောက်ပါ သီချင်းစာကြောင်း တစ်ကြောင်းချင်းစီကို စစ်ဆေးပြီး မူရင်းဘာသာစာသား (orig)၊ အင်္ဂလိပ်ဘာသာပြန် (en) နှင့် သီချင်းအဓိပ္ပာယ်နှင့် လိုက်ဖက်သော မြန်မာဘာသာပြန် (mm) တို့ကို ပြန်ထုတ်ပေးပါ။
+
+အလွန်အရေးကြီးသော စည်းမျဉ်းများ:
+1. သီချင်းစာကြောင်းထဲတွင် ဘာသာစကား (၂) မျိုး ရောနှောပါဝင်နေပါက (ဥပမာ - ထိုင်း + English၊ အူရဒူ/ဟိန္ဒီ + English၊ ကိုရီးယား + English၊ တရုတ် + English) ဘာသာစကား (၂) မျိုးစလုံး၏ အဓိပ္ပာယ်ကို အပြည့်အဝ ဘာသာပြန်ပေးရမည်။
+2. "mm" အကွက်တွင် မူရင်းနိုင်ငံခြားစာသားအတိုင်း လုံးဝ ပြန်မထည့်ရပါ။ သီချင်းနှင့် လိုက်ဖက်ပြီး နားထောင်ကောင်းသော မြန်မာစာသားစစ်စစ်ဖြင့်သာ ရေးပေးရမည်။
+3. "en" အကွက်တွင် အဓိပ္ပာယ်မှန်ကန်သော English စာသားသီးသန့် ရေးပေးရမည်။
+4. စာကြောင်းအရေအတွက် (${inputPayload.length} ကြောင်း) နှင့် အစီအစဉ် (idx) အတိအကျ တူညီရမည်။ စာကြောင်းတစ်ကြောင်းကို (၁) ကြောင်းတည်းသာ ထားရမည် (\n မပါရ)။
+5. Output MUST be ONLY a valid JSON array in this exact format:
+[
+  {
+    "idx": 0,
+    "orig": "မူရင်းစာသား",
+    "en": "English lyric translation",
+    "mm": "သီချင်းနှင့်လိုက်ဖက်သော မြန်မာဘာသာပြန်စာသား"
+  }
+]
+
+Input Lyrics:
+${JSON.stringify(inputPayload)}
+`;
+
+          const result = await callGeminiWithFallback(prompt, env.GEMINI_API_KEY);
+          if (!result.ok) {
+            return json(
+              { error: result.error, modelErrors: result.modelErrors || [] },
+              result.status || 503
+            );
+          }
+
+          const parsedBatch = parseJsonArray(result.text);
+          if (!Array.isArray(parsedBatch)) {
+            return json({ error: "Song translation JSON ဖတ်မရပါ။", raw: result.text }, 502);
+          }
+
+          for (let i = 0; i < batch.length; i++) {
+            const seg = batch[i];
+            const origClean = String(seg.text || seg.orig || "").replace(/\r?\n/g, " ").trim();
+            const found = parsedBatch.find((item) => Number(item?.idx) === i) || parsedBatch[i] || {};
+
+            allLyrics.push({
+              id: start + i + 1,
+              start: Number(seg.start) || 0,
+              end: Number(seg.end) || 0,
+              orig: String(found.orig || origClean).replace(/\r?\n/g, " ").trim(),
+              en: String(found.en || origClean).replace(/\r?\n/g, " ").trim(),
+              mm: String(found.mm || origClean).replace(/\r?\n/g, " ").trim(),
+            });
+          }
+        }
+
+        return json({
+          ok: true,
+          lyrics: allLyrics,
         });
       }
 
@@ -1047,7 +1132,7 @@ function parseJsonArray(text) {
     const parsed = JSON.parse(clean);
     if (Array.isArray(parsed)) return parsed;
     if (typeof parsed === "object" && parsed !== null) {
-      for (const k of ["story", "episodes", "scenes", "data"]) {
+      for (const k of ["lyrics", "translations", "story", "episodes", "scenes", "data"]) {
         if (Array.isArray(parsed[k])) return parsed[k];
       }
       for (const k in parsed) {
@@ -1070,7 +1155,7 @@ function parseJsonArray(text) {
   if (objStart !== -1 && objEnd !== -1 && objEnd > objStart) {
     try {
       const parsed = JSON.parse(clean.slice(objStart, objEnd + 1));
-      for (const k of ["story", "episodes", "scenes", "data"]) {
+      for (const k of ["lyrics", "translations", "story", "episodes", "scenes", "data"]) {
         if (Array.isArray(parsed[k])) return parsed[k];
       }
       for (const k in parsed) {
@@ -1084,4 +1169,4 @@ function parseJsonArray(text) {
 
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
-    }
+}
