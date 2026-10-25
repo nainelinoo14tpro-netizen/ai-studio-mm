@@ -1,256 +1,653 @@
 <!DOCTYPE html>
 <html lang="my">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>မြန်မာစာ အသံပြောင်းစနစ်</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Myanmar AI Voice Studio</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Myanmar Text', 'Noto Sans Myanmar', sans-serif;
     }
 
     body {
-      background-color: #ffffff;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      color: #1a1a1a;
-      display: flex;
-      justify-content: center;
-      padding: 24px 16px;
-    }
-
-    .container {
-      width: 100%;
-      max-width: 480px;
+      background: #0f172a;
+      color: #f8fafc;
+      min-height: 100vh;
       display: flex;
       flex-direction: column;
-      gap: 18px;
     }
 
-    /* အပေါ်ဆုံး ခေါင်းစဉ် (Blue Heading) */
-    .header-title {
-      color: #1a73e8;
-      font-size: 32px;
+    /* Header & Navigation */
+    header {
+      background: #1e293b;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #334155;
+    }
+
+    .brand {
+      font-size: 20px;
       font-weight: 700;
-      line-height: 1.3;
-      margin-bottom: 4px;
+      color: #38bdf8;
+      display: flex;
+      align-items: center;
+      gap: 10px;
     }
 
-    .field-group {
+    .menu-btn {
+      background: transparent;
+      border: none;
+      color: #f8fafc;
+      font-size: 20px;
+      cursor: pointer;
+    }
+
+    /* Container */
+    .container {
+      max-width: 680px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 20px;
+      flex: 1;
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 16px;
     }
 
-    .field-label {
-      font-size: 18px;
+    .card {
+      background: #1e293b;
+      padding: 20px;
+      border-radius: 16px;
+      border: 1px solid #334155;
+    }
+
+    label {
+      display: block;
+      font-size: 15px;
       font-weight: 600;
-      color: #202124;
+      color: #94a3b8;
+      margin-bottom: 8px;
     }
 
-    /* စာသားရိုက်ရန် Textarea */
-    .text-input {
+    /* Text Area */
+    .textarea-box {
+      position: relative;
+    }
+
+    textarea {
       width: 100%;
-      height: 160px;
-      padding: 14px;
-      border: 1px solid #dadce0;
+      min-height: 140px;
+      background: #0f172a;
+      border: 1px solid #334155;
       border-radius: 12px;
+      padding: 14px;
+      color: #f8fafc;
       font-size: 16px;
       line-height: 1.6;
       resize: vertical;
       outline: none;
-      font-family: inherit;
     }
 
-    .text-input:focus {
-      border-color: #1a73e8;
-      box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2);
+    textarea:focus {
+      border-color: #38bdf8;
     }
 
-    /* Dropdown Menus */
-    .select-input {
+    .char-count {
+      text-align: right;
+      font-size: 13px;
+      color: #64748b;
+      margin-top: 4px;
+    }
+
+    /* Grid Controls */
+    .control-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    select {
       width: 100%;
-      padding: 12px 14px;
-      border: 1px solid #dadce0;
+      background: #0f172a;
+      border: 1px solid #334155;
       border-radius: 10px;
-      font-size: 15px;
-      background-color: #f1f3f4;
-      color: #202124;
+      padding: 10px 12px;
+      color: #f8fafc;
       outline: none;
-      cursor: pointer;
+      font-size: 14px;
     }
 
-    /* အပြာရောင် Button */
-    .submit-btn {
+    /* Sample Voice Buttons */
+    .sample-section {
+      margin-top: 14px;
+    }
+
+    .sample-btn-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 8px;
+    }
+
+    .preview-btn {
+      background: #334155;
+      border: 1px solid #475569;
+      color: #f8fafc;
+      padding: 10px;
+      border-radius: 8px;
+      font-size: 13px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+
+    .preview-btn:hover {
+      background: #475569;
+    }
+
+    .preview-btn.playing {
+      background: #0284c7;
+      border-color: #38bdf8;
+    }
+
+    /* Pulse Mic Indicator */
+    .sample-active-box {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 12px;
+      padding: 10px;
+      background: #0f172a;
+      border-radius: 8px;
+    }
+
+    .sample-mic-pulse {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .sample-mic-pulse span {
+      position: absolute;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: rgba(56, 189, 248, 0.4);
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(0.8); opacity: 1; }
+      100% { transform: scale(1.6); opacity: 0; }
+    }
+
+    /* Main Action Button */
+    .generate-btn {
       width: 100%;
-      padding: 14px;
-      background-color: #1a73e8;
+      background: #0284c7;
       color: #ffffff;
       border: none;
-      border-radius: 10px;
-      font-size: 17px;
-      font-weight: 600;
+      border-radius: 12px;
+      padding: 14px;
+      font-size: 16px;
+      font-weight: 700;
       cursor: pointer;
-      transition: background-color 0.2s;
-      margin-top: 6px;
+      margin-top: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: background 0.2s;
     }
 
-    .submit-btn:hover {
-      background-color: #1557b0;
+    .generate-btn:hover {
+      background: #0369a1;
     }
 
-    .submit-btn:disabled {
-      background-color: #a8c7fa;
+    .generate-btn:disabled {
+      background: #475569;
       cursor: not-allowed;
     }
 
-    /* Status & Error Message */
-    .status-msg {
-      font-size: 14px;
-      line-height: 1.5;
-      min-height: 20px;
+    /* Output & Progress Box */
+    .progress-box {
+      display: none;
+      flex-direction: column;
+      gap: 6px;
+      margin-top: 14px;
     }
 
-    .status-msg.error {
-      color: #d93025;
-      font-weight: 500;
+    .progress-bar {
+      height: 6px;
+      background: #334155;
+      border-radius: 4px;
+      overflow: hidden;
     }
 
-    .status-msg.success {
-      color: #188038;
-      font-weight: 500;
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: #38bdf8;
+      transition: width 0.3s;
     }
 
-    .status-msg.loading {
-      color: #1a73e8;
+    .progress-text {
+      font-size: 13px;
+      color: #38bdf8;
     }
 
-    /* Audio Player */
-    .audio-player {
+    .output-box {
+      display: none;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 16px;
+      padding: 16px;
+      background: #0f172a;
+      border-radius: 12px;
+      border: 1px solid #334155;
+    }
+
+    audio {
       width: 100%;
-      margin-top: 4px;
-      outline: none;
+      height: 40px;
+    }
+
+    .download-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      background: #10b981;
+      color: #ffffff;
+      text-decoration: none;
+      padding: 10px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .error-msg {
+      display: none;
+      color: #f87171;
+      font-size: 14px;
+      margin-top: 10px;
+    }
+
+    /* Slide Menu & Overlay */
+    .overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      z-index: 90;
+    }
+
+    .overlay.active {
+      display: block;
+    }
+
+    .slide-menu {
+      position: fixed;
+      top: 0;
+      right: -280px;
+      width: 280px;
+      height: 100%;
+      background: #1e293b;
+      z-index: 100;
+      padding: 24px 20px;
+      transition: right 0.3s ease;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .slide-menu.active {
+      right: 0;
+    }
+
+    .menu-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 18px;
+      font-weight: bold;
+      border-bottom: 1px solid #334155;
+      padding-bottom: 12px;
+    }
+
+    .menu-item {
+      color: #cbd5e1;
+      text-decoration: none;
+      font-size: 15px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 0;
     }
   </style>
 </head>
 <body>
 
-  <main class="container">
-    <h1 class="header-title">ပြောင်းစနစ်</h1>
-
-    <!-- စာသားထည့်သွင်းရန် အပိုင်း -->
-    <div class="field-group">
-      <label class="field-label" for="ttsText">မြန်မာစာသား ထည့်သွင်းပါ</label>
-      <textarea id="ttsText" class="text-input" placeholder="စာသား ရိုက်ထည့်ပါ...">မင်္ဂလာပါ။ မြန်မာစာကို အသံအဖြစ် ပြောင်းလဲနိုင်ပါသည်။</textarea>
+  <!-- Overlay & Slide Menu -->
+  <div class="overlay" id="overlay" onclick="closeMenu()"></div>
+  <nav class="slide-menu" id="slideMenu">
+    <div class="menu-header">
+      <span>AI Studio Menu</span>
+      <button class="menu-btn" onclick="closeMenu()"><i class="fa-solid fa-xmark"></i></button>
     </div>
+    <a href="index.html" class="menu-item"><i class="fa-solid fa-house"></i> Home</a>
+    <a href="story-maker.html" class="menu-item"><i class="fa-solid fa-book-open"></i> Story Maker</a>
+    <a href="movie-recaps.html" class="menu-item"><i class="fa-solid fa-film"></i> Movie Recaps</a>
+    <a href="admin.html" class="menu-item"><i class="fa-solid fa-gear"></i> Admin Settings</a>
+  </nav>
 
-    <!-- Voice ရွေးချယ်မှု -->
-    <div class="field-group">
-      <label class="field-label" for="voiceSelect">Voice</label>
-      <select id="voiceSelect" class="select-input">
-        <option value="my-MM-ThihaNeural" selected>သီဟ (Thiha - Male)</option>
-        <option value="my-MM-NilarNeural">နီလာ (Nilar - Female)</option>
-      </select>
+  <!-- Header -->
+  <header>
+    <div class="brand">
+      <i class="fa-solid fa-microphone-lines"></i>
+      <span>Myanmar AI Voice</span>
     </div>
+    <button class="menu-btn" onclick="openMenu()"><i class="fa-solid fa-bars"></i></button>
+  </header>
 
-    <!-- Speed / Rate ရွေးချယ်မှု -->
-    <div class="field-group">
-      <label class="field-label" for="rateSelect">အမြန်နှုန်း (Rate)</label>
-      <select id="rateSelect" class="select-input">
-        <option value="-20%">Slow (-20%)</option>
-        <option value="+0%" selected>Normal (0%)</option>
-        <option value="+20%">Fast (+20%)</option>
-      </select>
+  <!-- Main Container -->
+  <div class="container">
+    <div class="card">
+      <label for="textInput">မြန်မာစာသား ထည့်သွင်းပါ</label>
+      <div class="textarea-box">
+        <textarea id="textInput" oninput="updateCharCount()" placeholder="ဤနေရာတွင် စာသားရိုက်ထည့်ပါ...">မင်္ဂလာပါ။ မြန်မာစာကို အသံအဖြစ် ပြောင်းလဲနိုင်ပါသည်။</textarea>
+      </div>
+      <div class="char-count">စာလုံးရေ: <span id="charCount">၄၅</span></div>
+
+      <!-- Controls -->
+      <div class="control-grid">
+        <div>
+          <label for="voiceSelect">အသံ ရွေးချယ်ရန်</label>
+          <select id="voiceSelect">
+            <option value="my-MM-ThihaNeural" selected>👨 သီဟ (Thiha - Male)</option>
+            <option value="my-MM-NilarNeural">👩 နီလာ (Nilar - Female)</option>
+          </select>
+        </div>
+        <div>
+          <label for="rateSelect">အမြန်နှုန်း (Speed)</label>
+          <select id="rateSelect">
+            <option value="-20%">Slow (-20%)</option>
+            <option value="+0%" selected>Normal (0%)</option>
+            <option value="+20%">Fast (+20%)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Sample Voice Testing Section -->
+      <div class="sample-section">
+        <label>အသံ နမူနာ စမ်းသပ်ရန်-</label>
+        <div class="sample-btn-grid">
+          <button class="preview-btn" id="thihaSampleBtn" onclick="playSampleVoice('my-MM-ThihaNeural', 'thihaSampleBtn')">
+            <span>👨 သီဟ အသံစမ်းရန်</span>
+          </button>
+          <button class="preview-btn" id="nilarSampleBtn" onclick="playSampleVoice('my-MM-NilarNeural', 'nilarSampleBtn')">
+            <span>👩 နီလာ အသံစမ်းရန်</span>
+          </button>
+        </div>
+
+        <div class="sample-active-box" id="sampleActiveBox">
+          <div class="sample-mic-pulse">
+            <span></span>
+            <div style="font-size:14px; position:relative; z-index:2;">🎙️</div>
+          </div>
+          <span style="font-size:13px; color:#38bdf8;" id="sampleStatusText">အသံစမ်းသပ်နေပါသည်...</span>
+        </div>
+      </div>
+
+      <!-- Generate Button -->
+      <button class="generate-btn" id="generateBtn" onclick="generateFullAudio()">
+        <i class="fa-solid fa-wand-magic-sparkles"></i>
+        <span id="btnText">အသံဖန်တီးရန်</span>
+      </button>
+
+      <!-- Progress Box -->
+      <div class="progress-box" id="progressBox">
+        <div class="progress-bar">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <div class="progress-text" id="progressText">အသံဖန်တီးနေပါသည်...</div>
+      </div>
+
+      <!-- Error Message -->
+      <div class="error-msg" id="errorMsg"></div>
+
+      <!-- Output Result Box -->
+      <div class="output-box" id="outputBox">
+        <audio id="audioElem" controls></audio>
+        <a id="downloadLink" class="download-btn" download="myanmar-speech.mp3">
+          <i class="fa-solid fa-download"></i> အသံဖိုင် ဒေါင်းလုဒ်ရယူရန်
+        </a>
+      </div>
     </div>
-
-    <!-- ခလုတ် -->
-    <button id="generateBtn" class="submit-btn" type="button">အသံဖန်တီးရန်</button>
-
-    <!-- Error/Status စာသားပြသရန် -->
-    <div id="statusMessage" class="status-msg"></div>
-
-    <!-- Audio Player -->
-    <audio id="audioElement" class="audio-player" controls preload="none"></audio>
-  </main>
+  </div>
 
   <script>
-    const textInput = document.getElementById("ttsText");
-    const voiceSelect = document.getElementById("voiceSelect");
-    const rateSelect = document.getElementById("rateSelect");
-    const generateBtn = document.getElementById("generateBtn");
-    const statusMsg = document.getElementById("statusMessage");
-    const audioElement = document.getElementById("audioElement");
+    // Universal Backend Route (Relative API Path သုံးထားသဖြင့် Render/Custom Domain အားလုံးတွင် အလုပ်လုပ်ပါသည်)
+    const API_ENDPOINT = "/api/tts";
 
-    let currentBlobUrl = null;
+    let sampleAudio = new Audio();
+    let currentlyPlayingBtnId = null;
+    let progressTimer = null;
 
-    generateBtn.addEventListener("click", async () => {
-      const text = textInput.value.trim();
+    const slideMenu = document.getElementById('slideMenu');
+    const overlay = document.getElementById('overlay');
+    const textInput = document.getElementById('textInput');
+    const voiceSelect = document.getElementById('voiceSelect');
+    const rateSelect = document.getElementById('rateSelect');
+    const generateBtn = document.getElementById('generateBtn');
+    const btnText = document.getElementById('btnText');
+    const progressBox = document.getElementById('progressBox');
+    const progressFill = document.getElementById('progressFill');
+    const progressText = document.getElementById('progressText');
+    const outputBox = document.getElementById('outputBox');
+    const audioElem = document.getElementById('audioElem');
+    const downloadLink = document.getElementById('downloadLink');
+    const errorMsg = document.getElementById('errorMsg');
+    const sampleActiveBox = document.getElementById('sampleActiveBox');
+    const sampleStatusText = document.getElementById('sampleStatusText');
 
-      if (!text) {
-        statusMsg.className = "status-msg error";
-        statusMsg.textContent = "❌ အမှား: ကျေးဇူးပြု၍ မြန်မာစာသား ထည့်သွင်းပေးပါ။";
+    function openMenu() {
+      slideMenu.classList.add('active');
+      overlay.classList.add('active');
+    }
+
+    function closeMenu() {
+      slideMenu.classList.remove('active');
+      overlay.classList.remove('active');
+    }
+
+    // Myanmar Character Counter
+    function toMyanmarNum(num) {
+      const mmNums = 
+['၀', '၁', '၂', '၃', '၄', '၅', '၆', '၇', '၈', '၉'];
+      return num.toString().split('').map(d => mmNums
+[d] || d).join('');
+    }
+
+    function updateCharCount() {
+      const text = textInput.value;
+      document.getElementById('charCount').textContent = toMyanmarNum(text.length);
+    }
+
+    function showError(msg) {
+      if (!msg) {
+        errorMsg.style.display = 'none';
+        errorMsg.textContent = '';
+      } else {
+        errorMsg.style.display = 'block';
+        errorMsg.textContent = msg;
+      }
+    }
+
+    function updateProgress(percent, text) {
+      progressBox.style.display = 'flex';
+      progressFill.style.width = percent + '%';
+      progressText.textContent = text;
+    }
+
+    function hideProgress() {
+      progressBox.style.display = 'none';
+      progressFill.style.width = '0%';
+    }
+
+    // Backend TTS Call Helper
+    async function fetchTtsAudioBlob(text, voice, rate) {
+      const response = await fetch(API_ENDPOINT, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          text: text.trim(),
+          voice: voice,
+          rate: rate,
+          pitch: "+0Hz",
+          volume: "+50%"
+        })
+      });
+
+      if (!response.ok) {
+        let errDesc = "Speech synthesis failed.";
+        try {
+          const errObj = await response.json();
+          errDesc = errObj.details || errObj.error || errDesc;
+        } catch (_) {
+          errDesc = await response.text();
+        }
+        throw new Error(errDesc);
+      }
+
+      return await response.blob();
+    }
+
+    // Sample Voice Tester
+    async function playSampleVoice(voice, btnId) {
+      const btn = document.getElementById(btnId);
+      showError("");
+
+      if (currentlyPlayingBtnId === btnId && !sampleAudio.paused) {
+        sampleAudio.pause();
+        sampleAudio.currentTime = 0;
+        btn.classList.remove('playing');
+        btn.innerHTML = btnId.includes('thiha') ? '<span>👨 သီဟ အသံစမ်းရန်</span>' : '<span>👩 နီလာ အသံစမ်းရန်</span>';
+        sampleActiveBox.style.display = 'none';
+        currentlyPlayingBtnId = null;
         return;
       }
 
-      // UI Loading အခြေအနေ ပြောင်းလဲခြင်း
-      generateBtn.disabled = true;
-      generateBtn.textContent = "လုပ်ဆောင်နေပါသည်...";
-      statusMsg.className = "status-msg loading";
-      statusMsg.textContent = "အသံဖန်တီးနေပါသည်... ခေတ္တစောင့်ဆိုင်းပေးပါ။";
+      if (!sampleAudio.paused) {
+        sampleAudio.pause();
+        if (currentlyPlayingBtnId) {
+          const prev = document.getElementById(currentlyPlayingBtnId);
+          if (prev) {
+            prev.classList.remove('playing');
+            prev.innerHTML = currentlyPlayingBtnId.includes('thiha') ? '<span>👨 သီဟ အသံစမ်းရန်</span>' : '<span>👩 နီလာ အသံစမ်းရန်</span>';
+          }
+        }
+      }
+
+      currentlyPlayingBtnId = btnId;
+      btn.classList.add('playing');
+      btn.innerHTML = '<span>ခေတ္တစောင့်ပါ...</span>';
+      sampleActiveBox.style.display = 'flex';
+      sampleStatusText.textContent = "အသံဖိုင် ရယူနေပါသည်...";
+
+      const sampleText = voice.includes("Thiha")
+        ? "မင်္ဂလာပါခင်ဗျာ၊ ကျွန်တော်ကတော့ သီဟ ဖြစ်ပါတယ်။ သင့်ရဲ့ စာသားနဲ့ ဇာတ်လမ်းတွေကို ကျွန်တော်ဖတ်ပြပေးပါမယ်။"
+        : "မင်္ဂလာပါရှင်၊ ကျွန်မကတော့ နီလာ ဖြစ်ပါတယ်။ သင့်အတွက် အကောင်းဆုံး အသံထွက်ပေးပါမယ်ရှင်။";
 
       try {
-        // Backend API ခေါ်ယူခြင်း (Render Domain သို့မဟုတ် Same Domain အားလုံးနှင့် အဆင်ပြေစေရန် Relative Path သုံးထားပါသည်) [2]
-        const response = await fetch("/api/tts", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            text: text,
-            voice: voiceSelect.value,
-            rate: rateSelect.value,
-            pitch: "+0Hz"
-          })
-        });
-
-        if (!response.ok) {
-          let errorDetail = "Speech synthesis failed.";
-          try {
-            const errJson = await response.json();
-            errorDetail = errJson.details || errJson.error || errorDetail;
-          } catch (_) {
-            errorDetail = await response.text();
-          }
-          throw new Error(errorDetail);
-        }
-
-        // အသံဖိုင် Blob ရယူခြင်း
-        const audioBlob = await response.blob();
-
-        if (currentBlobUrl) {
-          URL.revokeObjectURL(currentBlobUrl);
-        }
-
-        currentBlobUrl = URL.createObjectURL(audioBlob);
-        audioElement.src = currentBlobUrl;
-        audioElement.load();
+        const blob = await fetchTtsAudioBlob(sampleText, voice, "+0%");
+        const audioUrl = URL.createObjectURL(blob);
+        sampleAudio.src = audioUrl;
         
-        statusMsg.className = "status-msg success";
-        statusMsg.textContent = "✅ အသံဖိုင် ဖန်တီးပြီးပါပြီ။";
+        sampleStatusText.textContent = "နမူနာအသံ ဖွင့်နေပါသည်...";
+        btn.innerHTML = '<span>⏹️ ရပ်တန့်မည်</span>';
+        await sampleAudio.play();
 
-        // Auto Play
-        await audioElement.play().catch(() => {});
+        sampleAudio.onended = () => {
+          btn.classList.remove('playing');
+          btn.innerHTML = btnId.includes('thiha') ? '<span>👨 သီဟ အသံစမ်းရန်</span>' : '<span>👩 နီလာ အသံစမ်းရန်</span>';
+          sampleActiveBox.style.display = 'none';
+          currentlyPlayingBtnId = null;
+        };
+      } catch (err) {
+        btn.classList.remove('playing');
+        btn.innerHTML = btnId.includes('thiha') ? '<span>👨 သီဟ အသံစမ်းရန်</span>' : '<span>👩 နီလာ အသံစမ်းရန်</span>';
+        sampleActiveBox.style.display = 'none';
+        currentlyPlayingBtnId = null;
+        showError("❌ နမူနာ အသံစမ်းသပ်မှု အဆင်မပြေပါ: " + err.message);
+      }
+    }
+
+    // Main Audio Generation
+    async function generateFullAudio() {
+      const text = textInput.value.trim();
+      if (!text) {
+        showError("❌ ကျေးဇူးပြု၍ စာသား ထည့်သွင်းပေးပါ။");
+        return;
+      }
+
+      showError("");
+      outputBox.style.display = 'none';
+      generateBtn.disabled = true;
+      btnText.innerText = "လုပ်ဆောင်နေပါသည်...";
+
+      let progress = 10;
+      updateProgress(progress, "အသံဖန်တီးရန် စတင်နေပါသည် (၁၀%)...");
+
+      progressTimer = setInterval(() => {
+        if (progress < 85) {
+          progress += 15;
+          updateProgress(progress, `အသံသွင်းယူနေပါသည် (${toMyanmarNum(progress)}%)...`);
+        }
+      }, 400);
+
+      try {
+        const voice = voiceSelect.value;
+        const rate = rateSelect.value;
+        const blob = await fetchTtsAudioBlob(text, voice, rate);
+
+        clearInterval(progressTimer);
+        updateProgress(100, "✅ အသံသွင်းယူမှု အောင်မြင်ပါပြီ (၁၀၀%)");
+
+        const audioUrl = URL.createObjectURL(blob);
+        audioElem.src = audioUrl;
+        downloadLink.href = audioUrl;
+
+        setTimeout(() => {
+          hideProgress();
+          outputBox.style.display = 'flex';
+          audioElem.play().catch(() => {});
+        }, 400);
 
       } catch (err) {
-        console.error("TTS Synthesis Error:", err);
-        statusMsg.className = "status-msg error";
-        statusMsg.textContent = `❌ အမှား: ${err.message || "Speech synthesis failed."}`;
+        clearInterval(progressTimer);
+        hideProgress();
+        showError("❌ အသံဖန်တီးမှု အဆင်မပြေပါ: " + err.message);
       } finally {
         generateBtn.disabled = false;
-        generateBtn.textContent = "အသံဖန်တီးရန်";
+        btnText.innerText = "အသံဖန်တီးရန်";
       }
-    });
+    }
+
+    // Initialize character count on load
+    updateCharCount();
   </script>
 </body>
 </html>
