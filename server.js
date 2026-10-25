@@ -2,19 +2,21 @@ const express = require('express');
 const cors = require('cors');
 const WebSocket = require('ws');
 const crypto = require('crypto');
+const googleTTS = require('google-tts-api');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 const TRUSTED_CLIENT_TOKEN = '6A5AA1D4EAFF4E9FB37E23D68491D6F4';
 const CHROMIUM_FULL_VERSION = '143.0.3650.75';
-const CHROMIUM_MAJOR_VERSION = CHROMIUM_FULL_VERSION.split('.')[0];
+const CHROMIUM_MAJOR_VERSION = CHROMIUM_FULL_VERSION.split('.')
+[0];
 const SEC_MS_GEC_VERSION = `1-${CHROMIUM_FULL_VERSION}`;
 
 app.use(cors());
 app.use(express.json({ limit: '2mb' }));
 
-// Health Check (မူရင်း Route နှင့် Health Route နှစ်ခုလုံး ထည့်ပေးထားပါသည်)
+// Health Check
 app.get('/', (req, res) => {
   res.send('Myanmar TTS Server is Running (Direct HTTPS + Edge Spoofing Active!)');
 });
@@ -35,7 +37,8 @@ function getSecMsGec() {
 
 function escapeXml(text) {
   return String(text || '')
-    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, ' ')
+    .replace(/
+[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, ' ')
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
@@ -44,17 +47,20 @@ function escapeXml(text) {
 }
 
 function normalizeRate(rate) {
-  if (typeof rate === 'string' && /^[+-]\d{1,3}%$/.test(rate.trim())) return rate.trim();
+  if (typeof rate === 'string' && /^
+[+-]\d{1,3}%$/.test(rate.trim())) return rate.trim();
   return '+0%';
 }
 
 function normalizePitch(pitch) {
-  if (typeof pitch === 'string' && /^[+-]\d{1,3}Hz$/.test(pitch.trim())) return pitch.trim();
+  if (typeof pitch === 'string' && /^
+[+-]\d{1,3}Hz$/.test(pitch.trim())) return pitch.trim();
   return '+0Hz';
 }
 
 function normalizeVolume(volume) {
-  if (typeof volume === 'string' && /^[+-]\d{1,3}%$/.test(volume.trim())) return volume.trim();
+  if (typeof volume === 'string' && /^
+[+-]\d{1,3}%$/.test(volume.trim())) return volume.trim();
   return '+50%';
 }
 
@@ -70,7 +76,7 @@ function buildSsml(text, voice, rate, pitch, volume) {
 }
 
 // =========================================================================
-// ENGINE 1: Direct HTTPS POST Request (WebSocket Handshake မလိုသော နည်းလမ်း)
+// ENGINE 1: Direct HTTPS POST Request
 // =========================================================================
 async function synthesizeViaDirectHttps(ssml) {
   const secMsGec = getSecMsGec();
@@ -95,7 +101,7 @@ async function synthesizeViaDirectHttps(ssml) {
     `${ssml}`;
 
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 14000);
+  const timeout = setTimeout(() => controller.abort(), 6000);
 
   try {
     const response = await fetch(endpointUrl, {
@@ -142,7 +148,7 @@ async function synthesizeViaDirectHttps(ssml) {
 }
 
 // =========================================================================
-// ENGINE 2: Upgraded WebSocket Streaming (MUID Cookie + Close Handler)
+// ENGINE 2: WebSocket Streaming
 // =========================================================================
 function synthesizeViaWebSocket(ssml) {
   return new Promise((resolve, reject) => {
@@ -168,9 +174,11 @@ function synthesizeViaWebSocket(ssml) {
         'Sec-MS-GEC-Version': SEC_MS_GEC_VERSION,
         'Accept-Language': 'en-US,en;q=0.9',
       },
+      handshakeTimeout: 4000,
     });
 
-    const audioChunks = [];
+    const audioChunks = 
+[];
     let isDone = false;
 
     const finish = (err, buffer) => {
@@ -184,7 +192,7 @@ function synthesizeViaWebSocket(ssml) {
 
     const timer = setTimeout(() => {
       finish(new Error('WebSocket TTS Timeout'));
-    }, 15000);
+    }, 6000);
 
     ws.on('open', () => {
       const dateStr = new Date().toUTCString().replace('GMT', 'GMT+0000 (Coordinated Universal Time)');
@@ -208,12 +216,13 @@ function synthesizeViaWebSocket(ssml) {
 
     ws.on('message', (data, isBinary) => {
       if (isBinary) {
-        if (data.length > 2) {
-          const headerLen = data.readUInt16BE(0);
-          if (data.length > headerLen + 2) {
-            const headerText = data.toString('utf8', 2, headerLen + 2);
+        const buffer = Buffer.isBuffer(data) ? data : Buffer.from(data);
+        if (buffer.length > 2) {
+          const headerLen = buffer.readUInt16BE(0);
+          if (buffer.length > headerLen + 2) {
+            const headerText = buffer.toString('utf8', 2, headerLen + 2);
             if (headerText.includes('Path:audio')) {
-              audioChunks.push(data.slice(headerLen + 2));
+              audioChunks.push(buffer.subarray(headerLen + 2));
             }
           }
         }
@@ -269,31 +278,33 @@ async function handleTtsRequest(req, res) {
     const ssml = buildSsml(text, safeVoice, safeRate, safePitch, safeVolume);
 
     let audioBuffer = null;
-    const errors = [];
 
-    // 1. Try WebSocket Engine First (with updated Chromium 143 + MUID Cookie)
+    // 1. Try WebSocket Engine First
     try {
       audioBuffer = await synthesizeViaWebSocket(ssml);
     } catch (wsErr) {
-      errors.push(wsErr.message);
-      console.warn('WebSocket Engine failed, trying Direct HTTPS POST:', wsErr.message);
+      console.warn('WebSocket failed, trying Direct HTTPS:', wsErr.message);
     }
 
-    // 2. Fallback to Direct HTTPS POST Engine
+    // 2. Try Direct HTTPS Engine
     if (!audioBuffer || audioBuffer.length < 100) {
       try {
         audioBuffer = await synthesizeViaDirectHttps(ssml);
       } catch (httpErr) {
-        errors.push(httpErr.message);
-        console.error('Direct HTTPS POST Engine also failed:', httpErr.message);
+        console.warn('Direct HTTPS failed:', httpErr.message);
       }
     }
 
+    // 3. Fallback Engine (သေချာပေါက် အသံထွက်စေရန်)
     if (!audioBuffer || audioBuffer.length < 100) {
-      return res.status(502).json({
-        error: 'TTS Synthesis failed on both WebSocket and Direct HTTPS engines.',
-        details: errors.join(' | '),
+      console.warn('Edge Engines blocked by cloud, activating Fallback Engine...');
+      const base64Audio = await googleTTS.getAudioBase64(String(text).trim(), {
+        lang: 'my',
+        slow: safeRate.includes('-'),
+        host: 'https://translate.google.com',
+        timeout: 6000,
       });
+      audioBuffer = Buffer.from(base64Audio, 'base64');
     }
 
     res.set({
