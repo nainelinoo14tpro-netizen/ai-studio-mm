@@ -1,6 +1,6 @@
 /**
  * AI Studio All-in-One Master Backend Worker
- * (Fixed BigInt Precision for Edge TTS + Trilingual Song Karaoke & Multi-Endpoint Engine)
+ * (Dual-Engine Edge TTS: Direct HTTPS POST + WebSocket Fallback + Trilingual Song Karaoke & Multi-Endpoint Engine)
  */
 
 // =====================================================
@@ -57,7 +57,7 @@ export default {
       const url = new URL(request.url);
 
       // Health Check
-      if (url.pathname === "/" && request.method === "GET") {
+      if ((url.pathname === "/" || url.pathname === "/api/health") && request.method === "GET") {
         return json({
           ok: true,
           service: "ai-studio-backend-master",
@@ -80,6 +80,8 @@ export default {
             "POST /recap",
             "POST /story",
             "POST /tts",
+            "POST /api/tts",
+            "POST /api/synthesize",
             "POST /image",
             "POST /clone-tts",
           ],
@@ -506,9 +508,12 @@ Important Rules:
       }
 
       // =================================================
-      // 5. MYANMAR EDGE TTS (ORIGINAL VERIFIED ENGINE)
+      // 5. MYANMAR EDGE TTS (DUAL ENGINE: DIRECT HTTPS + WEBSOCKET)
       // =================================================
-      if (url.pathname === "/tts" && request.method === "POST") {
+      if (
+        (url.pathname === "/tts" || url.pathname === "/api/tts" || url.pathname === "/api/synthesize") &&
+        request.method === "POST"
+      ) {
         const body = await request.json().catch(() => ({}));
         const text = typeof body?.text === "string" ? body.text.trim() : "";
         const voice = normalizeMyanmarVoice(body?.voice);
@@ -828,10 +833,102 @@ async function getSecMsGec() {
 }
 
 // =====================================================
-// EDGE TTS (FIXED MUID COOKIE & HANDSHAKE)
+// EDGE TTS MASTER CONTROLLER (DIRECT HTTPS + WEBSOCKET)
 // =====================================================
 
 async function generateEdgeSpeech(text, voice, rate, pitch, volume) {
+  const errors = [];
+
+  // 1. Try WebSocket Engine First (with BigInt Sec-MS-GEC & MUID Cookie)
+  try {
+    const wsBuffer = await generateEdgeSpeechWebSocket(text, voice, rate, pitch, volume);
+    if (wsBuffer && wsBuffer.byteLength > 100) {
+      return wsBuffer;
+    }
+  } catch (wsErr) {
+    errors.push(`WS: ${wsErr.message}`);
+  }
+
+  // 2. Fallback to Direct HTTPS POST Engine (WebSocket Handshake မလိုသော နည်းလမ်း)
+  try {
+    const httpBuffer = await generateEdgeSpeechDirectHttp(text, voice, rate, pitch, volume);
+    if (httpBuffer && httpBuffer.byteLength > 100) {
+      return httpBuffer;
+    }
+  } catch (httpErr) {
+    errors.push(`HTTP: ${httpErr.message}`);
+  }
+
+  throw new Error(`Myanmar TTS failed (${errors.join(" | ")})`);
+}
+
+// ENGINE A: Direct HTTPS POST (From server (2).js)
+async function generateEdgeSpeechDirectHttp(text, voice, rate, pitch, volume) {
+  const secMsGec = await getSecMsGec();
+  const connectionId = crypto.randomUUID().replace(/-/g, "");
+  const muid = crypto.randomUUID().replace(/-/g, "").toUpperCase();
+  const reqId = crypto.randomUUID().replace(/-/g, "");
+  const dateStr = new Date().toUTCString();
+  const safeText = escapeXml(removeBadCharacters(text));
+
+  const ssml =
+    `<speak version='1.0' xmlns='http://www.w3.org/2001/synthesis' xmlns:mstts='http://www.w3.org/2001/mstts' xml:lang='my-MM'>` +
+    `<voice name='${voice}'>` +
+    `<prosody pitch='${pitch}' rate='${rate}' volume='${volume}'>${safeText}</prosody>` +
+    `</voice>` +
+    `</speak>`;
+
+  const endpointUrl =
+    `${EDGE_TTS_BASE}/edge/v1` +
+    `?TrustedClientToken=${TRUSTED_CLIENT_TOKEN}` +
+    `&Sec-MS-GEC=${secMsGec}` +
+    `&Sec-MS-GEC-Version=${SEC_MS_GEC_VERSION}` +
+    `&ConnectionId=${connectionId}`;
+
+  const payload =
+    `X-Timestamp:${dateStr}\r\n` +
+    `Content-Type:application/ssml+xml\r\n` +
+    `X-RequestId:${reqId}\r\n` +
+    `Path:ssml\r\n\r\n` +
+    `${ssml}`;
+
+  const response = await fetch(endpointUrl, {
+    method: "POST",
+    headers: {
+      "User-Agent":
+        `Mozilla/5.0 (Windows NT 10.0; Win64; x64) ` +
+        `AppleWebKit/537.36 (KHTML, like Gecko) ` +
+        `Chrome/${CHROMIUM_MAJOR_VERSION}.0.0.0 ` +
+        `Safari/537.36 Edg/${CHROMIUM_MAJOR_VERSION}.0.0.0`,
+      "Accept-Encoding": "gzip, deflate, br",
+      Origin: "chrome-extension://jdiccldimpdaibmpdkjnbmckianbfold",
+      Cookie: `muid=${muid};`,
+      "Sec-MS-GEC": secMsGec,
+      "Sec-MS-GEC-Version": SEC_MS_GEC_VERSION,
+      "Content-Type": "application/ssml+xml",
+    },
+    body: payload,
+  });
+
+  if (!response.ok) {
+    throw new Error(`Direct HTTPS status ${response.status}`);
+  }
+
+  const arrayBuffer = await response.arrayBuffer();
+  const rawBytes = new Uint8Array(arrayBuffer);
+  const sepBytes = new TextEncoder().encode("Path:audio\r\n");
+  const sepIndex = findSubarrayIndex(rawBytes, sepBytes);
+
+  const audioBytes = sepIndex !== -1 ? rawBytes.subarray(sepIndex + sepBytes.length) : rawBytes;
+  if (!audioBytes || audioBytes.byteLength < 100) {
+    throw new Error("Direct HTTPS returned empty audio");
+  }
+
+  return audioBytes.buffer.slice(audioBytes.byteOffset, audioBytes.byteOffset + audioBytes.byteLength);
+}
+
+// ENGINE B: WebSocket Streaming
+async function generateEdgeSpeechWebSocket(text, voice, rate, pitch, volume) {
   const connectionId = crypto.randomUUID().replace(/-/g, "");
   const muid = crypto.randomUUID().replace(/-/g, "").toUpperCase();
   const secMsGec = await getSecMsGec();
@@ -1032,6 +1129,17 @@ async function generateEdgeSpeech(text, voice, rate, pitch, volume) {
 // =====================================================
 // UTILITIES
 // =====================================================
+
+function findSubarrayIndex(haystack, needle) {
+  if (!needle.length || haystack.length < needle.length) return -1;
+  outer: for (let i = 0; i <= haystack.length - needle.length; i++) {
+    for (let j = 0; j < needle.length; j++) {
+      if (haystack[i + j] !== needle[j]) continue outer;
+    }
+    return i;
+  }
+  return -1;
+}
 
 function normalizeMyanmarVoice(voice) {
   if (voice === MYANMAR_VOICES.female) {
