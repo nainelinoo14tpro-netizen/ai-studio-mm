@@ -1,14 +1,17 @@
 {
-  "name": "ai-studio-backend",
+  "name": "burmese-tts",
   "version": "1.0.0",
-  "description": "Myanmar TTS and AI Studio Backend for Render",
+  "description": "Myanmar Text to Speech Application",
+  "type": "module",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
   "dependencies": {
     "cors": "^2.8.5",
-    "express": "^4.19.2",
-    "ws": "^8.16.0"
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "google-tts-api": "^2.0.2",
+    "ws": "^8.18.0"
   }
 }
