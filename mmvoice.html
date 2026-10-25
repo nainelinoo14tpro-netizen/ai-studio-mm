@@ -515,7 +515,7 @@
       <button class="menu-btn" onclick="openMenu()">☰</button>
       <div class="logo">AI Studio App</div>
     </div>
-    <span class="server-badge" id="serverStatusBadge">🟢 Dual TTS Ready</span>
+    <span class="server-badge" id="serverStatusBadge">🟢 Triple TTS Ready</span>
   </header>
 
   <!-- Overlay -->
@@ -701,8 +701,8 @@
 
     function updateRange(id, valId, unit) {
       const v = Number(document.getElementById(id).value) || 0;
-      const sign = v > 0 ? "+" : "";
-      document.getElementById(valId).innerText = sign + v + unit;
+      const sign = v >= 0 ? "+" : "";
+      document.getElementById(valId).innerText = (v === 0 ? "0" : sign + v) + unit;
     }
 
     function updateProgress(percent, text) {
@@ -736,21 +736,142 @@
     // Silently wake up Render Server in the background when page opens
     function wakeUpRenderServer() {
       fetch(`${RENDER_BACKEND_URL}/`, { method: 'GET', mode: 'no-cors' }).catch(() => {});
+      fetch(`${RENDER_BACKEND_URL}/api/health`, { method: 'GET', mode: 'no-cors' }).catch(() => {});
     }
 
-    // Multi-Engine TTS Request:
-    // 1. Try fast Cloudflare Worker (/tts) first
-    // 2. Fallback to Render Backend (/api/tts) with 50s wake-up timeout
+    // Helper for Direct Browser Fallback (Engine 3)
+    function generateSafeUUID() {
+      if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+        try { return crypto.randomUUID(); } catch (e) {}
+      }
+      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+      });
+    }
+
+    async function getSecMsGecClient() {
+      const unixSeconds = Math.floor(Date.now() / 1000);
+      const fileTimeSeconds = BigInt(unixSeconds) + 11644473600n;
+      let ticks = fileTimeSeconds * 10000000n;
+      ticks -= (ticks % 3000000000n);
+      const strToHash = ticks.toString() + "6A5AA1D4EAFF4E9FB37E23D68491D6F4";
+      if (typeof crypto !== 'undefined' && crypto.subtle) {
+        try {
+          const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(strToHash));
+          return Array.from(new Uint8Array(digest))
+            .map(b => b.toString(16).padStart(2, "0"))
+            .join("")
+            .toUpperCase();
+        } catch(e) {}
+      }
+      return "6A5AA1D4EAFF4E9FB37E23D68491D6F4";
+    }
+
+    async function generateEdgeSpeechInBrowser(cleanPayload) {
+      const connectionId = generateSafeUUID().replace(/-/g, "");
+      const secMsGec = await getSecMsGecClient();
+      const wsUrl = `wss://speech.platform.bing.com/consumer/speech/synthesize/readaloud/edge/v1?TrustedClientToken=6A5AA1D4EAFF4E9FB37E23D68491D6F4&Sec-MS-GEC=${secMsGec}&Sec-MS-GEC-Version=1-143.0.3650.75&ConnectionId=${connectionId}`;
+
+      return new Promise((resolve, reject) => {
+        let ws;
+        try {
+          ws = new WebSocket(wsUrl);
+        } catch (e) {
+          return reject(new Error("Browser WebSocket failed: " + e.message));
+        }
+        ws.binaryType = "arraybuffer";
+
+        const audioChunks = [];
+        let isDone = false;
+
+        const timer = setTimeout(() => {
+          if (!isDone) {
+            isDone = true;
+            try { ws.close(); } catch (e) {}
+            reject(new Error("Browser TTS Timeout"));
+          }
+        }, 15000);
+
+        ws.onopen = () => {
+          const dateStr = new Date().toUTCString().replace("GMT", "GMT+0000 (Coordinated Universal Time)");
+          const reqId = generateSafeUUID().replace(/-/g, "");
+          const safeText = String(cleanPayload.text || "")
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&apos;");
+
+          const ssml = `<speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis' xmlns:mstts='http://www.w3.org/2001/mstts' xml:lang='my-MM'><voice name='${cleanPayload.voice}'><prosody pitch='${cleanPayload.pitch}' rate='${cleanPayload.rate}' volume='${cleanPayload.volume}'>${safeText}</prosody></voice></speak>`;
+
+          ws.send(`X-Timestamp:${dateStr}\r\nContent-Type:application/json; charset=utf-8\r\nPath:speech.config\r\n\r\n{"context":{"synthesis":{"audio":{"metadataoptions":{"sentenceBoundaryEnabled":"false","wordBoundaryEnabled":"false"},"outputFormat":"audio-24khz-48kbitrate-mono-mp3"}}}}`);
+          ws.send(`X-RequestId:${reqId}\r\nContent-Type:application/ssml+xml\r\nX-Timestamp:${dateStr}\r\nPath:ssml\r\n\r\n${ssml}`);
+        };
+
+        ws.onmessage = (event) => {
+          if (typeof event.data === "string") {
+            if (event.data.includes("Path:turn.end")) {
+              if (!isDone) {
+                isDone = true;
+                clearTimeout(timer);
+                try { ws.close(); } catch (e) {}
+                if (audioChunks.length === 0) {
+                  reject(new Error("No audio chunks received"));
+                } else {
+                  resolve(new Blob(audioChunks, { type: "audio/mpeg" }));
+                }
+              }
+            }
+          } else if (event.data instanceof ArrayBuffer) {
+            const view = new DataView(event.data);
+            if (event.data.byteLength > 2) {
+              const headerLen = view.getUint16(0, false);
+              if (event.data.byteLength > headerLen + 2) {
+                const headerText = new TextDecoder().decode(event.data.slice(2, headerLen + 2));
+                if (headerText.includes("Path:audio")) {
+                  audioChunks.push(event.data.slice(headerLen + 2));
+                }
+              }
+            }
+          }
+        };
+
+        ws.onerror = () => {
+          if (!isDone) {
+            isDone = true;
+            clearTimeout(timer);
+            reject(new Error("Browser WebSocket connection error"));
+          }
+        };
+
+        ws.onclose = () => {
+          if (!isDone) {
+            isDone = true;
+            clearTimeout(timer);
+            if (audioChunks.length > 0) {
+              resolve(new Blob(audioChunks, { type: "audio/mpeg" }));
+            } else {
+              reject(new Error("Browser WebSocket closed"));
+            }
+          }
+        };
+      });
+    }
+
+    // Triple-Engine TTS Request:
+    // 1. Try fast Cloudflare Worker (/tts) first (Dual-Engine: WS + Direct HTTPS POST)
+    // 2. Fallback to Render Backend (/api/tts & /api/synthesize) with 50s wake-up timeout
+    // 3. Fallback to Direct Browser Edge TTS
     async function requestTTSAudio(payload, onStatusUpdate) {
       const errors = [];
 
-      // Normalize rate, pitch, volume strings so Worker regex validation never rejects them
       const cleanPayload = {
         text: String(payload.text || "").trim(),
         voice: payload.voice || "my-MM-NilarNeural",
-        rate: /^[+-]\d+%$/.test(payload.rate) ? payload.rate : "+0%",
-        pitch: /^[+-]\d+Hz$/.test(payload.pitch) ? payload.pitch : "+0Hz",
-        volume: /^[+-]\d+%$/.test(payload.volume) ? payload.volume : "+50%"
+        rate: /^[+-]\d{1,3}%$/.test(payload.rate) ? payload.rate : "+0%",
+        pitch: /^[+-]\d{1,3}Hz$/.test(payload.pitch) ? payload.pitch : "+0Hz",
+        volume: /^[+-]\d{1,3}%$/.test(payload.volume) ? payload.volume : "+50%"
       };
 
       // ENGINE 1: Fast Cloudflare Worker
@@ -781,32 +902,49 @@
         errors.push(`Worker Error: ${err1.message}`);
       }
 
-      // ENGINE 2: Render Backend (With 50-second timeout for cold-start wake-up)
-      try {
-        if (onStatusUpdate) onStatusUpdate("Render ဆာဗာကို နှိုး၍ အသံထုတ်ယူနေသည် (စက္ကန့် ၃၀ ခန့် စောင့်ပေးပါ)...");
-        const ctrl2 = new AbortController();
-        const t2 = setTimeout(() => ctrl2.abort(), 50000);
+      // ENGINE 2: Render Backend (/api/tts with fallback to /api/synthesize)
+      const renderEndpoints = ["/api/tts", "/api/synthesize"];
+      for (const ep of renderEndpoints) {
+        try {
+          if (onStatusUpdate) onStatusUpdate("Render ဆာဗာကို နှိုး၍ အသံထုတ်ယူနေသည် (စက္ကန့် ၃၀ ခန့် စောင့်ပေးပါ)...");
+          const ctrl2 = new AbortController();
+          const t2 = setTimeout(() => ctrl2.abort(), 50000);
 
-        const r2 = await fetch(`${RENDER_BACKEND_URL}/api/tts`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(cleanPayload),
-          signal: ctrl2.signal
-        });
-        clearTimeout(t2);
+          const r2 = await fetch(`${RENDER_BACKEND_URL}${ep}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(cleanPayload),
+            signal: ctrl2.signal
+          });
+          clearTimeout(t2);
 
-        if (r2.ok) {
-          const blob = await r2.blob();
-          if (blob && blob.size > 200) {
-            return blob;
+          if (r2.ok) {
+            const blob = await r2.blob();
+            if (blob && blob.size > 200) {
+              return blob;
+            }
+          } else if (r2.status === 404) {
+            continue;
+          } else {
+            const errData = await r2.json().catch(() => ({}));
+            errors.push(`Render ${ep} (${r2.status}): ${errData.error || r2.statusText}`);
+            break;
           }
-          errors.push("Render returned empty audio");
-        } else {
-          const errData = await r2.json().catch(() => ({}));
-          errors.push(`Render (${r2.status}): ${errData.error || r2.statusText}`);
+        } catch (err2) {
+          errors.push(`Render Error: ${err2.message}`);
+          break;
         }
-      } catch (err2) {
-        errors.push(`Render Error: ${err2.message}`);
+      }
+
+      // ENGINE 3: Direct Browser Edge TTS Fallback
+      try {
+        if (onStatusUpdate) onStatusUpdate("Direct Browser စနစ်ဖြင့် အသံတိုက်ရိုက် ထုတ်ယူနေသည်...");
+        const browserBlob = await generateEdgeSpeechInBrowser(cleanPayload);
+        if (browserBlob && browserBlob.size > 200) {
+          return browserBlob;
+        }
+      } catch (err3) {
+        errors.push(`Browser TTS: ${err3.message}`);
       }
 
       throw new Error(errors.join(" | "));
