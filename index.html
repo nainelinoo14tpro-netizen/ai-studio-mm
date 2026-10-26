@@ -411,6 +411,7 @@ body.logged-out .launch-btn::after {
 .pill-gold { background: #fffbeb; color: #b45309; border: 1px solid #fef3c7; }
 .pill-green { background: #f0fdf4; color: #15803d; border: 1px solid #dcfce7; }
 .pill-blue { background: #eff6ff; color: #1d4ed8; border: 1px solid #dbeafe; }
+.pill-purple { background: #faf5ff; color: #7e22ce; border: 1px solid #f3e8ff; }
 
 .card-title {
   font-size: 17px;
@@ -649,7 +650,7 @@ body.logged-out .launch-btn::after {
     <li><a href="story-maker.html" class="protected-link" data-feature="storyMaker">📖 Story Create</a></li>
     <li><a href="story-to-video.html" class="protected-link" data-feature="storyToVideo">🎬 Story to Video Studio</a></li>
     <li><a href="movie-recaps.html" class="protected-link" data-feature="movieRecaps">🎥 Movie Recaps</a></li>
-    <li><a href="karaoke-studio.html" class="active">🎤 Karaoke Studio</a></li>
+    <li><a href="karaoke-studio.html" class="protected-link" data-feature="karaokeStudio">🎤 Karaoke Studio</a></li>
     <li><a onclick="closeMenu(); openContactModal();">📞 Contacts (ဆက်သွယ်ရန်)</a></li>
   </ul>
 
@@ -675,7 +676,7 @@ body.logged-out .launch-btn::after {
 
   <div class="glass-header">
     <h2>🇲🇲 Myanmar AI Studio Suite</h2>
-    <p>မြန်မာအသံ၊ ဇာတ်လမ်းဖန်တီးမှုနှင့် ဗီဒီယို Studio စနစ်များ</p>
+    <p>မြန်မာအသံ၊ ဇာတ်လမ်းဖန်တီးမှု၊ ကာရာအိုကေ နှင့် ဗီဒီယို Studio စနစ်များ</p>
   </div>
 
   <div class="studio-grid">
@@ -686,7 +687,7 @@ body.logged-out .launch-btn::after {
         <span class="card-pill pill-gold">Voice AI</span>
       </div>
       <h3 class="card-title">Myanmar Voice TTS</h3>
-      <p class="card-desc">Microsoft Edge TTS အခြေပြု သဘာဝကျသော စတိုင်စုံ မြန်မာအသံ ထုတ်လုပ်မှု စနစ်။</p>
+      <p class="card-desc">Python Edge TTS အခြေပြု သဘာဝကျသော စတိုင်စုံ မြန်မာအသံ ထုတ်လုပ်မှု စနစ်။</p>
       <div class="card-features">
         <div class="feature-item"><span class="feature-dot"></span> နီလာ နှင့် သီဟ မြန်မာအသံများ</div>
         <div class="feature-item"><span class="feature-dot"></span> Natural / Story / Horror စတိုင်များ</div>
@@ -741,6 +742,23 @@ body.logged-out .launch-btn::after {
       <div class="card-features">
         <div class="feature-item"><span class="feature-dot"></span> အခန်းဆက် ဇာတ်ညွှန်းခွဲထုတ်ခြင်း</div>
         <div class="feature-item"><span class="feature-dot"></span> အသံသွင်းရန် အဆင်သင့် Script ရရှိခြင်း</div>
+      </div>
+      <div class="launch-btn">
+        <span>စတင်ဖန်တီးမည်</span>
+        <span>→</span>
+      </div>
+    </a>
+
+    <a href="karaoke-studio.html" class="studio-card protected-link" data-feature="karaokeStudio">
+      <div class="card-top-row">
+        <div class="card-icon">🎤</div>
+        <span class="card-pill pill-purple">Karaoke AI</span>
+      </div>
+      <h3 class="card-title">Karaoke Studio</h3>
+      <p class="card-desc">မြန်မာသီချင်းနှင့် နိုင်ငံခြားသီချင်းများအတွက် မူရင်း + English + မြန်မာ စာတန်းထိုးနှင့် အရောင်ပြေးစနစ်။</p>
+      <div class="card-features">
+        <div class="feature-item"><span class="feature-dot"></span> မြန်မာ/English သီးသန့်စီ SRT ထုတ်ယူခြင်း</div>
+        <div class="feature-item"><span class="feature-dot"></span> အချိန်ကိုက် Karaoke Highlight & MP4 Export</div>
       </div>
       <div class="launch-btn">
         <span>စတင်ဖန်တီးမည်</span>
