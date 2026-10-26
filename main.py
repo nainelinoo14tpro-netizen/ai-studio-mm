@@ -51,3 +51,4 @@ async def synthesize_speech(req: TTSRequest):
         return FileResponse(output_path, media_type="audio/mpeg", filename="myanmar-tts.mp3")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
