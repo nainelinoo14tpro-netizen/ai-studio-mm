@@ -1,6 +1,9 @@
 /**
  * AI Studio All-in-One Master Backend Worker
- * (Dual-Engine Edge TTS: Direct HTTPS POST + WebSocket Fallback + Trilingual Song Karaoke & Multi-Endpoint Engine)
+ * - Dual Oxion AI API Keys (OXION_API_KEY_1 -> OXION_API_KEY_2 Auto-Failover)
+ * - Multi-Engine Fallback (Oxion AI -> Gemini API -> Groq Llama-3.3)
+ * - Dual Transcription Engine (Groq Whisper + Gemini Multimodal Audio for Myanmar Songs)
+ * - Triple-Engine Myanmar TTS (Render Python Backend + Edge WS + Direct HTTPS)
  */
 
 // =====================================================
@@ -12,6 +15,7 @@ const CHROMIUM_FULL_VERSION = "143.0.3650.75";
 const CHROMIUM_MAJOR_VERSION = CHROMIUM_FULL_VERSION.split(".")[0];
 const SEC_MS_GEC_VERSION = `1-${CHROMIUM_FULL_VERSION}`;
 const EDGE_TTS_BASE = "https://speech.platform.bing.com/consumer/speech/synthesize/readaloud";
+const RENDER_PYTHON_TTS_URL = "https://ai-studio-mm.onrender.com";
 
 const DEFAULT_MYANMAR_VOICE = "my-MM-ThihaNeural";
 const MYANMAR_VOICES = {
@@ -27,7 +31,7 @@ const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
   "Access-Control-Allow-Headers": "Content-Type, Authorization",
-  "Access-Control-Expose-Headers": "X-TTS-Voice",
+  "Access-Control-Expose-Headers": "X-TTS-Voice, X-AI-Provider",
 };
 
 function json(data, status = 200) {
@@ -38,6 +42,49 @@ function json(data, status = 200) {
       "Content-Type": "application/json; charset=utf-8",
     },
   });
+}
+
+// =====================================================
+// COLLECT OXION & GEMINI KEYS (AUTO-ROTATION HELPER)
+// =====================================================
+
+function getOxionApiKeys(env) {
+  const rawKeys = [
+    env.OXION_API_KEY_1,
+    env.OXION_API_KEY_2,
+    env.OXION_API_KEY,
+    env.OXION_KEY_1,
+    env.OXION_KEY_2,
+  ];
+  const validKeys = [];
+  for (const item of rawKeys) {
+    if (typeof item === "string" && item.trim()) {
+      // Support comma-separated keys if user pasted two keys in one variable
+      const parts = item.split(",").map((k) => k.trim()).filter(Boolean);
+      for (const p of parts) {
+        if (!validKeys.includes(p)) validKeys.push(p);
+      }
+    }
+  }
+  return validKeys;
+}
+
+function getGeminiApiKeys(env) {
+  const rawKeys = [
+    env.GEMINI_API_KEY,
+    env.GEMINI_API_KEY_1,
+    env.GEMINI_API_KEY_2,
+  ];
+  const validKeys = [];
+  for (const item of rawKeys) {
+    if (typeof item === "string" && item.trim()) {
+      const parts = item.split(",").map((k) => k.trim()).filter(Boolean);
+      for (const p of parts) {
+        if (!validKeys.includes(p)) validKeys.push(p);
+      }
+    }
+  }
+  return validKeys;
 }
 
 // =====================================================
@@ -55,6 +102,8 @@ export default {
       }
 
       const url = new URL(request.url);
+      const oxionKeys = getOxionApiKeys(env);
+      const geminiKeys = getGeminiApiKeys(env);
 
       // Health Check
       if ((url.pathname === "/" || url.pathname === "/api/health") && request.method === "GET") {
@@ -62,11 +111,15 @@ export default {
           ok: true,
           service: "ai-studio-backend-master",
           status: "online",
+          oxion_keys_count: oxionKeys.length,
+          oxion_key_1_configured: !!oxionKeys[0],
+          oxion_key_2_configured: !!oxionKeys[1],
           groq_key_configured: !!env.GROQ_API_KEY,
-          gemini_key_configured: !!env.GEMINI_API_KEY,
+          gemini_key_configured: geminiKeys.length > 0,
           hf_token_configured: !!env.HF_TOKEN,
           tts: {
             enabled: true,
+            primary_engine: RENDER_PYTHON_TTS_URL,
             default_voice: DEFAULT_MYANMAR_VOICE,
             voices: MYANMAR_VOICES,
             language: "my-MM",
@@ -101,82 +154,117 @@ export default {
       }
 
       // =================================================
-      // 1. GROQ WHISPER TRANSCRIPTION
+      // 1. AUDIO TRANSCRIPTION (GROQ WHISPER + GEMINI MYANMAR SONG FALLBACK)
       // =================================================
       if (url.pathname === "/transcribe" && request.method === "POST") {
-        if (!env.GROQ_API_KEY) {
-          return json({ error: "GROQ_API_KEY မထည့်ရသေးပါ။ Cloudflare Secrets ကိုစစ်ပါ။" }, 500);
-        }
-
         const incoming = await request.formData();
         const file = incoming.get("file");
+        const songLangHint = String(incoming.get("lang") || incoming.get("mode") || "").toLowerCase();
 
         if (!file || typeof file === "string") {
           return json({ error: "Video သို့မဟုတ် Audio file မတွေ့ရှိပါ။" }, 400);
         }
 
-        const formData = new FormData();
-        formData.append("file", file, file.name || "audio.mp4");
-        formData.append("model", "whisper-large-v3-turbo");
-        formData.append("response_format", "verbose_json");
-        formData.append("timestamp_granularities[]", "segment");
-        formData.append("temperature", "0");
-
-        const response = await fetch("https://api.groq.com/openai/v1/audio/transcriptions", {
-          method: "POST",
-          headers: { Authorization: `Bearer ${env.GROQ_API_KEY}` },
-          body: formData,
-        });
-
-        const raw = await response.text();
-        let data;
-        try {
-          data = JSON.parse(raw);
-        } catch {
-          data = { error: raw };
+        // If explicitly requested for Myanmar song (`lang=my` or `mode=myanmar_song`),
+        // or if Groq key is missing, try Gemini Multimodal Audio first when possible
+        if ((songLangHint === "my" || songLangHint === "myanmar") && geminiKeys.length > 0) {
+          const geminiAudioResult = await transcribeAudioWithGemini(file, geminiKeys, "my");
+          if (geminiAudioResult.ok && geminiAudioResult.segments.length > 0) {
+            return json({
+              ok: true,
+              engine: "gemini-audio-myanmar",
+              language: "my",
+              duration: geminiAudioResult.duration,
+              text: geminiAudioResult.segments.map((s) => s.text).join(" "),
+              segments: geminiAudioResult.segments,
+            });
+          }
         }
 
-        if (!response.ok) {
-          return json(
-            { error: data?.error?.message || data?.error || `Groq error HTTP ${response.status}` },
-            response.status
-          );
+        if (!env.GROQ_API_KEY && geminiKeys.length === 0) {
+          return json({ error: "GROQ_API_KEY သို့မဟုတ် GEMINI_API_KEY မထည့်ရသေးပါ။ Cloudflare Secrets ကိုစစ်ပါ။" }, 500);
         }
 
-        const segments = Array.isArray(data?.segments) ? data.segments : [];
-        if (!segments.length) {
-          return json({ error: "Whisper က Subtitle segments မပြန်ပေးပါ။", text: data?.text || "" }, 422);
+        if (env.GROQ_API_KEY) {
+          const formData = new FormData();
+          formData.append("file", file, file.name || "audio.mp4");
+          formData.append("model", "whisper-large-v3-turbo");
+          formData.append("response_format", "verbose_json");
+          formData.append("timestamp_granularities[]", "segment");
+          formData.append("temperature", "0");
+          if (songLangHint === "my" || songLangHint === "myanmar") {
+            formData.append("language", "my");
+          }
+
+          const response = await fetch("https://api.groq.com/openai/v1/audio/transcriptions", {
+            method: "POST",
+            headers: { Authorization: `Bearer ${env.GROQ_API_KEY}` },
+            body: formData,
+          });
+
+          const raw = await response.text();
+          let data;
+          try {
+            data = JSON.parse(raw);
+          } catch {
+            data = { error: raw };
+          }
+
+          if (response.ok && Array.isArray(data?.segments) && data.segments.length > 0) {
+            const cleanSegments = data.segments
+              .map((s, index) => ({
+                id: index + 1,
+                start: Number(s.start) || 0,
+                end: Number(s.end) || 0,
+                text: String(s.text || "").trim(),
+              }))
+              .filter((s) => s.text && s.end > s.start);
+
+            if (cleanSegments.length > 0) {
+              return json({
+                ok: true,
+                engine: "groq-whisper",
+                language: data?.language || null,
+                duration: Number(data?.duration) || null,
+                text: data?.text || "",
+                segments: cleanSegments,
+              });
+            }
+          }
         }
 
-        const cleanSegments = segments
-          .map((s, index) => ({
-            id: index + 1,
-            start: Number(s.start) || 0,
-            end: Number(s.end) || 0,
-            text: String(s.text || "").trim(),
-          }))
-          .filter((s) => s.text && s.end > s.start);
+        // Fallback to Gemini Audio Transcription if Whisper failed or returned empty segments
+        if (geminiKeys.length > 0) {
+          const fallbackAudio = await transcribeAudioWithGemini(file, geminiKeys, songLangHint || "auto");
+          if (fallbackAudio.ok && fallbackAudio.segments.length > 0) {
+            return json({
+              ok: true,
+              engine: "gemini-audio-fallback",
+              language: fallbackAudio.language || "my",
+              duration: fallbackAudio.duration,
+              text: fallbackAudio.segments.map((s) => s.text).join(" "),
+              segments: fallbackAudio.segments,
+            });
+          }
+        }
 
-        return json({
-          ok: true,
-          language: data?.language || null,
-          duration: Number(data?.duration) || null,
-          text: data?.text || "",
-          segments: cleanSegments,
-        });
+        return json({ error: "အသံဖိုင်ထဲမှ စာသား ထုတ်ယူ၍ မရနိုင်ပါ။" }, 422);
       }
 
       // =================================================
-      // 2. GEMINI BATCH TRANSLATION (SUPPORTS MYANMAR & ENGLISH)
+      // 2. BATCH TRANSLATION (OXION KEY 1 -> KEY 2 -> GEMINI -> GROQ)
       // =================================================
       if (url.pathname === "/translate" && request.method === "POST") {
-        if (!env.GEMINI_API_KEY) {
-          return json({ error: "GEMINI_API_KEY မထည့်ရသေးပါ။ Cloudflare Secrets ကိုစစ်ပါ။" }, 500);
+        if (oxionKeys.length === 0 && geminiKeys.length === 0 && !env.GROQ_API_KEY) {
+          return json({ error: "API Key (Oxion သို့မဟုတ် Gemini) မထည့်ရသေးပါ။" }, 500);
         }
 
         const body = await request.json().catch(() => ({}));
         const texts = body?.texts;
-        const targetLang = body?.targetLang === "en" ? "English" : "natural spoken Myanmar Burmese";
+        const isTargetEn = body?.targetLang === "en";
+        const targetLangDesc = isTargetEn
+          ? "clear, natural, poetic English"
+          : "concise, natural spoken Myanmar Burmese (keep each line short and meaningful for subtitles, do not make it overly long)";
 
         if (!Array.isArray(texts) || texts.length === 0) {
           return json({ ok: true, translations: [] });
@@ -192,23 +280,22 @@ export default {
         for (let start = 0; start < texts.length; start += BATCH_SIZE) {
           const batch = texts.slice(start, start + BATCH_SIZE);
           const prompt = `
-You are a professional subtitle & song lyric translator.
-Translate every line in the input array into ${targetLang}.
+You are an expert subtitle and song lyric translator for Myanmar and English.
+Translate every line in the input JSON array into ${targetLangDesc}.
 
 CRITICAL RULES:
-- Even if a line contains 2 mixed languages (e.g., Thai + English, Hindi/Urdu + English, Korean + English, Chinese + English), translate the ENTIRE meaning completely into ${targetLang}.
-- Never return the untranslated original foreign script when translating to Myanmar Burmese.
-- Keep EXACTLY the same number of items (${batch.length} items).
-- Keep EXACTLY the same order.
-- Do NOT merge lines and do NOT split lines (keep each item on 1 single line without newline characters).
-- Make the translation natural, poetic, and fitting for songs/movies.
-- Output ONLY a valid JSON array of strings. No markdown, no explanation.
+1. Even if a line contains mixed languages (e.g., Myanmar + English, Thai + English, Korean + English, Hindi + English), translate the full meaning into ${targetLangDesc}.
+2. When translating into Myanmar Burmese, keep the phrasing concise, natural, and easy to read on screen (avoid bloated literal word-for-word translation).
+3. When translating Myanmar songs into English, translate the poetic meaning accurately into natural English lyrics.
+4. Keep EXACTLY ${batch.length} items in the exact same order.
+5. Each item must be a single line string without newline characters.
+6. Output ONLY a valid JSON array of strings. No markdown, no explanation.
 
 Input:
 ${JSON.stringify(batch)}
 `;
 
-          const result = await callGeminiWithFallback(prompt, env.GEMINI_API_KEY);
+          const result = await callMasterAIWithFailover(prompt, env);
           if (!result.ok) {
             return json(
               { error: result.error, modelErrors: result.modelErrors || [] },
@@ -218,7 +305,7 @@ ${JSON.stringify(batch)}
 
           const batchTranslations = parseJsonArray(result.text);
           if (!Array.isArray(batchTranslations)) {
-            return json({ error: "Gemini translation JSON ဖတ်မရပါ။", raw: result.text }, 502);
+            return json({ error: "Translation JSON ဖတ်မရပါ။", raw: result.text }, 502);
           }
 
           const normalized = batch.map((orig, i) => {
@@ -239,11 +326,11 @@ ${JSON.stringify(batch)}
       }
 
       // =================================================
-      // 2B. GEMINI SONG & KARAOKE TRILINGUAL TRANSLATOR (ORIG + EN + MM)
+      // 2B. SONG & KARAOKE TRILINGUAL TRANSLATOR (ORIG + EN + CONCISE MM)
       // =================================================
       if (url.pathname === "/song" && request.method === "POST") {
-        if (!env.GEMINI_API_KEY) {
-          return json({ error: "GEMINI_API_KEY မထည့်ရသေးပါ။ Cloudflare Secrets ကိုစစ်ပါ။" }, 500);
+        if (oxionKeys.length === 0 && geminiKeys.length === 0 && !env.GROQ_API_KEY) {
+          return json({ error: "API Key (Oxion သို့မဟုတ် Gemini) မထည့်ရသေးပါ။" }, 500);
         }
 
         const body = await request.json().catch(() => ({}));
@@ -264,22 +351,25 @@ ${JSON.stringify(batch)}
           }));
 
           const prompt = `
-သင်သည် ဘာသာစကားမျိုးစုံ ကျွမ်းကျင်သော သီချင်းစာသား (Song Lyrics & Karaoke) ဘာသာပြန်ပညာရှင် ဖြစ်သည်။
+သင်သည် မြန်မာသီချင်းနှင့် နိုင်ငံတကာသီချင်းများကို ကျွမ်းကျင်သော Song Lyrics & Karaoke ဘာသာပြန်ပညာရှင် ဖြစ်သည်။
 
-အောက်ပါ သီချင်းစာကြောင်း တစ်ကြောင်းချင်းစီကို စစ်ဆေးပြီး မူရင်းဘာသာစာသား (orig)၊ အင်္ဂလိပ်ဘာသာပြန် (en) နှင့် သီချင်းအဓိပ္ပာယ်နှင့် လိုက်ဖက်သော မြန်မာဘာသာပြန် (mm) တို့ကို ပြန်ထုတ်ပေးပါ။
+အောက်ပါ သီချင်းစာကြောင်း တစ်ကြောင်းချင်းစီကို စစ်ဆေးပြီး မူရင်းဘာသာစာသား (orig)၊ အင်္ဂလိပ်ဘာသာပြန် (en) နှင့် မြန်မာဘာသာပြန် (mm) တို့ကို သီးသန့်စီ ပြန်ထုတ်ပေးပါ။
 
 အလွန်အရေးကြီးသော စည်းမျဉ်းများ:
-1. သီချင်းစာကြောင်းထဲတွင် ဘာသာစကား (၂) မျိုး ရောနှောပါဝင်နေပါက (ဥပမာ - ထိုင်း + English၊ အူရဒူ/ဟိန္ဒီ + English၊ ကိုရီးယား + English၊ တရုတ် + English) ဘာသာစကား (၂) မျိုးစလုံး၏ အဓိပ္ပာယ်ကို အပြည့်အဝ ဘာသာပြန်ပေးရမည်။
-2. "mm" အကွက်တွင် မူရင်းနိုင်ငံခြားစာသားအတိုင်း လုံးဝ ပြန်မထည့်ရပါ။ သီချင်းနှင့် လိုက်ဖက်ပြီး နားထောင်ကောင်းသော မြန်မာစာသားစစ်စစ်ဖြင့်သာ ရေးပေးရမည်။
-3. "en" အကွက်တွင် အဓိပ္ပာယ်မှန်ကန်သော English စာသားသီးသန့် ရေးပေးရမည်။
-4. စာကြောင်းအရေအတွက် (${inputPayload.length} ကြောင်း) နှင့် အစီအစဉ် (idx) အတိအကျ တူညီရမည်။ စာကြောင်းတစ်ကြောင်းကို (၁) ကြောင်းတည်းသာ ထားရမည် (\n မပါရ)။
+1. အကယ်၍ မူရင်းသီချင်းသည် မြန်မာသီချင်းဖြစ်ပါက:
+   - "orig" နှင့် "mm" တွင် သပ်ရပ်မှန်ကန်သော မြန်မာသီချင်းစာသားအတိုင်း ထားပေးပြီး၊
+   - "en" တွင် အဓိပ္ပာယ်ပေါ်လွင်သော English သီချင်းစာသားအဖြစ် ဘာသာပြန်ပေးပါ။
+2. အကယ်၍ မူရင်းသီချင်းသည် English သို့မဟုတ် အခြားနိုင်ငံခြားသီချင်း ဖြစ်ပါက:
+   - "mm" အကွက်တွင် English စာကြောင်းအရှည်ကြီးအတိုင်း တိုက်ရိုက် အတင်းလိုက်မကပ်ဘဲ မြန်မာစကား သဘာဝအတိုင်း တိုတို၊ ကျစ်လျစ်ပြီး သီချင်းအဓိပ္ပာယ် ပေါ်လွင်သော မြန်မာစာသားသီးသန့် ရေးပေးပါ။
+3. သီချင်းစာကြောင်းထဲတွင် ဘာသာစကား (၂) မျိုး ရောနှောပါဝင်နေပါကလည်း အဓိပ္ပာယ်အပြည့်အဝ ဘာသာပြန်ပေးရမည်။
+4. စာကြောင်းအရေအတွက် (${inputPayload.length} ကြောင်း) နှင့် အစီအစဉ် (idx) အတိအကျ တူညီရမည်။ (\n မပါရ)။
 5. Output MUST be ONLY a valid JSON array in this exact format:
 [
   {
     "idx": 0,
     "orig": "မူရင်းစာသား",
-    "en": "English lyric translation",
-    "mm": "သီချင်းနှင့်လိုက်ဖက်သော မြန်မာဘာသာပြန်စာသား"
+    "en": "Natural English lyric translation",
+    "mm": "ကျစ်လျစ်သပ်ရပ်သော မြန်မာစာတန်း"
   }
 ]
 
@@ -287,7 +377,7 @@ Input Lyrics:
 ${JSON.stringify(inputPayload)}
 `;
 
-          const result = await callGeminiWithFallback(prompt, env.GEMINI_API_KEY);
+          const result = await callMasterAIWithFailover(prompt, env);
           if (!result.ok) {
             return json(
               { error: result.error, modelErrors: result.modelErrors || [] },
@@ -323,11 +413,11 @@ ${JSON.stringify(inputPayload)}
       }
 
       // =================================================
-      // 3. GEMINI MOVIE RECAP (FULL TIMELINE COVERAGE)
+      // 3. MOVIE RECAP (OXION KEY 1 -> KEY 2 -> GEMINI -> GROQ)
       // =================================================
       if (url.pathname === "/recap" && request.method === "POST") {
-        if (!env.GEMINI_API_KEY) {
-          return json({ error: "GEMINI_API_KEY မထည့်ရသေးပါ။" }, 500);
+        if (oxionKeys.length === 0 && geminiKeys.length === 0 && !env.GROQ_API_KEY) {
+          return json({ error: "API Key (Oxion သို့မဟုတ် Gemini) မထည့်ရသေးပါ။" }, 500);
         }
 
         const body = await request.json().catch(() => ({}));
@@ -387,7 +477,7 @@ SOURCE SEGMENTS (TIMELINE ACROSS VIDEO):
 ${JSON.stringify(sampledSegments)}
 `;
 
-        const result = await callGeminiWithFallback(prompt, env.GEMINI_API_KEY);
+        const result = await callMasterAIWithFailover(prompt, env);
         if (!result.ok) {
           return json(
             { error: result.error, modelErrors: result.modelErrors || [] },
@@ -407,11 +497,11 @@ ${JSON.stringify(sampledSegments)}
       }
 
       // =================================================
-      // 4. GEMINI STORY GENERATOR (UPDATED: 8s-10s Scenes & 15 Scenes per Ep/2Mins)
+      // 4. STORY GENERATOR (OXION KEY 1 -> KEY 2 -> GEMINI -> GROQ)
       // =================================================
       if (url.pathname === "/story" && request.method === "POST") {
-        if (!env.GEMINI_API_KEY) {
-          return json({ error: "GEMINI_API_KEY မထည့်ရသေးပါ။" }, 500);
+        if (oxionKeys.length === 0 && geminiKeys.length === 0 && !env.GROQ_API_KEY) {
+          return json({ error: "API Key (Oxion သို့မဟုတ် Gemini) မထည့်ရသေးပါ။" }, 500);
         }
 
         const body = await request.json().catch(() => ({}));
@@ -455,12 +545,6 @@ ${JSON.stringify(sampledSegments)}
     "scene": 1,
     "text_mm": "ညဉ့်နက်သန်းခေါင်ယံ တောနက်ကြီးတစ်ခုအတွင်းမှာ လေပြင်းတွေ တဝူးဝူးတိုက်ခတ်နေပြီး သစ်ရွက်ခြောက်တွေ ကြွေကျနေခဲ့ပါတယ်။ ပတ်ဝန်းကျင်တစ်ခုလုံး မြူနှင်းတွေဖုံးလွှမ်းနေပြီး အလွန်အေးစက်တိတ်ဆိတ်နေတဲ့အချိန်ပေါ့။",
     "image_prompt_en": "Dark foggy mysterious forest at midnight, cinematic atmospheric lighting, 8k"
-  },
-  {
-    "episode": 1,
-    "scene": 15,
-    "text_mm": "အိမ်ကြီးရဲ့ သစ်သားတံခါးကြီး ဖြည်းဖြည်းချင်းပွင့်သွားပြီး အမှောင်ထုထဲကနေ ကြောက်မက်ဖွယ်မျက်လုံးနီနီကြီးတွေ ပေါ်ထွက်လာချိန်မှာတော့... (အပိုင်း ၂ တွင် ဆက်လက်စောင့်မျှော်ကြည့်ရှုပါ)",
-    "image_prompt_en": "Terrifying glowing red eyes emerging from dark wooden doorway, extreme dramatic cliffhanger shot, 8k"
   }
 ]
 `;
@@ -491,7 +575,7 @@ Important Rules:
 `;
         }
 
-        const result = await callGeminiWithFallback(prompt, env.GEMINI_API_KEY);
+        const result = await callMasterAIWithFailover(prompt, env);
         if (!result.ok) {
           return json({ error: result.error, modelErrors: result.modelErrors || [] }, result.status || 503);
         }
@@ -508,7 +592,7 @@ Important Rules:
       }
 
       // =================================================
-      // 5. MYANMAR EDGE TTS (DUAL ENGINE: DIRECT HTTPS + WEBSOCKET)
+      // 5. MYANMAR EDGE TTS (RENDER PYTHON + WS + DIRECT HTTPS)
       // =================================================
       if (
         (url.pathname === "/tts" || url.pathname === "/api/tts" || url.pathname === "/api/synthesize") &&
@@ -636,7 +720,7 @@ Important Rules:
       }
 
       // =================================================
-      // 7. ZEROGPU BURMESE VOICE CLONE (GRADIO TUPLE RETURN RESOLVED)
+      // 7. ZEROGPU BURMESE VOICE CLONE
       // =================================================
       if (url.pathname === "/clone-tts" && request.method === "POST") {
         const body = await request.json().catch(() => ({}));
@@ -729,6 +813,261 @@ Important Rules:
     }
   },
 };
+
+// =====================================================
+// MASTER AI ROUTER:
+// 1. OXION_API_KEY_1 -> 2. OXION_API_KEY_2 -> 3. GEMINI -> 4. GROQ
+// =====================================================
+
+async function callMasterAIWithFailover(prompt, env) {
+  const allErrors = [];
+  const oxionKeys = getOxionApiKeys(env);
+  const geminiKeys = getGeminiApiKeys(env);
+
+  // STEP 1 & 2: Try Oxion AI Keys sequentially (Key 1 -> Key 2)
+  for (let kIdx = 0; kIdx < oxionKeys.length; kIdx++) {
+    const oxKey = oxionKeys[kIdx];
+    const oxRes = await callOxionSingleKey(prompt, oxKey, env.OXION_BASE_URL, env.OXION_MODEL, kIdx + 1);
+    if (oxRes.ok && oxRes.text) {
+      return oxRes;
+    }
+    allErrors.push(...(oxRes.errors || []));
+  }
+
+  // STEP 3: Fallback to Gemini API Keys sequentially
+  for (let gIdx = 0; gIdx < geminiKeys.length; gIdx++) {
+    const gemKey = geminiKeys[gIdx];
+    const gemRes = await callGeminiWithFallback(prompt, gemKey);
+    if (gemRes.ok && gemRes.text) {
+      return gemRes;
+    }
+    allErrors.push(...(gemRes.modelErrors || []));
+  }
+
+  // STEP 4: Emergency Fallback to Groq Llama-3.3-70b
+  if (env.GROQ_API_KEY) {
+    try {
+      const groqResp = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${env.GROQ_API_KEY}`,
+        },
+        body: JSON.stringify({
+          model: "llama-3.3-70b-versatile",
+          messages: [
+            { role: "system", content: "You are a precise JSON generator. Output valid JSON only." },
+            { role: "user", content: prompt },
+          ],
+          temperature: 0.2,
+        }),
+      });
+      if (groqResp.ok) {
+        const gData = await groqResp.json().catch(() => ({}));
+        const gText = gData?.choices?.[0]?.message?.content?.trim();
+        if (gText) {
+          return { ok: true, model: "groq-llama-3.3-70b", text: gText };
+        }
+      } else {
+        allErrors.push({ provider: "groq", status: groqResp.status });
+      }
+    } catch (e) {
+      allErrors.push({ provider: "groq", message: e.message });
+    }
+  }
+
+  return {
+    ok: false,
+    status: 503,
+    error: "AI Models (Oxion Key 1, Key 2 & Gemini) အားလုံး ချိတ်ဆက်၍ မရနိုင်သေးပါ။",
+    modelErrors: allErrors,
+  };
+}
+
+async function callOxionSingleKey(prompt, apiKey, customBaseUrl, customModel, keySlotNumber) {
+  const endpoints = customBaseUrl
+    ? [customBaseUrl.replace(/\/+$/, "")]
+    : [
+        "https://api.oxionai.com/v1/chat/completions",
+        "https://oxionai.com/api/v1/chat/completions",
+      ];
+
+  const models = customModel
+    ? [customModel]
+    : ["gemini-2.5-flash", "gemini-2.0-flash", "gpt-4o-mini"];
+
+  const errors = [];
+
+  for (const endpoint of endpoints) {
+    for (const model of models) {
+      try {
+        const response = await fetch(endpoint, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${apiKey}`,
+            "x-api-key": apiKey,
+          },
+          body: JSON.stringify({
+            model,
+            messages: [
+              { role: "system", content: "Output ONLY valid JSON without markdown formatting." },
+              { role: "user", content: prompt },
+            ],
+            temperature: 0.2,
+          }),
+        });
+
+        const raw = await response.text();
+        let data = null;
+        try {
+          data = JSON.parse(raw);
+        } catch {}
+
+        if (response.ok) {
+          const text =
+            data?.choices?.[0]?.message?.content?.trim() ||
+            data?.candidates?.[0]?.content?.parts?.map((p) => p?.text || "").join("").trim() ||
+            data?.text?.trim();
+
+          if (text) {
+            return {
+              ok: true,
+              provider: `oxion-key-${keySlotNumber}`,
+              model,
+              text,
+            };
+          }
+        } else {
+          const status = response.status;
+          errors.push({
+            provider: `oxion-key-${keySlotNumber}`,
+            endpoint,
+            model,
+            status,
+            message: data?.error?.message || `HTTP ${status}`,
+          });
+
+          // If key is out of quota/tokens (401, 402, 403, 429), immediately break to switch to Key #2!
+          if ([401, 402, 403, 429].includes(status)) {
+            return { ok: false, errors };
+          }
+          if (status === 404) break;
+        }
+      } catch (err) {
+        errors.push({
+          provider: `oxion-key-${keySlotNumber}`,
+          endpoint,
+          model,
+          message: err.message,
+        });
+        break;
+      }
+    }
+  }
+
+  return { ok: false, errors };
+}
+
+// =====================================================
+// GEMINI MULTIMODAL AUDIO TRANSCRIPTION (FOR MYANMAR SONGS)
+// =====================================================
+
+function arrayBufferToBase64(buffer) {
+  const bytes = new Uint8Array(buffer);
+  let binary = "";
+  const chunkSize = 0x8000;
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunkSize));
+  }
+  return btoa(binary);
+}
+
+async function transcribeAudioWithGemini(fileBlob, geminiKeys, langHint = "my") {
+  try {
+    const arrayBuf = await fileBlob.arrayBuffer();
+    // Limit inline audio payload to ~18MB to stay within Worker memory limits
+    if (arrayBuf.byteLength > 19 * 1024 * 1024) {
+      return { ok: false, error: "Audio file too large for inline Gemini transcription" };
+    }
+
+    const base64Audio = arrayBufferToBase64(arrayBuf);
+    const mimeType = fileBlob.type && fileBlob.type.startsWith("audio/") ? fileBlob.type : "audio/wav";
+
+    const prompt = `
+Listen carefully to this song/audio file and transcribe every sung lyric line with accurate start and end timestamps in seconds.
+${langHint === "my" ? "This is a Myanmar (Burmese) song. Transcribe the exact Burmese lyrics accurately in Myanmar Unicode script." : "Transcribe the lyrics in their original sung language."}
+
+CRITICAL RULES:
+1. Ignore purely instrumental guitar solos, intros, or outros — set "start" to the exact second the singer's voice begins singing that line, and "end" to when the line finishes.
+2. Output ONLY a valid JSON array in this exact format:
+[
+  { "id": 1, "start": 12.5, "end": 16.2, "text": "သီချင်းစာသား..." }
+]
+`;
+
+    const models = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"];
+
+    for (const apiKey of geminiKeys) {
+      for (const model of models) {
+        try {
+          const resp = await fetch(
+            `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "x-goog-api-key": apiKey,
+              },
+              body: JSON.stringify({
+                contents: [
+                  {
+                    parts: [
+                      { inlineData: { mimeType, data: base64Audio } },
+                      { text: prompt },
+                    ],
+                  },
+                ],
+                generationConfig: {
+                  responseMimeType: "application/json",
+                  temperature: 0.1,
+                },
+              }),
+            }
+          );
+
+          if (resp.ok) {
+            const data = await resp.json().catch(() => ({}));
+            const rawText = data?.candidates?.[0]?.content?.parts?.map((p) => p?.text || "").join("").trim();
+            const parsed = parseJsonArray(rawText);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              const cleanSegments = parsed
+                .map((s, idx) => ({
+                  id: idx + 1,
+                  start: Number(s.start) || 0,
+                  end: Number(s.end) || (Number(s.start) + 3.5),
+                  text: String(s.text || s.orig || s.mm || "").replace(/\r?\n/g, " ").trim(),
+                }))
+                .filter((s) => s.text && s.end > s.start);
+
+              if (cleanSegments.length > 0) {
+                return {
+                  ok: true,
+                  language: langHint,
+                  duration: cleanSegments[cleanSegments.length - 1].end,
+                  segments: cleanSegments,
+                };
+              }
+            }
+          }
+        } catch (e) {}
+      }
+    }
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+  return { ok: false, error: "Gemini audio transcription failed" };
+}
 
 // =====================================================
 // GEMINI MULTI-MODEL FALLBACK ENGINE
@@ -833,13 +1172,32 @@ async function getSecMsGec() {
 }
 
 // =====================================================
-// EDGE TTS MASTER CONTROLLER (DIRECT HTTPS + WEBSOCKET)
+// EDGE TTS MASTER CONTROLLER (RENDER PYTHON + WS + DIRECT HTTPS)
 // =====================================================
 
 async function generateEdgeSpeech(text, voice, rate, pitch, volume) {
   const errors = [];
 
-  // 1. Try WebSocket Engine First (with BigInt Sec-MS-GEC & MUID Cookie)
+  // 0. Try Live Python Render Backend First (100% Reliable)
+  try {
+    const renderResp = await fetch(`${RENDER_PYTHON_TTS_URL}/api/tts`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text, voice, rate, pitch }),
+    });
+    if (renderResp.ok) {
+      const renderBuf = await renderResp.arrayBuffer();
+      if (renderBuf && renderBuf.byteLength > 200) {
+        return renderBuf;
+      }
+    } else {
+      errors.push(`Render HTTP ${renderResp.status}`);
+    }
+  } catch (renderErr) {
+    errors.push(`Render: ${renderErr.message}`);
+  }
+
+  // 1. Try WebSocket Engine
   try {
     const wsBuffer = await generateEdgeSpeechWebSocket(text, voice, rate, pitch, volume);
     if (wsBuffer && wsBuffer.byteLength > 100) {
@@ -849,7 +1207,7 @@ async function generateEdgeSpeech(text, voice, rate, pitch, volume) {
     errors.push(`WS: ${wsErr.message}`);
   }
 
-  // 2. Fallback to Direct HTTPS POST Engine (WebSocket Handshake မလိုသော နည်းလမ်း)
+  // 2. Fallback to Direct HTTPS POST Engine
   try {
     const httpBuffer = await generateEdgeSpeechDirectHttp(text, voice, rate, pitch, volume);
     if (httpBuffer && httpBuffer.byteLength > 100) {
@@ -862,7 +1220,7 @@ async function generateEdgeSpeech(text, voice, rate, pitch, volume) {
   throw new Error(`Myanmar TTS failed (${errors.join(" | ")})`);
 }
 
-// ENGINE A: Direct HTTPS POST (From server (2).js)
+// ENGINE A: Direct HTTPS POST
 async function generateEdgeSpeechDirectHttp(text, voice, rate, pitch, volume) {
   const secMsGec = await getSecMsGec();
   const connectionId = crypto.randomUUID().replace(/-/g, "");
@@ -1238,7 +1596,7 @@ function parseJsonArray(text) {
     const parsed = JSON.parse(clean);
     if (Array.isArray(parsed)) return parsed;
     if (typeof parsed === "object" && parsed !== null) {
-      for (const k of ["lyrics", "translations", "story", "episodes", "scenes", "data"]) {
+      for (const k of ["lyrics", "translations", "story", "episodes", "scenes", "data", "recap"]) {
         if (Array.isArray(parsed[k])) return parsed[k];
       }
       for (const k in parsed) {
@@ -1261,7 +1619,7 @@ function parseJsonArray(text) {
   if (objStart !== -1 && objEnd !== -1 && objEnd > objStart) {
     try {
       const parsed = JSON.parse(clean.slice(objStart, objEnd + 1));
-      for (const k of ["lyrics", "translations", "story", "episodes", "scenes", "data"]) {
+      for (const k of ["lyrics", "translations", "story", "episodes", "scenes", "data", "recap"]) {
         if (Array.isArray(parsed[k])) return parsed[k];
       }
       for (const k in parsed) {
