@@ -138,7 +138,7 @@
       font-weight: 600;
     }
 
-    /* Main Container (Responsive for Phone & Laptop) */
+    /* Main Container */
     .container {
       padding: 16px 14px;
       max-width: 680px;
@@ -515,7 +515,7 @@
       <button class="menu-btn" onclick="openMenu()">☰</button>
       <div class="logo">AI Studio App</div>
     </div>
-    <span class="server-badge" id="serverStatusBadge">🟢 Triple TTS Ready</span>
+    <span class="server-badge" id="serverStatusBadge">🟢 Python TTS Ready</span>
   </header>
 
   <!-- Overlay -->
@@ -540,7 +540,7 @@
   <div class="container">
     <div class="glass-header">
       <h2>🎙️ Myanmar Voice TTS Studio</h2>
-      <p>Microsoft Edge TTS အခြေပြု သဘာဝကျ မြန်မာအသံစနစ်</p>
+      <p>Python Edge TTS အခြေပြု သဘာဝကျ မြန်မာအသံစနစ်</p>
     </div>
 
     <!-- Sample Voice Preview Box (Single Mic Indicator) -->
@@ -649,8 +649,10 @@
   </div>
 
   <script>
+    // URL များ သတ်မှတ်ခြင်း (Trailing Slash ဖယ်ရှားပြီး Double-Slash Bug ကာကွယ်ထားပါသည်)
+    const RAW_RENDER_URL = "https://ai-studio-mm.onrender.com";
+    const RENDER_BACKEND_URL = RAW_RENDER_URL.replace(/\/+$/, "");
     const WORKER_URL = "https://ai-studio-mm.nainelinoo-14tpro.workers.dev";
-    const RENDER_BACKEND_URL = "https://ai-studio-mm.onrender.com/";
 
     let sampleAudio = new Audio();
     let currentlyPlayingBtnId = null;
@@ -803,7 +805,7 @@
             .replace(/"/g, "&quot;")
             .replace(/'/g, "&apos;");
 
-          const ssml = `<speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis' xmlns:mstts='http://www.w3.org/2001/mstts' xml:lang='my-MM'><voice name='${cleanPayload.voice}'><prosody pitch='${cleanPayload.pitch}' rate='${cleanPayload.rate}' volume='${cleanPayload.volume}'>${safeText}</prosody></voice></speak>`;
+          const ssml = `<speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis' xmlns:mstts='http://www.w3.org/2001/mstts' xml:lang='my-MM'><voice name='${cleanPayload.voice}'><prosody pitch='${cleanPayload.pitch}' rate='${cleanPayload.rate}'>${safeText}</prosody></voice></speak>`;
 
           ws.send(`X-Timestamp:${dateStr}\r\nContent-Type:application/json; charset=utf-8\r\nPath:speech.config\r\n\r\n{"context":{"synthesis":{"audio":{"metadataoptions":{"sentenceBoundaryEnabled":"false","wordBoundaryEnabled":"false"},"outputFormat":"audio-24khz-48kbitrate-mono-mp3"}}}}`);
           ws.send(`X-RequestId:${reqId}\r\nContent-Type:application/ssml+xml\r\nX-Timestamp:${dateStr}\r\nPath:ssml\r\n\r\n${ssml}`);
@@ -859,10 +861,10 @@
       });
     }
 
-    // Triple-Engine TTS Request:
-    // 1. Try fast Cloudflare Worker (/tts) first (Dual-Engine: WS + Direct HTTPS POST)
-    // 2. Fallback to Render Backend (/api/tts & /api/synthesize) with 50s wake-up timeout
-    // 3. Fallback to Direct Browser Edge TTS
+    // TTS Multi-Engine Request:
+    // ENGINE 1 (PRIMARY): Python Render Backend (/api/tts & /api/synthesize)
+    // ENGINE 2 (FALLBACK): Cloudflare Worker (/tts)
+    // ENGINE 3 (EMERGENCY FALLBACK): Direct Browser WebSocket
     async function requestTTSAudio(payload, onStatusUpdate) {
       const errors = [];
 
@@ -870,81 +872,83 @@
         text: String(payload.text || "").trim(),
         voice: payload.voice || "my-MM-NilarNeural",
         rate: /^[+-]\d{1,3}%$/.test(payload.rate) ? payload.rate : "+0%",
-        pitch: /^[+-]\d{1,3}Hz$/.test(payload.pitch) ? payload.pitch : "+0Hz",
-        volume: /^[+-]\d{1,3}%$/.test(payload.volume) ? payload.volume : "+50%"
+        pitch: /^[+-]\d{1,3}Hz$/.test(payload.pitch) ? payload.pitch : "+0Hz"
       };
 
-      // ENGINE 1: Fast Cloudflare Worker
-      try {
-        if (onStatusUpdate) onStatusUpdate("Cloudflare Worker ဆာဗာမှ အသံထုတ်ယူနေသည်...");
-        const ctrl1 = new AbortController();
-        const t1 = setTimeout(() => ctrl1.abort(), 18000);
-
-        const r1 = await fetch(`${WORKER_URL}/tts`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(cleanPayload),
-          signal: ctrl1.signal
-        });
-        clearTimeout(t1);
-
-        if (r1.ok) {
-          const blob = await r1.blob();
-          if (blob && blob.size > 200) {
-            return blob;
-          }
-          errors.push("Worker returned empty audio");
-        } else {
-          const errData = await r1.json().catch(() => ({}));
-          errors.push(`Worker (${r1.status}): ${errData.error || r1.statusText}`);
-        }
-      } catch (err1) {
-        errors.push(`Worker Error: ${err1.message}`);
-      }
-
-      // ENGINE 2: Render Backend (/api/tts with fallback to /api/synthesize)
+      // ----------------------------------------------------
+      // ENGINE 1 (PRIMARY): Render Python Backend
+      // ----------------------------------------------------
       const renderEndpoints = ["/api/tts", "/api/synthesize"];
       for (const ep of renderEndpoints) {
         try {
-          if (onStatusUpdate) onStatusUpdate("Render ဆာဗာကို နှိုး၍ အသံထုတ်ယူနေသည် (စက္ကန့် ၃၀ ခန့် စောင့်ပေးပါ)...");
-          const ctrl2 = new AbortController();
-          const t2 = setTimeout(() => ctrl2.abort(), 50000);
+          if (onStatusUpdate) onStatusUpdate("Render Python ဆာဗာမှ အသံဖန်တီးနေပါသည်...");
+          const ctrl = new AbortController();
+          const t = setTimeout(() => ctrl.abort(), 45000); // Free tier spin-up timeout
 
-          const r2 = await fetch(`${RENDER_BACKEND_URL}${ep}`, {
+          const res = await fetch(`${RENDER_BACKEND_URL}${ep}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(cleanPayload),
-            signal: ctrl2.signal
+            signal: ctrl.signal
           });
-          clearTimeout(t2);
+          clearTimeout(t);
 
-          if (r2.ok) {
-            const blob = await r2.blob();
+          if (res.ok) {
+            const blob = await res.blob();
             if (blob && blob.size > 200) {
-              return blob;
+              return blob; // Render မှ အောင်မြင်စွာ ရရှိ
             }
-          } else if (r2.status === 404) {
-            continue;
+          } else if (res.status === 404) {
+            continue; // အခြား endpoint သို့ စမ်းမည်
           } else {
-            const errData = await r2.json().catch(() => ({}));
-            errors.push(`Render ${ep} (${r2.status}): ${errData.error || r2.statusText}`);
-            break;
+            const errData = await res.json().catch(() => ({}));
+            errors.push(`Render ${ep} (${res.status}): ${errData.detail || errData.error || res.statusText}`);
           }
-        } catch (err2) {
-          errors.push(`Render Error: ${err2.message}`);
-          break;
+        } catch (err) {
+          errors.push(`Render ${ep}: ${err.message}`);
         }
       }
 
-      // ENGINE 3: Direct Browser Edge TTS Fallback
+      // ----------------------------------------------------
+      // ENGINE 2 (FALLBACK): Cloudflare Worker
+      // ----------------------------------------------------
       try {
-        if (onStatusUpdate) onStatusUpdate("Direct Browser စနစ်ဖြင့် အသံတိုက်ရိုက် ထုတ်ယူနေသည်...");
+        if (onStatusUpdate) onStatusUpdate("Cloudflare Worker သို့ ကူးပြောင်း စမ်းသပ်နေသည်...");
+        const ctrlWorker = new AbortController();
+        const tWorker = setTimeout(() => ctrlWorker.abort(), 12000);
+
+        const rWorker = await fetch(`${WORKER_URL}/tts`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(cleanPayload),
+          signal: ctrlWorker.signal
+        });
+        clearTimeout(tWorker);
+
+        if (rWorker.ok) {
+          const blob = await rWorker.blob();
+          if (blob && blob.size > 200) {
+            return blob;
+          }
+        } else {
+          const errData = await rWorker.json().catch(() => ({}));
+          errors.push(`Worker (${rWorker.status}): ${errData.error || rWorker.statusText}`);
+        }
+      } catch (errWorker) {
+        errors.push(`Worker Error: ${errWorker.message}`);
+      }
+
+      // ----------------------------------------------------
+      // ENGINE 3 (EMERGENCY): Direct Browser Edge TTS
+      // ----------------------------------------------------
+      try {
+        if (onStatusUpdate) onStatusUpdate("Browser မှ တိုက်ရိုက် အသံထုတ်ယူနေသည်...");
         const browserBlob = await generateEdgeSpeechInBrowser(cleanPayload);
         if (browserBlob && browserBlob.size > 200) {
           return browserBlob;
         }
-      } catch (err3) {
-        errors.push(`Browser TTS: ${err3.message}`);
+      } catch (errBrowser) {
+        errors.push(`Browser TTS: ${errBrowser.message}`);
       }
 
       throw new Error(errors.join(" | "));
@@ -991,8 +995,7 @@
           text: sampleText,
           voice: voice,
           rate: "+0%",
-          pitch: "+0Hz",
-          volume: "+50%"
+          pitch: "+0Hz"
         }, (statusMsg) => {
           activeText.innerText = statusMsg;
         });
@@ -1043,7 +1046,7 @@
       btnText.innerText = "အသံဖန်တီးနေပါသည်...";
       outputBox.style.display = 'none';
 
-      updateProgress(15, "ဆာဗာသို့ ချိတ်ဆက်နေပါသည်...");
+      updateProgress(15, "Render Python ဆာဗာသို့ ချိတ်ဆက်နေပါသည်...");
 
       let currentProgress = 15;
       const progressTimer = setInterval(() => {
@@ -1058,8 +1061,7 @@
           text: text,
           voice: speaker,
           rate: rateStr,
-          pitch: pitchStr,
-          volume: "+50%"
+          pitch: pitchStr
         }, (statusMsg) => {
           document.getElementById('progressStepText').innerText = statusMsg;
         });
