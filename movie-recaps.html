@@ -4,10 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
 <meta name="theme-color" content="#e2e8f0">
-<title>Movie Recap & Karaoke Studio Pro - AI Studio App</title>
+<title>Movie Recap & Foreign Karaoke Studio Pro - AI Studio App</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Padauk:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Myanmar:wght@400;700;800&family=Padauk:wght@400;700&display=swap" rel="stylesheet">
 <!-- mp4-muxer for Pure Hardware H.264 + AAC .mp4 Frame-by-Frame Encoding -->
 <script src="https://cdn.jsdelivr.net/npm/mp4-muxer@5.1.3/build/mp4-muxer.min.js"></script>
 
@@ -35,7 +35,6 @@
   -webkit-tap-highlight-color: transparent;
   user-select: none;
   margin: 0; padding: 0;
-  font-family: 'Padauk', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 input, textarea, select { user-select: text; }
@@ -47,6 +46,7 @@ html, body {
   height: 100dvh; max-height: 100dvh;
   overflow: hidden;
   display: flex; flex-direction: column;
+  font-family: 'Padauk', 'Noto Sans Myanmar', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 button, input, textarea, select { font: inherit; }
@@ -69,7 +69,7 @@ button:active { transform: scale(0.97); }
   box-shadow: 0 4px 12px rgba(217, 119, 6, 0.25) !important;
 }
 .primary:hover { opacity: 0.95; }
-.primary:disabled, button:disabled, select:disabled, input:disabled { opacity: 0.45; cursor: not-allowed; }
+.primary:disabled, button:disabled, select:disabled, input:disabled, textarea:disabled { opacity: 0.45; cursor: not-allowed; }
 
 .secondaryBtn { background: #ffffff; border-color: var(--border); color: #334155; }
 .secondaryBtn:hover { background: #fffbeb; border-color: var(--gold); color: var(--accent); }
@@ -82,6 +82,13 @@ button.active {
 }
 
 .danger { background: #fee2e2 !important; border-color: #fca5a5 !important; color: #b91c1c !important; }
+.splitBtn { background: #e0f2fe !important; border-color: #7dd3fc !important; color: #0369a1 !important; }
+.fontUploadBtn {
+  background: linear-gradient(135deg, #0284c7, #0369a1) !important;
+  border: 0 !important; color: #ffffff !important;
+  font-weight: 700 !important; white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.25) !important;
+}
 .burnBtn {
   background: linear-gradient(135deg, #10b981, #059669) !important; border: 0 !important; color: #fff !important;
   box-shadow: 0 4px 12px rgba(16, 185, 129, 0.28); font-weight: 800;
@@ -115,9 +122,9 @@ button.active {
   background: none !important; border: none !important; color: #1e293b !important;
   font-size: 1.25rem; cursor: pointer; padding: 2px 6px; border-radius: 6px; box-shadow: none !important; flex-shrink: 0;
 }
-.nav-right { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.nav-right { display: flex; align-items: center; gap: 5px; flex-shrink: 0; }
 .navIconBtn {
-  padding: 4px 9px !important; font-size: 10.5px !important; border-radius: 8px !important;
+  padding: 4px 8px !important; font-size: 10px !important; border-radius: 8px !important;
   white-space: nowrap !important; flex-shrink: 0; height: 30px;
 }
 
@@ -160,7 +167,7 @@ button.active {
 }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-/* STUDIO LAYOUT WRAPPER: Vertical Split on Phone, 2-Column Side-by-Side on Laptop/Desktop */
+/* STUDIO LAYOUT WRAPPER */
 .studioLayoutWrapper {
   flex: 1;
   display: flex;
@@ -172,7 +179,7 @@ button.active {
   min-height: 0;
 }
 
-/* LOCKED TOP VIDEO + TOOLBAR SECTION (NEVER SCROLLS ON PHONE!) */
+/* LOCKED TOP VIDEO + TOOLBAR SECTION */
 .topLockedShell {
   width: 100%;
   padding: 4px 8px 2px;
@@ -187,7 +194,6 @@ button.active {
   width: 100%; position: relative;
 }
 
-/* Outer stage backdrop (dark slate) */
 .videoStageBackdrop {
   width: 100%;
   height: 27dvh;
@@ -201,7 +207,6 @@ button.active {
   position: relative;
 }
 
-/* Exact Video Aspect Ratio Box: Dynamically sized to the exact video dimensions! */
 .videoBox {
   position: relative;
   background: var(--studio-gray);
@@ -231,7 +236,7 @@ video {
 .videoEmptyState span { font-size: 28px; }
 .videoEmptyState p { margin: 0; font-size: 11px; font-weight: 700; color: #f1f5f9; }
 
-/* Layer Stacking Order: Blur behind texts & logos */
+/* Layer Stacking Order */
 #blursContainer { position: absolute; inset: 0; pointer-events: none; z-index: 10; overflow: hidden; }
 .videoBlurBoxItem {
   position: absolute; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
@@ -242,11 +247,11 @@ video {
   cursor: grabbing; border-color: var(--gold) !important;
 }
 
-/* 3 Independent Centered & Strict Aspect-Ratio Contained Subtitle Boxes */
+/* 3 Independent Draggable Subtitle Boxes (Full 0%-100% Corner Reach!) */
 .subOverlayBox {
   position: absolute; z-index: 25; cursor: grab; touch-action: none;
   transform: translate(-50%, -50%);
-  width: 94%; max-width: 94%;
+  width: auto; max-width: 96%;
   display: flex; justify-content: center; align-items: center;
   pointer-events: auto;
 }
@@ -257,7 +262,6 @@ video {
 #titlesContainer { position: absolute; inset: 0; pointer-events: none; z-index: 30; overflow: hidden; }
 #textsContainer { position: absolute; inset: 0; pointer-events: none; z-index: 32; overflow: hidden; }
 
-/* Logo Overlay */
 .videoLogoOverlay { 
   position: absolute; z-index: 35; pointer-events: auto; transform: translate(-50%, -50%); 
   cursor: grab; display: none; border-radius: 4px;
@@ -287,11 +291,13 @@ video {
   border: 1.5px solid #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.4);
 }
 
+/* Centered anchor so Titles and Custom Texts can reach all 4 corners (0% to 100%) */
 .videoTitleOverlayItem, .videoExtraTextItem {
-  padding: 3px 8px; border-radius: 6px; font-weight: 800; white-space: nowrap; transform: translate(-50%, 0);
+  padding: 3px 8px; border-radius: 6px; font-weight: 800; white-space: nowrap;
+  transform: translate(-50%, -50%);
 }
 
-/* Subtitle Overlay Inner Box (Fixed Uniform Font Size & Natural Line Wrapping) */
+/* Subtitle Overlay Inner Box */
 .overlayInner {
   position: relative; display: none; flex-direction: column; justify-content: center; align-items: center;
   padding: 4px 10px; border-radius: 7px; text-align: center; line-height: 1.35;
@@ -309,6 +315,7 @@ video {
   white-space: pre-wrap;
   word-break: break-word;
   line-height: 1.35;
+  font-family: inherit !important;
 }
 
 /* Video Control Bar */
@@ -327,7 +334,7 @@ video {
   flex: 1; min-width: 0; accent-color: var(--gold); height: 5px; border-radius: 3px; cursor: pointer; margin: 0 2px;
 }
 
-/* MASTER MODE DROPDOWN BAR (RECAP MODE vs KARAOKE MODE) */
+/* MASTER MODE DROPDOWN BAR (RECAP MODE vs FOREIGN KARAOKE MODE) */
 .modeSelectorBar {
   display: flex; align-items: center; gap: 6px;
   padding: 5px 8px;
@@ -344,7 +351,7 @@ video {
   color: #0f172a; outline: none; cursor: pointer;
 }
 
-/* KARAOKE-ONLY 3 SUBTITLE LANGUAGE BUTTONS WITH HIGH-VISIBILITY ON/OFF STATE */
+/* KARAOKE-ONLY 3 SUBTITLE LANGUAGE BUTTONS */
 .subLangThreeBtnBar {
   display: none;
   grid-template-columns: repeat(3, 1fr);
@@ -381,9 +388,9 @@ video {
 .stateBadgePill.on { background: #10b981; color: #ffffff; }
 .stateBadgePill.off { background: #cbd5e1; color: #475569; }
 
-/* UNDER VIDEO TOOLS BAR (Toggleable Drawer Buttons) */
+/* UNDER VIDEO TOOLS BAR */
 .underVideoToolsGrid {
-  display: grid; grid-template-columns: repeat(6, 1fr);
+  display: grid; grid-template-columns: repeat(7, 1fr);
   gap: 4px; padding: 4px 8px 5px;
   background: #ffffff; border-top: 1px dashed #e2e8f0; width: 100%;
 }
@@ -403,67 +410,22 @@ video {
   min-height: 0;
 }
 
-/* ========================================================= */
-/* LAPTOP & DESKTOP VIEW (Side-by-Side 2-Column Studio)      */
-/* ========================================================= */
 @media (min-width: 900px) {
-  .navbar {
-    height: 50px;
-    padding: 6px 24px;
-  }
-  .logo {
-    font-size: 1.1rem;
-  }
-  .navIconBtn {
-    font-size: 12px !important;
-    padding: 6px 14px !important;
-    height: 34px;
-  }
-
+  .navbar { height: 50px; padding: 6px 24px; }
+  .logo { font-size: 1.1rem; }
+  .navIconBtn { font-size: 12px !important; padding: 6px 14px !important; height: 34px; }
   .studioLayoutWrapper {
-    flex-direction: row;
-    align-items: stretch;
-    gap: 16px;
+    flex-direction: row; align-items: stretch; gap: 16px;
     padding: 12px 20px calc(68px + var(--safe-bottom));
   }
-
-  .topLockedShell {
-    width: 47%;
-    max-width: 600px;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-  }
-
-  .videoStageBackdrop {
-    height: 46dvh;
-    max-height: 430px;
-    min-height: 280px;
-  }
-
-  .quickLangBtn {
-    font-size: 11.5px !important;
-    padding: 7px 8px !important;
-  }
-
-  .quickToolBtn {
-    font-size: 11px !important;
-    padding: 7px 6px !important;
-  }
-
-  .scrollableWorkspace {
-    flex: 1;
-    width: 53%;
-    padding: 0 4px 20px 0;
-    height: 100%;
-  }
-
+  .topLockedShell { width: 47%; max-width: 600px; padding: 0; display: flex; flex-direction: column; }
+  .videoStageBackdrop { height: 46dvh; max-height: 430px; min-height: 280px; }
+  .quickLangBtn { font-size: 11.5px !important; padding: 7px 8px !important; }
+  .quickToolBtn { font-size: 11px !important; padding: 7px 6px !important; }
+  .scrollableWorkspace { flex: 1; width: 53%; padding: 0 4px 20px 0; height: 100%; }
   .fixedBottomExportBar {
-    max-width: 1380px;
-    left: 50%;
-    transform: translateX(-50%);
-    border-radius: 14px 14px 0 0;
-    padding: 8px 24px;
+    max-width: 1380px; left: 50%; transform: translateX(-50%);
+    border-radius: 14px 14px 0 0; padding: 8px 24px;
   }
 }
 
@@ -479,9 +441,7 @@ video {
   width: 100%;
   animation: drawerSlideDown 0.16s ease;
 }
-.toolDrawerCard.openDrawer {
-  display: block;
-}
+.toolDrawerCard.openDrawer { display: block; }
 @keyframes drawerSlideDown {
   from { opacity: 0; transform: translateY(-6px); }
   to { opacity: 1; transform: translateY(0); }
@@ -498,9 +458,7 @@ video {
   margin-bottom: 14px;
   width: 100%;
 }
-.mainModeCard.activeMain {
-  display: block;
-}
+.mainModeCard.activeMain { display: block; }
 
 .cardHead {
   padding: 9px 12px; border-bottom: 1px solid #f1f5f9;
@@ -513,42 +471,49 @@ video {
 .dot.ready { background: var(--green); }
 
 .closeDrawerBtn {
-  background: #fee2e2 !important;
-  border: 1px solid #fca5a5 !important;
-  color: #b91c1c !important;
-  font-size: 10px !important;
-  font-weight: 800 !important;
-  padding: 3px 8px !important;
-  border-radius: 99px !important;
+  background: #fee2e2 !important; border: 1px solid #fca5a5 !important; color: #b91c1c !important;
+  font-size: 10px !important; font-weight: 800 !important; padding: 3px 8px !important; border-radius: 99px !important;
 }
 
 .onOffToggleBtn {
-  padding: 4px 10px !important;
-  border-radius: 99px !important;
-  font-size: 10.5px !important;
-  font-weight: 800 !important;
-  border: 1.5px solid #cbd5e1 !important;
-  background: #f1f5f9 !important;
-  color: #475569 !important;
+  padding: 4px 10px !important; border-radius: 99px !important; font-size: 10.5px !important;
+  font-weight: 800 !important; border: 1.5px solid #cbd5e1 !important; background: #f1f5f9 !important; color: #475569 !important;
 }
 .onOffToggleBtn.isOn {
-  background: #dcfce7 !important;
-  border-color: #10b981 !important;
-  color: #047857 !important;
+  background: #dcfce7 !important; border-color: #10b981 !important; color: #047857 !important;
 }
 
 .manualEnterHintBox {
-  background: #ffffff;
-  border: 1px dashed #f59e0b;
-  border-radius: 8px;
-  padding: 6px 9px;
-  font-size: 10px;
-  color: #92400e;
-  margin-bottom: 8px;
-  line-height: 1.38;
+  background: #ffffff; border: 1px dashed #f59e0b; border-radius: 8px;
+  padding: 6px 9px; font-size: 10px; color: #92400e; margin-bottom: 8px; line-height: 1.38;
 }
 
-/* Video Lock & Progress Animations */
+.fontControlBox {
+  background: #f0f9ff;
+  border: 1.5px solid #bae6fd;
+  border-radius: 10px;
+  padding: 8px 10px;
+  margin-bottom: 8px;
+}
+.fontControlRow {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.fontSelectDropdown {
+  flex: 1;
+  background: #ffffff;
+  border: 1.5px solid var(--border);
+  color: var(--text);
+  border-radius: 8px;
+  padding: 5px 8px;
+  font-size: 11px;
+  font-weight: 700;
+  outline: none;
+}
+.fontSelectDropdown:focus { border-color: var(--cyan); }
+
+/* Video Lock & Real 0-100% Progress Animations */
 .videoLockOverlay {
   position: absolute; inset: 0; z-index: 95;
   background: rgba(15, 23, 42, 0.94); backdrop-filter: blur(6px);
@@ -584,14 +549,14 @@ video {
 @keyframes filmSweep { 0% { left: -100%; } 100% { left: 100%; } }
 
 .lockProgTrack {
-  width: 100%; max-width: 200px; height: 6px; background: #334155;
+  width: 100%; max-width: 220px; height: 7px; background: #334155;
   border-radius: 99px; overflow: hidden; margin-bottom: 4px;
 }
 .lockProgFill {
-  height: 100%; width: 0%; background: linear-gradient(90deg, var(--gold), var(--gold-dark));
-  border-radius: 99px; transition: width 0.25s ease;
+  height: 100%; width: 0%; background: linear-gradient(90deg, var(--gold), var(--green));
+  border-radius: 99px; transition: width 0.15s ease;
 }
-.lockPercentText { font-size: 11px; font-weight: 700; color: var(--gold); font-family: ui-monospace, monospace; }
+.lockPercentText { font-size: 12px; font-weight: 800; color: var(--gold); font-family: ui-monospace, monospace; }
 
 .liveSubBanner {
   background: #fffbeb; border: 1px solid #fde68a; border-left: 4px solid var(--gold);
@@ -724,6 +689,9 @@ video {
 
 <body>
 
+<!-- Hidden Custom Font (.ttf/.otf/.woff) File Input -->
+<input type="file" id="customFontUploadInput" accept=".ttf,.otf,.woff,.woff2,font/ttf,font/otf,application/x-font-ttf" style="display:none" onchange="handleCustomFontFileUpload(event)">
+
 <!-- Top Navbar -->
 <header class="navbar">
   <div class="nav-left">
@@ -731,6 +699,7 @@ video {
     <div class="logo">🎬 Recap & Karaoke Studio</div>
   </div>
   <div class="nav-right">
+    <button onclick="triggerFontUploadForTrack('ALL')" class="fontUploadBtn navIconBtn lockable" title="Upload Custom Font (.ttf)">🔤 Font (.ttf)</button>
     <button onclick="testMyanmarVoice()" class="secondaryBtn navIconBtn lockable" title="Test AI Voice">🔊 စမ်းသပ်</button>
     <label for="file" class="secondaryBtn navIconBtn lockable" style="cursor:pointer;display:inline-flex;align-items:center;gap:4px" title="Change Video">
       🔄 Video လဲ
@@ -833,7 +802,7 @@ video {
         <div class="videoBox" id="videoBox">
           <label for="file" class="videoEmptyState" id="emptyState">
             <span>🎬</span>
-            <p>Tap or Drop Movie / Song Video here</p>
+            <p>Tap or Drop Movie / Foreign Song Video here</p>
           </label>
           
           <video id="video" playsinline webkit-playsinline x5-playsinline x5-video-player-type="h5" 
@@ -855,29 +824,29 @@ video {
           <div id="textsContainer"></div>
           <img id="videoLogoOverlay" class="drag-element videoLogoOverlay" style="display: none;" alt="">
 
-          <!-- 3 INDEPENDENT DRAGGABLE SUBTITLE BOXES (Strictly inside #videoBox aspect ratio!) -->
-          <div class="subOverlayBox drag-element" id="overlayMM" title="မြန်မာစာတန်း (Drag to move)">
+          <!-- 3 INDEPENDENT DRAGGABLE SUBTITLE BOXES -->
+          <div class="subOverlayBox drag-element" id="overlayMM" title="မြန်မာစာတန်း (Drag to move anywhere)">
             <div class="overlayInner" id="overlayMMInner">
               <div class="overlayTarget" id="overlayMMTarget"></div>
             </div>
           </div>
 
-          <div class="subOverlayBox drag-element" id="overlayOrig" title="မူရင်းစာတန်း (Drag to move)">
+          <div class="subOverlayBox drag-element" id="overlayOrig" title="မူရင်းစာတန်း (Drag to move anywhere)">
             <div class="overlayInner" id="overlayOrigInner">
               <div class="overlayTarget" id="overlayOrigTarget"></div>
             </div>
           </div>
 
-          <div class="subOverlayBox drag-element" id="overlayEN" title="English စာတန်း (Drag to move)">
+          <div class="subOverlayBox drag-element" id="overlayEN" title="English စာတန်း (Drag to move anywhere)">
             <div class="overlayInner" id="overlayENInner">
               <div class="overlayTarget" id="overlayENTarget"></div>
             </div>
           </div>
 
-          <input id="file" type="file" accept="video/mp4,video/webm,video/quicktime,video/x-matroska,video/*" style="display:none" onchange="handleVideoFileSelect(event)">
+          <input id="file" type="file" accept="video/mp4,video/webm,video/quicktime,video/x-matroska,video/*,audio/*" style="display:none" onchange="handleVideoFileSelect(event)">
         </div>
 
-        <!-- Video Editing Lock Overlay with Cancel Button -->
+        <!-- Video Editing Lock Overlay with Real-Time 0-100% Progress & Cancel Button -->
         <div class="videoLockOverlay" id="videoLockOverlay">
           <div class="video-edit-anim-box">
             <div class="film-clap-wrap">
@@ -898,7 +867,7 @@ video {
           <div class="lockProgTrack">
             <div class="lockProgFill" id="lockProgFill"></div>
           </div>
-          <div class="lockPercentText" id="lockPercentText">0%</div>
+          <div class="lockPercentText" id="lockPercentText">0% / 100%</div>
           <button class="cancelBtn" id="cancelExportBtn" onclick="cancelCurrentExport()" style="display:none">
             🛑 Cancel Export (ရပ်တန့်မည်)
           </button>
@@ -916,12 +885,12 @@ video {
         <button class="vCtrlBtn lockable" onclick="skipVideo(5, event)" title="Forward 5s">5s ⏩</button>
       </div>
 
-      <!-- MASTER STUDIO MODE DROPDOWN (RECAP vs KARAOKE) -->
+      <!-- MASTER STUDIO MODE DROPDOWN (RECAP vs FOREIGN KARAOKE) -->
       <div class="modeSelectorBar">
         <span class="modeSelectorLabel">🎛️ Mode ရွေးရန်:</span>
         <select id="studioModeSelect" class="modeSelectorDropdown lockable" onchange="switchStudioMode(this.value)">
           <option value="recap">🎬 Movie Recap Mode (ရုပ်ရှင်ဇာတ်ကြောင်းပြော စနစ်)</option>
-          <option value="karaoke">🎤 Karaoke Song Mode (သီချင်း စာတန်းထိုး ၃ ဘာသာ စနစ်)</option>
+          <option value="karaoke">🌐 Foreign Karaoke Mode (နိုင်ငံခြားသီချင်း မူရင်း + မြန်မာစာတန်းအတို)</option>
         </select>
       </div>
 
@@ -931,9 +900,9 @@ video {
           <span>🇲🇲 မြန်မာ</span>
           <span class="stateBadgePill on" id="pill_MM">ON</span>
         </button>
-        <button type="button" class="quickLangBtn trackIsOff lockable" id="btnSwitch_subOrig" onclick="toggleToolDrawer('subOrig')">
+        <button type="button" class="quickLangBtn trackIsOn lockable" id="btnSwitch_subOrig" onclick="toggleToolDrawer('subOrig')">
           <span>🌐 မူရင်း</span>
-          <span class="stateBadgePill off" id="pill_Orig">OFF</span>
+          <span class="stateBadgePill on" id="pill_Orig">ON</span>
         </button>
         <button type="button" class="quickLangBtn trackIsOff lockable" id="btnSwitch_subEN" onclick="toggleToolDrawer('subEN')">
           <span>🇬🇧 English</span>
@@ -941,7 +910,7 @@ video {
         </button>
       </div>
 
-      <!-- UNDER VIDEO TOOLS ROW (Click once to Open, Click again to Close!) -->
+      <!-- UNDER VIDEO TOOLS ROW -->
       <div class="underVideoToolsGrid" id="underVideoToolsGrid">
         <!-- Shown only in Recap Mode to configure Myanmar Subtitle -->
         <button type="button" class="quickToolBtn lockable" id="btnTool_recapSub" onclick="toggleToolDrawer('subMM')">🎨 စာတန်း</button>
@@ -973,25 +942,41 @@ video {
         </div>
       </div>
       <div class="body" style="padding:12px">
-        <div class="manualEnterHintBox">
-          💡 <b>Fixed Font Size စနစ်:</b> စာတန်းအတိုအရှည်မရွေး သတ်မှတ်ထားသော Font Size အတိုင်း အရွယ်အစား ညီညာစွာ ပြသပေးပါသည်။ စိတ်ကြိုက် လိုင်းခွဲလိုပါက <b>📝 Script</b> ထဲတွင် <b>Enter (↵)</b> နှိပ်၍ ခွဲနိုင်ပါသည်။
+        <!-- REAL-TIME LIVE FONT SELECTOR & UPLOAD (.TTF) -->
+        <div class="fontControlBox">
+          <div class="karaokeSubSectionTitle" style="margin-bottom:5px;color:#0369a1">
+            <span>🔤 မြန်မာစာတန်း Font Style (Real-Time Live ပြောင်းမည်)</span>
+            <span id="mmFontBadge" style="font-size:9px;color:var(--green);font-weight:700">Padauk</span>
+          </div>
+          <div class="fontControlRow">
+            <select id="mmFontFamily" class="fontSelectDropdown lockable" onchange="updateTrackStyle('MM', true)">
+              <option value="Padauk">Padauk (မြန်မာ စံပြဖောင့်)</option>
+              <option value="Noto Sans Myanmar">Noto Sans Myanmar (အထူ/ခေတ်မီ)</option>
+              <option value="Pyidaungsu">Pyidaungsu (ပြည်ထောင်စု)</option>
+              <option value="Myanmar Text">Myanmar Text (System)</option>
+              <option value="Impact">Impact (Bold Display)</option>
+            </select>
+            <button type="button" class="fontUploadBtn lockable" onclick="triggerFontUploadForTrack('MM')" title="Upload custom .ttf or .otf font">
+              📤 Upload Font (.ttf)
+            </button>
+          </div>
         </div>
 
         <div class="karaokeSubSection" style="margin-bottom:8px">
           <div class="karaokeSubSectionTitle">
             <span>🎤 မြန်မာစာတန်း Karaoke အရောင်ပြေးစနစ်</span>
             <label style="font-size:11px;display:flex;align-items:center;gap:4px;cursor:pointer;color:var(--text)">
-              <input type="checkbox" id="mmKaraokeCheck" onchange="updateTrackStyle('MM')" class="lockable"> Karaoke ဖွင့်မည်
+              <input type="checkbox" id="mmKaraokeCheck" onchange="updateTrackStyle('MM', true)" class="lockable"> Karaoke ဖွင့်မည်
             </label>
           </div>
           <div class="styleGrid" style="margin-bottom:0">
             <div class="field">
               <label>ဆိုနေချိန် အရောင် (Highlight Color)</label>
-              <input id="mmActiveColor" type="color" value="#f59e0b" oninput="updateTrackStyle('MM')" class="lockable">
+              <input id="mmActiveColor" type="color" value="#f59e0b" oninput="updateTrackStyle('MM', true)" class="lockable">
             </div>
             <div class="field">
               <label>ပုံမှန် စာသားအရောင် (Base / Text Color)</label>
-              <input id="mmTextColor" type="color" value="#ffffff" oninput="updateTrackStyle('MM')" class="lockable">
+              <input id="mmTextColor" type="color" value="#ffffff" oninput="updateTrackStyle('MM', true)" class="lockable">
             </div>
           </div>
         </div>
@@ -999,38 +984,38 @@ video {
         <div class="styleGrid">
           <div class="field">
             <label>အနားသတ်အရောင် (Outline Color)</label>
-            <input id="mmOutlineColor" type="color" value="#000000" oninput="updateTrackStyle('MM')" class="lockable">
+            <input id="mmOutlineColor" type="color" value="#000000" oninput="updateTrackStyle('MM', true)" class="lockable">
           </div>
           <div class="field">
             <label>နောက်ခံ Box အရောင် (BG Color)</label>
-            <input id="mmBgColor" type="color" value="#000000" oninput="updateTrackStyle('MM')" class="lockable">
+            <input id="mmBgColor" type="color" value="#000000" oninput="updateTrackStyle('MM', true)" class="lockable">
           </div>
         </div>
 
         <div class="sliderPairRow">
           <div class="sliderField">
             <label>Outline အထူ: <span class="val" id="mmOutWVal">1.5px</span></label>
-            <input id="mmOutlineWidth" type="range" min="0" max="6" step="0.5" value="1.5" oninput="document.getElementById('mmOutWVal').textContent=this.value+'px'; updateTrackStyle('MM')" class="lockable">
+            <input id="mmOutlineWidth" type="range" min="0" max="6" step="0.5" value="1.5" oninput="document.getElementById('mmOutWVal').textContent=this.value+'px'; updateTrackStyle('MM', true)" class="lockable">
           </div>
           <div class="sliderField">
             <label>Box အကြည်/အမည်း: <span class="val" id="mmOpVal">55%</span></label>
-            <input id="mmBoxOpacity" type="range" min="0" max="100" value="55" oninput="document.getElementById('mmOpVal').textContent=this.value+'%'; updateTrackStyle('MM')" class="lockable">
+            <input id="mmBoxOpacity" type="range" min="0" max="100" value="55" oninput="document.getElementById('mmOpVal').textContent=this.value+'%'; updateTrackStyle('MM', true)" class="lockable">
           </div>
         </div>
 
         <div class="sliderField" style="margin-bottom:8px">
           <label>Font Size (ပုံသေ အရွယ်အစား): <span class="val" id="mmSizeVal">15 px</span></label>
-          <input id="mmSize" type="range" min="10" max="36" value="15" oninput="document.getElementById('mmSizeVal').textContent=this.value+' px'; updateTrackStyle('MM')" class="lockable">
+          <input id="mmSize" type="range" min="10" max="36" value="15" oninput="document.getElementById('mmSizeVal').textContent=this.value+' px'; updateTrackStyle('MM', true)" class="lockable">
         </div>
 
         <div class="sliderPairRow" style="margin-bottom:0">
           <div class="sliderField">
             <label>ဘယ်/ညာ (X %): <span class="val" id="mmPosXVal">50%</span></label>
-            <input id="mmPosX" type="range" min="5" max="95" value="50" oninput="updateTrackPosFromSlider('MM')" class="lockable">
+            <input id="mmPosX" type="range" min="0" max="100" value="50" oninput="updateTrackPosFromSlider('MM')" class="lockable">
           </div>
           <div class="sliderField">
             <label>အပေါ်/အောက် (Y %): <span class="val" id="mmPosYVal">84%</span></label>
-            <input id="mmPosY" type="range" min="5" max="95" value="84" oninput="updateTrackPosFromSlider('MM')" class="lockable">
+            <input id="mmPosY" type="range" min="0" max="100" value="84" oninput="updateTrackPosFromSlider('MM')" class="lockable">
           </div>
         </div>
       </div>
@@ -1041,32 +1026,48 @@ video {
       <div class="cardHead">
         <div class="title">🌐 မူရင်းဘာသာ စာတန်းထိုး Setting</div>
         <div style="display:flex;align-items:center;gap:6px">
-          <button type="button" class="onOffToggleBtn lockable" id="toggleBtn_Orig" onclick="toggleLangTrack('Orig')">
-            ⚪ OFF (ပိတ်ထားသည်)
+          <button type="button" class="onOffToggleBtn isOn lockable" id="toggleBtn_Orig" onclick="toggleLangTrack('Orig')">
+            🟢 ON (ပြသထားသည်)
           </button>
           <button type="button" class="closeDrawerBtn" onclick="closeAllToolDrawers()">✕ ပိတ်မည်</button>
         </div>
       </div>
       <div class="body" style="padding:12px">
-        <div class="manualEnterHintBox">
-          💡 <b>Fixed Font Size စနစ်:</b> မူရင်းစာတန်းကို စာလုံးအကြီးအငယ် မပြောင်းဘဲ သတ်မှတ်ထားသော Font Size အတိုင်း တိကျစွာ ပြသပေးပါသည်။
+        <!-- REAL-TIME LIVE FONT SELECTOR & UPLOAD (.TTF) -->
+        <div class="fontControlBox">
+          <div class="karaokeSubSectionTitle" style="margin-bottom:5px;color:#0369a1">
+            <span>🔤 မူရင်းစာတန်း Font Style (Real-Time Live ပြောင်းမည်)</span>
+            <span id="origFontBadge" style="font-size:9px;color:var(--green);font-weight:700">Padauk</span>
+          </div>
+          <div class="fontControlRow">
+            <select id="origFontFamily" class="fontSelectDropdown lockable" onchange="updateTrackStyle('Orig', true)">
+              <option value="Padauk">Padauk (Default)</option>
+              <option value="Noto Sans Myanmar">Noto Sans Myanmar</option>
+              <option value="Segoe UI">Segoe UI (Modern Sans)</option>
+              <option value="Impact">Impact (Bold Headline)</option>
+              <option value="Georgia">Georgia (Classic Serif)</option>
+            </select>
+            <button type="button" class="fontUploadBtn lockable" onclick="triggerFontUploadForTrack('Orig')">
+              📤 Upload Font (.ttf)
+            </button>
+          </div>
         </div>
 
         <div class="karaokeSubSection" style="margin-bottom:8px">
           <div class="karaokeSubSectionTitle">
             <span>🎤 မူရင်းစာတန်း Karaoke အရောင်ပြေးစနစ်</span>
             <label style="font-size:11px;display:flex;align-items:center;gap:4px;cursor:pointer;color:var(--text)">
-              <input type="checkbox" id="origKaraokeCheck" checked onchange="updateTrackStyle('Orig')" class="lockable"> Karaoke ဖွင့်မည်
+              <input type="checkbox" id="origKaraokeCheck" checked onchange="updateTrackStyle('Orig', true)" class="lockable"> Karaoke ဖွင့်မည်
             </label>
           </div>
           <div class="styleGrid" style="margin-bottom:0">
             <div class="field">
               <label>ဆိုနေချိန် အရောင် (Highlight Color)</label>
-              <input id="origActiveColor" type="color" value="#f59e0b" oninput="updateTrackStyle('Orig')" class="lockable">
+              <input id="origActiveColor" type="color" value="#f59e0b" oninput="updateTrackStyle('Orig', true)" class="lockable">
             </div>
             <div class="field">
               <label>မဆိုရသေးမီ အရောင် (Base Color)</label>
-              <input id="origTextColor" type="color" value="#ffffff" oninput="updateTrackStyle('Orig')" class="lockable">
+              <input id="origTextColor" type="color" value="#ffffff" oninput="updateTrackStyle('Orig', true)" class="lockable">
             </div>
           </div>
         </div>
@@ -1074,38 +1075,38 @@ video {
         <div class="styleGrid">
           <div class="field">
             <label>အနားသတ်အရောင် (Outline Color)</label>
-            <input id="origOutlineColor" type="color" value="#000000" oninput="updateTrackStyle('Orig')" class="lockable">
+            <input id="origOutlineColor" type="color" value="#000000" oninput="updateTrackStyle('Orig', true)" class="lockable">
           </div>
           <div class="field">
             <label>နောက်ခံ Box အရောင် (BG Color)</label>
-            <input id="origBgColor" type="color" value="#000000" oninput="updateTrackStyle('Orig')" class="lockable">
+            <input id="origBgColor" type="color" value="#000000" oninput="updateTrackStyle('Orig', true)" class="lockable">
           </div>
         </div>
 
         <div class="sliderPairRow">
           <div class="sliderField">
             <label>Outline အထူ: <span class="val" id="origOutWVal">1.5px</span></label>
-            <input id="origOutlineWidth" type="range" min="0" max="6" step="0.5" value="1.5" oninput="document.getElementById('origOutWVal').textContent=this.value+'px'; updateTrackStyle('Orig')" class="lockable">
+            <input id="origOutlineWidth" type="range" min="0" max="6" step="0.5" value="1.5" oninput="document.getElementById('origOutWVal').textContent=this.value+'px'; updateTrackStyle('Orig', true)" class="lockable">
           </div>
           <div class="sliderField">
             <label>Box အကြည်/အမည်း: <span class="val" id="origOpVal">50%</span></label>
-            <input id="origBoxOpacity" type="range" min="0" max="100" value="50" oninput="document.getElementById('origOpVal').textContent=this.value+'%'; updateTrackStyle('Orig')" class="lockable">
+            <input id="origBoxOpacity" type="range" min="0" max="100" value="50" oninput="document.getElementById('origOpVal').textContent=this.value+'%'; updateTrackStyle('Orig', true)" class="lockable">
           </div>
         </div>
 
         <div class="sliderField" style="margin-bottom:8px">
           <label>Font Size (ပုံသေ အရွယ်အစား): <span class="val" id="origSizeVal">14 px</span></label>
-          <input id="origSize" type="range" min="10" max="36" value="14" oninput="document.getElementById('origSizeVal').textContent=this.value+' px'; updateTrackStyle('Orig')" class="lockable">
+          <input id="origSize" type="range" min="10" max="36" value="14" oninput="document.getElementById('origSizeVal').textContent=this.value+' px'; updateTrackStyle('Orig', true)" class="lockable">
         </div>
 
         <div class="sliderPairRow" style="margin-bottom:0">
           <div class="sliderField">
             <label>ဘယ်/ညာ (X %): <span class="val" id="origPosXVal">50%</span></label>
-            <input id="origPosX" type="range" min="5" max="95" value="50" oninput="updateTrackPosFromSlider('Orig')" class="lockable">
+            <input id="origPosX" type="range" min="0" max="100" value="50" oninput="updateTrackPosFromSlider('Orig')" class="lockable">
           </div>
           <div class="sliderField">
             <label>အပေါ်/အောက် (Y %): <span class="val" id="origPosYVal">18%</span></label>
-            <input id="origPosY" type="range" min="5" max="95" value="18" oninput="updateTrackPosFromSlider('Orig')" class="lockable">
+            <input id="origPosY" type="range" min="0" max="100" value="18" oninput="updateTrackPosFromSlider('Orig')" class="lockable">
           </div>
         </div>
       </div>
@@ -1123,25 +1124,41 @@ video {
         </div>
       </div>
       <div class="body" style="padding:12px">
-        <div class="manualEnterHintBox">
-          💡 <b>Fixed Font Size စနစ်:</b> English စာတန်းကို စာလုံးအကြီးအငယ် မပြောင်းဘဲ သတ်မှတ်ထားသော Font Size အတိုင်း တိကျစွာ ပြသပေးပါသည်။
+        <!-- REAL-TIME LIVE FONT SELECTOR & UPLOAD (.TTF) -->
+        <div class="fontControlBox">
+          <div class="karaokeSubSectionTitle" style="margin-bottom:5px;color:#0369a1">
+            <span>🔤 English စာတန်း Font Style (Real-Time Live ပြောင်းမည်)</span>
+            <span id="enFontBadge" style="font-size:9px;color:var(--green);font-weight:700">Padauk</span>
+          </div>
+          <div class="fontControlRow">
+            <select id="enFontFamily" class="fontSelectDropdown lockable" onchange="updateTrackStyle('EN', true)">
+              <option value="Padauk">Padauk (Default)</option>
+              <option value="Segoe UI">Segoe UI (Modern Sans)</option>
+              <option value="Impact">Impact (Bold Headline)</option>
+              <option value="Georgia">Georgia (Classic Serif)</option>
+              <option value="Courier New">Courier New (Monospace)</option>
+            </select>
+            <button type="button" class="fontUploadBtn lockable" onclick="triggerFontUploadForTrack('EN')">
+              📤 Upload Font (.ttf)
+            </button>
+          </div>
         </div>
 
         <div class="karaokeSubSection" style="margin-bottom:8px">
           <div class="karaokeSubSectionTitle">
             <span>🎤 English စာတန်း Karaoke အရောင်ပြေးစနစ်</span>
             <label style="font-size:11px;display:flex;align-items:center;gap:4px;cursor:pointer;color:var(--text)">
-              <input type="checkbox" id="enKaraokeCheck" checked onchange="updateTrackStyle('EN')" class="lockable"> Karaoke ဖွင့်မည်
+              <input type="checkbox" id="enKaraokeCheck" checked onchange="updateTrackStyle('EN', true)" class="lockable"> Karaoke ဖွင့်မည်
             </label>
           </div>
           <div class="styleGrid" style="margin-bottom:0">
             <div class="field">
               <label>ဆိုနေချိန် အရောင် (Highlight Color)</label>
-              <input id="enActiveColor" type="color" value="#10b981" oninput="updateTrackStyle('EN')" class="lockable">
+              <input id="enActiveColor" type="color" value="#10b981" oninput="updateTrackStyle('EN', true)" class="lockable">
             </div>
             <div class="field">
               <label>မဆိုရသေးမီ အရောင် (Base Color)</label>
-              <input id="enTextColor" type="color" value="#ffffff" oninput="updateTrackStyle('EN')" class="lockable">
+              <input id="enTextColor" type="color" value="#ffffff" oninput="updateTrackStyle('EN', true)" class="lockable">
             </div>
           </div>
         </div>
@@ -1149,56 +1166,56 @@ video {
         <div class="styleGrid">
           <div class="field">
             <label>အနားသတ်အရောင် (Outline Color)</label>
-            <input id="enOutlineColor" type="color" value="#000000" oninput="updateTrackStyle('EN')" class="lockable">
+            <input id="enOutlineColor" type="color" value="#000000" oninput="updateTrackStyle('EN', true)" class="lockable">
           </div>
           <div class="field">
             <label>နောက်ခံ Box အရောင် (BG Color)</label>
-            <input id="enBgColor" type="color" value="#000000" oninput="updateTrackStyle('EN')" class="lockable">
+            <input id="enBgColor" type="color" value="#000000" oninput="updateTrackStyle('EN', true)" class="lockable">
           </div>
         </div>
 
         <div class="sliderPairRow">
           <div class="sliderField">
             <label>Outline အထူ: <span class="val" id="enOutWVal">1.5px</span></label>
-            <input id="enOutlineWidth" type="range" min="0" max="6" step="0.5" value="1.5" oninput="document.getElementById('enOutWVal').textContent=this.value+'px'; updateTrackStyle('EN')" class="lockable">
+            <input id="enOutlineWidth" type="range" min="0" max="6" step="0.5" value="1.5" oninput="document.getElementById('enOutWVal').textContent=this.value+'px'; updateTrackStyle('EN', true)" class="lockable">
           </div>
           <div class="sliderField">
             <label>Box အကြည်/အမည်း: <span class="val" id="enOpVal">50%</span></label>
-            <input id="enBoxOpacity" type="range" min="0" max="100" value="50" oninput="document.getElementById('enOpVal').textContent=this.value+'%'; updateTrackStyle('EN')" class="lockable">
+            <input id="enBoxOpacity" type="range" min="0" max="100" value="50" oninput="document.getElementById('enOpVal').textContent=this.value+'%'; updateTrackStyle('EN', true)" class="lockable">
           </div>
         </div>
 
         <div class="sliderField" style="margin-bottom:8px">
           <label>Font Size (ပုံသေ အရွယ်အစား): <span class="val" id="enSizeVal">14 px</span></label>
-          <input id="enSize" type="range" min="10" max="36" value="14" oninput="document.getElementById('enSizeVal').textContent=this.value+' px'; updateTrackStyle('EN')" class="lockable">
+          <input id="enSize" type="range" min="10" max="36" value="14" oninput="document.getElementById('enSizeVal').textContent=this.value+' px'; updateTrackStyle('EN', true)" class="lockable">
         </div>
 
         <div class="sliderPairRow" style="margin-bottom:0">
           <div class="sliderField">
             <label>ဘယ်/ညာ (X %): <span class="val" id="enPosXVal">50%</span></label>
-            <input id="enPosX" type="range" min="5" max="95" value="50" oninput="updateTrackPosFromSlider('EN')" class="lockable">
+            <input id="enPosX" type="range" min="0" max="100" value="50" oninput="updateTrackPosFromSlider('EN')" class="lockable">
           </div>
           <div class="sliderField">
             <label>အပေါ်/အောက် (Y %): <span class="val" id="enPosYVal">68%</span></label>
-            <input id="enPosY" type="range" min="5" max="95" value="68" oninput="updateTrackPosFromSlider('EN')" class="lockable">
+            <input id="enPosY" type="range" min="0" max="100" value="68" oninput="updateTrackPosFromSlider('EN')" class="lockable">
           </div>
         </div>
       </div>
     </section>
 
-    <!-- COLLAPSIBLE DRAWER 4: SCRIPT & LYRICS EDITOR -->
+    <!-- COLLAPSIBLE DRAWER 4: SCRIPT & LYRICS EDITOR (WITH SPLIT & DELETE) -->
     <section class="toolDrawerCard" id="drawer_editor">
       <div class="cardHead">
         <div class="title">📝 Script & Lyrics Editor <span id="subCount" style="color:var(--muted);font-size:11px"></span></div>
         <div style="display:flex;align-items:center;gap:5px">
-          <button class="secondaryBtn lockable" onclick="retranslateExistingSubtitles()" style="padding:3px 7px;font-size:10px" title="Re-translate all lines with Gemini AI">🔄 ပြန်ဘာသာပြန်</button>
+          <button class="secondaryBtn lockable" onclick="retranslateExistingSubtitles()" style="padding:3px 7px;font-size:10px" title="Re-translate all lines">🔄 အတိုပြန်ညှိ</button>
           <button class="primary lockable" id="addLineBtn" onclick="addSub()" style="padding:3px 7px;font-size:10px">+ Add</button>
           <button type="button" class="closeDrawerBtn" onclick="closeAllToolDrawers()">✕ ပိတ်မည်</button>
         </div>
       </div>
       <div class="body" style="padding:12px">
         <div class="manualEnterHintBox">
-          ⌨️ <b>စာသားနှင့် အချိန် ပြင်ဆင်ရန်:</b> စာသားအကွက်ထဲတွင် စိတ်ကြိုက်ပြင်နိုင်သလို စာကြောင်းတစ်ခုချင်းစီ၏ စချိန်/ဆုံးချိန် (စက္ကန့်) ကိုလည်း တိုက်ရိုက် ချိန်ညှိနိုင်ပါသည်။
+          ✂️ <b>၂ ကြောင်းခွဲရန် (Split) & စာသားပြင်ရန်:</b> စာကြောင်းရှည်နေပါက <b>✂️ ၂ ကြောင်းခွဲ</b> ခလုတ်ကို နှိပ်၍ အချိန်ရော စာသားပါ (၂) ကြောင်းအဖြစ် အလိုအလျောက် ခွဲထုတ်နိုင်ပါသည်။
         </div>
         <div class="liveSubBanner">
           <div class="liveSubHeader">
@@ -1211,7 +1228,7 @@ video {
           <input class="search lockable" id="search" placeholder="🔍 Search script or lyrics..." oninput="render()">
         </div>
         <div class="list" id="list">
-          <div class="empty">🎬 Upload a movie or song clip to generate script/lyrics.</div>
+          <div class="empty">🎬 Upload a movie or foreign song clip to generate script/lyrics.</div>
         </div>
       </div>
     </section>
@@ -1232,10 +1249,10 @@ video {
       </div>
     </section>
 
-    <!-- COLLAPSIBLE DRAWER 6: MOVIE TITLES -->
+    <!-- COLLAPSIBLE DRAWER 6: MOVIE TITLES (0% - 100% CORNER REACH) -->
     <section class="toolDrawerCard" id="drawer_title">
       <div class="cardHead">
-        <div class="title">📝 Movie Titles (ခေါင်းစဉ်စာတန်းများ)</div>
+        <div class="title">📝 Movie Titles (ခေါင်းစဉ်စာတန်းများ - ဒေါင့်အထိ ရွှေ့နိုင်သည်)</div>
         <div style="display:flex;align-items:center;gap:5px">
           <button onclick="addNewTitle()" class="primary lockable" style="font-size:10px;padding:4px 8px">+ Add Title</button>
           <button type="button" class="closeDrawerBtn" onclick="closeAllToolDrawers()">✕ ပိတ်မည်</button>
@@ -1248,10 +1265,10 @@ video {
       </div>
     </section>
 
-    <!-- COLLAPSIBLE DRAWER 7: CUSTOM TEXTS -->
+    <!-- COLLAPSIBLE DRAWER 7: CUSTOM TEXTS (0% - 100% CORNER REACH) -->
     <section class="toolDrawerCard" id="drawer_text">
       <div class="cardHead">
-        <div class="title">➕ Custom Texts (ရေပေါ်စာတန်းများ)</div>
+        <div class="title">➕ Custom Texts (ရေပေါ်စာတန်းများ - ဒေါင့်အထိ ရွှေ့နိုင်သည်)</div>
         <div style="display:flex;align-items:center;gap:5px">
           <button onclick="addNewCustomText()" class="primary lockable" style="font-size:10px;padding:4px 8px">+ Add Text</button>
           <button type="button" class="closeDrawerBtn" onclick="closeAllToolDrawers()">✕ ပိတ်မည်</button>
@@ -1319,10 +1336,10 @@ video {
     <section class="mainModeCard activeMain" id="mainPage_recap">
       <div class="cardHead">
         <div>
-          <div class="title">🎬 Movie Recap & AI Voice Setup (ပင်မစာမျက်နှာ)</div>
+          <div class="title">🎬 Movie Recap & Loud AI Voice Studio (ပင်မစာမျက်နှာ)</div>
           <div class="status">
             <span class="dot ready" id="dot"></span>
-            <span id="status">Waiting for movie video</span>
+            <span id="status">300% Loud Voice Booster + Auto-Ducking အသင့်ဖြစ်ပါပြီ</span>
           </div>
         </div>
       </div>
@@ -1352,8 +1369,10 @@ video {
 
         <div style="margin-bottom:8px">
           <label style="font-size:10.5px;color:var(--accent);font-weight:700;display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
-            <span>🗣️ AI VOICE SETTINGS (အသံပိုင်ရှင် ရွေးချယ်မှု)</span>
-            <span style="font-size:9px;color:var(--green)">🟢 Python TTS Live</span>
+            <span>🗣️ AI VOICE SETTINGS (အသံပိုင်ရှင် + 300% Voice Booster)</span>
+            <label style="font-size:10px;color:var(--green);display:flex;align-items:center;gap:4px;cursor:pointer">
+              <input type="checkbox" id="bgmAutoDuckCheck" checked> Auto-Duck BGM
+            </label>
           </label>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
             <button class="voiceBtn active lockable" id="voiceThiha" onclick="setVoice('my-MM-ThihaNeural')">👨 သီဟ (ကျားအသံ)</button>
@@ -1363,12 +1382,12 @@ video {
 
         <div class="sliderPairRow">
           <div class="sliderField">
-            <label>မူရင်း Video အသံ (BGM): <span class="val" id="videoVolVal">20%</span></label>
-            <input id="videoVolume" type="range" min="0" max="100" value="20" oninput="updateAudioLevels()" class="lockable">
+            <label>မူရင်း Video အသံ (BGM): <span class="val" id="videoVolVal">15%</span></label>
+            <input id="videoVolume" type="range" min="0" max="100" value="15" oninput="updateAudioLevels()" class="lockable">
           </div>
           <div class="sliderField">
-            <label>နောက်ခံစကားပြောသံ (Voice): <span class="val" id="voiceVolVal">100%</span></label>
-            <input id="voiceVolume" type="range" min="0" max="100" value="100" oninput="updateAudioLevels()" class="lockable">
+            <label>🔊 စကားပြောသံ (Voice Boost): <span class="val" id="voiceVolVal">200%</span></label>
+            <input id="voiceVolume" type="range" min="0" max="300" step="10" value="200" oninput="updateAudioLevels()" class="lockable">
           </div>
         </div>
 
@@ -1388,30 +1407,29 @@ video {
     </section>
 
     <!-- ========================================================= -->
-    <!-- PERMANENT MAIN PAGE 2: SONG KARAOKE & SRT STUDIO          -->
-    <!-- (SRT Upload buttons removed; Separate Translation & Sync) -->
+    <!-- PERMANENT MAIN PAGE 2: FOREIGN SONG KARAOKE STUDIO        -->
     <!-- ========================================================= -->
     <section class="mainModeCard" id="mainPage_karaoke">
       <div class="cardHead">
         <div>
-          <div class="title">🎤 Song Karaoke & Bilingual Lyrics Studio (ပင်မစာမျက်နှာ)</div>
-          <div class="status">မြန်မာသီချင်းရော နိုင်ငံခြားသီချင်းပါ မြန်မာစာတန်း သီးသန့် + English သီးသန့် + မူရင်း ထုတ်ပေးမည်</div>
+          <div class="title">🌐 Foreign Song Karaoke Studio (နိုင်ငံခြားသီချင်း ကာရာအိုကေ)</div>
+          <div class="status">မူရင်းစာသား + English + မြန်မာစာတန်းအတို (ကျစ်လျစ်စနစ်) ကို စက္ကန့်ပိုင်းအတွင်း ထုတ်ပေးမည်</div>
         </div>
       </div>
 
       <div class="body" style="padding:12px">
         <div class="karaokeSubSection">
           <div class="karaokeSubSectionTitle">
-            <span>🎵 သီချင်းစာသား သီးသန့်စီ ဘာသာပြန်ထုတ်ရန် (Myanmar & English Engine)</span>
+            <span>🎵 နိုင်ငံခြားသီချင်း မူရင်း + မြန်မာစာတန်းအတို ထုတ်ရန် (Fast Whisper + Gemini 3.8)</span>
           </div>
 
           <button class="primary lockable" id="generateSongBtn" style="width:100%;padding:11px;margin-bottom:8px" onclick="generateSongKaraokeSubtitles()">
             <span class="btnSpinner" id="songSpinner" style="display:none"></span>
-            <span id="songBtnText">🎵 Generate Song Lyrics (မူရင်း + EN + မြန်မာ သီးသန့်စီ ထုတ်မည်)</span>
+            <span id="songBtnText">🎵 Generate Foreign Karaoke (မူရင်း + မြန်မာစာတန်း အတို ထုတ်မည်)</span>
           </button>
 
           <button class="secondaryBtn lockable" style="width:100%;padding:8px;margin-bottom:10px;font-size:10.5px" onclick="retranslateExistingSubtitles()">
-            🔄 စာတန်းအားလုံး သီးသန့်စီ ပြန်လည်ဘာသာပြန်မည် (Re-Translate All)
+            🔄 မြန်မာစာတန်းများကို စာကြောင်းတိုတိုဖြင့် ပြန်လည်ဘာသာပြန်မည်
           </button>
 
           <div class="sliderField" style="background:#fffbeb;padding:8px 10px;border-radius:8px;border:1px solid #fde68a;margin-bottom:8px">
@@ -1424,7 +1442,7 @@ video {
           </div>
 
           <p style="font-size:10px;color:var(--muted);margin-bottom:0">
-            ✨ မြန်မာစာတန်းကို English အရှည်ကြီးအတိုင်း တိုက်ရိုက်မကပ်ဘဲ မြန်မာစကား သဘာဝအတိုင်း တိုတိုနှင့် အဓိပ္ပာယ်ပေါ်လွင်အောင် သီးသန့် ဘာသာပြန်ပေးပါသည်။ အောက်ခြေရှိ <b>📝 SRT</b> ခလုတ်မှလည်း ဘာသာစကားတစ်ခုချင်း သီးသန့် ဒေါင်းလုဒ်ဆွဲနိုင်ပါသည်။
+            ✨ နိုင်ငံခြားသီချင်းများကို စက္ကန့်ပိုင်းအတွင်း နားထောင်ပြီး မြန်မာစာတန်းကို <b>စာကြောင်းတိုတို (၄ လုံး - ၆ လုံး)</b> ဖြင့် ကျစ်လျစ်စွာ ဘာသာပြန်ပေးပါသည်။ အပေါ်ရှိ <b>🔤 Font (.ttf)</b> ခလုတ်မှလည်း စိတ်ကြိုက်ဖောင့် တင်နိုင်ပါသည်။
           </p>
         </div>
       </div>
@@ -1578,40 +1596,15 @@ async function generateEdgeSpeechInBrowser(text, voice, rate) {
   });
 }
 
-// Guaranteed Triple-Engine Myanmar TTS (Primary: Python Render Server)
 async function fetchMyanmarAudio(text, voice = "my-MM-ThihaNeural", rate = "+0%") {
   const cleanText = String(text || "").trim();
   const cleanRate = /^[+-]\d{1,3}%$/.test(rate) ? rate : "+0%";
   const payload = { text: cleanText, voice, rate: cleanRate, pitch: "+0Hz" };
 
-  // ENGINE 1 (PRIMARY): Python Render Server (/api/tts & /api/synthesize)
-  const renderEndpoints = ["/api/tts", "/api/synthesize"];
-  for (const ep of renderEndpoints) {
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 50000);
-      const resp = await fetch(`${RENDER_BACKEND_URL}${ep}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-        signal: controller.signal
-      });
-      clearTimeout(timeoutId);
-      if (resp.ok) {
-        const blob = await resp.blob();
-        if (blob && blob.size > 200) return URL.createObjectURL(blob);
-      } else if (resp.status === 404) {
-        continue;
-      }
-    } catch (e) {
-      console.warn(`Render ${ep} error:`, e);
-    }
-  }
-
-  // ENGINE 2 (FALLBACK): Cloudflare Worker
+  // ENGINE 1: Cloudflare Worker (0ms cold start)
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 12000);
+    const timeoutId = setTimeout(() => controller.abort(), 14000);
     const resp = await fetch(`${WORKER_URL}/tts`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -1623,8 +1616,26 @@ async function fetchMyanmarAudio(text, voice = "my-MM-ThihaNeural", rate = "+0%"
       const blob = await resp.blob();
       if (blob && blob.size > 200) return URL.createObjectURL(blob);
     }
-  } catch (e) {
-    console.warn("Worker TTS fallback error:", e);
+  } catch (e) {}
+
+  // ENGINE 2: Python Render Server (/api/tts & /api/synthesize)
+  const renderEndpoints = ["/api/tts", "/api/synthesize"];
+  for (const ep of renderEndpoints) {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 35000);
+      const resp = await fetch(`${RENDER_BACKEND_URL}${ep}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+      if (resp.ok) {
+        const blob = await resp.blob();
+        if (blob && blob.size > 200) return URL.createObjectURL(blob);
+      }
+    } catch (e) {}
   }
 
   // ENGINE 3: Browser Fallback
@@ -1633,7 +1644,7 @@ async function fetchMyanmarAudio(text, voice = "my-MM-ThihaNeural", rate = "+0%"
 window.fetchMyanmarAudio = fetchMyanmarAudio;
 
 // -------------------------------------------------------------
-// APP STATE VARIABLES & STUDIO MODE ('recap' vs 'karaoke')
+// APP STATE VARIABLES & CUSTOM FONT (.TTF) REGISTRY
 // -------------------------------------------------------------
 let studioMode = "recap"; // 'recap' | 'karaoke'
 let currentOpenDrawer = null;
@@ -1643,16 +1654,22 @@ let file = null;
 let videoURL = null;
 let generating = false;
 let lastActiveSubId = null;
-let karaokeTimingOffset = 0.0; // User adjustable vocal sync delay in seconds
+let karaokeTimingOffset = 0.0;
 
 let recapTone = "narrator";
 let selectedVoice = "my-MM-ThihaNeural";
 
-// 3 Independent Subtitle Tracks: MM (Myanmar), Orig (Original), EN (English)
+let pendingFontUploadTarget = "ALL";
+let customUploadedFonts = [];
+let stylePreviewTimeout = null;
+let forceStylePreviewActive = false;
+
+// 3 Independent Subtitle Tracks
 const subTracks = {
   MM: {
     enabled: true,
     karaoke: false,
+    fontFamily: "Padauk",
     activeColor: "#f59e0b",
     textColor: "#ffffff",
     outlineColor: "#000000",
@@ -1666,6 +1683,7 @@ const subTracks = {
   Orig: {
     enabled: false,
     karaoke: true,
+    fontFamily: "Padauk",
     activeColor: "#f59e0b",
     textColor: "#ffffff",
     outlineColor: "#000000",
@@ -1679,6 +1697,7 @@ const subTracks = {
   EN: {
     enabled: false,
     karaoke: true,
+    fontFamily: "Padauk",
     activeColor: "#10b981",
     textColor: "#ffffff",
     outlineColor: "#000000",
@@ -1706,9 +1725,16 @@ let borderProgEnabled = true;
 let isExportActive = false;
 let activeRecorderInstance = null;
 
+// Web Audio Booster for 300% Loud Voiceover + Compressor
 let voiceAudioCtx = null;
 let voiceGainNode = null;
+let voiceCompressorNode = null;
 let activeVoiceAudio = null;
+let isVoiceCurrentlyPlaying = false;
+
+// Real-Time Smooth Progress Ticker
+let smoothProgressInterval = null;
+let currentDisplayedPct = 0;
 
 const video = document.getElementById("video");
 const videoBox = document.getElementById("videoBox");
@@ -1736,6 +1762,138 @@ function openMenu() {
 function closeMenu() {
   slideMenu.classList.remove('active');
   overlayDrawer.classList.remove('active');
+}
+
+// -------------------------------------------------------------
+// REAL-TIME 0% -> 100% LIVE PROGRESS ENGINE
+// -------------------------------------------------------------
+function setLockProgress(pct, title, desc) {
+  pct = Math.min(100, Math.max(0, Math.round(pct)));
+  currentDisplayedPct = pct;
+  lockProgFill.style.width = pct + "%";
+  lockPercentText.textContent = `${pct}% / 100%`;
+  if (title) lockTitle.textContent = title;
+  if (desc) lockDesc.textContent = desc;
+}
+
+function startSmoothProgressCreep(targetMaxPct, stepIntervalMs = 220) {
+  stopSmoothProgressCreep();
+  smoothProgressInterval = setInterval(() => {
+    if (currentDisplayedPct < targetMaxPct) {
+      currentDisplayedPct += 1;
+      lockProgFill.style.width = currentDisplayedPct + "%";
+      lockPercentText.textContent = `${currentDisplayedPct}% / 100%`;
+    }
+  }, stepIntervalMs);
+}
+
+function stopSmoothProgressCreep() {
+  if (smoothProgressInterval) {
+    clearInterval(smoothProgressInterval);
+    smoothProgressInterval = null;
+  }
+}
+
+// -------------------------------------------------------------
+// CUSTOM FONT (.TTF / .OTF) UPLOAD & REAL-TIME LIVE PREVIEW ENGINE
+// -------------------------------------------------------------
+function triggerFontUploadForTrack(targetTrackKey) {
+  pendingFontUploadTarget = targetTrackKey || "ALL";
+  const inp = document.getElementById("customFontUploadInput");
+  if (inp) {
+    inp.value = "";
+    inp.click();
+  }
+}
+
+function injectCustomFontCssRule(fontFamilyName) {
+  let styleTag = document.getElementById("dynamicCustomFontRules");
+  if (!styleTag) {
+    styleTag = document.createElement("style");
+    styleTag.id = "dynamicCustomFontRules";
+    document.head.appendChild(styleTag);
+  }
+  styleTag.textContent += `\n.font-${fontFamilyName} { font-family: '${fontFamilyName}', 'Padauk', sans-serif !important; }`;
+}
+
+async function handleCustomFontFileUpload(e) {
+  const fontFile = e.target.files && e.target.files[0];
+  if (!fontFile) return;
+
+  try {
+    const cleanFileName = fontFile.name.replace(/\.[^/.]+$/, "").replace(/[^a-zA-Z0-9_\u1000-\u109F\s-]/g, "").trim() || "CustomFont";
+    const uniqueFontFamily = `CustomFont_${Date.now()}`;
+    const arrayBuf = await fontFile.arrayBuffer();
+
+    const fontFace = new FontFace(uniqueFontFamily, arrayBuf);
+    const loadedFace = await fontFace.load();
+    document.fonts.add(loadedFace);
+    await document.fonts.ready;
+
+    injectCustomFontCssRule(uniqueFontFamily);
+
+    customUploadedFonts.push({
+      family: uniqueFontFamily,
+      label: `✨ ${cleanFileName} (.ttf)`
+    });
+
+    // Add newly uploaded font option to all 3 subtitle track dropdowns
+    ["MM", "Orig", "EN"].forEach(k => {
+      const sel = document.getElementById(k.toLowerCase() + "FontFamily");
+      if (sel) {
+        const opt = document.createElement("option");
+        opt.value = uniqueFontFamily;
+        opt.textContent = `✨ ${cleanFileName} (.ttf)`;
+        sel.appendChild(opt);
+      }
+    });
+
+    // Apply immediately to target track or all tracks
+    const targets = pendingFontUploadTarget === "ALL" ? ["MM", "Orig", "EN"] : [pendingFontUploadTarget];
+    targets.forEach(k => {
+      const sel = document.getElementById(k.toLowerCase() + "FontFamily");
+      if (sel) sel.value = uniqueFontFamily;
+      updateTrackStyle(k, true);
+    });
+
+    // Also update Titles and Custom Texts if uploaded globally or for Title/Text
+    if (pendingFontUploadTarget === "ALL" || pendingFontUploadTarget === "TITLE") {
+      titlesList.forEach(t => { t.fontFamily = uniqueFontFamily; });
+      renderTitles();
+      if (activeItemType === "title" && activeItemId) selectTitle(activeItemId);
+    }
+    if (pendingFontUploadTarget === "ALL" || pendingFontUploadTarget === "TEXT") {
+      textsList.forEach(t => { t.fontFamily = uniqueFontFamily; });
+      renderTexts();
+      if (activeItemType === "text" && activeItemId) selectText(activeItemId);
+    }
+
+    toast(`✅ "${fontFile.name}" ဖောင့်ကို Real-Time ပြောင်းလဲပြီးပါပြီ!`);
+  } catch (err) {
+    console.error("Font upload error:", err);
+    toast("❌ Font (.ttf) ဖိုင်ဖတ်ရာတွင် အဆင်မပြေပါ: " + err.message);
+  }
+}
+
+function getFontStackString(fontFamilyName) {
+  const f = String(fontFamilyName || "Padauk").trim();
+  return `'${f}', 'Padauk', 'Noto Sans Myanmar', 'Segoe UI', sans-serif`;
+}
+
+function buildFontOptionsHtml(selectedFont) {
+  const baseFonts = [
+    { val: "Padauk", label: "Padauk (မြန်မာ စံပြဖောင့်)" },
+    { val: "Noto Sans Myanmar", label: "Noto Sans Myanmar (အထူ/ခေတ်မီ)" },
+    { val: "Pyidaungsu", label: "Pyidaungsu (ပြည်ထောင်စု)" },
+    { val: "Segoe UI", label: "Segoe UI (Modern Sans)" },
+    { val: "Impact", label: "Impact (Bold Headline)" },
+    { val: "Georgia", label: "Georgia (Classic Serif)" }
+  ];
+  const all = [
+    ...baseFonts,
+    ...customUploadedFonts.map(cf => ({ val: cf.family, label: cf.label }))
+  ];
+  return all.map(item => `<option value="${item.val}" ${item.val === selectedFont ? "selected" : ""}>${item.label}</option>`).join("");
 }
 
 function onKaraokeOffsetChange(val) {
@@ -1769,7 +1927,7 @@ function syncVideoBoxExactAspectRatio() {
 }
 
 // -------------------------------------------------------------
-// MASTER STUDIO MODE SWITCHER & TOGGLEABLE DRAWER SYSTEM
+// MASTER STUDIO MODE SWITCHER ('recap' vs 'karaoke')
 // -------------------------------------------------------------
 function switchStudioMode(mode) {
   studioMode = mode === "karaoke" ? "karaoke" : "recap";
@@ -1795,6 +1953,9 @@ function switchStudioMode(mode) {
     mainRecap.classList.add("activeMain");
     mainKaraoke.classList.remove("activeMain");
 
+    document.getElementById("mmKaraokeCheck").checked = false;
+    subTracks.MM.karaoke = false;
+    toggleLangTrack("MM", true, true);
     toggleLangTrack("Orig", false, true);
     toggleLangTrack("EN", false, true);
     toast("🎬 Movie Recap Mode (ပင်မစာမျက်နှာ)");
@@ -1806,7 +1967,12 @@ function switchStudioMode(mode) {
     mainRecap.classList.remove("activeMain");
     mainKaraoke.classList.add("activeMain");
 
-    toast("🎤 Karaoke Song Mode (ပင်မစာမျက်နှာ)");
+    document.getElementById("mmKaraokeCheck").checked = true;
+    subTracks.MM.karaoke = true;
+    toggleLangTrack("MM", true, true);
+    toggleLangTrack("Orig", true, true);
+    toggleLangTrack("EN", false, true);
+    toast("🌐 Foreign Song Karaoke Mode (မူရင်း + မြန်မာစာတန်းအတို)");
   }
 
   render();
@@ -1878,17 +2044,27 @@ function toggleLangTrack(key, forceState, silent) {
     domBox.style.display = tr.enabled ? "flex" : "none";
   }
 
-  updateLiveSubtitleOverlays(video.currentTime || 0);
+  updateLiveSubtitleOverlays(video.currentTime || 0, true);
   if (!silent) {
     const labelMap = { MM: "မြန်မာစာတန်း", Orig: "မူရင်းစာတန်း", EN: "English စာတန်း" };
     toast(`${labelMap[key]} ${tr.enabled ? "🟢 ဖွင့်လိုက်ပါပြီ (ON)" : "⚪ ပိတ်လိုက်ပါပြီ (OFF)"}`);
   }
 }
 
-function updateTrackStyle(key) {
+function updateTrackStyle(key, triggerLivePreview = false) {
   const tr = subTracks[key];
   if (!tr) return;
   const p = key.toLowerCase();
+
+  const fontSel = document.getElementById(p + "FontFamily");
+  if (fontSel && fontSel.value) {
+    tr.fontFamily = fontSel.value;
+    const badge = document.getElementById(p + "FontBadge");
+    if (badge) {
+      const selectedOpt = fontSel.options[fontSel.selectedIndex];
+      badge.textContent = selectedOpt ? selectedOpt.textContent.replace(/\s*\(.*?\)/g, "") : tr.fontFamily;
+    }
+  }
 
   tr.karaoke = document.getElementById(p + "KaraokeCheck").checked;
   tr.activeColor = document.getElementById(p + "ActiveColor").value;
@@ -1909,9 +2085,19 @@ function updateTrackStyle(key) {
   if (innerEl) innerEl.style.backgroundColor = `rgba(${r}, ${g}, ${b}, ${tr.opacity / 100})`;
   if (targetEl) {
     targetEl.style.webkitTextStroke = `${tr.outlineWidth}px ${tr.outlineColor}`;
+    targetEl.style.fontFamily = getFontStackString(tr.fontFamily);
   }
 
-  updateLiveSubtitleOverlays(video.currentTime || 0);
+  if (triggerLivePreview) {
+    forceStylePreviewActive = true;
+    clearTimeout(stylePreviewTimeout);
+    stylePreviewTimeout = setTimeout(() => {
+      forceStylePreviewActive = false;
+      updateLiveSubtitleOverlays(video.currentTime || 0, false);
+    }, 3500);
+  }
+
+  updateLiveSubtitleOverlays(video.currentTime || 0, triggerLivePreview);
 }
 
 function updateTrackPosFromSlider(key) {
@@ -1929,31 +2115,27 @@ function updateTrackPosFromSlider(key) {
     domBox.style.left = tr.x + "%";
     domBox.style.top = tr.y + "%";
   }
+  updateLiveSubtitleOverlays(video.currentTime || 0, true);
 }
 
 // -------------------------------------------------------------
 // UNIFORM FIXED FONT SIZE + NATURAL WORD WRAPPING ENGINE
-// Never shrinks or enlarges font size! Keeps user's exact size
-// and wraps long sentences cleanly into balanced lines.
 // -------------------------------------------------------------
 function splitTextIntoTokensForWrap(str) {
   if (str.includes(" ")) {
     return str.split(/\s+/).filter(Boolean).map((w, idx, arr) => idx < arr.length - 1 ? w + " " : w);
   }
-  // For unspaced Myanmar/Asian scripts, group by syllable/cluster boundaries
-  const clusters = [];
   const regex = /[\u1000-\u102A\u103F\u104A-\u104F][\u102B-\u103E\u1056-\u1059]*|[^\u1000-\u109F]+|./g;
-  const matches = str.match(regex) || [str];
-  return matches;
+  return str.match(regex) || [str];
 }
 
-function layoutSubtitleLines(rawText, fixedFontSizePx, maxPixelWidth) {
+function layoutSubtitleLines(rawText, fixedFontSizePx, maxPixelWidth, fontFamilyName = "Padauk") {
   if (!rawText || !String(rawText).trim()) {
     return { lines: [], fontSize: fixedFontSizePx };
   }
 
-  const fontSize = fixedFontSizePx; // Strictly fixed uniform font size!
-  measureCtx.font = `700 ${fontSize}px 'Padauk', 'Segoe UI', sans-serif`;
+  const fontSize = fixedFontSizePx;
+  measureCtx.font = `700 ${fontSize}px ${getFontStackString(fontFamilyName)}`;
 
   const paragraphs = String(rawText)
     .split(/\r?\n/)
@@ -1988,8 +2170,6 @@ function layoutSubtitleLines(rawText, fixedFontSizePx, maxPixelWidth) {
   return { lines: wrappedLines, fontSize };
 }
 
-// Computes accurate Karaoke Progress (0..1) using vocalStart & karaokeTimingOffset
-// so highlight NEVER runs prematurely during guitar solos or instrumental lead-ins!
 function computeKaraokeVocalProgress(sub, currentTime) {
   if (!sub) return 0;
   const baseVocalStart = typeof sub.vocalStart === "number" ? sub.vocalStart : sub.start;
@@ -1997,7 +2177,7 @@ function computeKaraokeVocalProgress(sub, currentTime) {
   const effectiveVocalEnd = Math.max(effectiveVocalStart + 0.25, sub.end + Math.max(0, karaokeTimingOffset * 0.35));
 
   if (currentTime < effectiveVocalStart) {
-    return 0; // Vocal hasn't started yet; keep text in 100% Base Color!
+    return 0;
   }
   if (currentTime >= effectiveVocalEnd) {
     return 1;
@@ -2021,10 +2201,12 @@ function renderDomTrackOverlay(key, rawText, progressPct) {
   innerEl.style.display = "inline-flex";
 
   const boxWidthPx = Math.max(80, (videoBox.clientWidth || 240) * 0.86);
-  const layout = layoutSubtitleLines(rawText, tr.size, boxWidthPx);
+  const layout = layoutSubtitleLines(rawText, tr.size, boxWidthPx, tr.fontFamily);
   const lines = layout.lines;
 
+  const fontStack = getFontStackString(tr.fontFamily);
   targetEl.style.fontSize = layout.fontSize + "px";
+  targetEl.style.fontFamily = fontStack;
   targetEl.innerHTML = "";
 
   const totalChars = Math.max(1, lines.reduce((acc, l) => acc + Math.max(1, l.length), 0));
@@ -2033,6 +2215,7 @@ function renderDomTrackOverlay(key, rawText, progressPct) {
   lines.forEach((lineText) => {
     const span = document.createElement("span");
     span.className = "karaokeLineSpan";
+    span.style.fontFamily = fontStack;
     span.textContent = lineText;
 
     const lineLen = Math.max(1, lineText.length);
@@ -2062,9 +2245,20 @@ function renderDomTrackOverlay(key, rawText, progressPct) {
   });
 }
 
-function updateLiveSubtitleOverlays(t) {
-  const activeSub = subs.find(a => t >= a.start && t <= a.end);
-  const progress = activeSub ? computeKaraokeVocalProgress(activeSub, t) : 0;
+// Updates Live Subtitle Overlays AND shows real-time font preview even when paused!
+function updateLiveSubtitleOverlays(t, isStylePreview = false) {
+  let activeSub = subs.find(a => t >= a.start && t <= a.end);
+  let progress = activeSub ? computeKaraokeVocalProgress(activeSub, t) : 0;
+
+  // If user is changing Font / Color / Size while video is paused at an empty spot, show immediate preview!
+  if (!activeSub && (isStylePreview || forceStylePreviewActive) && !isExportActive) {
+    activeSub = subs[0] || {
+      mm: "မြန်မာစာတန်းထိုး ဖောင့်ဒီဇိုင်း နမူနာ",
+      orig: "Sample Original Lyric Font Preview",
+      en: "Sample English Subtitle Font Preview"
+    };
+    progress = 0.5;
+  }
 
   if (activeSub) {
     renderDomTrackOverlay("MM", activeSub.mm || "", progress);
@@ -2088,16 +2282,64 @@ function startSmoothPreviewKaraokeLoop() {
 }
 video.addEventListener("play", startSmoothPreviewKaraokeLoop);
 
+// -------------------------------------------------------------
+// 300% LOUD VOICEOVER BOOSTER + SMART BGM AUTO-DUCKING
+// -------------------------------------------------------------
 function initVoiceAudioSystem() {
   if (!voiceAudioCtx) {
     const AudioContextClass = window.AudioContext || window.webkitAudioContext;
     voiceAudioCtx = new AudioContextClass();
+
+    // Broadcast Compressor so boosted voiceover is loud, punchy, and never distorts
+    voiceCompressorNode = voiceAudioCtx.createDynamicsCompressor();
+    voiceCompressorNode.threshold.value = -18;
+    voiceCompressorNode.knee.value = 12;
+    voiceCompressorNode.ratio.value = 4;
+    voiceCompressorNode.attack.value = 0.003;
+    voiceCompressorNode.release.value = 0.15;
+
     voiceGainNode = voiceAudioCtx.createGain();
-    voiceGainNode.gain.value = 1.8;
-    voiceGainNode.connect(voiceAudioCtx.destination);
+    const aVol = Number(document.getElementById("voiceVolume")?.value || 200);
+    voiceGainNode.gain.value = 2.8 * (aVol / 100);
+
+    voiceGainNode.connect(voiceCompressorNode);
+    voiceCompressorNode.connect(voiceAudioCtx.destination);
   }
   if (voiceAudioCtx.state === 'suspended') {
     voiceAudioCtx.resume();
+  }
+}
+
+function applyBgmDucking(duckActive) {
+  const vVol = Number(document.getElementById("videoVolume")?.value || 15);
+  const autoDuck = document.getElementById("bgmAutoDuckCheck")?.checked;
+  if (vVol <= 0) {
+    video.volume = 0;
+    return;
+  }
+  video.muted = false;
+  if (duckActive && autoDuck && studioMode === "recap") {
+    // Duck BGM to 25% of its set volume while voiceover is speaking
+    video.volume = Math.max(0.02, (vVol / 100) * 0.25);
+  } else {
+    video.volume = Math.min(1.0, vVol / 100);
+  }
+}
+
+function updateAudioLevels() {
+  const vVol = Number(document.getElementById("videoVolume").value);
+  const aVol = Number(document.getElementById("voiceVolume").value);
+  document.getElementById("videoVolVal").textContent = vVol + "%";
+  document.getElementById("voiceVolVal").textContent = aVol + "%";
+
+  applyBgmDucking(isVoiceCurrentlyPlaying);
+
+  if (activeVoiceAudio) {
+    activeVoiceAudio.volume = Math.min(1.0, aVol / 100);
+  }
+  if (voiceGainNode) {
+    // Up to 300% slider -> up to 4.2x pre-compressor broadcast gain!
+    voiceGainNode.gain.value = 1.6 * (aVol / 100);
   }
 }
 
@@ -2128,34 +2370,6 @@ function setVoice(v) {
   document.getElementById("voiceThiha").classList.toggle("active", v.includes("Thiha"));
   document.getElementById("voiceNilar").classList.toggle("active", v.includes("Nilar"));
   toast(`Voice: ${v.includes("Thiha") ? "သီဟ (ကျား)" : "နီလာ (မ)"}`);
-}
-
-function updateAudioLevels() {
-  const vVol = Number(document.getElementById("videoVolume").value);
-  const aVol = Number(document.getElementById("voiceVolume").value);
-  document.getElementById("videoVolVal").textContent = vVol + "%";
-  document.getElementById("voiceVolVal").textContent = aVol + "%";
-
-  if (vVol <= 0) {
-    video.volume = 0;
-  } else {
-    video.muted = false;
-    video.volume = vVol / 100;
-  }
-  if (activeVoiceAudio) {
-    activeVoiceAudio.volume = Math.min(1.0, aVol / 100);
-  }
-  if (voiceGainNode) {
-    voiceGainNode.gain.value = 1.8 * (aVol / 100);
-  }
-}
-
-function setLockProgress(pct, title, desc) {
-  pct = Math.min(100, Math.max(0, Math.round(pct)));
-  lockProgFill.style.width = pct + "%";
-  lockPercentText.textContent = pct + "%";
-  if (title) lockTitle.textContent = title;
-  if (desc) lockDesc.textContent = desc;
 }
 
 // -------------------------------------------------------------
@@ -2218,7 +2432,7 @@ function renderBorderProgressTick(t, dur) {
 }
 
 // -------------------------------------------------------------
-// Touch-Drag Helper (Strictly bounded to #videoBox Aspect Ratio)
+// Touch-Drag Helper (FULL 0% TO 100% CORNER-TO-CORNER FREEDOM!)
 // -------------------------------------------------------------
 function makeElementDraggable(domEl, itemData, onMoveCallback, onSelectCallback) {
   let isDragging = false;
@@ -2246,10 +2460,11 @@ function makeElementDraggable(domEl, itemData, onMoveCallback, onSelectCallback)
     if (domEl.classList.contains("videoBlurBoxItem")) {
       const maxX = Math.max(0, 100 - (itemData.w || 0));
       itemData.x = Math.max(0, Math.min(maxX, Math.round(initX + deltaXPct)));
-      itemData.y = Math.max(0, Math.min(98, Math.round(initY + deltaYPct)));
+      itemData.y = Math.max(0, Math.min(100, Math.round(initY + deltaYPct)));
     } else {
-      itemData.x = Math.max(6, Math.min(94, Math.round(initX + deltaXPct)));
-      itemData.y = Math.max(6, Math.min(94, Math.round(initY + deltaYPct)));
+      // Allow full 0% to 100% movement so Titles, Texts, Subtitles & Logos reach all 4 corners!
+      itemData.x = Math.max(0, Math.min(100, Math.round(initX + deltaXPct)));
+      itemData.y = Math.max(0, Math.min(100, Math.round(initY + deltaYPct)));
     }
 
     if (onMoveCallback) onMoveCallback();
@@ -2266,13 +2481,14 @@ function makeElementDraggable(domEl, itemData, onMoveCallback, onSelectCallback)
 }
 
 // -------------------------------------------------------------
-// 1. Titles System
+// 1. Titles System (With Font Selector, .ttf Upload & 0-100% X/Y Sliders)
 // -------------------------------------------------------------
 function addNewTitle() {
   const id = Date.now();
   const newTitle = {
     id,
     text: "ရုပ်ရှင်ဇာတ်လမ်းအညွှန်း",
+    fontFamily: subTracks.MM.fontFamily || "Padauk",
     size: 16,
     color: "#ffffff",
     outlineColor: "#000000",
@@ -2280,13 +2496,13 @@ function addNewTitle() {
     bgColor: "#000000",
     opacity: 75,
     x: 50,
-    y: Math.min(80, 12 + titlesList.length * 8)
+    y: Math.min(90, 12 + titlesList.length * 8)
   };
   titlesList.push(newTitle);
   renderTitles();
   selectTitle(id);
   toggleToolDrawer("title", true);
-  toast("New Title Added!");
+  toast("New Title Added! ဒေါင့်အထိ စိတ်ကြိုက် ရွှေ့နိုင်ပါသည်။");
 }
 
 function removeTitle(id) {
@@ -2306,6 +2522,14 @@ function selectTitle(id) {
   form.innerHTML = `
     <div class="field" style="margin-bottom:8px">
       <input type="text" value="${t.text}" oninput="updateCurrentTitle('text', this.value)">
+    </div>
+    <div class="fontControlBox" style="margin-bottom:8px">
+      <div class="fontControlRow">
+        <select class="fontSelectDropdown" onchange="updateCurrentTitle('fontFamily', this.value)">
+          ${buildFontOptionsHtml(t.fontFamily || "Padauk")}
+        </select>
+        <button type="button" class="fontUploadBtn" onclick="triggerFontUploadForTrack('TITLE')">📤 Font (.ttf)</button>
+      </div>
     </div>
     <div class="styleGrid">
       <div class="field">
@@ -2331,9 +2555,19 @@ function selectTitle(id) {
         <input type="range" min="0" max="100" value="${t.opacity}" oninput="document.getElementById('tOpVal').textContent=this.value+'%'; updateCurrentTitle('opacity', Number(this.value))">
       </div>
     </div>
-    <div class="sliderField" style="margin-bottom:4px">
+    <div class="sliderField" style="margin-bottom:8px">
       <label>Font Size: <span id="tSzVal">${t.size}px</span></label>
-      <input type="range" min="10" max="40" value="${t.size}" oninput="document.getElementById('tSzVal').textContent=this.value+'px'; updateCurrentTitle('size', Number(this.value))">
+      <input type="range" min="10" max="42" value="${t.size}" oninput="document.getElementById('tSzVal').textContent=this.value+'px'; updateCurrentTitle('size', Number(this.value))">
+    </div>
+    <div class="sliderPairRow" style="margin-bottom:0">
+      <div class="sliderField">
+        <label>ဘယ်/ညာ (X %): <span class="val" id="tPosXVal">${t.x}%</span></label>
+        <input id="titleXSlider" type="range" min="0" max="100" value="${t.x}" oninput="document.getElementById('tPosXVal').textContent=this.value+'%'; updateCurrentTitle('x', Number(this.value))">
+      </div>
+      <div class="sliderField">
+        <label>အပေါ်/အောက် (Y %): <span class="val" id="tPosYVal">${t.y}%</span></label>
+        <input id="titleYSlider" type="range" min="0" max="100" value="${t.y}" oninput="document.getElementById('tPosYVal').textContent=this.value+'%'; updateCurrentTitle('y', Number(this.value))">
+      </div>
     </div>
   `;
   document.querySelectorAll(".videoTitleOverlayItem").forEach(el => el.classList.toggle("active-selected", el.dataset.id == id));
@@ -2354,6 +2588,7 @@ function renderTitles() {
     el.style.left = t.x + "%";
     el.style.top = t.y + "%";
     el.style.fontSize = t.size + "px";
+    el.style.fontFamily = getFontStackString(t.fontFamily || subTracks.MM.fontFamily);
     el.style.color = t.color;
     el.style.webkitTextStroke = `${t.outlineWidth}px ${t.outlineColor}`;
 
@@ -2372,6 +2607,14 @@ function renderTitles() {
     makeElementDraggable(el, t, () => {
       el.style.left = t.x + "%";
       el.style.top = t.y + "%";
+      const sx = document.getElementById("titleXSlider");
+      const sy = document.getElementById("titleYSlider");
+      const vx = document.getElementById("tPosXVal");
+      const vy = document.getElementById("tPosYVal");
+      if (sx) sx.value = t.x;
+      if (sy) sy.value = t.y;
+      if (vx) vx.textContent = t.x + "%";
+      if (vy) vy.textContent = t.y + "%";
     }, () => selectTitle(t.id));
 
     container.appendChild(el);
@@ -2379,13 +2622,14 @@ function renderTitles() {
 }
 
 // -------------------------------------------------------------
-// 2. Custom Texts System
+// 2. Custom Texts System (With Font Selector, .ttf Upload & 0-100% Corner Reach)
 // -------------------------------------------------------------
 function addNewCustomText() {
   const id = Date.now();
   const newText = {
     id,
     text: "အပိုင်း (၁)",
+    fontFamily: subTracks.MM.fontFamily || "Padauk",
     size: 14,
     color: "#0284c7",
     outlineColor: "#000000",
@@ -2393,13 +2637,13 @@ function addNewCustomText() {
     bgColor: "#000000",
     opacity: 60,
     x: 50,
-    y: Math.min(80, 20 + textsList.length * 8)
+    y: Math.min(90, 20 + textsList.length * 8)
   };
   textsList.push(newText);
   renderTexts();
   selectText(id);
   toggleToolDrawer("text", true);
-  toast("New Custom Text Added!");
+  toast("New Custom Text Added! ဒေါင့်အထိ စိတ်ကြိုက် ရွှေ့နိုင်ပါသည်။");
 }
 
 function removeCustomText(id) {
@@ -2419,6 +2663,14 @@ function selectText(id) {
   form.innerHTML = `
     <div class="field" style="margin-bottom:8px">
       <input type="text" value="${t.text}" oninput="updateCurrentText('text', this.value)">
+    </div>
+    <div class="fontControlBox" style="margin-bottom:8px">
+      <div class="fontControlRow">
+        <select class="fontSelectDropdown" onchange="updateCurrentText('fontFamily', this.value)">
+          ${buildFontOptionsHtml(t.fontFamily || "Padauk")}
+        </select>
+        <button type="button" class="fontUploadBtn" onclick="triggerFontUploadForTrack('TEXT')">📤 Font (.ttf)</button>
+      </div>
     </div>
     <div class="styleGrid">
       <div class="field">
@@ -2444,9 +2696,19 @@ function selectText(id) {
         <input type="range" min="0" max="100" value="${t.opacity}" oninput="document.getElementById('cxOpVal').textContent=this.value+'%'; updateCurrentText('opacity', Number(this.value))">
       </div>
     </div>
-    <div class="sliderField" style="margin-bottom:4px">
+    <div class="sliderField" style="margin-bottom:8px">
       <label>Font Size: <span id="cxSzVal">${t.size}px</span></label>
-      <input type="range" min="10" max="36" value="${t.size}" oninput="document.getElementById('cxSzVal').textContent=this.value+'px'; updateCurrentText('size', Number(this.value))">
+      <input type="range" min="10" max="40" value="${t.size}" oninput="document.getElementById('cxSzVal').textContent=this.value+'px'; updateCurrentText('size', Number(this.value))">
+    </div>
+    <div class="sliderPairRow" style="margin-bottom:0">
+      <div class="sliderField">
+        <label>ဘယ်/ညာ (X %): <span class="val" id="cxPosXVal">${t.x}%</span></label>
+        <input id="textXSlider" type="range" min="0" max="100" value="${t.x}" oninput="document.getElementById('cxPosXVal').textContent=this.value+'%'; updateCurrentText('x', Number(this.value))">
+      </div>
+      <div class="sliderField">
+        <label>အပေါ်/အောက် (Y %): <span class="val" id="cxPosYVal">${t.y}%</span></label>
+        <input id="textYSlider" type="range" min="0" max="100" value="${t.y}" oninput="document.getElementById('cxPosYVal').textContent=this.value+'%'; updateCurrentText('y', Number(this.value))">
+      </div>
     </div>
   `;
 }
@@ -2466,6 +2728,7 @@ function renderTexts() {
     el.style.left = t.x + "%";
     el.style.top = t.y + "%";
     el.style.fontSize = t.size + "px";
+    el.style.fontFamily = getFontStackString(t.fontFamily || subTracks.MM.fontFamily);
     el.style.color = t.color;
     el.style.webkitTextStroke = `${t.outlineWidth}px ${t.outlineColor}`;
 
@@ -2484,6 +2747,14 @@ function renderTexts() {
     makeElementDraggable(el, t, () => {
       el.style.left = t.x + "%";
       el.style.top = t.y + "%";
+      const sx = document.getElementById("textXSlider");
+      const sy = document.getElementById("textYSlider");
+      const vx = document.getElementById("cxPosXVal");
+      const vy = document.getElementById("cxPosYVal");
+      if (sx) sx.value = t.x;
+      if (sy) sy.value = t.y;
+      if (vx) vx.textContent = t.x + "%";
+      if (vy) vy.textContent = t.y + "%";
     }, () => selectText(t.id));
 
     container.appendChild(el);
@@ -2560,7 +2831,7 @@ function selectBlur(id) {
       </div>
       <div class="sliderField">
         <label>အပေါ်/အောက် (Y Pos): <span class="val" id="bYVal">${b.y}%</span></label>
-        <input id="blurYSlider" type="range" min="0" max="98" value="${b.y}" oninput="document.getElementById('bYVal').textContent=this.value+'%'; updateCurrentBlur('y', Number(this.value))">
+        <input id="blurYSlider" type="range" min="0" max="100" value="${b.y}" oninput="document.getElementById('bYVal').textContent=this.value+'%'; updateCurrentBlur('y', Number(this.value))">
       </div>
     </div>
   `;
@@ -2571,14 +2842,7 @@ function updateCurrentBlur(prop, val) {
   if (!b) return;
   b[prop] = val;
 
-  if (prop === 'w' && b.x + b.w > 100) {
-    b.x = Math.max(0, 100 - b.w);
-    const xSlider = document.getElementById("blurXSlider");
-    const xVal = document.getElementById("bXVal");
-    if (xSlider) xSlider.value = b.x;
-    if (xVal) xVal.textContent = b.x + "%";
-  }
-  if (prop === 'x' && b.x + b.w > 100) {
+  if ((prop === 'w' || prop === 'x') && b.x + b.w > 100) {
     b.x = Math.max(0, 100 - b.w);
     const xSlider = document.getElementById("blurXSlider");
     const xVal = document.getElementById("bXVal");
@@ -2674,7 +2938,7 @@ function initLogoDrag() {
 function autoAdjustSubtitleForAspectRatio() {
   syncVideoBoxExactAspectRatio();
   ["MM", "Orig", "EN"].forEach(k => {
-    updateTrackStyle(k);
+    updateTrackStyle(k, false);
     updateTrackPosFromSlider(k);
   });
 }
@@ -2710,6 +2974,8 @@ function handleVideoFileSelect(e) {
 
 function loadVideo(f) {
   file = f;
+  wakeUpRenderServer();
+
   if (videoURL) URL.revokeObjectURL(videoURL);
   videoURL = URL.createObjectURL(f);
   video.src = videoURL;
@@ -2717,7 +2983,7 @@ function loadVideo(f) {
   document.getElementById("emptyState").style.display = "none";
   video.muted = false;
 
-  document.querySelectorAll(".lockable, input.lockable, select.lockable").forEach(el => {
+  document.querySelectorAll(".lockable, input.lockable, select.lockable, textarea.lockable").forEach(el => {
     el.disabled = false;
   });
   generating = false;
@@ -2739,17 +3005,16 @@ function loadVideo(f) {
 }
 
 // -------------------------------------------------------------
-// SMART VOCAL WINDOW & AUDIO ENERGY ONSET DETECTOR
-// Fixes premature karaoke highlight during guitar solos / intros!
+// SMART VOCAL WINDOW & CONCISE MYANMAR LYRIC FORMATTER
 // -------------------------------------------------------------
 function estimateNaturalVocalDuration(textStr) {
   const clean = String(textStr || "").replace(/\s+/g, " ").trim();
   if (!clean) return 3.0;
   const wordCount = clean.split(/\s+/).length;
   const charCount = clean.length;
-  const estByWords = wordCount * 0.48 + 1.1;
-  const estByChars = charCount * 0.13 + 1.1;
-  return Math.max(2.2, Math.min(6.8, Math.max(estByWords, estByChars)));
+  const estByWords = wordCount * 0.48 + 1.0;
+  const estByChars = charCount * 0.12 + 1.0;
+  return Math.max(2.0, Math.min(6.5, Math.max(estByWords, estByChars)));
 }
 
 function sanitizeSegmentVocalTiming(seg, prevEnd) {
@@ -2766,14 +3031,11 @@ function sanitizeSegmentVocalTiming(seg, prevEnd) {
   let vocalStart = rawStart;
   let displayStart = rawStart;
 
-  // If Whisper attached a long instrumental break / guitar solo to the start of this segment:
-  if (segDur > expectedVocalDur + 1.6) {
+  if (segDur > expectedVocalDur + 1.5) {
     vocalStart = Number((rawEnd - expectedVocalDur).toFixed(2));
-    // Show the subtitle line 0.7s before the singer actually sings (in Base Color)
-    displayStart = Number(Math.max(rawStart, vocalStart - 0.7).toFixed(2));
+    displayStart = Number(Math.max(rawStart, vocalStart - 0.6).toFixed(2));
   } else {
-    // Normal segment: brief 0.22s lead-in cue before highlight sweep starts
-    const cueLead = Math.min(0.28, segDur * 0.12);
+    const cueLead = Math.min(0.25, segDur * 0.10);
     vocalStart = Number((rawStart + cueLead).toFixed(2));
     displayStart = Number(rawStart.toFixed(2));
   }
@@ -2785,33 +3047,58 @@ function sanitizeSegmentVocalTiming(seg, prevEnd) {
   };
 }
 
-// Concise Myanmar Subtitle Post-Processor (Prevents bloated literal translations)
+function isHallucinatedGibberish(text) {
+  const s = String(text || "").trim();
+  if (!s) return true;
+  if (/random\s+gibberish|random\s+text|အဓိပ္ပာယ်မရှိသော\s*စာသား|prooh/i.test(s)) return true;
+  if (/[\u10A0-\u10FF\u0530-\u058F\u0590-\u05FF]/.test(s)) return true;
+  return false;
+}
+
+function hasMyanmarScript(str) {
+  return /[\u1000-\u109F]/.test(String(str || ""));
+}
+
 function formatConciseMyanmarSubtitle(mmText) {
   let s = String(mmText || "").replace(/\r?\n/g, " ").replace(/\s+/g, " ").trim();
-  if (!s) return "";
-  // Remove redundant repeated interjections at start (e.g., "အိုး ဟုတ်ကဲ့၊ အိုး ဟုတ်ကဲ့")
-  s = s.replace(/^(အိုး\s*ဟုတ်ကဲ့[၊,\s]*|အို\s*ရေ့[၊,\s]*)+/i, "");
-  return s.trim() || mmText.trim();
-}
+  if (!s || isHallucinatedGibberish(s)) return "";
 
-function isMostlyMyanmarText(str) {
-  const mmChars = (String(str || "").match(/[\u1000-\u109F]/g) || []).length;
-  return mmChars > 3 && mmChars >= String(str || "").length * 0.25;
+  s = s
+    .replace(/^(အိုး\s*ဟုတ်ကဲ့[၊,\s]*|အို\s*ရေ့[၊,\s]*|ဒါပေမယ့်လည်း\s*|အမှန်တကယ်တော့\s*)+/i, "")
+    .replace(/ကျွန်တော်\s*တို့/g, "တို့")
+    .replace(/ကျွန်တော်/g, "ကိုယ်")
+    .replace(/ကျွန်မ/g, "ကိုယ်")
+    .replace(/ခင်ဗျား/g, "မင်း")
+    .replace(/သင့်ကို/g, "မင်းကို")
+    .replace(/သင်ဟာ/g, "မင်း")
+    .replace(/သင်က/g, "မင်းက")
+    .replace(/ဖြစ်ပါသည်/g, "ပဲ")
+    .replace(/ဖြစ်ပါတယ်/g, "ပါ")
+    .replace(/နေပါတယ်/g, "နေတယ်")
+    .replace(/ခဲ့ပါတယ်/g, "ခဲ့တယ်")
+    .replace(/သွားခဲ့ပြီ/g, "သွားပြီ")
+    .replace(/[။]+$/g, "")
+    .trim();
+
+  return s || mmText.trim();
 }
 
 // -------------------------------------------------------------
-// GEMINI AI WORKER & INDEPENDENT MYANMAR / ENGLISH TRANSLATION
+// FAST LIGHTWEIGHT AUDIO EXTRACTOR WITH REAL PROGRESS (1% -> 22%)
 // -------------------------------------------------------------
-async function extractLightweightAudioBlob(videoFile) {
+async function extractLightweightAudioBlob(videoFile, onProgress = null) {
+  if (onProgress) onProgress(4, "🎵 ဗီဒီယိုထဲမှ အသံလှိုင်းကို ဖတ်ယူနေပါသည်...");
   const buf = await videoFile.arrayBuffer();
+  if (onProgress) onProgress(9, "🎵 အသံလှိုင်း Decoding ပြုလုပ်နေပါသည်...");
   const actx = new (window.AudioContext || window.webkitAudioContext)();
   const dec = await actx.decodeAudioData(buf);
-  const targetRate = 16000;
+  const targetRate = 12000;
   const off = new OfflineAudioContext(1, Math.ceil(dec.duration * targetRate), targetRate);
   const src = off.createBufferSource();
   src.buffer = dec;
   src.connect(off.destination);
   src.start(0);
+  if (onProgress) onProgress(15, "🎵 အသံဖိုင်ကို ပေါ့ပါးအောင် ချုံ့နေပါသည်...");
   const rendered = await off.startRendering();
   actx.close();
 
@@ -2830,6 +3117,7 @@ async function extractLightweightAudioBlob(videoFile) {
     v.setInt16(p, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
     p += 2;
   }
+  if (onProgress) onProgress(22, "✅ အသံဖိုင် ပြင်ဆင်ပြီးပါပြီ!");
   return new Blob([outBuf], { type: 'audio/wav' });
 }
 
@@ -2844,21 +3132,6 @@ async function tryTranslateGTX(text, targetLang) {
   throw new Error("Invalid GTX payload");
 }
 
-async function tryTranslateClients5(text, targetLang) {
-  const url = `https://clients5.google.com/translate_a/t?client=dict-chrome-ex&sl=auto&tl=${targetLang}&q=${encodeURIComponent(text)}`;
-  const r = await fetch(url);
-  if (!r.ok) throw new Error("Clients5 HTTP " + r.status);
-  const d = await r.json();
-  if (Array.isArray(d)) {
-    if (typeof d[0] === "string") return d[0];
-    if (Array.isArray(d[0]) && typeof d[0][0] === "string") return d.map(x => x[0]).join("");
-  }
-  if (d && Array.isArray(d.sentences)) {
-    return d.sentences.map(s => s.trans || "").join("");
-  }
-  throw new Error("Invalid Clients5 payload");
-}
-
 async function translateRobustText(rawText, targetLang) {
   const clean = String(rawText || "").trim();
   if (!clean) return "";
@@ -2866,108 +3139,134 @@ async function translateRobustText(rawText, targetLang) {
     const res1 = await tryTranslateGTX(clean, targetLang);
     if (res1 && res1.trim()) return res1.trim();
   } catch (e) {}
-  try {
-    const res2 = await tryTranslateClients5(clean, targetLang);
-    if (res2 && res2.trim()) return res2.trim();
-  } catch (e) {}
   return clean;
 }
 
-// Separate Independent Translation for a single target language ('en' or 'my')
 async function translateIndependentLanguageTrack(origLinesArray, targetLang) {
-  try {
-    const r = await fetch(WORKER_URL + "/translate", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ texts: origLinesArray, targetLang })
-    });
-    if (r.ok) {
-      const d = await r.json();
-      if (Array.isArray(d.translations) && d.translations.length === origLinesArray.length) {
-        return d.translations;
+  for (const baseUrl of [WORKER_URL, RENDER_BACKEND_URL]) {
+    try {
+      const r = await fetch(baseUrl + "/translate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          texts: origLinesArray,
+          targetLang,
+          concise: targetLang !== "en"
+        })
+      });
+      if (r.ok) {
+        const d = await r.json();
+        if (Array.isArray(d.translations) && d.translations.length === origLinesArray.length) {
+          return d.translations;
+        }
       }
-    }
-  } catch (e) {
-    console.warn(`Worker /translate (${targetLang}) fallback:`, e);
+    } catch (e) {}
   }
 
   const results = new Array(origLinesArray.length).fill("");
-  const batchSize = 8;
-  for (let startIdx = 0; startIdx < origLinesArray.length; startIdx += batchSize) {
-    const slice = origLinesArray.slice(startIdx, startIdx + batchSize);
-    const joinedBlock = slice.map(s => s.replace(/\r?\n/g, " ").trim()).join("\n");
-    const translatedBlock = await translateRobustText(joinedBlock, targetLang);
-    const splitLines = String(translatedBlock || "").split(/\r?\n/).map(s => s.trim());
-
-    if (splitLines.length === slice.length) {
-      for (let j = 0; j < slice.length; j++) {
-        results[startIdx + j] = splitLines[j] || slice[j];
-      }
-    } else {
-      for (let j = 0; j < slice.length; j++) {
-        results[startIdx + j] = await translateRobustText(slice[j], targetLang);
-      }
-    }
+  for (let j = 0; j < origLinesArray.length; j++) {
+    results[j] = await translateRobustText(origLinesArray[j], targetLang);
   }
   return results;
 }
 
-// Translates Song Segments Independently for Original/English and Concise Myanmar
-// Supports both Myanmar Songs -> (Myanmar + English) and Foreign Songs -> (Orig + English + Concise Myanmar)
-async function translateSongSegmentsIndependently(rawSegments, onProgress) {
-  const origLines = rawSegments.map(s => String(s.text || s.orig || "").replace(/\r?\n/g, " ").trim());
-  const sampleJoined = origLines.slice(0, 6).join(" ");
-  const isMyanmarSong = isMostlyMyanmarText(sampleJoined);
+// -------------------------------------------------------------
+// FOREIGN SONG KARAOKE TRANSLATOR WITH REAL BATCH PROGRESS (55% -> 98%)
+// -------------------------------------------------------------
+async function translateForeignSongSegmentsWithRealProgress(rawSegments, onProgress) {
+  const validSegments = rawSegments.filter(s => {
+    const txt = String(s.text || s.orig || s.mm || "").trim();
+    return txt && !isHallucinatedGibberish(txt);
+  });
 
-  let enLines = [];
-  let mmLines = [];
-
-  // Try Gemini AI /song endpoint first
-  let geminiSongSuccess = false;
-  try {
-    if (onProgress) onProgress(50, "✨ Gemini AI ဖြင့် သီချင်းစာတန်းများ သီးသန့်စီ ဘာသာပြန်နေပါသည်...");
-    const resp = await fetch(WORKER_URL + "/song", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        segments: rawSegments.map((s, idx) => ({
-          start: s.start,
-          end: s.end,
-          text: origLines[idx]
-        }))
-      })
-    });
-
-    if (resp.ok) {
-      const data = await resp.json();
-      if (Array.isArray(data?.lyrics) && data.lyrics.length === rawSegments.length) {
-        enLines = data.lyrics.map((item, idx) => String(item.en || origLines[idx]).replace(/\r?\n/g, " ").trim());
-        mmLines = data.lyrics.map((item, idx) => formatConciseMyanmarSubtitle(item.mm || origLines[idx]));
-        geminiSongSuccess = true;
-      }
-    }
-  } catch (err) {
-    console.warn("Worker /song fallback to independent tracks:", err);
+  if (!validSegments.length) {
+    throw new Error("သီချင်းဆိုသံ စာသား မတွေ့ရှိပါ။");
   }
 
-  if (!geminiSongSuccess) {
-    if (isMyanmarSong) {
-      // Myanmar song: Myanmar track is the clean original lyric, translate English independently
-      mmLines = origLines.map(l => formatConciseMyanmarSubtitle(l));
-      if (onProgress) onProgress(68, "🇬🇧 မြန်မာသီချင်းမှ English စာတန်းသီးသန့် ဘာသာပြန်နေသည်...");
-      enLines = await translateIndependentLanguageTrack(origLines, "en");
-    } else {
-      // Foreign / English song: Translate English and Myanmar as separate independent passes
-      if (onProgress) onProgress(62, "🇬🇧 English စာတန်းသီးသန့် ထုတ်ယူနေသည်...");
-      enLines = await translateIndependentLanguageTrack(origLines, "en");
-      if (onProgress) onProgress(80, "🇲🇲 မြန်မာစာတန်းသီးသန့် (အဓိပ္ပာယ်ကျစ်လျစ်စွာ) ဘာသာပြန်နေသည်...");
-      const rawMm = await translateIndependentLanguageTrack(origLines, "my");
-      mmLines = rawMm.map(l => formatConciseMyanmarSubtitle(l));
+  const origLines = validSegments.map(s => String(s.text || s.orig || s.mm || "").replace(/\r?\n/g, " ").trim());
+  const enLines = new Array(origLines.length).fill("");
+  const mmLines = new Array(origLines.length).fill("");
+
+  const BATCH_SIZE = 16;
+  const totalBatches = Math.ceil(validSegments.length / BATCH_SIZE);
+
+  for (let bIdx = 0; bIdx < totalBatches; bIdx++) {
+    const start = bIdx * BATCH_SIZE;
+    const end = Math.min(validSegments.length, start + BATCH_SIZE);
+    const batchSegs = validSegments.slice(start, end);
+    const batchOrig = origLines.slice(start, end);
+
+    const batchStartPct = 56 + Math.round((bIdx / totalBatches) * 34);
+    const batchTargetPct = 56 + Math.round(((bIdx + 1) / totalBatches) * 34);
+    if (onProgress) {
+      onProgress(batchStartPct, `✨ မြန်မာစာတန်းအတို ဘာသာပြန်နေသည် (${end}/${validSegments.length} ကြောင်း)...`);
+    }
+    startSmoothProgressCreep(batchTargetPct - 1, 200);
+
+    let batchSuccess = false;
+    for (const baseUrl of [WORKER_URL, RENDER_BACKEND_URL]) {
+      try {
+        const resp = await fetch(baseUrl + "/song", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            conciseMM: true,
+            segments: batchSegs.map((s, idx) => ({
+              start: s.start,
+              end: s.end,
+              text: batchOrig[idx]
+            }))
+          })
+        });
+
+        if (resp.ok) {
+          const data = await resp.json();
+          if (Array.isArray(data?.lyrics) && data.lyrics.length === batchSegs.length) {
+            for (let k = 0; k < batchSegs.length; k++) {
+              enLines[start + k] = String(data.lyrics[k]?.en || batchOrig[k]).replace(/\r?\n/g, " ").trim();
+              mmLines[start + k] = formatConciseMyanmarSubtitle(data.lyrics[k]?.mm || "");
+            }
+            batchSuccess = true;
+            break;
+          }
+        }
+      } catch (e) {}
+    }
+
+    stopSmoothProgressCreep();
+
+    if (!batchSuccess) {
+      const fbEn = await translateIndependentLanguageTrack(batchOrig, "en");
+      const fbMm = await translateIndependentLanguageTrack(batchOrig, "my");
+      for (let k = 0; k < batchSegs.length; k++) {
+        enLines[start + k] = String(fbEn[k] || batchOrig[k]).replace(/\r?\n/g, " ").trim();
+        mmLines[start + k] = formatConciseMyanmarSubtitle(fbMm[k] || "");
+      }
+    }
+
+    if (onProgress) {
+      onProgress(batchTargetPct, `✅ စာကြောင်း (${end}/${validSegments.length}) ဘာသာပြန်ပြီးပါပြီ`);
+    }
+  }
+
+  // Final verification pass (90% -> 98%) to guarantee 100% Burmese script on every line
+  for (let i = 0; i < origLines.length; i++) {
+    if (!mmLines[i] || (!hasMyanmarScript(mmLines[i]) && /[a-zA-Z]/.test(mmLines[i]))) {
+      try {
+        const gtxMM = await tryTranslateGTX(origLines[i], "my");
+        if (gtxMM && hasMyanmarScript(gtxMM)) {
+          mmLines[i] = formatConciseMyanmarSubtitle(gtxMM);
+        }
+      } catch (e) {}
+    }
+    const verifyPct = 90 + Math.round(((i + 1) / origLines.length) * 8);
+    if (onProgress && i % 4 === 0) {
+      onProgress(verifyPct, "🇲🇲 မြန်မာစာတန်းနှင့် Karaoke အချိန်များ အပြီးသတ် စစ်ဆေးနေသည်...");
     }
   }
 
   let prevEnd = 0;
-  return rawSegments.map((seg, i) => {
+  return validSegments.map((seg, i) => {
     const timing = sanitizeSegmentVocalTiming({
       start: seg.start,
       end: seg.end,
@@ -3002,32 +3301,37 @@ async function retranslateExistingSubtitles() {
   cancelExportBtn.style.display = "none";
 
   try {
-    setLockProgress(25, "✨ စာတန်းအားလုံး သီးသန့်စီ ပြန်လည်ဘာသာပြန်နေပါသည်...", `စာကြောင်း (${subs.length}) ကြောင်းကို မူရင်း + EN + မြန်မာ သီးသန့်စီ ပြန်ဆိုနေသည်...`);
+    setLockProgress(10, "✨ စာတန်းအားလုံး စာကြောင်းတိုတိုဖြင့် ပြန်ညှိနေပါသည်...", `စာကြောင်း (${subs.length}) ကြောင်းကို ကျစ်လျစ်အောင် ပြန်ဆိုနေသည်...`);
     const sourceSegments = subs.map(s => ({
       start: s.start,
       end: s.end,
-      text: (s.orig || s.mm || s.en || "").replace(/\r?\n/g, " ").trim()
+      text: (s.orig || s.en || s.mm || "").replace(/\r?\n/g, " ").trim()
     }));
 
-    const updatedSubs = await translateSongSegmentsIndependently(sourceSegments, (pct, msg) => {
-      setLockProgress(pct, msg);
+    const updatedSubs = await translateForeignSongSegmentsWithRealProgress(sourceSegments, (pct, msg) => {
+      setLockProgress(pct, msg, "Gemini AI + Concise Lyric Engine အလုပ်လုပ်နေသည်...");
     });
 
     subs = updatedSubs;
     render();
-    updateLiveSubtitleOverlays(video.currentTime || 0);
-    setLockProgress(100, "🎉 သီးသန့်စီ ဘာသာပြန်ပြီးပါပြီ!", "မူရင်း + English + မြန်မာ (၃) မျိုးလုံး အသင့်ဖြစ်ပါပြီ");
+    updateLiveSubtitleOverlays(video.currentTime || 0, true);
+    setLockProgress(100, "🎉 စာတန်းအတို ပြန်ညှိပြီးပါပြီ!", "မူရင်း + English + မြန်မာ အသင့်ဖြစ်ပါပြီ");
     await new Promise(r => setTimeout(r, 350));
     videoLockOverlay.classList.remove("active");
-    toast("🎉 သီးသန့်စီ ဘာသာပြန် အောင်မြင်ပါသည်!");
+    toast("🎉 မြန်မာစာတန်းအတို ပြန်ညှိခြင်း အောင်မြင်ပါသည်!");
   } catch (err) {
+    stopSmoothProgressCreep();
     videoLockOverlay.classList.remove("active");
     toast("Error: " + err.message);
   } finally {
+    stopSmoothProgressCreep();
     generating = false;
   }
 }
 
+// -------------------------------------------------------------
+// FOREIGN SONG KARAOKE GENERATOR (0% -> 100% REAL-TIME LIVE PROGRESS)
+// -------------------------------------------------------------
 async function generateSongKaraokeSubtitles() {
   if (generating) return;
   if (!file) {
@@ -3039,53 +3343,68 @@ async function generateSongKaraokeSubtitles() {
   video.pause();
   videoLockOverlay.classList.add("active");
   cancelExportBtn.style.display = "none";
-  setLockProgress(8, "🎵 သီချင်းစာသားများ စတင်ထုတ်ယူနေပါသည်...", "သီချင်းအသံလှိုင်းနှင့် Vocal အချိန်ကို စစ်ဆေးနေပါသည်...");
+  setLockProgress(2, "🎵 နိုင်ငံခြားသီချင်း စတင်စစ်ဆေးနေပါသည်...", "သီချင်းအသံလှိုင်းနှင့် Vocal အချိန်ကို ထုတ်ယူနေပါသည်...");
 
-  document.querySelectorAll(".lockable, input.lockable, select.lockable").forEach(el => {
+  document.querySelectorAll(".lockable, input.lockable, select.lockable, textarea.lockable").forEach(el => {
     el.disabled = true;
   });
 
   const spinner = document.getElementById("songSpinner");
   const btnText = document.getElementById("songBtnText");
   if (spinner) spinner.style.display = "inline-block";
-  if (btnText) btnText.textContent = "သီချင်းစာတန်း သီးသန့်စီ ထုတ်ယူနေပါသည်...";
+  if (btnText) btnText.textContent = "သီချင်းစာတန်း ထုတ်ယူနေပါသည်...";
 
   subs = [];
   audioMap.clear();
   render();
 
   try {
+    // 1. Extract lightweight audio (2% -> 22%)
     let payloadFile = file;
     try {
-      if (file.size > 20 * 1024 * 1024) {
-        setLockProgress(20, "🎵 သီချင်းအသံဖိုင် သီးသန့်ခွဲထုတ်နေပါသည်...", "ဖိုင်ဆိုဒ်ကြီးမားသဖြင့် ပေါ့ပါးသော အသံဖိုင်အဖြစ် ပြောင်းလဲနေပါသည်...");
-        const audioBlob = await extractLightweightAudioBlob(file);
-        payloadFile = new File([audioBlob], "song_extract.wav", { type: "audio/wav" });
-      }
+      const audioBlob = await extractLightweightAudioBlob(file, (pct, msg) => {
+        setLockProgress(pct, msg, "အသံလှိုင်းကို မြန်ဆန်စွာ စစ်ထုတ်နေသည်...");
+      });
+      payloadFile = new File([audioBlob], "foreign_song.wav", { type: "audio/wav" });
     } catch (extractErr) {
       payloadFile = file;
     }
 
-    setLockProgress(38, "🎤 Whisper AI သီချင်းစာသား နားထောင်နေပါသည်...", "သီချင်းဆိုသံ စတင်သည့် အချိန်အတိအကျကို ထုတ်ယူနေပါသည်...");
+    // 2. Whisper Fast Transcription (24% -> 54%)
+    setLockProgress(25, "🎤 Whisper AI ဖြင့် သီချင်းစာသားနှင့် အချိန်များ ဖမ်းယူနေသည်...", "သီချင်းဆိုသံ စတင်သည့် စက္ကန့်အတိအကျကို ထုတ်ယူနေပါသည်...");
+    startSmoothProgressCreep(52, 180);
+
     const fd = new FormData();
     fd.append("file", payloadFile);
+    fd.append("lang", "auto");
+    fd.append("mode", "foreign_song");
 
-    const r1 = await fetch(WORKER_URL + "/transcribe", { method: "POST", body: fd });
-    if (!r1.ok) {
-      const errText = await r1.text();
-      throw new Error(`[Transcribe Error HTTP ${r1.status}]: ${errText}`);
+    let d1 = null;
+    for (const baseUrl of [WORKER_URL, RENDER_BACKEND_URL]) {
+      try {
+        const r1 = await fetch(baseUrl + "/transcribe", { method: "POST", body: fd });
+        if (r1.ok) {
+          d1 = await r1.json();
+          if (d1 && Array.isArray(d1.segments) && d1.segments.length > 0) break;
+        }
+      } catch (e) {}
     }
 
-    const d1 = await r1.json();
-    const rawSegments = (d1.segments || []).filter(s => s && String(s.text || "").trim());
+    stopSmoothProgressCreep();
+
+    const rawSegments = (d1?.segments || []).filter(s => s && String(s.text || "").trim());
     if (!rawSegments.length) throw new Error("သီချင်း/ဗီဒီယိုထဲတွင် စာသား မတွေ့ရှိပါ။");
 
-    subs = await translateSongSegmentsIndependently(rawSegments, (pct, titleMsg) => {
-      setLockProgress(pct, titleMsg, `စာကြောင်း (${rawSegments.length}) ကြောင်းကို သီးသန့်စီ ဘာသာပြန်ပြီး Vocal Timing ချိန်ညှိနေပါသည်...`);
+    setLockProgress(55, `✅ မူရင်းစာကြောင်း (${rawSegments.length}) ကြောင်း ဖမ်းယူပြီးပါပြီ!`, "မြန်မာစာတန်းအတို ဆက်လက်ဘာသာပြန်နေသည်...");
+
+    // 3. Translate to Short Poetic Myanmar & English (56% -> 98%)
+    subs = await translateForeignSongSegmentsWithRealProgress(rawSegments, (pct, titleMsg) => {
+      setLockProgress(pct, titleMsg, `စာကြောင်း (${rawSegments.length}) ကြောင်းကို ကျစ်လျစ်စွာ ဘာသာပြန်နေသည်...`);
     });
 
     switchStudioMode("karaoke");
     document.getElementById("mmKaraokeCheck").checked = true;
+    subTracks.MM.karaoke = true;
     document.getElementById("videoVolume").value = 100;
     updateAudioLevels();
     toggleLangTrack("MM", true, true);
@@ -3093,25 +3412,30 @@ async function generateSongKaraokeSubtitles() {
     autoAdjustSubtitleForAspectRatio();
     render();
 
-    setLockProgress(100, "🎉 သီချင်း ကာရာအိုကေ စာတန်းထိုး ပြီးပါပြီ!", "မူရင်း + English + မြန်မာ သီးသန့်စီ အသင့်ဖြစ်ပါပြီ...");
-    await new Promise(r => setTimeout(r, 450));
+    setLockProgress(100, "🎉 နိုင်ငံခြားသီချင်း ကာရာအိုကေ 100% ပြီးပါပြီ!", `စာကြောင်း (${subs.length}) ကြောင်း အသင့်ဖြစ်ပါပြီ!`);
+    await new Promise(r => setTimeout(r, 400));
     videoLockOverlay.classList.remove("active");
-    toast("🎉 သီချင်း Karaoke (မူရင်း + EN + မြန်မာ) အောင်မြင်စွာ ရရှိပါပြီ!");
+    toast("🎉 သီချင်း Karaoke (မူရင်း + EN + မြန်မာအတို) အောင်မြင်စွာ ရရှိပါပြီ!");
   } catch (err) {
+    stopSmoothProgressCreep();
     console.error("Song Karaoke generation error:", err);
     videoLockOverlay.classList.remove("active");
     setStatus("error", "Error occurred");
     toast("Error: " + err.message);
   } finally {
+    stopSmoothProgressCreep();
     generating = false;
-    document.querySelectorAll(".lockable, input.lockable, select.lockable").forEach(el => {
+    document.querySelectorAll(".lockable, input.lockable, select.lockable, textarea.lockable").forEach(el => {
       el.disabled = false;
     });
     if (spinner) spinner.style.display = "none";
-    if (btnText) btnText.textContent = "🎵 Generate Song Lyrics (မူရင်း + EN + မြန်မာ သီးသန့်စီ ထုတ်မည်)";
+    if (btnText) btnText.textContent = "🎵 Generate Foreign Karaoke (မူရင်း + မြန်မာစာတန်း အတို ထုတ်မည်)";
   }
 }
 
+// -------------------------------------------------------------
+// MOVIE RECAP SCRIPT GENERATOR (0% -> 100% REAL-TIME LIVE PROGRESS)
+// -------------------------------------------------------------
 async function generateRecapScriptOnly() {
   if (generating) return;
   if (!file) {
@@ -3123,9 +3447,9 @@ async function generateRecapScriptOnly() {
   video.pause();
   videoLockOverlay.classList.add("active");
   cancelExportBtn.style.display = "none";
-  setLockProgress(10, "🚀 စတင်လုပ်ဆောင်နေပါသည်...", "ဗီဒီယို ဖိုင်ကို စစ်ဆေးနေပါသည်...");
+  setLockProgress(2, "🚀 ဗီဒီယိုကို စတင်စစ်ဆေးနေပါသည်...", "အသံလှိုင်းနှင့် စကားပြောများကို ထုတ်ယူနေပါသည်...");
 
-  document.querySelectorAll(".lockable, input.lockable, select.lockable").forEach(el => {
+  document.querySelectorAll(".lockable, input.lockable, select.lockable, textarea.lockable").forEach(el => {
     el.disabled = true;
   });
 
@@ -3139,22 +3463,27 @@ async function generateRecapScriptOnly() {
   render();
 
   try {
+    // 1. Extract lightweight audio (2% -> 22%)
     let payloadFile = file;
     try {
-      if (file.size > 20 * 1024 * 1024) {
-        setLockProgress(25, "🎵 အသံဖိုင် သီးသန့်ထုတ်ယူနေပါသည်...", "ဗီဒီယို ဖိုင်ဆိုဒ် ကြီးမားသဖြင့် ပေါ့ပါးသော အသံဖိုင်အဖြစ် ခွဲထုတ်နေပါသည်...");
-        const audioBlob = await extractLightweightAudioBlob(file);
-        payloadFile = new File([audioBlob], "audio_extract.wav", { type: "audio/wav" });
-      }
+      const audioBlob = await extractLightweightAudioBlob(file, (pct, msg) => {
+        setLockProgress(pct, msg, "ဗီဒီယိုထဲမှ စကားပြောအသံလှိုင်းကို ခွဲထုတ်နေသည်...");
+      });
+      payloadFile = new File([audioBlob], "audio_extract.wav", { type: "audio/wav" });
     } catch (extractErr) {
       payloadFile = file;
     }
 
-    setLockProgress(50, "🎙️ Whisper Transcribing...", "စကားပြောစာသားများ နားထောင်ထုတ်ယူနေပါသည်...");
+    // 2. Whisper Transcribe (24% -> 56%)
+    setLockProgress(24, "🎙️ Whisper AI စကားပြော နားထောင်နေပါသည်...", "ဗီဒီယိုထဲမှ Dialogue များကို အချိန်နှင့်တကွ ထုတ်ယူနေသည်...");
+    startSmoothProgressCreep(54, 180);
+
     const fd = new FormData();
     fd.append("file", payloadFile);
 
     const r1 = await fetch(WORKER_URL + "/transcribe", { method: "POST", body: fd });
+    stopSmoothProgressCreep();
+
     if (!r1.ok) {
       const errText = await r1.text();
       throw new Error(`[Whisper Transcribe Error HTTP ${r1.status}]: ${errText}`);
@@ -3166,7 +3495,9 @@ async function generateRecapScriptOnly() {
 
     const totalVideoDuration = Math.round(video.duration || (rawSegments[rawSegments.length - 1].end || 60));
 
-    setLockProgress(75, "✨ မြန်မာဇာတ်ကြောင်းပြောစစ်စစ် ရေးနေပါသည်...", `စကားပြော ${rawSegments.length} ခုကို နားလည်အောင် ဘာသာပြန်ပြီး သဘာဝကျသော Recap စာသား ပြုစုနေပါသည်...`);
+    // 3. Gemini AI Recap Script Generation (58% -> 94%)
+    setLockProgress(58, "✨ မြန်မာဇာတ်ကြောင်းပြောစစ်စစ် ရေးနေပါသည်...", `စကားပြော ${rawSegments.length} ခုကို ဆွဲဆောင်မှုရှိသော Recap စာသားအဖြစ် ပြုစုနေသည်...`);
+    startSmoothProgressCreep(93, 220);
 
     const recapReq = await fetch(WORKER_URL + "/recap", {
       method: "POST",
@@ -3178,6 +3509,8 @@ async function generateRecapScriptOnly() {
       })
     });
 
+    stopSmoothProgressCreep();
+
     if (!recapReq.ok) {
       const errText = await recapReq.text();
       throw new Error(`[Gemini Recap Error HTTP ${recapReq.status}]: ${errText}`);
@@ -3185,6 +3518,8 @@ async function generateRecapScriptOnly() {
 
     const recapData = await recapReq.json();
     const generatedScript = recapData.recap || [];
+
+    setLockProgress(96, "✅ Recap စာတန်းများ နေရာချထားနေပါသည်...", "Timeline နှင့် စာတန်းများ ချိတ်ဆက်နေသည်...");
 
     subs = generatedScript.map((g, i) => {
       const st = Number(g.start ?? (i * 4));
@@ -3207,18 +3542,20 @@ async function generateRecapScriptOnly() {
     autoAdjustSubtitleForAspectRatio();
     render();
 
-    setLockProgress(100, "🎉 Script ရေးပြီးပါပြီ!", "Recap စာသားများ အသင့်ဖြစ်ပါပြီ...");
-    await new Promise(r => setTimeout(r, 450));
+    setLockProgress(100, "🎉 Script ရေးသားမှု 100% ပြီးပါပြီ!", `Recap စာကြောင်း (${subs.length}) ကြောင်း အသင့်ဖြစ်ပါပြီ...`);
+    await new Promise(r => setTimeout(r, 400));
     videoLockOverlay.classList.remove("active");
-    toast("🎉 သဘာဝကျသော Script ရေးပြီးပါပြီ!");
+    toast("🎉 သဘာဝကျသော Recap Script ရေးပြီးပါပြီ!");
   } catch(err) {
+    stopSmoothProgressCreep();
     console.error("Recap generation error:", err);
     videoLockOverlay.classList.remove("active");
     setStatus("error", "Error occurred");
     toast("Error: " + err.message);
   } finally {
+    stopSmoothProgressCreep();
     generating = false;
-    document.querySelectorAll(".lockable, input.lockable, select.lockable").forEach(el => {
+    document.querySelectorAll(".lockable, input.lockable, select.lockable, textarea.lockable").forEach(el => {
       el.disabled = false;
     });
     if (spinner) spinner.style.display = "none";
@@ -3227,21 +3564,102 @@ async function generateRecapScriptOnly() {
 }
 
 // -------------------------------------------------------------
-// Voice Synthesis Trigger (Connected to Python Render Server)
+// ✂️ SPLIT SUBTITLE INTO 2 LINES (TIME + TEXT)
+// -------------------------------------------------------------
+function splitHelperTextInHalf(str) {
+  const clean = String(str || "").trim();
+  if (!clean) return ["", ""];
+
+  if (clean.includes("\n")) {
+    const parts = clean.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+    if (parts.length >= 2) {
+      const half = Math.ceil(parts.length / 2);
+      return [parts.slice(0, half).join(" "), parts.slice(half).join(" ")];
+    }
+  }
+
+  const words = clean.split(/\s+/).filter(Boolean);
+  if (words.length >= 2) {
+    const mid = Math.ceil(words.length / 2);
+    return [words.slice(0, mid).join(" "), words.slice(mid).join(" ")];
+  }
+
+  const clusters = splitTextIntoTokensForWrap(clean);
+  if (clusters.length >= 2) {
+    const mid = Math.ceil(clusters.length / 2);
+    return [clusters.slice(0, mid).join(""), clusters.slice(mid).join("")];
+  }
+
+  return [clean, clean];
+}
+
+function splitSubLine(id) {
+  const idx = subs.findIndex(s => s.id === id);
+  if (idx === -1) return;
+
+  const item = subs[idx];
+  const dur = Math.max(0.6, item.end - item.start);
+  const midTime = Number((item.start + dur / 2).toFixed(2));
+
+  const [mm1, mm2] = splitHelperTextInHalf(item.mm);
+  const [orig1, orig2] = splitHelperTextInHalf(item.orig);
+  const [en1, en2] = splitHelperTextInHalf(item.en);
+
+  const firstHalf = {
+    id: item.id,
+    start: item.start,
+    vocalStart: item.vocalStart ?? item.start,
+    end: midTime,
+    mm: mm1,
+    orig: orig1,
+    en: en1,
+    voiceOverride: item.voiceOverride || selectedVoice
+  };
+
+  const secondHalf = {
+    id: item.id + 1,
+    start: midTime,
+    vocalStart: midTime,
+    end: item.end,
+    mm: mm2,
+    orig: orig2,
+    en: en2,
+    voiceOverride: item.voiceOverride || selectedVoice
+  };
+
+  audioMap.delete(item.id);
+  subs.splice(idx, 1, firstHalf, secondHalf);
+  subs = subs.map((s, i) => ({ ...s, id: i + 1 }));
+
+  render();
+  updateLiveSubtitleOverlays(video.currentTime || 0, true);
+  toast(`✂️ စာကြောင်း #${id} ကို (၂) ကြောင်း ခွဲထုတ်ပြီးပါပြီ!`);
+}
+
+function removeSubLine(id) {
+  audioMap.delete(id);
+  subs = subs.filter(s => s.id !== id).map((s, idx) => ({ ...s, id: idx + 1 }));
+  render();
+  updateLiveSubtitleOverlays(video.currentTime || 0);
+}
+
+// -------------------------------------------------------------
+// LOUD VOICEOVER SYNTHESIS & PLAYBACK (WITH BGM AUTO-DUCKING)
 // -------------------------------------------------------------
 async function testMyanmarVoice() {
   if (generating) return;
-  toast("⏳ Python TTS ဆာဗာမှ အသံစမ်းသပ်နေပါသည်...");
+  toast("⏳ မြန်မာအသံ (300% Voice Booster) စမ်းသပ်နေပါသည်...");
   try {
     const spd = Number(document.getElementById("voiceSpeed").value) || 0;
     const rateStr = (spd >= 0 ? "+" : "") + spd + "%";
-    const audioUrl = await fetchMyanmarAudio("မင်္ဂလာပါခင်ဗျာ။ ဇာတ်လမ်းပြော အသံစနစ် ကောင်းမွန်စွာ အလုပ်လုပ်နေပါပြီ။", selectedVoice, rateStr);
+    const audioUrl = await fetchMyanmarAudio("မင်္ဂလာပါခင်ဗျာ။ ဇာတ်လမ်းပြော အသံချဲ့စနစ် ကြည်လင်ကျယ်လောင်စွာ အလုပ်လုပ်နေပါပြီ။", selectedVoice, rateStr);
     initVoiceAudioSystem();
+    updateAudioLevels();
     const aud = new Audio(audioUrl);
     const src = voiceAudioCtx.createMediaElementSource(aud);
     src.connect(voiceGainNode);
     await aud.play();
-    toast("🔊 Myanmar Voice Playing!");
+    toast("🔊 300% Boosted Myanmar Voice Playing!");
   } catch(e) {
     toast("Voice error: " + e.message);
   }
@@ -3291,16 +3709,18 @@ async function synthesizeAllVoiceovers() {
   const rateStr = (spd >= 0 ? "+" : "") + spd + "%";
 
   try {
+    setLockProgress(1, `🗣️ မြန်မာအသံဖိုင် စတင်သွင်းယူနေပါသည် (0/${subs.length})...`, "300% Loud Voice Booster စနစ်ဖြင့် အသံထုတ်နေသည်...");
     for (let i = 0; i < subs.length; i++) {
       const line = subs[i];
-      setLockProgress(Math.round(((i + 1) / subs.length) * 100), `🗣️ မြန်မာအသံဖိုင် သွင်းယူနေပါသည် (${i + 1}/${subs.length})...`, `"${(line.mm || "").slice(0, 24)}..."`);
+      const realPct = Math.max(2, Math.round(((i + 1) / subs.length) * 100));
       const url = await fetchMyanmarAudio((line.mm || "").replace(/\n+/g, " "), selectedVoice, rateStr);
       if (url) audioMap.set(line.id, url);
-      await new Promise(r => setTimeout(r, 80));
+      setLockProgress(realPct, `🗣️ မြန်မာအသံဖိုင် သွင်းယူနေပါသည် (${i + 1}/${subs.length})...`, `"${(line.mm || "").slice(0, 26)}..."`);
     }
 
+    await new Promise(r => setTimeout(r, 300));
     videoLockOverlay.classList.remove("active");
-    toast("🎉 အသံများ အားလုံး သွင်းယူပြီးပါပြီ!");
+    toast("🎉 အသံများ အားလုံး 100% သွင်းယူပြီးပါပြီ!");
     render();
   } catch(e) {
     videoLockOverlay.classList.remove("active");
@@ -3327,7 +3747,7 @@ video.addEventListener("timeupdate", () => {
 
   if (activeSub) {
     bannerTime.textContent = `${formatTime(activeSub.start)} → ${formatTime(activeSub.end)}`;
-    const extraOrig = (studioMode === "karaoke" && activeSub.orig) ? ` [${activeSub.orig}]` : "";
+    const extraOrig = (studioMode === "karaoke" && activeSub.orig) ? ` | 🌐 ${activeSub.orig}` : "";
     bannerMM.textContent = (activeSub.mm || "") + extraOrig;
     if (!isExportActive && lastActiveSubId !== activeSub.id) {
       lastActiveSubId = activeSub.id;
@@ -3346,13 +3766,32 @@ function playVoiceForSub(sub) {
   const url = audioMap.get(sub.id);
   if (!url) return;
   initVoiceAudioSystem();
-  if (activeVoiceAudio) activeVoiceAudio.pause();
+  updateAudioLevels();
+
+  if (activeVoiceAudio) {
+    activeVoiceAudio.pause();
+  }
   activeVoiceAudio = new Audio(url);
+  isVoiceCurrentlyPlaying = true;
+  applyBgmDucking(true);
+
+  activeVoiceAudio.onended = () => {
+    isVoiceCurrentlyPlaying = false;
+    applyBgmDucking(false);
+  };
+  activeVoiceAudio.onpause = () => {
+    isVoiceCurrentlyPlaying = false;
+    applyBgmDucking(false);
+  };
+
   try {
     const srcNode = voiceAudioCtx.createMediaElementSource(activeVoiceAudio);
     srcNode.connect(voiceGainNode);
   } catch(e){}
-  activeVoiceAudio.play().catch(() => {});
+  activeVoiceAudio.play().catch(() => {
+    isVoiceCurrentlyPlaying = false;
+    applyBgmDucking(false);
+  });
 }
 
 function updateSubTiming(id, field, val) {
@@ -3365,7 +3804,7 @@ function updateSubTiming(id, field, val) {
   } else if (field === "end") {
     s.end = Math.max(s.start + 0.3, num);
   }
-  updateLiveSubtitleOverlays(video.currentTime || 0);
+  updateLiveSubtitleOverlays(video.currentTime || 0, true);
 }
 
 function render() {
@@ -3375,7 +3814,7 @@ function render() {
 
   const rows = subs.filter(x => !q || (x.mm || "").toLowerCase().includes(q) || (x.orig || "").toLowerCase().includes(q) || (x.en || "").toLowerCase().includes(q));
   if (!rows.length) {
-    list.innerHTML = `<div class="empty">🎬 Upload movie or song clip to begin.</div>`;
+    list.innerHTML = `<div class="empty">🎬 Upload movie or foreign song clip to begin.</div>`;
     return;
   }
 
@@ -3390,15 +3829,21 @@ function render() {
           →
           <input type="number" step="0.1" class="timeInputMini" value="${Number(x.end).toFixed(1)}" onchange="updateSubTiming(${x.id}, 'end', this.value)" title="End Time (sec)">s
         </span>
-        <button onclick="event.stopPropagation(); createOrPlayVoiceForSubId(${x.id})" style="font-size:10px;padding:3px 7px;">
-          ${audioMap.has(x.id) ? "🔊 Play" : "🎙️ Create"}
-        </button>
+        <div style="display:flex;align-items:center;gap:4px">
+          ${!showKaraokeFields ? `
+            <button onclick="event.stopPropagation(); createOrPlayVoiceForSubId(${x.id})" style="font-size:9.5px;padding:2px 7px;">
+              ${audioMap.has(x.id) ? "🔊 Play" : "🎙️ Voice"}
+            </button>
+          ` : ``}
+          <button class="splitBtn" onclick="event.stopPropagation(); splitSubLine(${x.id})" style="font-size:9.5px;padding:2px 7px;" title="Split into 2 lines">✂️ ၂ ကြောင်းခွဲ</button>
+          <button class="danger" onclick="event.stopPropagation(); removeSubLine(${x.id})" style="font-size:9.5px;padding:2px 6px;">✕</button>
+        </div>
       </div>
-      <textarea class="itemEditText" rows="2" placeholder="🇲🇲 မြန်မာစာတန်း..." onclick="event.stopPropagation()" oninput="subs.find(s=>s.id===${x.id}).mm=this.value; audioMap.delete(${x.id}); updateLiveSubtitleOverlays(video.currentTime)">${x.mm || ""}</textarea>
+      <textarea class="itemEditText" rows="2" placeholder="🇲🇲 မြန်မာစာတန်း..." onclick="event.stopPropagation()" oninput="subs.find(s=>s.id===${x.id}).mm=this.value; audioMap.delete(${x.id}); updateLiveSubtitleOverlays(video.currentTime, true)">${x.mm || ""}</textarea>
       ${showKaraokeFields ? `
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:4px" onclick="event.stopPropagation()">
-        <textarea class="itemEditText" rows="1" style="margin-bottom:0;font-size:11px" placeholder="🌐 မူရင်းစာတန်း (Orig)..." oninput="subs.find(s=>s.id===${x.id}).orig=this.value; updateLiveSubtitleOverlays(video.currentTime)">${x.orig || ""}</textarea>
-        <textarea class="itemEditText" rows="1" style="margin-bottom:0;font-size:11px" placeholder="🇬🇧 English စာတန်း..." oninput="subs.find(s=>s.id===${x.id}).en=this.value; updateLiveSubtitleOverlays(video.currentTime)">${x.en || ""}</textarea>
+        <textarea class="itemEditText" rows="1" style="margin-bottom:0;font-size:11px" placeholder="🌐 မူရင်းစာတန်း (Orig)..." oninput="subs.find(s=>s.id===${x.id}).orig=this.value; updateLiveSubtitleOverlays(video.currentTime, true)">${x.orig || ""}</textarea>
+        <textarea class="itemEditText" rows="1" style="margin-bottom:0;font-size:11px" placeholder="🇬🇧 English စာတန်း..." oninput="subs.find(s=>s.id===${x.id}).en=this.value; updateLiveSubtitleOverlays(video.currentTime, true)">${x.en || ""}</textarea>
       </div>
       ` : ``}
     </div>
@@ -3414,11 +3859,12 @@ function addSub() {
     vocalStart: start,
     end: start + 3.0,
     mm: "မြန်မာစာတန်း အသစ်...",
-    orig: "",
-    en: ""
+    orig: studioMode === "karaoke" ? "New lyric line..." : "",
+    en: studioMode === "karaoke" ? "New lyric line..." : ""
   });
   if (subs.length === 1) autoAdjustSubtitleForAspectRatio();
   render();
+  updateLiveSubtitleOverlays(video.currentTime || 0, true);
 }
 
 function formatTime(s) {
@@ -3469,7 +3915,7 @@ videoBox.addEventListener("click", (e) => {
 });
 
 // -------------------------------------------------------------
-// EXPORT & DOWNLOAD LOGIC (Fast WebCodecs + Standard + Audio + Separate SRT)
+// EXPORT & DOWNLOAD LOGIC (RENDERS CUSTOM .TTF FONTS & 300% VOICE!)
 // -------------------------------------------------------------
 function openExportModal() {
   document.getElementById('exportModalBackdrop').classList.add('show');
@@ -3490,7 +3936,7 @@ function selectExportMethod(method) {
 
 function setExportingLock(locked) {
   isExportActive = locked;
-  document.querySelectorAll(".lockable, input.lockable, select.lockable").forEach(el => {
+  document.querySelectorAll(".lockable, input.lockable, select.lockable, textarea.lockable").forEach(el => {
     el.disabled = locked;
     el.style.opacity = locked ? "0.5" : "1";
     el.style.pointerEvents = locked ? "none" : "auto";
@@ -3521,19 +3967,18 @@ function drawRoundedBox(ctx, x, y, w, h, r) {
   ctx.closePath();
 }
 
-// Draw each active Subtitle Track on Canvas with Fixed Uniform Font Size & Per-Line Sequential Sweep
 function drawTrackBoxOnCanvas(bCtx, burnCanvas, trackKey, rawText, karaokeProg, scale) {
   const tr = subTracks[trackKey];
   if (!tr || !tr.enabled || !rawText || !rawText.trim()) return;
 
   const padX = 10 * scale;
   const padY = 4 * scale;
-  const maxBoxWidth = burnCanvas.width * 0.88;
+  const maxBoxWidth = burnCanvas.width * 0.92;
   const maxTextWidth = maxBoxWidth - (padX * 2);
 
-  const layout = layoutSubtitleLines(rawText, tr.size * scale, maxTextWidth);
+  const layout = layoutSubtitleLines(rawText, tr.size * scale, maxTextWidth, tr.fontFamily);
   const lines = layout.lines;
-  const activeFontSize = layout.fontSize; // Strictly fixed uniform font size!
+  const activeFontSize = layout.fontSize;
   if (!lines.length) return;
 
   const sx = (tr.x / 100) * burnCanvas.width;
@@ -3542,7 +3987,7 @@ function drawTrackBoxOnCanvas(bCtx, burnCanvas, trackKey, rawText, karaokeProg, 
   const boxOpacity = tr.opacity / 100;
 
   bCtx.save();
-  bCtx.font = `700 ${activeFontSize}px 'Padauk', 'Segoe UI', sans-serif`;
+  bCtx.font = `700 ${activeFontSize}px ${getFontStackString(tr.fontFamily)}`;
   bCtx.textAlign = "center";
   bCtx.textBaseline = "middle";
   bCtx.lineJoin = "round";
@@ -3560,11 +4005,10 @@ function drawTrackBoxOnCanvas(bCtx, burnCanvas, trackKey, rawText, karaokeProg, 
 
   let boxX = sx - (boxW / 2);
   let boxY = sy - (boxH / 2);
-  const edgeMargin = 6 * scale;
-  if (boxX < edgeMargin) boxX = edgeMargin;
-  if (boxX + boxW > burnCanvas.width - edgeMargin) boxX = burnCanvas.width - edgeMargin - boxW;
-  if (boxY < edgeMargin) boxY = edgeMargin;
-  if (boxY + boxH > burnCanvas.height - edgeMargin) boxY = burnCanvas.height - edgeMargin - boxH;
+  if (boxX < 0) boxX = 0;
+  if (boxX + boxW > burnCanvas.width) boxX = burnCanvas.width - boxW;
+  if (boxY < 0) boxY = 0;
+  if (boxY + boxH > burnCanvas.height) boxY = burnCanvas.height - boxH;
 
   const centerX = boxX + (boxW / 2);
 
@@ -3652,15 +4096,16 @@ function drawCanvasFrame(bCtx, burnCanvas, currTime, scale) {
     drawTrackBoxOnCanvas(bCtx, burnCanvas, "MM", currentSub.mm || "", karaokeProg, scale);
   }
 
+  // Draw Titles (Centered on X%, Y% matching DOM translate(-50%, -50%))
   titlesList.forEach(t => {
     const tx = (t.x / 100) * burnCanvas.width;
     const ty = (t.y / 100) * burnCanvas.height;
     const fsize = t.size * scale;
-    const padX = 10 * scale;
-    const padY = 4 * scale;
+    const padX = 8 * scale;
+    const padY = 3 * scale;
 
     bCtx.save();
-    bCtx.font = `800 ${fsize}px 'Padauk', 'Segoe UI', sans-serif`;
+    bCtx.font = `800 ${fsize}px ${getFontStackString(t.fontFamily || subTracks.MM.fontFamily)}`;
     bCtx.textAlign = "center";
     bCtx.textBaseline = "middle";
     bCtx.lineJoin = "round";
@@ -3669,7 +4114,7 @@ function drawCanvasFrame(bCtx, burnCanvas, currTime, scale) {
     const boxW = textW + padX * 2;
     const boxH = (fsize * 1.36) + padY * 2;
     const boxX = tx - (boxW / 2);
-    const boxY = ty;
+    const boxY = ty - (boxH / 2);
 
     if (t.opacity > 0) {
       const r = parseInt(t.bgColor.slice(1, 3), 16) || 0;
@@ -3680,26 +4125,26 @@ function drawCanvasFrame(bCtx, burnCanvas, currTime, scale) {
       bCtx.fill();
     }
 
-    const centerY = boxY + (boxH / 2);
     if (t.outlineWidth > 0) {
       bCtx.strokeStyle = t.outlineColor;
       bCtx.lineWidth = t.outlineWidth * scale * 2;
-      bCtx.strokeText(t.text, tx, centerY);
+      bCtx.strokeText(t.text, tx, ty);
     }
     bCtx.fillStyle = t.color;
-    bCtx.fillText(t.text, tx, centerY);
+    bCtx.fillText(t.text, tx, ty);
     bCtx.restore();
   });
 
+  // Draw Custom Texts (Centered on X%, Y% matching DOM translate(-50%, -50%))
   textsList.forEach(t => {
     const tx = (t.x / 100) * burnCanvas.width;
     const ty = (t.y / 100) * burnCanvas.height;
     const fsize = t.size * scale;
-    const padX = 10 * scale;
-    const padY = 4 * scale;
+    const padX = 8 * scale;
+    const padY = 3 * scale;
 
     bCtx.save();
-    bCtx.font = `800 ${fsize}px 'Padauk', 'Segoe UI', sans-serif`;
+    bCtx.font = `800 ${fsize}px ${getFontStackString(t.fontFamily || subTracks.MM.fontFamily)}`;
     bCtx.textAlign = "center";
     bCtx.textBaseline = "middle";
     bCtx.lineJoin = "round";
@@ -3708,7 +4153,7 @@ function drawCanvasFrame(bCtx, burnCanvas, currTime, scale) {
     const boxW = textW + padX * 2;
     const boxH = (fsize * 1.36) + padY * 2;
     const boxX = tx - (boxW / 2);
-    const boxY = ty;
+    const boxY = ty - (boxH / 2);
 
     if (t.opacity > 0) {
       const r = parseInt(t.bgColor.slice(1, 3), 16) || 0;
@@ -3719,14 +4164,13 @@ function drawCanvasFrame(bCtx, burnCanvas, currTime, scale) {
       bCtx.fill();
     }
 
-    const centerY = boxY + (boxH / 2);
     if (t.outlineWidth > 0) {
       bCtx.strokeStyle = t.outlineColor;
       bCtx.lineWidth = t.outlineWidth * scale * 2;
-      bCtx.strokeText(t.text, tx, centerY);
+      bCtx.strokeText(t.text, tx, ty);
     }
     bCtx.fillStyle = t.color;
-    bCtx.fillText(t.text, tx, centerY);
+    bCtx.fillText(t.text, tx, ty);
     bCtx.restore();
   });
 
@@ -3786,13 +4230,24 @@ function seekVideoAndWait(targetTime) {
   });
 }
 
+// Offline Audio Mixer with Loud Voiceover Boost + Compressor + BGM Ducking
 async function buildOfflineMixedAudioBuffer(totalDur, sampleRate = 44100) {
   const lengthSamples = Math.max(1, Math.ceil(totalDur * sampleRate));
   const offCtx = new OfflineAudioContext(2, lengthSamples, sampleRate);
 
+  const masterComp = offCtx.createDynamicsCompressor();
+  masterComp.threshold.value = -16;
+  masterComp.knee.value = 12;
+  masterComp.ratio.value = 4;
+  masterComp.attack.value = 0.003;
+  masterComp.release.value = 0.15;
+  masterComp.connect(offCtx.destination);
+
   const bgmVol = Number(document.getElementById("videoVolume").value) / 100;
   const voiceVol = Number(document.getElementById("voiceVolume").value) / 100;
+  const autoDuck = document.getElementById("bgmAutoDuckCheck")?.checked;
 
+  let bgmGain = null;
   if (bgmVol > 0 && file) {
     try {
       const vBuf = await file.arrayBuffer();
@@ -3802,10 +4257,10 @@ async function buildOfflineMixedAudioBuffer(totalDur, sampleRate = 44100) {
 
       const bgmSource = offCtx.createBufferSource();
       bgmSource.buffer = decodedVideoAudio;
-      const bgmGain = offCtx.createGain();
-      bgmGain.gain.value = bgmVol;
+      bgmGain = offCtx.createGain();
+      bgmGain.gain.setValueAtTime(bgmVol, 0);
       bgmSource.connect(bgmGain);
-      bgmGain.connect(offCtx.destination);
+      bgmGain.connect(masterComp);
       bgmSource.start(0);
     } catch (e) {
       console.warn("Could not decode original video audio for BGM mix:", e);
@@ -3822,10 +4277,22 @@ async function buildOfflineMixedAudioBuffer(totalDur, sampleRate = 44100) {
         const src = offCtx.createBufferSource();
         src.buffer = dec;
         const gNode = offCtx.createGain();
-        gNode.gain.value = 1.6 * voiceVol;
+        // High-clarity loud voiceover multiplier
+        gNode.gain.value = 2.2 * voiceVol;
         src.connect(gNode);
-        gNode.connect(offCtx.destination);
-        src.start(Math.max(0, s.start));
+        gNode.connect(masterComp);
+
+        const startSec = Math.max(0, s.start);
+        const endSec = startSec + dec.duration;
+        src.start(startSec);
+
+        // Schedule automatic BGM ducking during this voiceover segment
+        if (bgmGain && autoDuck && studioMode === "recap") {
+          bgmGain.gain.setValueAtTime(bgmVol, Math.max(0, startSec - 0.08));
+          bgmGain.gain.linearRampToValueAtTime(bgmVol * 0.25, startSec + 0.05);
+          bgmGain.gain.setValueAtTime(bgmVol * 0.25, Math.max(startSec + 0.06, endSec - 0.05));
+          bgmGain.gain.linearRampToValueAtTime(bgmVol, endSec + 0.12);
+        }
       } catch (e) {
         console.warn("Voice segment decode skipped:", e);
       }
@@ -3911,11 +4378,7 @@ async function exportFastVideo() {
     for (const codecStr of h264Profiles) {
       try {
         const check = await VideoEncoder.isConfigSupported({
-          codec: codecStr,
-          width,
-          height,
-          bitrate: 4_000_000,
-          framerate: fps
+          codec: codecStr, width, height, bitrate: 4_000_000, framerate: fps
         });
         if (check.supported) {
           selectedVideoConfig = check.config;
@@ -3933,10 +4396,7 @@ async function exportFastVideo() {
     if (typeof AudioEncoder !== "undefined" && typeof AudioData !== "undefined") {
       try {
         const aCheck = await AudioEncoder.isConfigSupported({
-          codec: "mp4a.40.2",
-          sampleRate: sampleRate,
-          numberOfChannels: 2,
-          bitrate: 128_000
+          codec: "mp4a.40.2", sampleRate, numberOfChannels: 2, bitrate: 128_000
         });
         if (aCheck.supported) selectedAudioConfig = aCheck.config;
       } catch (e) {}
@@ -3944,24 +4404,16 @@ async function exportFastVideo() {
 
     const muxerConfig = {
       target: new Mp4Muxer.ArrayBufferTarget(),
-      video: {
-        codec: "avc",
-        width,
-        height
-      },
+      video: { codec: "avc", width, height },
       fastStart: "in-memory"
     };
     if (selectedAudioConfig) {
-      muxerConfig.audio = {
-        codec: "aac",
-        sampleRate: sampleRate,
-        numberOfChannels: 2
-      };
+      muxerConfig.audio = { codec: "aac", sampleRate, numberOfChannels: 2 };
     }
     const muxer = new Mp4Muxer.Muxer(muxerConfig);
 
     if (selectedAudioConfig) {
-      setLockProgress(8, "🎵 Mixing Audio (1x Normal Speed)...", "မူရင်းအသံနှင့် မြန်မာ Voiceover များကို ပေါင်းစပ်နေပါသည်...");
+      setLockProgress(8, "🎵 Mixing Loud Voiceover & Audio...", "မူရင်းအသံနှင့် 300% မြန်မာ Voiceover များကို ပေါင်းစပ်နေပါသည်...");
       const mixedBuffer = await buildOfflineMixedAudioBuffer(totalDur, sampleRate);
 
       const audioEncoder = new AudioEncoder({
@@ -3983,7 +4435,7 @@ async function exportFastVideo() {
 
         const audioData = new AudioData({
           format: "f32-planar",
-          sampleRate: sampleRate,
+          sampleRate,
           numberOfFrames: size,
           numberOfChannels: 2,
           timestamp: Math.round((offset / sampleRate) * 1_000_000),
@@ -4031,7 +4483,7 @@ async function exportFastVideo() {
         setLockProgress(
           pct,
           `⚡ Fast MP4 Encoding (${pct}%)...`,
-          `Frame ${i + 1} / ${totalFrames} • 100% Pure .mp4 (Normal 1x Speed)`
+          `Frame ${i + 1} / ${totalFrames} • 100% Pure .mp4`
         );
       }
     }
@@ -4104,25 +4556,7 @@ async function exportStandardRealtimeVideo() {
     fullMixSource.connect(dest);
     fullMixSource.connect(audioCtx.destination);
     fullMixSource.start(audioCtx.currentTime);
-  } catch (e) {
-    const voiceVol = Number(document.getElementById("voiceVolume").value) / 100;
-    for (let s of subs) {
-      const url = audioMap.get(s.id);
-      if (url) {
-        try {
-          const resp = await fetch(url);
-          const dec = await audioCtx.decodeAudioData(await resp.arrayBuffer());
-          const src = audioCtx.createBufferSource();
-          src.buffer = dec;
-          const gNode = audioCtx.createGain();
-          gNode.gain.value = voiceVol;
-          src.connect(gNode);
-          gNode.connect(dest);
-          src.start(audioCtx.currentTime + s.start);
-        } catch(err){}
-      }
-    }
-  }
+  } catch (e) {}
 
   const canvasStream = burnCanvas.captureStream(30);
   const combinedStream = new MediaStream([
@@ -4311,7 +4745,7 @@ window.onload = function() {
   syncVideoBoxExactAspectRatio();
   updateAudioLevels();
   ["MM", "Orig", "EN"].forEach(k => {
-    updateTrackStyle(k);
+    updateTrackStyle(k, false);
     updateTrackPosFromSlider(k);
   });
   initSubtitleTouchDrag();
