@@ -1,8 +1,10 @@
 /**
  * AI Studio All-in-One Master Backend Worker
+ * - Primary Model: gemini-3.8-flash (with automatic fallback to 2.0-flash & 1.5-flash)
  * - Dual Oxion AI API Keys (OXION_API_KEY_1 -> OXION_API_KEY_2 Auto-Failover)
- * - Dedicated Gemini Multimodal Audio Engine for Myanmar Songs (No Whisper Gibberish)
- * - Concise Poetic Myanmar Lyric Translation for Foreign Songs
+ * - Scroll-Stopping Dramatic Hook Engine for Story Maker & Story to Video
+ * - Auto Song Lyrics Lookup by Video Filename / Song Title (/api/fetch-lyrics)
+ * - Concise Poetic Myanmar Lyric Translation for Foreign Songs (/song & /translate)
  * - Triple-Engine Myanmar TTS (Render Python Backend + Edge WS + Direct HTTPS)
  */
 
@@ -22,6 +24,13 @@ const MYANMAR_VOICES = {
   male: "my-MM-ThihaNeural",
   female: "my-MM-NilarNeural",
 };
+
+const GEMINI_MODELS = [
+  "gemini-3.8-flash",
+  "gemini-2.0-flash",
+  "gemini-1.5-flash",
+  "gemini-1.5-pro",
+];
 
 // =====================================================
 // CORS
@@ -45,7 +54,7 @@ function json(data, status = 200) {
 }
 
 // =====================================================
-// API KEY COLLECTORS (AUTO-ROTATION HELPER)
+// API KEY COLLECTORS & FILENAME CLEANER
 // =====================================================
 
 function getOxionApiKeys(env) {
@@ -86,6 +95,19 @@ function getGeminiApiKeys(env) {
   return validKeys;
 }
 
+function cleanSongTitleFromFilename(rawName) {
+  if (!rawName) return "";
+  let s = String(rawName).trim().replace(/\.[a-zA-Z0-9]{2,4}$/, "");
+  s = s.replace(
+    /\b(official\s*mv|official\s*video|music\s*video|lyric\s*video|lyrics|audio|karaoke|hd|fhd|4k|1080p|720p|mp4|mp3|vocals?)\b/gi,
+    " "
+  );
+  s = s.replace(/[\[\(\{]\s*[\]\)\}]/g, " ");
+  s = s.replace(/[_]+/g, " ");
+  s = s.replace(/\s+/g, " ").replace(/^[-_.\s]+|[-_.\s]+$/g, "");
+  return s;
+}
+
 function isGibberishOrPlaceholder(str) {
   const s = String(str || "").trim();
   if (!s) return true;
@@ -115,6 +137,7 @@ export default {
           ok: true,
           service: "ai-studio-backend-master",
           status: "online",
+          primary_gemini_model: GEMINI_MODELS[0],
           oxion_keys_count: oxionKeys.length,
           oxion_key_1_configured: !!oxionKeys[0],
           oxion_key_2_configured: !!oxionKeys[1],
@@ -131,7 +154,9 @@ export default {
           routes: [
             "GET /",
             "GET /voices",
+            "POST /api/fetch-lyrics",
             "POST /transcribe",
+            "POST /api/karaoke",
             "POST /translate",
             "POST /song",
             "POST /recap",
@@ -158,18 +183,68 @@ export default {
       }
 
       // =================================================
-      // 1. AUDIO TRANSCRIPTION
-      // - Myanmar Song Mode -> STRICTLY Gemini Multimodal Audio (Never Whisper!)
-      // - Foreign / Recap Mode -> Groq Whisper + Gemini Audio Fallback
+      // 0. FETCH LYRICS BY SONG TITLE OR VIDEO FILENAME
       // =================================================
-      if (url.pathname === "/transcribe" && request.method === "POST") {
+      if (url.pathname === "/api/fetch-lyrics" && request.method === "POST") {
+        const body = await request.json().catch(() => ({}));
+        const cleanedTitle = cleanSongTitleFromFilename(body?.song_title || "");
+        if (!cleanedTitle) {
+          return json({ error: "သီချင်းအမည် ရိုက်ထည့်ပေးပါ။" }, 400);
+        }
+
+        const prompt = `
+သင်သည် မြန်မာသီချင်းနှင့် နိုင်ငံတကာသီချင်းစာသားများကို အတိအကျ သိရှိသော သီချင်းစာသားဘဏ် (Lyrics Database) ဖြစ်သည်။
+ရှာဖွေလိုသော သီချင်းအမည် / ဖိုင်အမည်: "${cleanedTitle}"
+
+စည်းမျဉ်းများ:
+1. အကယ်၍ သီချင်းခေါင်းစဉ် တစ်ခုတည်း (ဥပမာ - "တမ်းတ") သို့မဟုတ် ဗီဒီယိုဖိုင်အမည် ပေးထားပါက အကျော်ကြားဆုံး သက်ဆိုင်ရာ သီချင်း၏ စာသားအပြည့်အစုံကို ထုတ်ပေးပါ။
+2. စာသားများကို ကာရာအိုကေ စာတန်းထိုးရန်အတွက် တစ်ကြောင်းချင်းစီ အစဉ်လိုက် ထုတ်ပေးပါ။
+3. Output MUST be ONLY a valid JSON array of strings:
+[
+  "ပထမ စာကြောင်း...",
+  "ဒုတိယ စာကြောင်း..."
+]
+`;
+        const result = await callMasterAIWithFailover(prompt, env);
+        if (!result.ok) {
+          return json({ error: result.error || "Lyrics ရှာမတွေ့ပါ" }, 503);
+        }
+
+        const lines = parseJsonArray(result.text);
+        if (!Array.isArray(lines) || !lines.length) {
+          return json({ error: "သီချင်းစာသား ဖတ်မရပါ။" }, 422);
+        }
+
+        const cleanLines = lines
+          .map((l) => String(l || "").trim())
+          .filter((l) => l && !isGibberishOrPlaceholder(l));
+
+        return json({
+          ok: true,
+          song_title: cleanedTitle,
+          lyrics_text: cleanLines.join("\n"),
+          lines: cleanLines,
+        });
+      }
+
+      // =================================================
+      // 1. AUDIO TRANSCRIPTION & HYBRID KARAOKE ALIGNMENT
+      // =================================================
+      if ((url.pathname === "/transcribe" || url.pathname === "/api/karaoke") && request.method === "POST") {
         const incoming = await request.formData();
         const file = incoming.get("file");
         const songLangHint = String(incoming.get("lang") || "").toLowerCase();
         const modeHint = String(incoming.get("mode") || "").toLowerCase();
+        const rawSongTitle = String(incoming.get("song_title") || "").trim();
+        let customLyrics = String(incoming.get("lyrics") || "").trim();
 
         if (!file || typeof file === "string") {
           return json({ error: "Video သို့မဟုတ် Audio file မတွေ့ရှိပါ။" }, 400);
+        }
+
+        let songTitle = cleanSongTitleFromFilename(rawSongTitle || file.name || "");
+        if (/^(vocal_isolated|audio|video|vid_\d+|lv_\d+|capcut.*|inshot.*|\d+)$/i.test(songTitle)) {
+          songTitle = "";
         }
 
         const isMyanmarSongMode =
@@ -177,35 +252,54 @@ export default {
           songLangHint === "my" ||
           songLangHint === "myanmar";
 
-        // MYANMAR SONG MODE: Use Gemini Multimodal Audio ONLY (Never fall back to Groq Whisper!)
-        if (isMyanmarSongMode) {
-          if (geminiKeys.length === 0) {
+        // Pre-fetch lyrics if songTitle exists and customLyrics is empty
+        if (songTitle && !customLyrics) {
+          const lPrompt = `Provide the accurate sung lyrics line-by-line for the song: "${songTitle}". Output ONLY a JSON array of strings.`;
+          const lRes = await callMasterAIWithFailover(lPrompt, env);
+          if (lRes.ok) {
+            const pLines = parseJsonArray(lRes.text);
+            if (Array.isArray(pLines) && pLines.length > 2) {
+              customLyrics = pLines.map((x) => String(x || "").trim()).filter(Boolean).join("\n");
+            }
+          }
+        }
+
+        // MYANMAR SONG MODE OR HYBRID LYRICS MODE -> Use Gemini 3.8 Flash Multimodal Audio
+        if (isMyanmarSongMode || songTitle || customLyrics) {
+          if (geminiKeys.length > 0) {
+            const geminiAudioResult = await transcribeAudioWithGemini(
+              file,
+              geminiKeys,
+              isMyanmarSongMode ? "my" : "auto",
+              songTitle,
+              customLyrics
+            );
+            if (geminiAudioResult.ok && geminiAudioResult.segments.length > 0) {
+              return json({
+                ok: true,
+                engine: geminiAudioResult.engine || "gemini-3.8-flash-audio",
+                language: isMyanmarSongMode ? "my" : "auto",
+                duration: geminiAudioResult.duration,
+                text: geminiAudioResult.segments.map((s) => s.text).join(" "),
+                segments: geminiAudioResult.segments,
+              });
+            }
+            if (isMyanmarSongMode) {
+              return json(
+                {
+                  error:
+                    geminiAudioResult.error ||
+                    "မြန်မာသီချင်းဆိုသံကို Gemini Audio ဖြင့် နားထောင်ရာတွင် စာသားမတွေ့ရှိပါ။",
+                },
+                422
+              );
+            }
+          } else if (isMyanmarSongMode) {
             return json(
-              { error: "မြန်မာသီချင်း နားထောင်ရန် GEMINI_API_KEY လိုအပ်ပါသည်။ Cloudflare Secrets တွင် စစ်ဆေးပါ။" },
+              { error: "မြန်မာသီချင်း နားထောင်ရန် GEMINI_API_KEY လိုအပ်ပါသည်။" },
               500
             );
           }
-
-          const geminiAudioResult = await transcribeAudioWithGemini(file, geminiKeys, "my");
-          if (geminiAudioResult.ok && geminiAudioResult.segments.length > 0) {
-            return json({
-              ok: true,
-              engine: "gemini-audio-myanmar",
-              language: "my",
-              duration: geminiAudioResult.duration,
-              text: geminiAudioResult.segments.map((s) => s.text).join(" "),
-              segments: geminiAudioResult.segments,
-            });
-          }
-
-          return json(
-            {
-              error:
-                geminiAudioResult.error ||
-                "မြန်မာသီချင်းဆိုသံကို Gemini Audio ဖြင့် နားထောင်ရာတွင် စာသားမတွေ့ရှိပါ (သို့မဟုတ် ဖိုင်ဆိုဒ်ကြီးနေပါသည်)။",
-            },
-            422
-          );
         }
 
         // FOREIGN SONG / MOVIE RECAP MODE: Try Groq Whisper first for timestamps
@@ -258,13 +352,12 @@ export default {
           }
         }
 
-        // Fallback to Gemini Audio Transcription for foreign songs if Whisper failed
         if (geminiKeys.length > 0) {
-          const fallbackAudio = await transcribeAudioWithGemini(file, geminiKeys, "auto");
+          const fallbackAudio = await transcribeAudioWithGemini(file, geminiKeys, "auto", songTitle, customLyrics);
           if (fallbackAudio.ok && fallbackAudio.segments.length > 0) {
             return json({
               ok: true,
-              engine: "gemini-audio-fallback",
+              engine: fallbackAudio.engine || "gemini-3.8-flash-audio",
               language: fallbackAudio.language || "auto",
               duration: fallbackAudio.duration,
               text: fallbackAudio.segments.map((s) => s.text).join(" "),
@@ -289,7 +382,7 @@ export default {
         const isTargetEn = body?.targetLang === "en";
         const targetLangDesc = isTargetEn
           ? "clear, natural, poetic English"
-          : "VERY SHORT, concise, poetic Myanmar Burmese (maximum 4 to 7 Burmese words per line so it fits on 1 short subtitle line)";
+          : "VERY SHORT, concise, poetic Myanmar Burmese (maximum 4 to 6 Burmese words per line so it fits on 1 short subtitle line)";
 
         if (!Array.isArray(texts) || texts.length === 0) {
           return json({ ok: true, translations: [] });
@@ -309,10 +402,10 @@ You are an expert subtitle and song lyric translator for Myanmar and English.
 Translate every line in the input JSON array into ${targetLangDesc}.
 
 CRITICAL RULES:
-1. When translating into Myanmar Burmese, make each line ULTRA-CONCISE and poetic (only 4 to 7 words/phrases). Never write long, wordy prose sentences. Use short pronouns like "ကိုယ်", "မင်း", "တို့" instead of "ကျွန်တော်", "ခင်ဗျား".
-2. Never output placeholder text like "random text", "gibberish", or "အဓိပ္ပာယ်မရှိသော စာသား".
-3. Keep EXACTLY ${batch.length} items in the exact same order.
-4. Each item must be a single line string without newline characters.
+1. When translating into Myanmar Burmese, you MUST output genuine Myanmar Burmese script (never repeat the English text).
+2. Make each Myanmar line ULTRA-CONCISE and poetic (only 4 to 6 words/phrases). Use short pronouns like "ကိုယ်", "မင်း", "တို့" instead of "ကျွန်တော်", "ခင်ဗျား".
+3. Never output placeholder text like "random text", "gibberish", or "အဓိပ္ပာယ်မရှိသော စာသား".
+4. Keep EXACTLY ${batch.length} items in the exact same order.
 5. Output ONLY a valid JSON array of strings. No markdown, no explanation.
 
 Input:
@@ -380,10 +473,9 @@ ${JSON.stringify(batch)}
 အောက်ပါ သီချင်းစာကြောင်း တစ်ကြောင်းချင်းစီအတွက် မူရင်းစာသား (orig)၊ အင်္ဂလိပ်ဘာသာပြန် (en) နှင့် အလွန်ကျစ်လျစ်တိုတောင်းသော မြန်မာဘာသာပြန် (mm) တို့ကို ထုတ်ပေးပါ။
 
 အလွန်အရေးကြီးသော စည်းမျဉ်းများ:
-1. "mm" (မြန်မာစာတန်း) သည် ဗီဒီယိုပေါ်တွင် (၁) ကြောင်းတည်း လှပစွာ ပေါ်စေရန် အလွန်တိုတိုနှင့် အဓိပ္ပာယ်ထိမိသော သီချင်းစာသားစတိုင် (စကားလုံး ၄ လုံး မှ ၇ လုံးခန့်သာ) ရေးပေးရမည်။ စာကြောင်းအရှည်ကြီး လုံးဝ မရေးရပါ။
-   - ဥပမာ - "But I know the truth, you're just in love with yourself" ဆိုပါက "ဒါပေမဲ့ ငါသိပါတယ်၊ မင်းက မင်းကိုယ်မင်းပဲ ချစ်နေတာပါ" ဟု အရှည်ကြီး မရေးဘဲ "မင်းက ကိုယ့်ကိုယ်ကိုယ်ပဲ ချစ်သူပါ" သို့မဟုတ် "ငါသိတယ် မင်းက အတ္တသမားပါ" ဟု တိုတိုကျစ်လျစ်စွာ ရေးပါ။
-2. "ကျွန်တော်/ကျွန်မ/ခင်ဗျား/သင်" အစား သီချင်းဆန်သော "ကိုယ်/ငါ/မင်း/တို့" ကိုသာ သုံးပါ။
-3. မည်သည့်အခါမှ "random text", "gibberish", "အဓိပ္ပာယ်မရှိသော စာသား" ဟု မရေးရပါ။
+1. "mm" သည် မြန်မာယူနီကုဒ်စာသား စစ်စစ် ဖြစ်ရမည် (အင်္ဂလိပ်စာသား လုံးဝ ပြန်မထည့်ရပါ)။
+2. "mm" (မြန်မာစာတန်း) သည် ဗီဒီယိုပေါ်တွင် (၁) ကြောင်းတည်း လှပစွာ ပေါ်စေရန် အလွန်တိုတိုနှင့် အဓိပ္ပာယ်ထိမိသော သီချင်းစာသားစတိုင် (စကားလုံး ၄ လုံး မှ ၆ လုံးခန့်သာ) ရေးပေးရမည်။ စာကြောင်းအရှည်ကြီး လုံးဝ မရေးရပါ။
+3. "ကျွန်တော်/ကျွန်မ/ခင်ဗျား/သင်" အစား သီချင်းဆန်သော "ကိုယ်/ငါ/မင်း/တို့" ကိုသာ သုံးပါ။
 4. စာကြောင်းအရေအတွက် (${inputPayload.length} ကြောင်း) နှင့် အစီအစဉ် (idx) အတိအကျ တူညီရမည်။ (\n မပါရ)။
 5. Output MUST be ONLY a valid JSON array in this exact format:
 [
@@ -439,7 +531,7 @@ ${JSON.stringify(inputPayload)}
       }
 
       // =================================================
-      // 3. MOVIE RECAP (FULL TIMELINE COVERAGE)
+      // 3. MOVIE RECAP (FULL TIMELINE COVERAGE + OPENING HOOK)
       // =================================================
       if (url.pathname === "/recap" && request.method === "POST") {
         if (oxionKeys.length === 0 && geminiKeys.length === 0 && !env.GROQ_API_KEY) {
@@ -484,7 +576,7 @@ ${JSON.stringify(inputPayload)}
 - Mood / Tone: ${toneGuides[tone] || toneGuides.narrator}
 
 အလွန်အရေးကြီးသော စည်းမျဉ်းများ:
-1. Myanmar Burmese စကားပြောစစ်စစ်ဖြင့် ရေးပါ။
+1. ပထမဆုံး စာကြောင်း (id: 1) ကို ပရိသတ် ဖုန်းပွတ်နေရာမှ ချက်ချင်း ရပ်ကြည့်ချင်လာစေမည့် အလွန်စိတ်ဝင်စားဖွယ် အဖွင့် Hook ဖြင့် စတင်ပါ။
 2. Narration timestamps (start/end) များကို 0 စက္ကန့်မှ စတင်၍ ဗီဒီယိုအဆုံး ${Math.round(videoDuration)} စက္ကန့်အထိ ညီညီညာညာ ဖြန့်ခွဲရေးပေးရမည်။
 3. စာကြောင်းတစ်ခုလျှင် ဖတ်ရလွယ်စေရန် တိုတိုရှင်းရှင်း (စကားလုံး ၆ လုံး မှ ၁၀ လုံးခန့်သာ) ရေးပါ။
 4. Output MUST be ONLY valid JSON array:
@@ -494,7 +586,7 @@ ${JSON.stringify(inputPayload)}
     "id": 1,
     "start": 0.0,
     "end": 4.5,
-    "recap_mm": "ဇာတ်လမ်းစစချင်းမှာတော့..."
+    "recap_mm": "ဆွဲဆောင်မှုရှိသော အဖွင့်စာသား..."
   }
 ]
 
@@ -522,7 +614,7 @@ ${JSON.stringify(sampledSegments)}
       }
 
       // =================================================
-      // 4. STORY GENERATOR
+      // 4. STORY GENERATOR (CAPTIVATING HOOK FOR STORY MAKER & STORY TO VIDEO)
       // =================================================
       if (url.pathname === "/story" && request.method === "POST") {
         if (oxionKeys.length === 0 && geminiKeys.length === 0 && !env.GROQ_API_KEY) {
@@ -542,20 +634,29 @@ ${JSON.stringify(sampledSegments)}
           return json({ error: "Story topic လိုအပ်ပါသည်။" }, 400);
         }
 
+        const hookInstruction = `
+🔥 အလွန်အရေးကြီးသော အဖွင့်ပိုင်း (SCENE 1 CAPTIVATING HOOK RULE):
+- ပထမဆုံး အခန်း (Scene 1) ကို "တစ်ခါတုန်းက..." သို့မဟုတ် ရိုးရှင်းပျင်းရိဖွယ် မိတ်ဆက်စကားဖြင့် လုံးဝ မစရပါ!
+- ပထမဆုံး စက္ကန့်ပိုင်းအတွင်း နားထောင်သူ ကြက်သီးထသွားစေမည့်၊ သိချင်စိတ် ပြင်းပြပြီး ဗီဒီယိုကို ဆက်မကြည့်ဘဲ မနေနိုင်အောင် ဆွဲဆောင်နိုင်သည့် (Scroll-Stopping Dramatic Hook / ထူးဆန်းထိတ်လန့်ဖွယ် အဖြစ်အပျက် / အသက်လုရသည့် အခိုက်အတန့် သို့မဟုတ် လျှို့ဝှက်ဆန်းကြယ် မေးခွန်းထုတ်ချက်) ဖြင့် ချက်ချင်း စတင်ရေးသားပါ။
+- အခန်းတိုင်းကို စကားပြောဟန် သဘာဝကျကျ၊ ရုပ်ရှင်ဆန်ဆန် စိတ်ဝင်စားဖွယ် အရှိန်အဟုန်မပြတ် စီးဆင်းအောင် ရေးသားပါ။
+`;
+
         let prompt = "";
 
         if (type === "series") {
           const epCount = Math.min(6, Math.max(2, Number(episodes) || 2));
           prompt = `
-သင်သည် နာမည်ကြီး Social Media Short Series ရေးသားသူ ပုံပြင်နှင့် ဇာတ်လမ်းရေးဆရာ ဖြစ်သည်။
+သင်သည် ပရိသတ် သန်းချီကြည့်ရှုသော Viral Short Video ဇာတ်လမ်းတွဲ ရေးသားသူ ပညာရှင် ဖြစ်သည်။
 အောက်ပါ ခေါင်းစဉ်ကို အခြေခံ၍ စုစုပေါင်း ${epCount} ပိုင်း (Episode 1 မှ Episode ${epCount} အထိ) ပါဝင်သော ဇာတ်လမ်းတွဲကို ရေးပေးပါ။
 
 ခေါင်းစဉ်: "${topic}"
 အမျိုးအစား: ${category}
 အပိုင်း အရေအတွက်: စုစုပေါင်း ${epCount} ပိုင်း (တစ်ပိုင်းလျှင် အခန်း ၁၅ ခန်း အတိအကျ)
 
+${hookInstruction}
+
 စည်းမျဉ်းများ:
-1. Episode တစ်ခုစီတွင် scene 1 မှ scene 15 အထိ အခန်း ၁၅ ခန်း အတိအကျ ပါဝင်ရမည်။
+1. Episode တစ်ခုစီ၏ Scene 1 တိုင်းတွင် ပရိသတ်ကို ချက်ချင်း ဖမ်းစားနိုင်သော အပြင်းထန်ဆုံး Hook ဖြင့် စတင်ပြီး၊ အပိုင်းအဆုံး (Scene 15) တွင် နောက်တစ်ပိုင်း ဆက်ကြည့်ချင်လာအောင် Cliffhanger ဖြင့် အဆုံးသတ်ပါ။
 2. Scene တစ်ခုစီ၏ မြန်မာစာသား (text_mm) သည် စကားလုံးရေ ၃၅ လုံးမှ ၄၅ လုံးခန့် ရှိရမည်။
 3. image_prompt_en ကို Cinematic English visual prompt အဖြစ် ရေးပါ။
 4. Output MUST be ONLY valid JSON array:
@@ -563,8 +664,8 @@ ${JSON.stringify(sampledSegments)}
   {
     "episode": 1,
     "scene": 1,
-    "text_mm": "ညဉ့်နက်သန်းခေါင်ယံ တောနက်ကြီးတစ်ခုအတွင်းမှာ...",
-    "image_prompt_en": "Dark foggy mysterious forest at midnight, cinematic lighting, 8k"
+    "text_mm": "ညသန်းခေါင် ၁၂ နာရီတိတိမှာ သင့်အိပ်ခန်းတံခါးကို အပြင်ကမဟုတ်ဘဲ အထဲကနေ လာခေါက်နေသံ ကြားလိုက်ရရင် သင်ဘာလုပ်မလဲ...",
+    "image_prompt_en": "Eerie bedroom door at midnight, dramatic shadows, cinematic horror lighting, 8k"
   }
 ]
 `;
@@ -572,22 +673,25 @@ ${JSON.stringify(sampledSegments)}
           const numDur = Number(duration);
           const sceneCount = numDur === 1 ? 8 : (numDur === 2 ? 15 : (numDur === 3 ? 20 : 32));
           prompt = `
-Write a cinematic scene-by-scene complete story for Faceless AI Video.
+သင်သည် ပရိသတ် သန်းချီကြည့်ရှုသော Viral Faceless AI Video ဇာတ်လမ်းရေးဆရာ ဖြစ်သည်။
 Topic: "${topic}"
 Category: ${category}
 Duration: ${numDur} Minutes
 Scenes: Exactly ${sceneCount} scenes.
 
+${hookInstruction}
+
 Rules:
-1. Each scene's narration (text_mm) MUST be 35 to 45 Burmese words long in natural spoken Myanmar Burmese.
-2. image_prompt_en MUST be English and highly cinematic.
-3. Output ONLY valid JSON array:
+1. Scene 1 ကို ပရိသတ် ဖုန်းပွတ်နေရာမှ ရပ်ပြီး နားထောင်ချင်လာစေမည့် အပြင်းထန်ဆုံး စိတ်ဝင်စားဖွယ် Hook ဖြင့် စတင်ပါ။
+2. Each scene's narration (text_mm) MUST be 35 to 45 Burmese words long in natural spoken Myanmar Burmese.
+3. image_prompt_en MUST be English and highly cinematic.
+4. Output ONLY valid JSON array:
 [
   {
     "episode": 1,
     "scene": 1,
-    "text_mm": "ညဉ့်နက်သန်းခေါင်ယံ တောနက်ကြီးတစ်ခုအတွင်းမှာ...",
-    "image_prompt_en": "Cinematic opening scene, atmospheric lighting, 8k"
+    "text_mm": "လူတိုင်း မေ့ပျောက်ထားကြတဲ့ ဒီရွာပျက်ကြီးထဲကို ခြေချမိသူတိုင်း ဘာကြောင့် မနက်မိုးလင်းတာနဲ့ ပျောက်ဆုံးသွားကြရတာလဲ...",
+    "image_prompt_en": "Abandoned mysterious village in deep fog, cinematic dramatic lighting, 8k resolution"
   }
 ]
 `;
@@ -813,7 +917,7 @@ Rules:
 
 // =====================================================
 // MASTER AI ROUTER:
-// 1. OXION_API_KEY_1 -> 2. OXION_API_KEY_2 -> 3. GEMINI -> 4. GROQ
+// 1. GEMINI (gemini-3.8-flash) -> 2. OXION_KEY_1 & 2 -> 3. GROQ
 // =====================================================
 
 async function callMasterAIWithFailover(prompt, env) {
@@ -821,15 +925,7 @@ async function callMasterAIWithFailover(prompt, env) {
   const oxionKeys = getOxionApiKeys(env);
   const geminiKeys = getGeminiApiKeys(env);
 
-  for (let kIdx = 0; kIdx < oxionKeys.length; kIdx++) {
-    const oxKey = oxionKeys[kIdx];
-    const oxRes = await callOxionSingleKey(prompt, oxKey, env.OXION_BASE_URL, env.OXION_MODEL, kIdx + 1);
-    if (oxRes.ok && oxRes.text) {
-      return oxRes;
-    }
-    allErrors.push(...(oxRes.errors || []));
-  }
-
+  // 1. Try Gemini Direct Keys First (gemini-3.8-flash -> gemini-2.0-flash -> gemini-1.5-flash)
   for (let gIdx = 0; gIdx < geminiKeys.length; gIdx++) {
     const gemKey = geminiKeys[gIdx];
     const gemRes = await callGeminiWithFallback(prompt, gemKey);
@@ -839,6 +935,17 @@ async function callMasterAIWithFailover(prompt, env) {
     allErrors.push(...(gemRes.modelErrors || []));
   }
 
+  // 2. Try Oxion AI Keys (Key 1 -> Key 2)
+  for (let kIdx = 0; kIdx < oxionKeys.length; kIdx++) {
+    const oxKey = oxionKeys[kIdx];
+    const oxRes = await callOxionSingleKey(prompt, oxKey, env.OXION_BASE_URL, env.OXION_MODEL, kIdx + 1);
+    if (oxRes.ok && oxRes.text) {
+      return oxRes;
+    }
+    allErrors.push(...(oxRes.errors || []));
+  }
+
+  // 3. Fallback to Groq Llama-3.3-70b
   if (env.GROQ_API_KEY) {
     try {
       const groqResp = await fetch("https://api.groq.com/openai/v1/chat/completions", {
@@ -853,7 +960,7 @@ async function callMasterAIWithFailover(prompt, env) {
             { role: "system", content: "You are a precise JSON generator. Output valid JSON only." },
             { role: "user", content: prompt },
           ],
-          temperature: 0.2,
+          temperature: 0.25,
         }),
       });
       if (groqResp.ok) {
@@ -873,7 +980,7 @@ async function callMasterAIWithFailover(prompt, env) {
   return {
     ok: false,
     status: 503,
-    error: "AI Models (Oxion Key 1, Key 2 & Gemini) အားလုံး ချိတ်ဆက်၍ မရနိုင်သေးပါ။",
+    error: "AI Models (Gemini 3.8 Flash, Oxion Key 1 & 2) အားလုံး ချိတ်ဆက်၍ မရနိုင်သေးပါ။",
     modelErrors: allErrors,
   };
 }
@@ -888,7 +995,7 @@ async function callOxionSingleKey(prompt, apiKey, customBaseUrl, customModel, ke
 
   const models = customModel
     ? [customModel]
-    : ["gemini-2.5-flash", "gemini-2.0-flash", "gpt-4o-mini"];
+    : ["gemini-3.8-flash", "gemini-2.0-flash", "gemini-1.5-flash", "gpt-4o-mini"];
 
   const errors = [];
 
@@ -908,7 +1015,7 @@ async function callOxionSingleKey(prompt, apiKey, customBaseUrl, customModel, ke
               { role: "system", content: "Output ONLY valid JSON without markdown formatting." },
               { role: "user", content: prompt },
             ],
-            temperature: 0.2,
+            temperature: 0.25,
           }),
         });
 
@@ -942,10 +1049,11 @@ async function callOxionSingleKey(prompt, apiKey, customBaseUrl, customModel, ke
             message: data?.error?.message || `HTTP ${status}`,
           });
 
-          if ([401, 402, 403, 429].includes(status)) {
+          if ([401, 402, 403].includes(status)) {
             return { ok: false, errors };
           }
-          if (status === 404) break;
+          // Try next model on 404 or 400
+          continue;
         }
       } catch (err) {
         errors.push({
@@ -963,7 +1071,7 @@ async function callOxionSingleKey(prompt, apiKey, customBaseUrl, customModel, ke
 }
 
 // =====================================================
-// GEMINI MULTIMODAL AUDIO TRANSCRIPTION (FOR MYANMAR SONGS)
+// GEMINI MULTIMODAL AUDIO TRANSCRIPTION (GEMINI-3.8-FLASH)
 // =====================================================
 
 function arrayBufferToBase64(buffer) {
@@ -976,7 +1084,7 @@ function arrayBufferToBase64(buffer) {
   return btoa(binary);
 }
 
-async function transcribeAudioWithGemini(fileBlob, geminiKeys, langHint = "my") {
+async function transcribeAudioWithGemini(fileBlob, geminiKeys, langHint = "my", songTitle = "", referenceLyrics = "") {
   try {
     const arrayBuf = await fileBlob.arrayBuffer();
     if (arrayBuf.byteLength > 19 * 1024 * 1024) {
@@ -986,33 +1094,38 @@ async function transcribeAudioWithGemini(fileBlob, geminiKeys, langHint = "my") 
     const base64Audio = arrayBufferToBase64(arrayBuf);
     const mimeType = fileBlob.type && fileBlob.type.startsWith("audio/") ? fileBlob.type : "audio/wav";
 
+    const titleContext = songTitle ? `သီချင်းအမည်/ဖိုင်အမည်: "${songTitle}"\n` : "";
+    const lyricsContext = referenceLyrics
+      ? `အောက်ပါ မူရင်းသီချင်းစာသားအမှန်ကို အခြေခံ၍ အသံဖိုင်ထဲတွင် အဆိုတော် သီဆိုသွားသည့် အချိန် (start နှင့် end စက္ကန့်) များနှင့် တိကျစွာ ချိန်ညှိ (Align) ပေးပါ:\n${referenceLyrics}\n`
+      : "";
+
     const prompt =
       langHint === "my"
         ? `
 သင်သည် မြန်မာသီချင်းများကို နားထောင်ပြီး စာသားနှင့် အချိန် (Timestamps) အတိအကျ ထုတ်ပေးသော ပညာရှင် ဖြစ်သည်။
+${titleContext}${lyricsContext}
 ဤအသံဖိုင်ထဲရှိ နောက်ခံတီးလုံးသံများ (Guitar, Drums, Music) ကို လုံးဝ လျစ်လျူရှုပြီး အဆိုတော် သီဆိုနေသော မြန်မာသီချင်းစာသား အစစ်အမှန်ကိုသာ နားထောင်၍ မြန်မာယူနီကုဒ်စာသားဖြင့် ထုတ်ပေးပါ။
 
 အလွန်အရေးကြီးသော စည်းမျဉ်းများ:
 1. အဆိုတော် စတင်သီဆိုသည့် စက္ကန့်အတိအကျကို "start" တွင်ထားပြီး စာကြောင်းဆုံးသည့် စက္ကန့်ကို "end" တွင် ထားပါ။ တီးလုံးသီးသန့် လာနေချိန်များကို မထည့်ရပါ။
 2. စာကြောင်းတစ်ကြောင်းလျှင် ကာရာအိုကေ စာတန်းထိုးရန် သင့်တော်သော အရှည် (စက္ကန့် ၂.၅ မှ ၄.၅ စက္ကန့်စာခန့်) ပိုင်းဖြတ်ပေးပါ။
-3. မည်သည့်အခါမှ "random gibberish", "random text", "အဓိပ္ပာယ်မရှိသော စာသား" သို့မဟုတ် အခြားဘာသာစကား အမှားများ လုံးဝ မထည့်ရပါ။ မြန်မာသီချင်းစာသား စစ်စစ်ကိုသာ ရေးပါ။
+3. မည်သည့်အခါမှ "random gibberish", "random text", "အဓိပ္ပာယ်မရှိသော စာသား" လုံးဝ မထည့်ရပါ။ မြန်မာသီချင်းစာသား စစ်စစ်ကိုသာ ရေးပါ။
 4. Output MUST be ONLY a valid JSON array in this exact format:
 [
   { "id": 1, "start": 10.5, "end": 14.2, "text": "မြန်မာသီချင်းစာသား..." }
 ]
 `
         : `
-Listen carefully to the singing voice in this audio file (ignoring background instrumentals) and transcribe every sung lyric line with accurate start and end timestamps in seconds.
+Listen carefully to the singing voice in this audio file (ignoring background instrumentals) and transcribe/align every sung lyric line with accurate start and end timestamps in seconds.
+${titleContext}${lyricsContext}
 Output ONLY a valid JSON array:
 [
   { "id": 1, "start": 10.5, "end": 14.2, "text": "Lyric line..." }
 ]
 `;
 
-    const models = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-pro"];
-
     for (const apiKey of geminiKeys) {
-      for (const model of models) {
+      for (const model of GEMINI_MODELS) {
         try {
           const resp = await fetch(
             `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
@@ -1056,6 +1169,7 @@ Output ONLY a valid JSON array:
               if (cleanSegments.length > 0) {
                 return {
                   ok: true,
+                  engine: model,
                   language: langHint,
                   duration: cleanSegments[cleanSegments.length - 1].end,
                   segments: cleanSegments,
@@ -1073,20 +1187,13 @@ Output ONLY a valid JSON array:
 }
 
 // =====================================================
-// GEMINI MULTI-MODEL FALLBACK ENGINE
+// GEMINI MULTI-MODEL FALLBACK ENGINE (GEMINI-3.8-FLASH FIRST)
 // =====================================================
 
 async function callGeminiWithFallback(prompt, apiKey) {
-  const models = [
-    "gemini-2.5-flash",
-    "gemini-2.0-flash",
-    "gemini-1.5-flash",
-    "gemini-1.5-pro",
-  ];
-
   const errors = [];
 
-  for (const model of models) {
+  for (const model of GEMINI_MODELS) {
     for (let attempt = 1; attempt <= 2; attempt++) {
       try {
         const response = await fetch(
@@ -1101,7 +1208,7 @@ async function callGeminiWithFallback(prompt, apiKey) {
               contents: [{ parts: [{ text: prompt }] }],
               generationConfig: {
                 responseMimeType: "application/json",
-                temperature: 0.2,
+                temperature: 0.25,
               },
             }),
           }
@@ -1129,7 +1236,7 @@ async function callGeminiWithFallback(prompt, apiKey) {
           const message = data?.error?.message || `HTTP ${status}`;
           errors.push({ model, attempt, status, message });
 
-          if (status === 404) break;
+          if (status === 404 || status === 400) break;
 
           const retryable = [429, 500, 502, 503, 504].includes(status);
           if (!retryable) break;
@@ -1508,7 +1615,7 @@ function parseJsonArray(text) {
     const parsed = JSON.parse(clean);
     if (Array.isArray(parsed)) return parsed;
     if (typeof parsed === "object" && parsed !== null) {
-      for (const k of ["lyrics", "translations", "story", "episodes", "scenes", "data", "recap", "segments"]) {
+      for (const k of ["lyrics", "translations", "lines", "story", "episodes", "scenes", "data", "recap", "segments"]) {
         if (Array.isArray(parsed[k])) return parsed[k];
       }
       for (const k in parsed) {
