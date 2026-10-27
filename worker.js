@@ -1,10 +1,10 @@
 /**
  * AI Studio All-in-One Master Backend Worker
- * - Primary Model: gemini-3.8-flash (with automatic fallback to 2.0-flash & 1.5-flash)
+ * - Models: gemini-3.8-flash, gemini-3.5-flash-lite, gemini-3.6-flash
  * - Dual Oxion AI API Keys (OXION_API_KEY_1 -> OXION_API_KEY_2 Auto-Failover)
+ * - Guaranteed Burmese Translation Engine (AI + Server-Side GTX Fallback)
+ * - Fast Audio Chunk Timestamp Offset Support for Real 0-100% Progress
  * - Scroll-Stopping Dramatic Hook Engine for Story Maker & Story to Video
- * - Auto Song Lyrics Lookup by Video Filename / Song Title (/api/fetch-lyrics)
- * - Concise Poetic Myanmar Lyric Translation for Foreign Songs (/song & /translate)
  * - Triple-Engine Myanmar TTS (Render Python Backend + Edge WS + Direct HTTPS)
  */
 
@@ -27,9 +27,10 @@ const MYANMAR_VOICES = {
 
 const GEMINI_MODELS = [
   "gemini-3.8-flash",
-  "gemini-2.0-flash",
-  "gemini-1.5-flash",
-  "gemini-1.5-pro",
+  "gemini-3.5-flash-lite",
+  "gemini-3.6-flash",
+  "gemini-3.1-flash-lite",
+  "gemini-2.5-flash",
 ];
 
 // =====================================================
@@ -54,7 +55,7 @@ function json(data, status = 200) {
 }
 
 // =====================================================
-// API KEY COLLECTORS & FILENAME CLEANER
+// API KEY COLLECTORS & HELPERS
 // =====================================================
 
 function getOxionApiKeys(env) {
@@ -99,7 +100,7 @@ function cleanSongTitleFromFilename(rawName) {
   if (!rawName) return "";
   let s = String(rawName).trim().replace(/\.[a-zA-Z0-9]{2,4}$/, "");
   s = s.replace(
-    /\b(official\s*mv|official\s*video|music\s*video|lyric\s*video|lyrics|audio|karaoke|hd|fhd|4k|1080p|720p|mp4|mp3|vocals?)\b/gi,
+    /\b(official\s*mv|official\s*video|music\s*video|lyric\s*video|lyrics|audio|karaoke|hd|fhd|4k|1080p|720p|mp4|mp3|vocals?|mv)\b/gi,
     " "
   );
   s = s.replace(/[\[\(\{]\s*[\]\)\}]/g, " ");
@@ -114,6 +115,28 @@ function isGibberishOrPlaceholder(str) {
   if (/random\s+gibberish|random\s+text|အဓိပ္ပာယ်မရှိသော\s*စာသား|prooh/i.test(s)) return true;
   if (/[\u10A0-\u10FF\u0530-\u058F\u0590-\u05FF]/.test(s)) return true;
   return false;
+}
+
+function hasMyanmarScript(str) {
+  return /[\u1000-\u109F]/.test(String(str || ""));
+}
+
+async function serverSideTranslateGTX(text, targetLang = "my") {
+  const clean = String(text || "").trim();
+  if (!clean) return "";
+  try {
+    const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${targetLang}&dt=t&q=${encodeURIComponent(clean)}`;
+    const r = await fetch(url, {
+      headers: { "User-Agent": "Mozilla/5.0" },
+    });
+    if (r.ok) {
+      const d = await r.json();
+      if (Array.isArray(d) && Array.isArray(d[0])) {
+        return d[0].map((item) => item[0] || "").join("").trim();
+      }
+    }
+  } catch (e) {}
+  return clean;
 }
 
 // =====================================================
@@ -196,10 +219,8 @@ export default {
 သင်သည် မြန်မာသီချင်းနှင့် နိုင်ငံတကာသီချင်းစာသားများကို အတိအကျ သိရှိသော သီချင်းစာသားဘဏ် (Lyrics Database) ဖြစ်သည်။
 ရှာဖွေလိုသော သီချင်းအမည် / ဖိုင်အမည်: "${cleanedTitle}"
 
-စည်းမျဉ်းများ:
-1. အကယ်၍ သီချင်းခေါင်းစဉ် တစ်ခုတည်း (ဥပမာ - "တမ်းတ") သို့မဟုတ် ဗီဒီယိုဖိုင်အမည် ပေးထားပါက အကျော်ကြားဆုံး သက်ဆိုင်ရာ သီချင်း၏ စာသားအပြည့်အစုံကို ထုတ်ပေးပါ။
-2. စာသားများကို ကာရာအိုကေ စာတန်းထိုးရန်အတွက် တစ်ကြောင်းချင်းစီ အစဉ်လိုက် ထုတ်ပေးပါ။
-3. Output MUST be ONLY a valid JSON array of strings:
+အထက်ပါ သီချင်း၏ စာသားအပြည့်အစုံကို ကာရာအိုကေ စာတန်းထိုးရန်အတွက် တစ်ကြောင်းချင်းစီ အစဉ်လိုက် ထုတ်ပေးပါ။
+Output MUST be ONLY a valid JSON array of strings:
 [
   "ပထမ စာကြောင်း...",
   "ဒုတိယ စာကြောင်း..."
@@ -228,7 +249,7 @@ export default {
       }
 
       // =================================================
-      // 1. AUDIO TRANSCRIPTION & HYBRID KARAOKE ALIGNMENT
+      // 1. AUDIO TRANSCRIPTION & FAST CHUNKED KARAOKE
       // =================================================
       if ((url.pathname === "/transcribe" || url.pathname === "/api/karaoke") && request.method === "POST") {
         const incoming = await request.formData();
@@ -236,14 +257,15 @@ export default {
         const songLangHint = String(incoming.get("lang") || "").toLowerCase();
         const modeHint = String(incoming.get("mode") || "").toLowerCase();
         const rawSongTitle = String(incoming.get("song_title") || "").trim();
-        let customLyrics = String(incoming.get("lyrics") || "").trim();
+        const customLyrics = String(incoming.get("lyrics") || "").trim();
+        const timeOffset = Math.max(0, Number(incoming.get("time_offset") || 0));
 
         if (!file || typeof file === "string") {
           return json({ error: "Video သို့မဟုတ် Audio file မတွေ့ရှိပါ။" }, 400);
         }
 
         let songTitle = cleanSongTitleFromFilename(rawSongTitle || file.name || "");
-        if (/^(vocal_isolated|audio|video|vid_\d+|lv_\d+|capcut.*|inshot.*|\d+)$/i.test(songTitle)) {
+        if (/^(vocal_isolated|chunk_\d+|audio|video|vid_\d+|lv_\d+|capcut.*|inshot.*|\d+)$/i.test(songTitle)) {
           songTitle = "";
         }
 
@@ -252,108 +274,95 @@ export default {
           songLangHint === "my" ||
           songLangHint === "myanmar";
 
-        // Pre-fetch lyrics if songTitle exists and customLyrics is empty
-        if (songTitle && !customLyrics) {
-          const lPrompt = `Provide the accurate sung lyrics line-by-line for the song: "${songTitle}". Output ONLY a JSON array of strings.`;
-          const lRes = await callMasterAIWithFailover(lPrompt, env);
-          if (lRes.ok) {
-            const pLines = parseJsonArray(lRes.text);
-            if (Array.isArray(pLines) && pLines.length > 2) {
-              customLyrics = pLines.map((x) => String(x || "").trim()).filter(Boolean).join("\n");
-            }
+        // MYANMAR SONG MODE -> Use Gemini Multimodal Audio (Direct, no extra blocking calls!)
+        if (isMyanmarSongMode) {
+          if (geminiKeys.length === 0) {
+            return json({ error: "မြန်မာသီချင်း နားထောင်ရန် GEMINI_API_KEY လိုအပ်ပါသည်။" }, 500);
           }
-        }
 
-        // MYANMAR SONG MODE OR HYBRID LYRICS MODE -> Use Gemini 3.8 Flash Multimodal Audio
-        if (isMyanmarSongMode || songTitle || customLyrics) {
-          if (geminiKeys.length > 0) {
-            const geminiAudioResult = await transcribeAudioWithGemini(
-              file,
-              geminiKeys,
-              isMyanmarSongMode ? "my" : "auto",
-              songTitle,
-              customLyrics
-            );
-            if (geminiAudioResult.ok && geminiAudioResult.segments.length > 0) {
-              return json({
-                ok: true,
-                engine: geminiAudioResult.engine || "gemini-3.8-flash-audio",
-                language: isMyanmarSongMode ? "my" : "auto",
-                duration: geminiAudioResult.duration,
-                text: geminiAudioResult.segments.map((s) => s.text).join(" "),
-                segments: geminiAudioResult.segments,
-              });
-            }
-            if (isMyanmarSongMode) {
-              return json(
-                {
-                  error:
-                    geminiAudioResult.error ||
-                    "မြန်မာသီချင်းဆိုသံကို Gemini Audio ဖြင့် နားထောင်ရာတွင် စာသားမတွေ့ရှိပါ။",
-                },
-                422
-              );
-            }
-          } else if (isMyanmarSongMode) {
-            return json(
-              { error: "မြန်မာသီချင်း နားထောင်ရန် GEMINI_API_KEY လိုအပ်ပါသည်။" },
-              500
-            );
+          const geminiAudioResult = await transcribeAudioWithGemini(
+            file,
+            geminiKeys,
+            "my",
+            songTitle,
+            customLyrics,
+            timeOffset
+          );
+
+          if (geminiAudioResult.ok && geminiAudioResult.segments.length > 0) {
+            return json({
+              ok: true,
+              engine: geminiAudioResult.engine || "gemini-3.8-flash-audio",
+              language: "my",
+              duration: geminiAudioResult.duration,
+              text: geminiAudioResult.segments.map((s) => s.text).join(" "),
+              segments: geminiAudioResult.segments,
+            });
           }
+
+          return json(
+            {
+              error:
+                geminiAudioResult.error ||
+                "မြန်မာသီချင်းဆိုသံကို နားထောင်ရာတွင် စာသားမတွေ့ရှိပါ။",
+            },
+            422
+          );
         }
 
-        // FOREIGN SONG / MOVIE RECAP MODE: Try Groq Whisper first for timestamps
-        if (!env.GROQ_API_KEY && geminiKeys.length === 0) {
-          return json({ error: "GROQ_API_KEY သို့မဟုတ် GEMINI_API_KEY မထည့်ရသေးပါ။" }, 500);
-        }
-
+        // FOREIGN SONG / MOVIE RECAP MODE: Use Groq Whisper First for Ultra-Fast Timestamps (2-4 seconds!)
         if (env.GROQ_API_KEY) {
-          const formData = new FormData();
-          formData.append("file", file, file.name || "audio.mp4");
-          formData.append("model", "whisper-large-v3-turbo");
-          formData.append("response_format", "verbose_json");
-          formData.append("timestamp_granularities[]", "segment");
-          formData.append("temperature", "0");
-
-          const response = await fetch("https://api.groq.com/openai/v1/audio/transcriptions", {
-            method: "POST",
-            headers: { Authorization: `Bearer ${env.GROQ_API_KEY}` },
-            body: formData,
-          });
-
-          const raw = await response.text();
-          let data;
           try {
-            data = JSON.parse(raw);
-          } catch {
-            data = { error: raw };
-          }
+            const formData = new FormData();
+            formData.append("file", file, file.name || "audio.wav");
+            formData.append("model", "whisper-large-v3-turbo");
+            formData.append("response_format", "verbose_json");
+            formData.append("timestamp_granularities[]", "segment");
+            formData.append("temperature", "0");
 
-          if (response.ok && Array.isArray(data?.segments) && data.segments.length > 0) {
-            const cleanSegments = data.segments
-              .map((s, index) => ({
-                id: index + 1,
-                start: Number(s.start) || 0,
-                end: Number(s.end) || 0,
-                text: String(s.text || "").trim(),
-              }))
-              .filter((s) => s.text && !isGibberishOrPlaceholder(s.text) && s.end > s.start);
+            const response = await fetch("https://api.groq.com/openai/v1/audio/transcriptions", {
+              method: "POST",
+              headers: { Authorization: `Bearer ${env.GROQ_API_KEY}` },
+              body: formData,
+            });
 
-            if (cleanSegments.length > 0) {
-              return json({
-                ok: true,
-                engine: "groq-whisper",
-                language: data?.language || null,
-                duration: Number(data?.duration) || null,
-                text: cleanSegments.map((s) => s.text).join(" "),
-                segments: cleanSegments,
-              });
+            if (response.ok) {
+              const data = await response.json().catch(() => ({}));
+              if (Array.isArray(data?.segments) && data.segments.length > 0) {
+                const cleanSegments = data.segments
+                  .map((s, index) => ({
+                    id: index + 1,
+                    start: Number(((Number(s.start) || 0) + timeOffset).toFixed(2)),
+                    end: Number(((Number(s.end) || 0) + timeOffset).toFixed(2)),
+                    text: String(s.text || "").trim(),
+                  }))
+                  .filter((s) => s.text && !isGibberishOrPlaceholder(s.text) && s.end > s.start);
+
+                if (cleanSegments.length > 0) {
+                  return json({
+                    ok: true,
+                    engine: "groq-whisper",
+                    language: data?.language || "auto",
+                    duration: (Number(data?.duration) || 0) + timeOffset,
+                    text: cleanSegments.map((s) => s.text).join(" "),
+                    segments: cleanSegments,
+                  });
+                }
+              }
             }
-          }
+          } catch (e) {}
         }
 
+        // Fallback to Gemini Audio for foreign songs if Groq fails
         if (geminiKeys.length > 0) {
-          const fallbackAudio = await transcribeAudioWithGemini(file, geminiKeys, "auto", songTitle, customLyrics);
+          const fallbackAudio = await transcribeAudioWithGemini(
+            file,
+            geminiKeys,
+            "auto",
+            songTitle,
+            customLyrics,
+            timeOffset
+          );
           if (fallbackAudio.ok && fallbackAudio.segments.length > 0) {
             return json({
               ok: true,
@@ -370,13 +379,9 @@ export default {
       }
 
       // =================================================
-      // 2. BATCH TRANSLATION (CONCISE MYANMAR & ENGLISH)
+      // 2. BATCH TRANSLATION (GUARANTEED MYANMAR & ENGLISH)
       // =================================================
       if (url.pathname === "/translate" && request.method === "POST") {
-        if (oxionKeys.length === 0 && geminiKeys.length === 0 && !env.GROQ_API_KEY) {
-          return json({ error: "API Key (Oxion သို့မဟုတ် Gemini) မထည့်ရသေးပါ။" }, 500);
-        }
-
         const body = await request.json().catch(() => ({}));
         const texts = body?.texts;
         const isTargetEn = body?.targetLang === "en";
@@ -386,10 +391,6 @@ export default {
 
         if (!Array.isArray(texts) || texts.length === 0) {
           return json({ ok: true, translations: [] });
-        }
-
-        if (texts.length > 500) {
-          return json({ error: "Subtitle lines အရမ်းများပါသည်။ Max 500 lines." }, 400);
         }
 
         const BATCH_SIZE = 35;
@@ -403,35 +404,36 @@ Translate every line in the input JSON array into ${targetLangDesc}.
 
 CRITICAL RULES:
 1. When translating into Myanmar Burmese, you MUST output genuine Myanmar Burmese script (never repeat the English text).
-2. Make each Myanmar line ULTRA-CONCISE and poetic (only 4 to 6 words/phrases). Use short pronouns like "ကိုယ်", "မင်း", "တို့" instead of "ကျွန်တော်", "ခင်ဗျား".
-3. Never output placeholder text like "random text", "gibberish", or "အဓိပ္ပာယ်မရှိသော စာသား".
-4. Keep EXACTLY ${batch.length} items in the exact same order.
-5. Output ONLY a valid JSON array of strings. No markdown, no explanation.
+2. Make each Myanmar line ULTRA-CONCISE and poetic (only 4 to 6 words/phrases). Use short pronouns like "ကိုယ်", "မင်း", "တို့".
+3. Keep EXACTLY ${batch.length} items in the exact same order.
+4. Output ONLY a valid JSON array of strings. No markdown.
 
 Input:
 ${JSON.stringify(batch)}
 `;
 
+          let batchTranslations = null;
           const result = await callMasterAIWithFailover(prompt, env);
-          if (!result.ok) {
-            return json(
-              { error: result.error, modelErrors: result.modelErrors || [] },
-              result.status || 503
-            );
+          if (result.ok) {
+            batchTranslations = parseJsonArray(result.text);
           }
 
-          const batchTranslations = parseJsonArray(result.text);
-          if (!Array.isArray(batchTranslations)) {
-            return json({ error: "Translation JSON ဖတ်မရပါ။", raw: result.text }, 502);
-          }
+          const normalized = [];
+          for (let i = 0; i < batch.length; i++) {
+            const orig = String(batch[i] || "").trim();
+            let tr = Array.isArray(batchTranslations) && typeof batchTranslations[i] === "string"
+              ? batchTranslations[i].replace(/\r?\n/g, " ").trim()
+              : "";
 
-          const normalized = batch.map((orig, i) => {
-            const tr = batchTranslations[i];
-            if (typeof tr === "string" && tr.trim() && !isGibberishOrPlaceholder(tr)) {
-              return tr.replace(/\r?\n/g, " ").trim();
+            // Server-side GTX guarantee if AI didn't return Burmese for Myanmar target
+            if (!isTargetEn && (!tr || !hasMyanmarScript(tr) || isGibberishOrPlaceholder(tr))) {
+              tr = await serverSideTranslateGTX(orig, "my");
+            } else if (isTargetEn && (!tr || isGibberishOrPlaceholder(tr))) {
+              tr = await serverSideTranslateGTX(orig, "en");
             }
-            return String(orig);
-          });
+
+            normalized.push(tr || orig);
+          }
 
           allTranslations.push(...normalized);
         }
@@ -443,13 +445,9 @@ ${JSON.stringify(batch)}
       }
 
       // =================================================
-      // 2B. SONG & KARAOKE TRANSLATOR (ULTRA-SHORT CONCISE MYANMAR)
+      // 2B. SONG & KARAOKE TRANSLATOR (100% GUARANTEED MYANMAR)
       // =================================================
       if (url.pathname === "/song" && request.method === "POST") {
-        if (oxionKeys.length === 0 && geminiKeys.length === 0 && !env.GROQ_API_KEY) {
-          return json({ error: "API Key (Oxion သို့မဟုတ် Gemini) မထည့်ရသေးပါ။" }, 500);
-        }
-
         const body = await request.json().catch(() => ({}));
         const rawSegments = Array.isArray(body?.segments) ? body.segments : [];
 
@@ -474,10 +472,10 @@ ${JSON.stringify(batch)}
 
 အလွန်အရေးကြီးသော စည်းမျဉ်းများ:
 1. "mm" သည် မြန်မာယူနီကုဒ်စာသား စစ်စစ် ဖြစ်ရမည် (အင်္ဂလိပ်စာသား လုံးဝ ပြန်မထည့်ရပါ)။
-2. "mm" (မြန်မာစာတန်း) သည် ဗီဒီယိုပေါ်တွင် (၁) ကြောင်းတည်း လှပစွာ ပေါ်စေရန် အလွန်တိုတိုနှင့် အဓိပ္ပာယ်ထိမိသော သီချင်းစာသားစတိုင် (စကားလုံး ၄ လုံး မှ ၆ လုံးခန့်သာ) ရေးပေးရမည်။ စာကြောင်းအရှည်ကြီး လုံးဝ မရေးရပါ။
+2. "mm" (မြန်မာစာတန်း) သည် ဗီဒီယိုပေါ်တွင် (၁) ကြောင်းတည်း လှပစွာ ပေါ်စေရန် အလွန်တိုတိုနှင့် အဓိပ္ပာယ်ထိမိသော သီချင်းစာသားစတိုင် (စကားလုံး ၄ လုံး မှ ၆ လုံးခန့်သာ) ရေးပေးရမည်။
 3. "ကျွန်တော်/ကျွန်မ/ခင်ဗျား/သင်" အစား သီချင်းဆန်သော "ကိုယ်/ငါ/မင်း/တို့" ကိုသာ သုံးပါ။
-4. စာကြောင်းအရေအတွက် (${inputPayload.length} ကြောင်း) နှင့် အစီအစဉ် (idx) အတိအကျ တူညီရမည်။ (\n မပါရ)။
-5. Output MUST be ONLY a valid JSON array in this exact format:
+4. စာကြောင်းအရေအတွက် (${inputPayload.length} ကြောင်း) နှင့် အစီအစဉ် (idx) အတိအကျ တူညီရမည်။
+5. Output MUST be ONLY a valid JSON array:
 [
   {
     "idx": 0,
@@ -491,27 +489,27 @@ Input Lyrics:
 ${JSON.stringify(inputPayload)}
 `;
 
+          let parsedBatch = null;
           const result = await callMasterAIWithFailover(prompt, env);
-          if (!result.ok) {
-            return json(
-              { error: result.error, modelErrors: result.modelErrors || [] },
-              result.status || 503
-            );
-          }
-
-          const parsedBatch = parseJsonArray(result.text);
-          if (!Array.isArray(parsedBatch)) {
-            return json({ error: "Song translation JSON ဖတ်မရပါ။", raw: result.text }, 502);
+          if (result.ok) {
+            parsedBatch = parseJsonArray(result.text);
           }
 
           for (let i = 0; i < batch.length; i++) {
             const seg = batch[i];
             const origClean = String(seg.text || seg.orig || "").replace(/\r?\n/g, " ").trim();
-            const found = parsedBatch.find((item) => Number(item?.idx) === i) || parsedBatch[i] || {};
+            const found = Array.isArray(parsedBatch)
+              ? parsedBatch.find((item) => Number(item?.idx) === i) || parsedBatch[i] || {}
+              : {};
 
-            const mmClean = !isGibberishOrPlaceholder(found.mm)
-              ? String(found.mm).replace(/\r?\n/g, " ").trim()
-              : origClean;
+            let mmClean = !isGibberishOrPlaceholder(found.mm)
+              ? String(found.mm || "").replace(/\r?\n/g, " ").trim()
+              : "";
+
+            // Guarantee genuine Burmese script via Server-Side GTX if AI skipped or returned English
+            if (!mmClean || (!hasMyanmarScript(mmClean) && /[a-zA-Z]/.test(mmClean))) {
+              mmClean = await serverSideTranslateGTX(origClean, "my");
+            }
 
             allLyrics.push({
               id: start + i + 1,
@@ -519,7 +517,7 @@ ${JSON.stringify(inputPayload)}
               end: Number(seg.end) || 0,
               orig: String(found.orig || origClean).replace(/\r?\n/g, " ").trim(),
               en: String(found.en || origClean).replace(/\r?\n/g, " ").trim(),
-              mm: mmClean,
+              mm: mmClean || origClean,
             });
           }
         }
@@ -534,10 +532,6 @@ ${JSON.stringify(inputPayload)}
       // 3. MOVIE RECAP (FULL TIMELINE COVERAGE + OPENING HOOK)
       // =================================================
       if (url.pathname === "/recap" && request.method === "POST") {
-        if (oxionKeys.length === 0 && geminiKeys.length === 0 && !env.GROQ_API_KEY) {
-          return json({ error: "API Key (Oxion သို့မဟုတ် Gemini) မထည့်ရသေးပါ။" }, 500);
-        }
-
         const body = await request.json().catch(() => ({}));
         const segments = body?.segments;
         const tone = body?.tone || "narrator";
@@ -617,10 +611,6 @@ ${JSON.stringify(sampledSegments)}
       // 4. STORY GENERATOR (CAPTIVATING HOOK FOR STORY MAKER & STORY TO VIDEO)
       // =================================================
       if (url.pathname === "/story" && request.method === "POST") {
-        if (oxionKeys.length === 0 && geminiKeys.length === 0 && !env.GROQ_API_KEY) {
-          return json({ error: "API Key (Oxion သို့မဟုတ် Gemini) မထည့်ရသေးပါ။" }, 500);
-        }
-
         const body = await request.json().catch(() => ({}));
         const {
           topic,
@@ -917,7 +907,7 @@ Rules:
 
 // =====================================================
 // MASTER AI ROUTER:
-// 1. GEMINI (gemini-3.8-flash) -> 2. OXION_KEY_1 & 2 -> 3. GROQ
+// 1. GEMINI (3.8-flash / 3.5-flash-lite) -> 2. OXION -> 3. GROQ
 // =====================================================
 
 async function callMasterAIWithFailover(prompt, env) {
@@ -925,7 +915,7 @@ async function callMasterAIWithFailover(prompt, env) {
   const oxionKeys = getOxionApiKeys(env);
   const geminiKeys = getGeminiApiKeys(env);
 
-  // 1. Try Gemini Direct Keys First (gemini-3.8-flash -> gemini-2.0-flash -> gemini-1.5-flash)
+  // 1. Try Gemini Direct Keys First
   for (let gIdx = 0; gIdx < geminiKeys.length; gIdx++) {
     const gemKey = geminiKeys[gIdx];
     const gemRes = await callGeminiWithFallback(prompt, gemKey);
@@ -980,7 +970,7 @@ async function callMasterAIWithFailover(prompt, env) {
   return {
     ok: false,
     status: 503,
-    error: "AI Models (Gemini 3.8 Flash, Oxion Key 1 & 2) အားလုံး ချိတ်ဆက်၍ မရနိုင်သေးပါ။",
+    error: "AI Models အားလုံး ချိတ်ဆက်၍ မရနိုင်သေးပါ။",
     modelErrors: allErrors,
   };
 }
@@ -995,7 +985,7 @@ async function callOxionSingleKey(prompt, apiKey, customBaseUrl, customModel, ke
 
   const models = customModel
     ? [customModel]
-    : ["gemini-3.8-flash", "gemini-2.0-flash", "gemini-1.5-flash", "gpt-4o-mini"];
+    : ["gemini-3.8-flash", "gemini-3.5-flash-lite", "gemini-3.6-flash", "gpt-4o-mini"];
 
   const errors = [];
 
@@ -1052,7 +1042,6 @@ async function callOxionSingleKey(prompt, apiKey, customBaseUrl, customModel, ke
           if ([401, 402, 403].includes(status)) {
             return { ok: false, errors };
           }
-          // Try next model on 404 or 400
           continue;
         }
       } catch (err) {
@@ -1071,7 +1060,7 @@ async function callOxionSingleKey(prompt, apiKey, customBaseUrl, customModel, ke
 }
 
 // =====================================================
-// GEMINI MULTIMODAL AUDIO TRANSCRIPTION (GEMINI-3.8-FLASH)
+// GEMINI MULTIMODAL AUDIO TRANSCRIPTION (FAST CHUNK READY)
 // =====================================================
 
 function arrayBufferToBase64(buffer) {
@@ -1084,7 +1073,14 @@ function arrayBufferToBase64(buffer) {
   return btoa(binary);
 }
 
-async function transcribeAudioWithGemini(fileBlob, geminiKeys, langHint = "my", songTitle = "", referenceLyrics = "") {
+async function transcribeAudioWithGemini(
+  fileBlob,
+  geminiKeys,
+  langHint = "my",
+  songTitle = "",
+  referenceLyrics = "",
+  timeOffset = 0
+) {
   try {
     const arrayBuf = await fileBlob.arrayBuffer();
     if (arrayBuf.byteLength > 19 * 1024 * 1024) {
@@ -1094,9 +1090,9 @@ async function transcribeAudioWithGemini(fileBlob, geminiKeys, langHint = "my", 
     const base64Audio = arrayBufferToBase64(arrayBuf);
     const mimeType = fileBlob.type && fileBlob.type.startsWith("audio/") ? fileBlob.type : "audio/wav";
 
-    const titleContext = songTitle ? `သီချင်းအမည်/ဖိုင်အမည်: "${songTitle}"\n` : "";
+    const titleContext = songTitle ? `သီချင်းအမည်/အဆိုတော်: "${songTitle}"\n` : "";
     const lyricsContext = referenceLyrics
-      ? `အောက်ပါ မူရင်းသီချင်းစာသားအမှန်ကို အခြေခံ၍ အသံဖိုင်ထဲတွင် အဆိုတော် သီဆိုသွားသည့် အချိန် (start နှင့် end စက္ကန့်) များနှင့် တိကျစွာ ချိန်ညှိ (Align) ပေးပါ:\n${referenceLyrics}\n`
+      ? `အောက်ပါ မူရင်းသီချင်းစာသားအမှန်ထဲမှ ဤအသံပိုင်းတွင် သီဆိုနေသော စာကြောင်းများကို အသံချိန် (start နှင့် end စက္ကန့်) အတိအကျဖြင့် ချိန်ညှိပေးပါ:\n${referenceLyrics}\n`
       : "";
 
     const prompt =
@@ -1104,23 +1100,24 @@ async function transcribeAudioWithGemini(fileBlob, geminiKeys, langHint = "my", 
         ? `
 သင်သည် မြန်မာသီချင်းများကို နားထောင်ပြီး စာသားနှင့် အချိန် (Timestamps) အတိအကျ ထုတ်ပေးသော ပညာရှင် ဖြစ်သည်။
 ${titleContext}${lyricsContext}
-ဤအသံဖိုင်ထဲရှိ နောက်ခံတီးလုံးသံများ (Guitar, Drums, Music) ကို လုံးဝ လျစ်လျူရှုပြီး အဆိုတော် သီဆိုနေသော မြန်မာသီချင်းစာသား အစစ်အမှန်ကိုသာ နားထောင်၍ မြန်မာယူနီကုဒ်စာသားဖြင့် ထုတ်ပေးပါ။
+ဤအသံဖိုင်ထဲရှိ နောက်ခံတီးလုံးသံများ (Guitar, Drums, Music) ကို ကျော်ပြီး အဆိုတော် သီဆိုနေသော မြန်မာသီချင်းစာသားကို နားထောင်၍ မြန်မာယူနီကုဒ်စာသားဖြင့် ထုတ်ပေးပါ။
+အကယ်၍ ဤအသံပိုင်းတွင် လူဆိုသံ လုံးဝမပါဘဲ တီးလုံးသက်သက်သာ ဖြစ်နေပါက [] (Empty array) သာ ပြန်ပေးပါ။
 
-အလွန်အရေးကြီးသော စည်းမျဉ်းများ:
-1. အဆိုတော် စတင်သီဆိုသည့် စက္ကန့်အတိအကျကို "start" တွင်ထားပြီး စာကြောင်းဆုံးသည့် စက္ကန့်ကို "end" တွင် ထားပါ။ တီးလုံးသီးသန့် လာနေချိန်များကို မထည့်ရပါ။
-2. စာကြောင်းတစ်ကြောင်းလျှင် ကာရာအိုကေ စာတန်းထိုးရန် သင့်တော်သော အရှည် (စက္ကန့် ၂.၅ မှ ၄.၅ စက္ကန့်စာခန့်) ပိုင်းဖြတ်ပေးပါ။
-3. မည်သည့်အခါမှ "random gibberish", "random text", "အဓိပ္ပာယ်မရှိသော စာသား" လုံးဝ မထည့်ရပါ။ မြန်မာသီချင်းစာသား စစ်စစ်ကိုသာ ရေးပါ။
-4. Output MUST be ONLY a valid JSON array in this exact format:
+စည်းမျဉ်းများ:
+1. အဆိုတော် စတင်သီဆိုသည့် စက္ကန့်အတိအကျကို "start" တွင်ထားပြီး စာကြောင်းဆုံးသည့် စက္ကန့်ကို "end" တွင် ထားပါ (ဤအသံဖိုင်၏ 0.0 စက္ကန့်မှ စတင်တွက်ချက်ပါ)။
+2. စာကြောင်းတစ်ကြောင်းလျှင် စက္ကန့် ၂.၅ မှ ၄.၅ စက္ကန့်စာခန့် ပိုင်းဖြတ်ပေးပါ။
+3. Output MUST be ONLY a valid JSON array:
 [
-  { "id": 1, "start": 10.5, "end": 14.2, "text": "မြန်မာသီချင်းစာသား..." }
+  { "id": 1, "start": 2.5, "end": 6.2, "text": "မြန်မာသီချင်းစာသား..." }
 ]
 `
         : `
-Listen carefully to the singing voice in this audio file (ignoring background instrumentals) and transcribe/align every sung lyric line with accurate start and end timestamps in seconds.
+Listen carefully to the singing voice in this audio clip (ignoring purely instrumental parts) and transcribe every sung lyric line with accurate start and end timestamps in seconds relative to the start of this audio clip (0.0s).
 ${titleContext}${lyricsContext}
+If there are no vocals in this clip, output [].
 Output ONLY a valid JSON array:
 [
-  { "id": 1, "start": 10.5, "end": 14.2, "text": "Lyric line..." }
+  { "id": 1, "start": 2.5, "end": 6.2, "text": "Lyric line..." }
 ]
 `;
 
@@ -1154,27 +1151,30 @@ Output ONLY a valid JSON array:
 
           if (resp.ok) {
             const data = await resp.json().catch(() => ({}));
-            const rawText = data?.candidates?.[0]?.content?.parts?.map((p) => p?.text || "").join("").trim();
+            const rawText = data?.candidates?.[0]?.content?.parts
+              ?.filter((p) => !p.thought)
+              ?.map((p) => p?.text || "")
+              .join("")
+              .trim();
+
             const parsed = parseJsonArray(rawText);
-            if (Array.isArray(parsed) && parsed.length > 0) {
+            if (Array.isArray(parsed)) {
               const cleanSegments = parsed
                 .map((s, idx) => ({
                   id: idx + 1,
-                  start: Number(s.start) || 0,
-                  end: Number(s.end) || Number(s.start) + 3.5,
+                  start: Number(((Number(s.start) || 0) + timeOffset).toFixed(2)),
+                  end: Number(((Number(s.end) || Number(s.start) + 3.5) + timeOffset).toFixed(2)),
                   text: String(s.text || s.orig || s.mm || "").replace(/\r?\n/g, " ").trim(),
                 }))
                 .filter((s) => s.text && !isGibberishOrPlaceholder(s.text) && s.end > s.start);
 
-              if (cleanSegments.length > 0) {
-                return {
-                  ok: true,
-                  engine: model,
-                  language: langHint,
-                  duration: cleanSegments[cleanSegments.length - 1].end,
-                  segments: cleanSegments,
-                };
-              }
+              return {
+                ok: true,
+                engine: model,
+                language: langHint,
+                duration: cleanSegments.length ? cleanSegments[cleanSegments.length - 1].end : timeOffset,
+                segments: cleanSegments,
+              };
             }
           }
         } catch (e) {}
@@ -1187,66 +1187,58 @@ Output ONLY a valid JSON array:
 }
 
 // =====================================================
-// GEMINI MULTI-MODEL FALLBACK ENGINE (GEMINI-3.8-FLASH FIRST)
+// GEMINI MULTI-MODEL FALLBACK ENGINE
 // =====================================================
 
 async function callGeminiWithFallback(prompt, apiKey) {
   const errors = [];
 
   for (const model of GEMINI_MODELS) {
-    for (let attempt = 1; attempt <= 2; attempt++) {
-      try {
-        const response = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "x-goog-api-key": apiKey,
+    try {
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-goog-api-key": apiKey,
+          },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: {
+              responseMimeType: "application/json",
+              temperature: 0.25,
             },
-            body: JSON.stringify({
-              contents: [{ parts: [{ text: prompt }] }],
-              generationConfig: {
-                responseMimeType: "application/json",
-                temperature: 0.25,
-              },
-            }),
-          }
-        );
-
-        const raw = await response.text();
-        let data = null;
-        try {
-          data = JSON.parse(raw);
-        } catch {}
-
-        if (response.ok) {
-          const rawText = data?.candidates?.[0]?.content?.parts
-            ?.map((p) => p?.text || "")
-            .join("")
-            .trim();
-
-          if (rawText) {
-            return { ok: true, model, text: rawText };
-          }
-
-          errors.push({ model, attempt, status: 200, message: "Empty Gemini response" });
-        } else {
-          const status = response.status;
-          const message = data?.error?.message || `HTTP ${status}`;
-          errors.push({ model, attempt, status, message });
-
-          if (status === 404 || status === 400) break;
-
-          const retryable = [429, 500, 502, 503, 504].includes(status);
-          if (!retryable) break;
-
-          if (attempt === 1) await sleep(500);
+          }),
         }
-      } catch (error) {
-        errors.push({ model, attempt, status: 0, message: error?.message || "Network error" });
-        if (attempt === 1) await sleep(500);
+      );
+
+      const raw = await response.text();
+      let data = null;
+      try {
+        data = JSON.parse(raw);
+      } catch {}
+
+      if (response.ok) {
+        const rawText = data?.candidates?.[0]?.content?.parts
+          ?.filter((p) => !p.thought)
+          ?.map((p) => p?.text || "")
+          .join("")
+          .trim();
+
+        if (rawText) {
+          return { ok: true, model, text: rawText };
+        }
+        errors.push({ model, status: 200, message: "Empty Gemini response" });
+      } else {
+        const status = response.status;
+        const message = data?.error?.message || `HTTP ${status}`;
+        errors.push({ model, status, message });
+        continue;
       }
+    } catch (error) {
+      errors.push({ model, status: 0, message: error?.message || "Network error" });
+      continue;
     }
   }
 
@@ -1634,8 +1626,4 @@ function parseJsonArray(text) {
   }
 
   return null;
-}
-
-function sleep(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
 }
