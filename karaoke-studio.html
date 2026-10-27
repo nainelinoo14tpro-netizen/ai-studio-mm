@@ -67,7 +67,7 @@ button:active { transform: scale(0.97); }
   box-shadow: 0 4px 12px rgba(217, 119, 6, 0.25) !important;
 }
 .primary:hover { opacity: 0.95; }
-.primary:disabled, button:disabled, select:disabled, input:disabled { opacity: 0.45; cursor: not-allowed; }
+.primary:disabled, button:disabled, select:disabled, input:disabled, textarea:disabled { opacity: 0.45; cursor: not-allowed; }
 
 .secondaryBtn { background: #ffffff; border-color: var(--border); color: #334155; }
 .secondaryBtn:hover { background: #fffbeb; border-color: var(--gold); color: var(--accent); }
@@ -563,6 +563,43 @@ video {
   font-size: 10.5px; font-weight: 800; color: var(--accent);
   margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 4px;
 }
+
+.hybridLyricsBox {
+  background: #f8fafc;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 10px;
+  padding: 9px 10px;
+  margin-bottom: 10px;
+}
+.titleLookupRow {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+.titleLookupInput {
+  flex: 1;
+  background: #ffffff;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 11.5px;
+  color: var(--text);
+  outline: none;
+}
+.titleLookupInput:focus { border-color: var(--gold); }
+.customLyricsArea {
+  width: 100%;
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 6px 9px;
+  font-size: 11px;
+  color: var(--text);
+  line-height: 1.4;
+  outline: none;
+  resize: vertical;
+}
+.customLyricsArea:focus { border-color: var(--gold); }
 
 .fixedBottomExportBar {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 950;
@@ -1179,15 +1216,15 @@ video {
     </section>
 
     <!-- ========================================================= -->
-    <!-- PERMANENT MAIN PAGE: SONG KARAOKE STUDIO                  -->
+    <!-- PERMANENT MAIN PAGE: HYBRID SONG KARAOKE STUDIO           -->
     <!-- ========================================================= -->
     <section class="mainModeCard" id="mainPage_karaoke">
       <div class="cardHead">
         <div>
-          <div class="title">🎤 Song Karaoke & Vocal Isolation Studio</div>
+          <div class="title">🎤 Hybrid Song Karaoke Studio (Render Server + Gemini Audio)</div>
           <div class="status">
             <span class="dot ready" id="dot"></span>
-            <span id="status">Vocal Filter + Gemini Audio စနစ် အသင့်ဖြစ်ပါပြီ</span>
+            <span id="status">Render Python Server + Gemini Audio အသင့်ဖြစ်ပါပြီ</span>
           </div>
         </div>
       </div>
@@ -1201,7 +1238,7 @@ video {
           <div class="songTypeGrid">
             <button type="button" class="songLangBtn active lockable" id="songMode_my" onclick="setSongSourceMode('my')">
               <span>🇲🇲 မြန်မာသီချင်း (Myanmar Only)</span>
-              <small>Vocal သီးသန့်ခွဲထုတ် + မြန်မာစာတန်း သီးသန့်</small>
+              <small>မြန်မာစာတန်း သီးသန့် (၁ ဘာသာ)</small>
             </button>
             <button type="button" class="songLangBtn lockable" id="songMode_auto" onclick="setSongSourceMode('auto')">
               <span>🌐 နိုင်ငံခြားသီချင်း (Foreign Song)</span>
@@ -1209,9 +1246,24 @@ video {
             </button>
           </div>
 
+          <!-- HYBRID OPTION C: SONG TITLE & REFERENCE LYRICS BOX -->
+          <div class="hybridLyricsBox">
+            <div class="karaokeSubSectionTitle" style="margin-bottom:5px">
+              <span>🎼 ၂။ သီချင်းအမည်ဖြင့် စာသားအမှန် ရှာဖွေချိန်ညှိရန် (စိတ်ကြိုက်)</span>
+              <span style="font-size:9px;color:var(--muted);font-weight:600">သတ်ပုံ ၁၀၀% တိကျစေရန်</span>
+            </div>
+            <div class="titleLookupRow">
+              <input id="songTitleInput" type="text" class="titleLookupInput lockable" placeholder="ဥပမာ - တမ်းတ - အောင်လ (သို့) သီချင်းအမည် ရိုက်ထည့်ပါ...">
+              <button type="button" class="secondaryBtn lockable" id="fetchLyricsBtn" onclick="fetchLyricsBySongTitle()" style="white-space:nowrap;padding:6px 10px">
+                🔍 စာသားရှာ
+              </button>
+            </div>
+            <textarea id="customLyricsInput" rows="3" class="customLyricsArea lockable" placeholder="သီချင်းစာသား အမှန်ရှိပါက ဤနေရာတွင် တိုက်ရိုက် ကူးထည့်နိုင်ပါသည် (မထည့်ဘဲ ထားပါကလည်း Render Server + Gemini Audio က သီချင်းသံကို တိုက်ရိုက်နားထောင်ပြီး ထုတ်ပေးပါမည်)..."></textarea>
+          </div>
+
           <button class="primary lockable" id="generateSongBtn" style="width:100%;padding:11px;margin-bottom:8px" onclick="generateSongKaraokeSubtitles()">
             <span class="btnSpinner" id="songSpinner" style="display:none"></span>
-            <span id="songBtnText">🎵 Generate Myanmar Karaoke (ဆိုသံခွဲထုတ်ပြီး မြန်မာစာတန်းထုတ်မည်)</span>
+            <span id="songBtnText">🎵 Generate Myanmar Karaoke (Render Server ဖြင့် စာတန်းထုတ်မည်)</span>
           </button>
 
           <button class="secondaryBtn lockable" id="retranslateMainBtn" style="width:100%;padding:8px;margin-bottom:10px;font-size:10.5px;display:none" onclick="retranslateExistingSubtitles()">
@@ -1233,7 +1285,7 @@ video {
           </div>
 
           <p style="font-size:10px;color:var(--muted);margin-bottom:0" id="modeHintText">
-            ✨ <b>🇲🇲 မြန်မာသီချင်း Mode:</b> သီချင်းထဲမှ တီးလုံးသံများကို Vocal Isolation Filter ဖြင့် လျှော့ချပြီး လူဆိုသံသီးသန့်ကို Gemini Audio ဖြင့် နားထောင်ကာ <b>မြန်မာစာတန်းထိုး တစ်ခုတည်းသာ</b> သပ်ရပ်စွာ ထုတ်ပေးပါသည်။
+            ✨ <b>🇲🇲 မြန်မာသီချင်း Mode:</b> ၅ မိနစ်စာ သီချင်းအရှည်ကြီးများကိုလည်း Timeout မဖြစ်စေဘဲ <b>Render Python Server + Gemini Audio</b> ဖြင့် အသံနှင့် စာသား အချိန်ကိုက် ချိန်ညှိကာ မြန်မာစာတန်း တစ်ခုတည်းသာ ထုတ်ပေးပါသည်။
           </p>
         </div>
       </div>
@@ -1260,7 +1312,7 @@ video {
 
 <script>
 // -------------------------------------------------------------
-// CORE BACKEND CONFIGURATION
+// CORE BACKEND CONFIGURATION (RENDER PYTHON + CLOUDFLARE WORKER)
 // -------------------------------------------------------------
 const RAW_RENDER_URL = "https://ai-studio-mm.onrender.com";
 const RENDER_BACKEND_URL = RAW_RENDER_URL.replace(/\/+$/, "");
@@ -1268,6 +1320,7 @@ const WORKER_URL = "https://ai-studio-mm.nainelinoo-14tpro.workers.dev";
 
 function wakeUpRenderServer() {
   fetch(`${RENDER_BACKEND_URL}/`, { method: "GET", mode: "no-cors" }).catch(() => {});
+  fetch(`${RENDER_BACKEND_URL}/api/health`, { method: "GET", mode: "no-cors" }).catch(() => {});
 }
 
 // -------------------------------------------------------------
@@ -1386,7 +1439,6 @@ function setSongSourceMode(mode) {
   const srtOptOrig = document.getElementById("srtOpt_Orig");
 
   if (songSourceMode === "my") {
-    // MYANMAR SONG MODE: Strictly Myanmar Subtitle ONLY!
     langBar.classList.add("singleMMMode");
     btnOrig.style.display = "none";
     btnEN.style.display = "none";
@@ -1394,9 +1446,9 @@ function setSongSourceMode(mode) {
     if (srtOptEN) srtOptEN.style.display = "none";
     if (srtOptOrig) srtOptOrig.style.display = "none";
     if (retranslateMainBtn) retranslateMainBtn.style.display = "none";
-    if (songBtnText) songBtnText.textContent = "🎵 Generate Myanmar Karaoke (ဆိုသံခွဲထုတ်ပြီး မြန်မာစာတန်းထုတ်မည်)";
+    if (songBtnText) songBtnText.textContent = "🎵 Generate Myanmar Karaoke (Render Server ဖြင့် စာတန်းထုတ်မည်)";
     if (modeHintText) {
-      modeHintText.innerHTML = `✨ <b>🇲🇲 မြန်မာသီချင်း Mode:</b> သီချင်းထဲမှ တီးလုံးသံများကို Vocal Isolation Filter ဖြင့် လျှော့ချပြီး လူဆိုသံသီးသန့်ကို Gemini Audio ဖြင့် နားထောင်ကာ <b>မြန်မာစာတန်းထိုး တစ်ခုတည်းသာ</b> သပ်ရပ်စွာ ထုတ်ပေးပါသည်။`;
+      modeHintText.innerHTML = `✨ <b>🇲🇲 မြန်မာသီချင်း Mode:</b> ၅ မိနစ်စာ သီချင်းအရှည်ကြီးများကိုလည်း Timeout မဖြစ်စေဘဲ <b>Render Python Server + Gemini Audio</b> ဖြင့် အသံနှင့် စာသား အချိန်ကိုက် ချိန်ညှိကာ မြန်မာစာတန်း တစ်ခုတည်းသာ ထုတ်ပေးပါသည်။`;
     }
 
     toggleLangTrack("MM", true, true);
@@ -1404,7 +1456,6 @@ function setSongSourceMode(mode) {
     toggleLangTrack("EN", false, true);
     toast("🇲🇲 မြန်မာသီချင်း Mode (မြန်မာစာတန်း သီးသန့်)");
   } else {
-    // FOREIGN SONG MODE: Original + Short Concise Myanmar + English
     langBar.classList.remove("singleMMMode");
     btnOrig.style.display = "flex";
     btnEN.style.display = "flex";
@@ -1414,7 +1465,7 @@ function setSongSourceMode(mode) {
     if (retranslateMainBtn) retranslateMainBtn.style.display = "inline-flex";
     if (songBtnText) songBtnText.textContent = "🎵 Generate Foreign Karaoke (မူရင်း + မြန်မာစာတန်း အတို ထုတ်မည်)";
     if (modeHintText) {
-      modeHintText.innerHTML = `✨ <b>🌐 နိုင်ငံခြားသီချင်း Mode:</b> မြန်မာစာတန်းထိုးကို အရှည်ကြီး မဖြစ်စေဘဲ သီချင်းနှင့် လိုက်ဖက်သော <b>စာကြောင်းတိုတို (၅ လုံး - ၇ လုံး)</b> ဖြင့် ကျစ်လျစ်စွာ ဘာသာပြန်ပေးပါသည်။`;
+      modeHintText.innerHTML = `✨ <b>🌐 နိုင်ငံခြားသီချင်း Mode:</b> မြန်မာစာတန်းထိုးကို အရှည်ကြီး မဖြစ်စေဘဲ သီချင်းနှင့် လိုက်ဖက်သော <b>စာကြောင်းတိုတို (၄ လုံး - ၆ လုံး)</b> ဖြင့် ကျစ်လျစ်စွာ ဘာသာပြန်ပေးပါသည်။`;
     }
 
     toggleLangTrack("Orig", true, true);
@@ -1425,6 +1476,56 @@ function setSongSourceMode(mode) {
 
   render();
   updateLiveSubtitleOverlays(video.currentTime || 0);
+}
+
+// -------------------------------------------------------------
+// OPTION C: FETCH LYRICS BY SONG TITLE
+// -------------------------------------------------------------
+async function fetchLyricsBySongTitle() {
+  const titleInput = document.getElementById("songTitleInput");
+  const lyricsBox = document.getElementById("customLyricsInput");
+  const btn = document.getElementById("fetchLyricsBtn");
+  const title = (titleInput.value || "").trim();
+
+  if (!title) {
+    toast("ကျေးဇူးပြု၍ သီချင်းအမည် (သို့) အဆိုတော်အမည် အရင်ရိုက်ထည့်ပါ");
+    titleInput.focus();
+    return;
+  }
+
+  const origBtnHtml = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = `⏳ ရှာနေသည်...`;
+
+  try {
+    // 1. Try Render Server /api/fetch-lyrics first
+    let foundLines = null;
+    try {
+      const r = await fetch(`${RENDER_BACKEND_URL}/api/fetch-lyrics`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ song_title: title, lang: songSourceMode })
+      });
+      if (r.ok) {
+        const d = await r.json();
+        if (Array.isArray(d.lines) && d.lines.length > 0) {
+          foundLines = d.lines;
+        }
+      }
+    } catch (e) {}
+
+    if (foundLines && foundLines.length > 0) {
+      lyricsBox.value = foundLines.join("\n");
+      toast(`✅ "${title}" စာသား (${foundLines.length}) ကြောင်း ရှာတွေ့ပါပြီ!`);
+    } else {
+      toast("ℹ️ စာသားအသင့် မတွေ့ပါသဖြင့် Generate နှိပ်သည့်အခါ အသံမှ တိုက်ရိုက်နားထောင်ပေးပါမည်");
+    }
+  } catch (err) {
+    toast("Error: " + err.message);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = origBtnHtml;
+  }
 }
 
 function onKaraokeOffsetChange(val) {
@@ -2267,7 +2368,16 @@ function loadVideo(f) {
   document.getElementById("emptyState").style.display = "none";
   video.muted = false;
 
-  document.querySelectorAll(".lockable, input.lockable, select.lockable").forEach(el => {
+  // Auto-populate song title hint from filename if empty
+  const titleInput = document.getElementById("songTitleInput");
+  if (titleInput && !titleInput.value.trim()) {
+    const cleanName = f.name.replace(/\.[^/.]+$/, "").replace(/[_-]+/g, " ").trim();
+    if (cleanName && !/^(vid|video|lv|capcut|inshot|\d+)$/i.test(cleanName)) {
+      titleInput.value = cleanName;
+    }
+  }
+
+  document.querySelectorAll(".lockable, input.lockable, select.lockable, textarea.lockable").forEach(el => {
     el.disabled = false;
   });
   generating = false;
@@ -2331,22 +2441,18 @@ function sanitizeSegmentVocalTiming(seg, prevEnd) {
   };
 }
 
-// Detects Whisper/AI gibberish or placeholder hallucinations
 function isHallucinatedGibberish(text) {
   const s = String(text || "").trim();
   if (!s) return true;
   if (/random\s+gibberish|random\s+text|အဓိပ္ပာယ်မရှိသော\s*စာသား|prooh/i.test(s)) return true;
-  // Georgian, Armenian, Hebrew, Cyrillic gibberish when Myanmar was expected
   if (/[\u10A0-\u10FF\u0530-\u058F\u0590-\u05FF]/.test(s)) return true;
   return false;
 }
 
-// Makes foreign-to-Myanmar translations short, poetic, and concise (never overly long!)
 function formatConciseMyanmarSubtitle(mmText) {
   let s = String(mmText || "").replace(/\r?\n/g, " ").replace(/\s+/g, " ").trim();
   if (!s || isHallucinatedGibberish(s)) return "";
 
-  // Strip verbose filler words that make Burmese subtitles too long
   s = s
     .replace(/^(အိုး\s*ဟုတ်ကဲ့[၊,\s]*|အို\s*ရေ့[၊,\s]*|ဒါပေမယ့်လည်း\s*|အမှန်တကယ်တော့\s*)+/i, "")
     .replace(/ကျွန်တော်\s*တို့/g, "တို့")
@@ -2369,10 +2475,8 @@ function formatConciseMyanmarSubtitle(mmText) {
 
 // -------------------------------------------------------------
 // VOCAL ISOLATION & CENTER-VOICE FREQUENCY FILTER (WEB AUDIO DSP)
-// Removes heavy bass/drums (<220Hz) and high cymbal/guitar fizz (>3800Hz)
-// and boosts human singing frequencies (300Hz - 3400Hz) before AI listens!
 // -------------------------------------------------------------
-async function extractVocalIsolatedAudioBlob(videoFile, targetRate = 12000) {
+async function extractVocalIsolatedAudioBlob(videoFile, targetRate = 10000) {
   const buf = await videoFile.arrayBuffer();
   const actx = new (window.AudioContext || window.webkitAudioContext)();
   const dec = await actx.decodeAudioData(buf);
@@ -2383,7 +2487,6 @@ async function extractVocalIsolatedAudioBlob(videoFile, targetRate = 12000) {
   const numFrames = Math.ceil(dec.duration * rate);
   const off = new OfflineAudioContext(1, numFrames, rate);
 
-  // If stereo, extract Center (Mid) Channel where lead vocals sit: M = (L + R) * 0.5
   const monoBuffer = off.createBuffer(1, dec.length, dec.sampleRate);
   const outCh = monoBuffer.getChannelData(0);
   if (dec.numberOfChannels >= 2) {
@@ -2399,26 +2502,22 @@ async function extractVocalIsolatedAudioBlob(videoFile, targetRate = 12000) {
   const src = off.createBufferSource();
   src.buffer = monoBuffer;
 
-  // 1. High-Pass Filter: Cut bass guitar, kick drum & low rumble below 220Hz
   const highPass = off.createBiquadFilter();
   highPass.type = "highpass";
   highPass.frequency.value = 220;
   highPass.Q.value = 0.707;
 
-  // 2. Low-Pass Filter: Cut cymbals, hi-hats & guitar distortion fizz above 3800Hz
   const lowPass = off.createBiquadFilter();
   lowPass.type = "lowpass";
   lowPass.frequency.value = 3800;
   lowPass.Q.value = 0.707;
 
-  // 3. Vocal Presence Mid-Boost (1650Hz +5.5dB) so Burmese syllables cut through BGM
   const vocalBoost = off.createBiquadFilter();
   vocalBoost.type = "peaking";
   vocalBoost.frequency.value = 1650;
   vocalBoost.Q.value = 1.1;
   vocalBoost.gain.value = 5.5;
 
-  // 4. Dynamics Compressor to level out singing voice
   const compressor = off.createDynamicsCompressor();
   compressor.threshold.value = -24;
   compressor.knee.value = 18;
@@ -2437,7 +2536,6 @@ async function extractVocalIsolatedAudioBlob(videoFile, targetRate = 12000) {
   actx.close();
 
   const cdata = rendered.getChannelData(0);
-  // Peak normalize vocal track
   let maxPeak = 0.01;
   for (let i = 0; i < cdata.length; i++) {
     const abs = Math.abs(cdata[i]);
@@ -2485,24 +2583,24 @@ async function translateRobustText(rawText, targetLang) {
 }
 
 async function translateIndependentLanguageTrack(origLinesArray, targetLang) {
-  try {
-    const r = await fetch(WORKER_URL + "/translate", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        texts: origLinesArray,
-        targetLang,
-        concise: targetLang !== "en"
-      })
-    });
-    if (r.ok) {
-      const d = await r.json();
-      if (Array.isArray(d.translations) && d.translations.length === origLinesArray.length) {
-        return d.translations;
+  for (const baseUrl of [RENDER_BACKEND_URL, WORKER_URL]) {
+    try {
+      const r = await fetch(baseUrl + "/translate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          texts: origLinesArray,
+          targetLang,
+          concise: targetLang !== "en"
+        })
+      });
+      if (r.ok) {
+        const d = await r.json();
+        if (Array.isArray(d.translations) && d.translations.length === origLinesArray.length) {
+          return d.translations;
+        }
       }
-    }
-  } catch (e) {
-    console.warn(`Worker /translate (${targetLang}) fallback:`, e);
+    } catch (e) {}
   }
 
   const results = new Array(origLinesArray.length).fill("");
@@ -2516,7 +2614,6 @@ async function translateIndependentLanguageTrack(origLinesArray, targetLang) {
 // PROCESS & TRANSLATE SEGMENTS ACCORDING TO MODE
 // -------------------------------------------------------------
 async function processSongSegmentsForMode(rawSegments, onProgress) {
-  // Filter out any hallucinated gibberish segments first
   const validSegments = rawSegments.filter(s => {
     const txt = String(s.text || s.orig || s.mm || "").trim();
     return txt && !isHallucinatedGibberish(txt);
@@ -2528,7 +2625,7 @@ async function processSongSegmentsForMode(rawSegments, onProgress) {
 
   const origLines = validSegments.map(s => String(s.text || s.orig || s.mm || "").replace(/\r?\n/g, " ").trim());
 
-  // MODE 1: MYANMAR SONG -> Myanmar Subtitle ONLY! No English/Foreign translation!
+  // MODE 1: MYANMAR SONG -> Myanmar Subtitle ONLY!
   if (songSourceMode === "my") {
     let prevEnd = 0;
     return validSegments.map((seg, i) => {
@@ -2555,37 +2652,38 @@ async function processSongSegmentsForMode(rawSegments, onProgress) {
   // MODE 2: FOREIGN SONG -> Short, Poetic Myanmar Subtitle + Original + English
   let enLines = [];
   let mmLines = [];
-  let workerSongSuccess = false;
+  let songSuccess = false;
 
-  try {
-    if (onProgress) onProgress(58, "✨ မြန်မာစာတန်းတိုတို (ကျစ်လျစ်စနစ်) ဖြင့် ဘာသာပြန်နေပါသည်...");
-    const resp = await fetch(WORKER_URL + "/song", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        conciseMM: true,
-        segments: validSegments.map((s, idx) => ({
-          start: s.start,
-          end: s.end,
-          text: origLines[idx]
-        }))
-      })
-    });
+  for (const baseUrl of [RENDER_BACKEND_URL, WORKER_URL]) {
+    try {
+      if (onProgress) onProgress(60, "✨ မြန်မာစာတန်းတိုတို (ကျစ်လျစ်စနစ်) ဖြင့် ဘာသာပြန်နေပါသည်...");
+      const resp = await fetch(baseUrl + "/song", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          conciseMM: true,
+          segments: validSegments.map((s, idx) => ({
+            start: s.start,
+            end: s.end,
+            text: origLines[idx]
+          }))
+        })
+      });
 
-    if (resp.ok) {
-      const data = await resp.json();
-      if (Array.isArray(data?.lyrics) && data.lyrics.length === validSegments.length) {
-        enLines = data.lyrics.map((item, idx) => String(item.en || origLines[idx]).replace(/\r?\n/g, " ").trim());
-        mmLines = data.lyrics.map((item, idx) => formatConciseMyanmarSubtitle(item.mm || origLines[idx]));
-        workerSongSuccess = true;
+      if (resp.ok) {
+        const data = await resp.json();
+        if (Array.isArray(data?.lyrics) && data.lyrics.length === validSegments.length) {
+          enLines = data.lyrics.map((item, idx) => String(item.en || origLines[idx]).replace(/\r?\n/g, " ").trim());
+          mmLines = data.lyrics.map((item, idx) => formatConciseMyanmarSubtitle(item.mm || origLines[idx]));
+          songSuccess = true;
+          break;
+        }
       }
-    }
-  } catch (err) {
-    console.warn("Worker /song fallback:", err);
+    } catch (err) {}
   }
 
-  if (!workerSongSuccess) {
-    if (onProgress) onProgress(65, "🇬🇧 English စာတန်းသီးသန့် ထုတ်ယူနေသည်...");
+  if (!songSuccess) {
+    if (onProgress) onProgress(68, "🇬🇧 English စာတန်းသီးသန့် ထုတ်ယူနေသည်...");
     enLines = await translateIndependentLanguageTrack(origLines, "en");
     if (onProgress) onProgress(82, "🇲🇲 မြန်မာစာတန်း အတို (ကျစ်လျစ်စနစ်) ဘာသာပြန်နေသည်...");
     const rawMm = await translateIndependentLanguageTrack(origLines, "my");
@@ -2653,6 +2751,9 @@ async function retranslateExistingSubtitles() {
   }
 }
 
+// -------------------------------------------------------------
+// MAIN HYBRID GENERATOR: RENDER PYTHON SERVER (OPTION B) + LYRICS (OPTION C)
+// -------------------------------------------------------------
 async function generateSongKaraokeSubtitles() {
   if (generating) return;
   if (!file) {
@@ -2666,20 +2767,23 @@ async function generateSongKaraokeSubtitles() {
   cancelExportBtn.style.display = "none";
 
   const isMM = (songSourceMode === "my");
+  const songTitle = (document.getElementById("songTitleInput")?.value || "").trim();
+  const customLyrics = (document.getElementById("customLyricsInput")?.value || "").trim();
+
   setLockProgress(
     12,
     "🎛️ သီချင်းထဲမှ တီးလုံးသံများကို လျှော့ချပြီး ဆိုသံ (Vocal) သီးသန့်ခွဲထုတ်နေပါသည်...",
     "Vocal Isolation Bandpass Filter (220Hz - 3800Hz) ဖြင့် သန့်စင်နေသည်..."
   );
 
-  document.querySelectorAll(".lockable, input.lockable, select.lockable").forEach(el => {
+  document.querySelectorAll(".lockable, input.lockable, select.lockable, textarea.lockable").forEach(el => {
     el.disabled = true;
   });
 
   const spinner = document.getElementById("songSpinner");
   const btnText = document.getElementById("songBtnText");
   if (spinner) spinner.style.display = "inline-block";
-  if (btnText) btnText.textContent = "ဆိုသံခွဲထုတ်ပြီး စာတန်းထုတ်နေပါသည်...";
+  if (btnText) btnText.textContent = "Render Server ဖြင့် အသံနှင့်စာသား ချိန်ညှိနေပါသည်...";
 
   subs = [];
   render();
@@ -2687,7 +2791,7 @@ async function generateSongKaraokeSubtitles() {
   try {
     let payloadFile = file;
     try {
-      const vocalBlob = await extractVocalIsolatedAudioBlob(file, 12000);
+      const vocalBlob = await extractVocalIsolatedAudioBlob(file, 10000);
       payloadFile = new File([vocalBlob], "vocal_isolated.wav", { type: "audio/wav" });
     } catch (extractErr) {
       console.warn("Vocal filter fallback to original file:", extractErr);
@@ -2695,25 +2799,61 @@ async function generateSongKaraokeSubtitles() {
     }
 
     setLockProgress(
-      40,
-      isMM ? "🇲🇲 Gemini Audio ဖြင့် မြန်မာသီချင်းဆိုသံကို တိုက်ရိုက်နားထောင်နေပါသည်..." : "🎤 AI ဖြင့် သီချင်းဆိုသံနှင့် အချိန်များကို နားထောင်နေပါသည်...",
-      "တီးလုံးသံများကို ကျော်ပြီး အဆိုတော် စဆိုသည့် စက္ကန့်အတိအကျကို ဖမ်းယူနေပါသည်..."
+      36,
+      isMM
+        ? "🚀 Render Python Server + Gemini Audio ဖြင့် မြန်မာသီချင်းကို ချိန်ညှိနေပါသည်..."
+        : "🚀 Render Server ဖြင့် နိုင်ငံခြားသီချင်းစာသားနှင့် အချိန်များကို ချိန်ညှိနေပါသည်...",
+      songTitle
+        ? `သီချင်းအမည် "${songTitle}" စာသားနှင့် အသံလှိုင်းကို တိုက်ဆိုင်စစ်ဆေးနေသည်...`
+        : "သီချင်းအစမှအဆုံး ဆိုသံစက္ကန့်အတိအကျကို နားထောင်နေပါသည် (စက္ကန့် ၂၀-၄၀ ခန့် စောင့်ပေးပါ)..."
     );
 
-    const fd = new FormData();
-    fd.append("file", payloadFile);
-    fd.append("lang", isMM ? "my" : "auto");
-    fd.append("mode", isMM ? "myanmar_gemini_only" : "foreign_song");
+    const buildFormData = () => {
+      const fd = new FormData();
+      fd.append("file", payloadFile);
+      fd.append("lang", isMM ? "my" : "auto");
+      fd.append("mode", isMM ? "myanmar_gemini_only" : "foreign_song");
+      if (songTitle) fd.append("song_title", songTitle);
+      if (customLyrics) fd.append("lyrics", customLyrics);
+      return fd;
+    };
 
-    const r1 = await fetch(WORKER_URL + "/transcribe", { method: "POST", body: fd });
-    if (!r1.ok) {
-      const errText = await r1.text();
-      throw new Error(`[Transcribe Error HTTP ${r1.status}]: ${errText}`);
+    // PRIMARY: Call Render Python Server (/api/karaoke) -> No 30s Worker Timeout!
+    let d1 = null;
+    let lastErrorText = "";
+
+    try {
+      const rRender = await fetch(`${RENDER_BACKEND_URL}/api/karaoke`, {
+        method: "POST",
+        body: buildFormData()
+      });
+      if (rRender.ok) {
+        d1 = await rRender.json();
+      } else {
+        lastErrorText = await rRender.text();
+      }
+    } catch (renderErr) {
+      lastErrorText = renderErr.message;
     }
 
-    const d1 = await r1.json();
-    const rawSegments = (d1.segments || []).filter(s => s && String(s.text || "").trim());
-    if (!rawSegments.length) throw new Error("သီချင်း/ဗီဒီယိုထဲတွင် ဆိုသံစာသား မတွေ့ရှိပါ။");
+    // FALLBACK: Call Cloudflare Worker (/transcribe) if Render wasn't updated or asleep
+    if (!d1 || !Array.isArray(d1.segments) || !d1.segments.length) {
+      setLockProgress(48, "🔄 Backup Worker Engine ဖြင့် ဆက်လက်ချိတ်ဆက်နေပါသည်...", "သီချင်းအသံလှိုင်းကို စစ်ဆေးနေပါသည်...");
+      const rWorker = await fetch(`${WORKER_URL}/transcribe`, {
+        method: "POST",
+        body: buildFormData()
+      });
+      if (!rWorker.ok) {
+        const wErr = await rWorker.text();
+        throw new Error(lastErrorText || wErr || `HTTP ${rWorker.status}`);
+      }
+      d1 = await rWorker.json();
+    }
+
+    const rawSegments = (d1?.segments || []).filter(s => s && String(s.text || "").trim());
+    if (!rawSegments.length) {
+      throw new Error("သီချင်းထဲတွင် ဆိုသံစာသား မတွေ့ရှိပါ။ သီချင်းအမည် သို့မဟုတ် စာသား ရိုက်ထည့်ပြီး ထပ်မံစမ်းကြည့်ပါ။");
+    }
 
     subs = await processSongSegmentsForMode(rawSegments, (pct, titleMsg) => {
       setLockProgress(pct, titleMsg, `စာကြောင်း (${rawSegments.length}) ကြောင်းကို ချိန်ညှိနေပါသည်...`);
@@ -2744,7 +2884,7 @@ async function generateSongKaraokeSubtitles() {
     toast("Error: " + err.message);
   } finally {
     generating = false;
-    document.querySelectorAll(".lockable, input.lockable, select.lockable").forEach(el => {
+    document.querySelectorAll(".lockable, input.lockable, select.lockable, textarea.lockable").forEach(el => {
       el.disabled = false;
     });
     if (spinner) spinner.style.display = "none";
@@ -2759,7 +2899,6 @@ function splitHelperTextInHalf(str) {
   const clean = String(str || "").trim();
   if (!clean) return ["", ""];
 
-  // 1. If user already put a newline (\n), split right there
   if (clean.includes("\n")) {
     const parts = clean.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
     if (parts.length >= 2) {
@@ -2768,14 +2907,12 @@ function splitHelperTextInHalf(str) {
     }
   }
 
-  // 2. If there are spaces, split at the middle word
   const words = clean.split(/\s+/).filter(Boolean);
   if (words.length >= 2) {
     const mid = Math.ceil(words.length / 2);
     return [words.slice(0, mid).join(" "), words.slice(mid).join(" ")];
   }
 
-  // 3. If unspaced Burmese text, split at the middle syllable cluster
   const clusters = splitTextIntoTokensForWrap(clean);
   if (clusters.length >= 2) {
     const mid = Math.ceil(clusters.length / 2);
@@ -2991,7 +3128,7 @@ function selectExportMethod(method) {
 
 function setExportingLock(locked) {
   isExportActive = locked;
-  document.querySelectorAll(".lockable, input.lockable, select.lockable").forEach(el => {
+  document.querySelectorAll(".lockable, input.lockable, select.lockable, textarea.lockable").forEach(el => {
     el.disabled = locked;
     el.style.opacity = locked ? "0.5" : "1";
     el.style.pointerEvents = locked ? "none" : "auto";
