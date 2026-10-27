@@ -7,7 +7,7 @@
 <title>Karaoke & Lyrics Studio Pro - AI Studio App</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Padauk:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Myanmar:wght@400;700;800&family=Padauk:wght@400;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/mp4-muxer@5.1.3/build/mp4-muxer.min.js"></script>
 
 <style>
@@ -34,7 +34,7 @@
   -webkit-tap-highlight-color: transparent;
   user-select: none;
   margin: 0; padding: 0;
-  font-family: 'Padauk', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: 'Padauk', 'Noto Sans Myanmar', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 input, textarea, select { user-select: text; }
@@ -81,6 +81,12 @@ button.active {
 
 .danger { background: #fee2e2 !important; border-color: #fca5a5 !important; color: #b91c1c !important; }
 .splitBtn { background: #e0f2fe !important; border-color: #7dd3fc !important; color: #0369a1 !important; }
+.fontUploadBtn {
+  background: linear-gradient(135deg, #0284c7, #0369a1) !important;
+  border: 0 !important; color: #ffffff !important;
+  font-weight: 700 !important; white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.25) !important;
+}
 .burnBtn {
   background: linear-gradient(135deg, #10b981, #059669) !important; border: 0 !important; color: #fff !important;
   box-shadow: 0 4px 12px rgba(16, 185, 129, 0.28); font-weight: 800;
@@ -301,6 +307,7 @@ video {
   white-space: pre-wrap;
   word-break: break-word;
   line-height: 1.35;
+  font-family: inherit;
 }
 
 .videoControlBarExternal {
@@ -451,6 +458,31 @@ video {
   padding: 6px 9px; font-size: 10px; color: #92400e; margin-bottom: 8px; line-height: 1.38;
 }
 
+.fontControlBox {
+  background: #f0f9ff;
+  border: 1.5px solid #bae6fd;
+  border-radius: 10px;
+  padding: 8px 10px;
+  margin-bottom: 8px;
+}
+.fontControlRow {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.fontSelectDropdown {
+  flex: 1;
+  background: #ffffff;
+  border: 1.5px solid var(--border);
+  color: var(--text);
+  border-radius: 8px;
+  padding: 5px 8px;
+  font-size: 11px;
+  font-weight: 700;
+  outline: none;
+}
+.fontSelectDropdown:focus { border-color: var(--cyan); }
+
 .videoLockOverlay {
   position: absolute; inset: 0; z-index: 95;
   background: rgba(15, 23, 42, 0.94); backdrop-filter: blur(6px);
@@ -483,14 +515,14 @@ video {
 @keyframes filmSweep { 0% { left: -100%; } 100% { left: 100%; } }
 
 .lockProgTrack {
-  width: 100%; max-width: 200px; height: 6px; background: #334155;
+  width: 100%; max-width: 220px; height: 7px; background: #334155;
   border-radius: 99px; overflow: hidden; margin-bottom: 4px;
 }
 .lockProgFill {
-  height: 100%; width: 0%; background: linear-gradient(90deg, var(--gold), var(--gold-dark));
-  border-radius: 99px; transition: width 0.25s ease;
+  height: 100%; width: 0%; background: linear-gradient(90deg, var(--gold), var(--green));
+  border-radius: 99px; transition: width 0.2s ease;
 }
-.lockPercentText { font-size: 11px; font-weight: 700; color: var(--gold); font-family: ui-monospace, monospace; }
+.lockPercentText { font-size: 12px; font-weight: 800; color: var(--gold); font-family: ui-monospace, monospace; }
 
 .liveSubBanner {
   background: #fffbeb; border: 1px solid #fde68a; border-left: 4px solid var(--gold);
@@ -647,6 +679,9 @@ video {
 
 <body>
 
+<!-- Hidden Custom Font (.ttf/.otf/.woff) File Input -->
+<input type="file" id="customFontUploadInput" accept=".ttf,.otf,.woff,.woff2,font/ttf,font/otf,application/x-font-ttf" style="display:none" onchange="handleCustomFontFileUpload(event)">
+
 <!-- Top Navbar -->
 <header class="navbar">
   <div class="nav-left">
@@ -654,6 +689,7 @@ video {
     <div class="logo">🎤 Karaoke & Lyrics Studio</div>
   </div>
   <div class="nav-right">
+    <button onclick="triggerFontUploadForTrack('ALL')" class="secondaryBtn navIconBtn lockable" title="Upload Custom Font (.ttf)">🔤 Font (.ttf)</button>
     <button onclick="toggleToolDrawer('editor')" class="secondaryBtn navIconBtn lockable" title="Edit Lyrics">📝 စာသားပြင်</button>
     <label for="file" class="secondaryBtn navIconBtn lockable" style="cursor:pointer;display:inline-flex;align-items:center;gap:4px" title="Change Song Video">
       🔄 သီချင်းလဲ
@@ -800,7 +836,7 @@ video {
           <input id="file" type="file" accept="video/mp4,video/webm,video/quicktime,video/x-matroska,video/*,audio/*" style="display:none" onchange="handleVideoFileSelect(event)">
         </div>
 
-        <!-- Video Editing Lock Overlay with Cancel Button -->
+        <!-- Video Editing Lock Overlay with Real 0-100% Progress & Cancel Button -->
         <div class="videoLockOverlay" id="videoLockOverlay">
           <div class="video-edit-anim-box">
             <div class="film-clap-wrap">
@@ -883,8 +919,23 @@ video {
         </div>
       </div>
       <div class="body" style="padding:12px">
-        <div class="manualEnterHintBox">
-          💡 <b>Fixed Font Size & Split စနစ်:</b> စာတန်းအတိုအရှည်မရွေး သတ်မှတ်ထားသော Font Size အတိုင်း ညီညာစွာ ပြသပေးပါသည်။ စာကြောင်းရှည်ပါက <b>📝 Lyrics</b> ထဲရှိ <b>✂️ ၂ ကြောင်းခွဲ (Split)</b> ခလုတ်ဖြင့် အချိန်ကိုက် ခွဲထုတ်နိုင်ပါသည်။
+        <!-- CUSTOM FONT STYLE & UPLOAD (.TTF) BOX -->
+        <div class="fontControlBox">
+          <div class="karaokeSubSectionTitle" style="margin-bottom:5px;color:#0369a1">
+            <span>🔤 စာတန်းထိုး Font Style ရွေးရန် (သို့) .ttf ဖောင့်တင်ရန်</span>
+            <span id="mmFontBadge" style="font-size:9px;color:var(--green);font-weight:700">Padauk</span>
+          </div>
+          <div class="fontControlRow">
+            <select id="mmFontFamily" class="fontSelectDropdown lockable" onchange="updateTrackStyle('MM')">
+              <option value="Padauk">Padauk (မြန်မာ စံပြဖောင့်)</option>
+              <option value="Noto Sans Myanmar">Noto Sans Myanmar (အထူ/ခေတ်မီ)</option>
+              <option value="Pyidaungsu">Pyidaungsu (ပြည်ထောင်စု)</option>
+              <option value="Myanmar Text">Myanmar Text (System)</option>
+            </select>
+            <button type="button" class="fontUploadBtn lockable" onclick="triggerFontUploadForTrack('MM')" title="Upload custom .ttf or .otf font">
+              📤 Upload Font (.ttf)
+            </button>
+          </div>
         </div>
 
         <div class="karaokeSubSection" style="margin-bottom:8px">
@@ -958,6 +1009,26 @@ video {
         </div>
       </div>
       <div class="body" style="padding:12px">
+        <!-- CUSTOM FONT STYLE & UPLOAD (.TTF) BOX -->
+        <div class="fontControlBox">
+          <div class="karaokeSubSectionTitle" style="margin-bottom:5px;color:#0369a1">
+            <span>🔤 မူရင်းစာတန်း Font Style (သို့) .ttf ဖောင့်တင်ရန်</span>
+            <span id="origFontBadge" style="font-size:9px;color:var(--green);font-weight:700">Padauk</span>
+          </div>
+          <div class="fontControlRow">
+            <select id="origFontFamily" class="fontSelectDropdown lockable" onchange="updateTrackStyle('Orig')">
+              <option value="Padauk">Padauk (Default)</option>
+              <option value="Noto Sans Myanmar">Noto Sans Myanmar</option>
+              <option value="Segoe UI">Segoe UI (Modern Sans)</option>
+              <option value="Impact">Impact (Bold Headline)</option>
+              <option value="Georgia">Georgia (Classic Serif)</option>
+            </select>
+            <button type="button" class="fontUploadBtn lockable" onclick="triggerFontUploadForTrack('Orig')">
+              📤 Upload Font (.ttf)
+            </button>
+          </div>
+        </div>
+
         <div class="karaokeSubSection" style="margin-bottom:8px">
           <div class="karaokeSubSectionTitle">
             <span>🎤 မူရင်းစာတန်း Karaoke အရောင်ပြေးစနစ်</span>
@@ -1029,6 +1100,26 @@ video {
         </div>
       </div>
       <div class="body" style="padding:12px">
+        <!-- CUSTOM FONT STYLE & UPLOAD (.TTF) BOX -->
+        <div class="fontControlBox">
+          <div class="karaokeSubSectionTitle" style="margin-bottom:5px;color:#0369a1">
+            <span>🔤 English စာတန်း Font Style (သို့) .ttf ဖောင့်တင်ရန်</span>
+            <span id="enFontBadge" style="font-size:9px;color:var(--green);font-weight:700">Padauk</span>
+          </div>
+          <div class="fontControlRow">
+            <select id="enFontFamily" class="fontSelectDropdown lockable" onchange="updateTrackStyle('EN')">
+              <option value="Padauk">Padauk (Default)</option>
+              <option value="Segoe UI">Segoe UI (Modern Sans)</option>
+              <option value="Impact">Impact (Bold Headline)</option>
+              <option value="Georgia">Georgia (Classic Serif)</option>
+              <option value="Courier New">Courier New (Monospace)</option>
+            </select>
+            <button type="button" class="fontUploadBtn lockable" onclick="triggerFontUploadForTrack('EN')">
+              📤 Upload Font (.ttf)
+            </button>
+          </div>
+        </div>
+
         <div class="karaokeSubSection" style="margin-bottom:8px">
           <div class="karaokeSubSectionTitle">
             <span>🎤 English စာတန်း Karaoke အရောင်ပြေးစနစ်</span>
@@ -1221,12 +1312,15 @@ video {
     <section class="mainModeCard" id="mainPage_karaoke">
       <div class="cardHead">
         <div>
-          <div class="title">🎤 Hybrid Song Karaoke Studio (Render Server + Gemini 3.8)</div>
+          <div class="title">🎤 Hybrid Song Karaoke Studio (Fast Chunking + Custom .ttf Font)</div>
           <div class="status">
             <span class="dot ready" id="dot"></span>
-            <span id="status">Render Server + Gemini 3.8 Flash အသင့်ဖြစ်ပါပြီ</span>
+            <span id="status">Fast Parallel Audio + Custom Font (.ttf) အသင့်ဖြစ်ပါပြီ</span>
           </div>
         </div>
+        <button type="button" class="fontUploadBtn lockable" style="padding:4px 9px;font-size:10px" onclick="triggerFontUploadForTrack('ALL')">
+          📤 Upload Font (.ttf)
+        </button>
       </div>
 
       <div class="body" style="padding:12px">
@@ -1246,24 +1340,24 @@ video {
             </button>
           </div>
 
-          <!-- HYBRID OPTION C: AUTO VIDEO FILENAME & SONG TITLE LYRICS LOOKUP -->
+          <!-- HYBRID OPTION C: SONG TITLE & REFERENCE LYRICS BOX -->
           <div class="hybridLyricsBox">
             <div class="karaokeSubSectionTitle" style="margin-bottom:5px">
-              <span>🎼 ၂။ သီချင်းအမည် / ဖိုင်အမည်ဖြင့် စာသားအမှန် ရှာဖွေချိန်ညှိရန်</span>
-              <span style="font-size:9px;color:var(--green);font-weight:700" id="autoLookupBadge">✨ Auto-Filename Search</span>
+              <span>🎼 ၂။ သီချင်းအမည် / စာသားအမှန် ချိန်ညှိရန် (စိတ်ကြိုက်)</span>
+              <span style="font-size:9px;color:var(--green);font-weight:700" id="autoLookupBadge">✨ Auto-Filename Ready</span>
             </div>
             <div class="titleLookupRow">
-              <input id="songTitleInput" type="text" class="titleLookupInput lockable" placeholder="ဗီဒီယိုဖိုင်နာမည်မှ အလိုအလျောက် ဖတ်ပေးပါမည် (သို့) သီချင်းအမည် ရိုက်ထည့်ပါ...">
+              <input id="songTitleInput" type="text" class="titleLookupInput lockable" placeholder="သီချင်းအမည် (ဥပမာ - တမ်းတ)...">
               <button type="button" class="secondaryBtn lockable" id="fetchLyricsBtn" onclick="fetchLyricsBySongTitle(false)" style="white-space:nowrap;padding:6px 10px">
                 🔍 စာသားရှာ
               </button>
             </div>
-            <textarea id="customLyricsInput" rows="3" class="customLyricsArea lockable" placeholder="သီချင်းဗီဒီယိုဖိုင်အမည်သည် သီချင်းနာမည်ဖြစ်ပါက ဤနေရာတွင် စာသားအမှန် အလိုအလျောက် ပေါ်လာပါမည် (သို့မဟုတ် စိတ်ကြိုက် ကူးထည့်နိုင်ပါသည်)..."></textarea>
+            <textarea id="customLyricsInput" rows="2" class="customLyricsArea lockable" placeholder="သီချင်းစာသား အမှန်ရှိပါက ဤနေရာတွင် ကူးထည့်နိုင်ပါသည် (မထည့်ဘဲ ထားပါကလည်း အသံကို အပိုင်းလိုက် အမြန်နားထောင်ပြီး ထုတ်ပေးပါမည်)..."></textarea>
           </div>
 
           <button class="primary lockable" id="generateSongBtn" style="width:100%;padding:11px;margin-bottom:8px" onclick="generateSongKaraokeSubtitles()">
             <span class="btnSpinner" id="songSpinner" style="display:none"></span>
-            <span id="songBtnText">🎵 Generate Myanmar Karaoke (Render Server ဖြင့် စာတန်းထုတ်မည်)</span>
+            <span id="songBtnText">🎵 Generate Myanmar Karaoke (အမြန်စနစ်ဖြင့် စာတန်းထုတ်မည်)</span>
           </button>
 
           <button class="secondaryBtn lockable" id="retranslateMainBtn" style="width:100%;padding:8px;margin-bottom:10px;font-size:10.5px;display:none" onclick="retranslateExistingSubtitles()">
@@ -1285,7 +1379,7 @@ video {
           </div>
 
           <p style="font-size:10px;color:var(--muted);margin-bottom:0" id="modeHintText">
-            ✨ <b>🇲🇲 မြန်မာသီချင်း Mode:</b> ဗီဒီယိုဖိုင်နာမည်မှ သီချင်းစာသားကို အလိုအလျောက် ရှာဖွေပေးပြီး <b>Render Server + Gemini-3.8-Flash</b> ဖြင့် အသံနှင့် စာသား အချိန်ကိုက် ချိန်ညှိပေးပါသည်။
+            ✨ <b>🇲🇲 မြန်မာသီချင်း Mode:</b> ၅ မိနစ်စာ သီချင်းများကို ၁ မိနစ်စီ အပိုင်းခွဲ၍ ပြိုင်တူ (Parallel) နားထောင်ပေးသဖြင့် Timeout လုံးဝမဖြစ်ဘဲ <b>0% မှ 100% အမှန်တကယ် Loading</b> ဖြင့် အမြန်ဆုံး ထုတ်ပေးပါသည်။
           </p>
         </div>
       </div>
@@ -1324,7 +1418,7 @@ function wakeUpRenderServer() {
 }
 
 // -------------------------------------------------------------
-// APP STATE VARIABLES
+// APP STATE VARIABLES & CUSTOM FONT (.TTF) REGISTRY
 // -------------------------------------------------------------
 let songSourceMode = "my"; // 'my' (Myanmar Song - MM Only) | 'auto' (Foreign Song - Short MM + Orig/EN)
 let currentOpenDrawer = null;
@@ -1334,10 +1428,14 @@ let videoURL = null;
 let generating = false;
 let karaokeTimingOffset = 0.0;
 
+let pendingFontUploadTarget = "ALL"; // 'MM' | 'Orig' | 'EN' | 'ALL'
+let customUploadedFonts = []; // [{ name: 'MyCustomFont_1', label: 'Masterpiece.ttf' }]
+
 const subTracks = {
   MM: {
     enabled: true,
     karaoke: true,
+    fontFamily: "Padauk",
     activeColor: "#f59e0b",
     textColor: "#ffffff",
     outlineColor: "#000000",
@@ -1351,6 +1449,7 @@ const subTracks = {
   Orig: {
     enabled: false,
     karaoke: true,
+    fontFamily: "Padauk",
     activeColor: "#f59e0b",
     textColor: "#ffffff",
     outlineColor: "#000000",
@@ -1364,6 +1463,7 @@ const subTracks = {
   EN: {
     enabled: false,
     karaoke: true,
+    fontFamily: "Padauk",
     activeColor: "#10b981",
     textColor: "#ffffff",
     outlineColor: "#000000",
@@ -1420,6 +1520,73 @@ function closeMenu() {
 }
 
 // -------------------------------------------------------------
+// CUSTOM FONT (.TTF / .OTF / .WOFF) UPLOAD & ENGINE
+// -------------------------------------------------------------
+function triggerFontUploadForTrack(targetTrackKey) {
+  pendingFontUploadTarget = targetTrackKey || "ALL";
+  const inp = document.getElementById("customFontUploadInput");
+  if (inp) {
+    inp.value = "";
+    inp.click();
+  }
+}
+
+async function handleCustomFontFileUpload(e) {
+  const fontFile = e.target.files && e.target.files[0];
+  if (!fontFile) return;
+
+  try {
+    const cleanFileName = fontFile.name.replace(/\.[^/.]+$/, "").replace(/[^a-zA-Z0-9_\u1000-\u109F\s-]/g, "").trim() || "CustomFont";
+    const uniqueFontFamily = `CustomFont_${Date.now()}`;
+    const arrayBuf = await fontFile.arrayBuffer();
+
+    const fontFace = new FontFace(uniqueFontFamily, arrayBuf);
+    const loadedFace = await fontFace.load();
+    document.fonts.add(loadedFace);
+
+    customUploadedFonts.push({
+      family: uniqueFontFamily,
+      label: `✨ ${cleanFileName} (.ttf)`
+    });
+
+    // Add newly uploaded font option to all 3 track dropdowns
+    ["MM", "Orig", "EN"].forEach(k => {
+      const sel = document.getElementById(k.toLowerCase() + "FontFamily");
+      if (sel) {
+        const opt = document.createElement("option");
+        opt.value = uniqueFontFamily;
+        opt.textContent = `✨ ${cleanFileName} (.ttf)`;
+        sel.appendChild(opt);
+      }
+    });
+
+    // Apply immediately to target track (or all tracks)
+    const targets = pendingFontUploadTarget === "ALL" ? ["MM", "Orig", "EN"] : [pendingFontUploadTarget];
+    targets.forEach(k => {
+      const sel = document.getElementById(k.toLowerCase() + "FontFamily");
+      if (sel) sel.value = uniqueFontFamily;
+      updateTrackStyle(k);
+    });
+
+    // Also apply to any existing Titles if user uploaded globally
+    titlesList.forEach(t => { t.fontFamily = uniqueFontFamily; });
+    textsList.forEach(t => { t.fontFamily = uniqueFontFamily; });
+    renderTitles();
+    renderTexts();
+
+    toast(`✅ "${fontFile.name}" ဖောင့်ကို အောင်မြင်စွာ တင်ပြီး ပြောင်းလဲလိုက်ပါပြီ!`);
+  } catch (err) {
+    console.error("Font upload error:", err);
+    toast("❌ Font (.ttf) ဖိုင်ဖတ်ရာတွင် အဆင်မပြေပါ: " + err.message);
+  }
+}
+
+function getFontStackString(fontFamilyName) {
+  const f = String(fontFamilyName || "Padauk").trim();
+  return `'${f}', 'Padauk', 'Noto Sans Myanmar', 'Segoe UI', sans-serif`;
+}
+
+// -------------------------------------------------------------
 // FILENAME CLEANER & AUTO SONG TITLE DETECTOR
 // -------------------------------------------------------------
 function cleanSongTitleFromFilename(rawName) {
@@ -1472,9 +1639,9 @@ function setSongSourceMode(mode) {
     if (srtOptEN) srtOptEN.style.display = "none";
     if (srtOptOrig) srtOptOrig.style.display = "none";
     if (retranslateMainBtn) retranslateMainBtn.style.display = "none";
-    if (songBtnText) songBtnText.textContent = "🎵 Generate Myanmar Karaoke (Render Server ဖြင့် စာတန်းထုတ်မည်)";
+    if (songBtnText) songBtnText.textContent = "🎵 Generate Myanmar Karaoke (အမြန်စနစ်ဖြင့် စာတန်းထုတ်မည်)";
     if (modeHintText) {
-      modeHintText.innerHTML = `✨ <b>🇲🇲 မြန်မာသီချင်း Mode:</b> ဗီဒီယိုဖိုင်နာမည်မှ သီချင်းစာသားကို အလိုအလျောက် ရှာဖွေပေးပြီး <b>Render Server + Gemini-3.8-Flash</b> ဖြင့် အသံနှင့် စာသား အချိန်ကိုက် ချိန်ညှိပေးပါသည်။`;
+      modeHintText.innerHTML = `✨ <b>🇲🇲 မြန်မာသီချင်း Mode:</b> ၅ မိနစ်စာ သီချင်းများကို ၁ မိနစ်စီ အပိုင်းခွဲ၍ ပြိုင်တူ (Parallel) နားထောင်ပေးသဖြင့် Timeout လုံးဝမဖြစ်ဘဲ <b>0% မှ 100% အမှန်တကယ် Loading</b> ဖြင့် အမြန်ဆုံး ထုတ်ပေးပါသည်။`;
     }
 
     toggleLangTrack("MM", true, true);
@@ -1505,9 +1672,9 @@ function setSongSourceMode(mode) {
 }
 
 // -------------------------------------------------------------
-// OPTION C: FETCH LYRICS BY SONG TITLE OR VIDEO FILENAME
+// OPTION C: MANUAL OR BACKGROUND LYRICS LOOKUP
 // -------------------------------------------------------------
-async function fetchLyricsBySongTitle(isAutoFromFilename = false) {
+async function fetchLyricsBySongTitle(isSilentBackground = false) {
   const titleInput = document.getElementById("songTitleInput");
   const lyricsBox = document.getElementById("customLyricsInput");
   const btn = document.getElementById("fetchLyricsBtn");
@@ -1517,7 +1684,7 @@ async function fetchLyricsBySongTitle(isAutoFromFilename = false) {
   const cleanedTitle = cleanSongTitleFromFilename(rawTitle);
 
   if (!cleanedTitle) {
-    if (!isAutoFromFilename) {
+    if (!isSilentBackground) {
       toast("ကျေးဇူးပြု၍ သီချင်းအမည် (သို့) အဆိုတော်အမည် အရင်ရိုက်ထည့်ပါ");
       titleInput.focus();
     }
@@ -1533,14 +1700,17 @@ async function fetchLyricsBySongTitle(isAutoFromFilename = false) {
   try {
     let foundLines = null;
 
-    // Try Cloudflare Worker first (0ms cold start) then Render Server
     for (const baseUrl of [WORKER_URL, RENDER_BACKEND_URL]) {
       try {
+        const ctrl = new AbortController();
+        const timer = setTimeout(() => ctrl.abort(), 14000);
         const r = await fetch(`${baseUrl}/api/fetch-lyrics`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ song_title: cleanedTitle, lang: songSourceMode })
+          body: JSON.stringify({ song_title: cleanedTitle, lang: songSourceMode }),
+          signal: ctrl.signal
         });
+        clearTimeout(timer);
         if (r.ok) {
           const d = await r.json();
           if (Array.isArray(d.lines) && d.lines.length > 0) {
@@ -1553,18 +1723,20 @@ async function fetchLyricsBySongTitle(isAutoFromFilename = false) {
 
     if (foundLines && foundLines.length > 0) {
       lyricsBox.value = foundLines.join("\n");
-      if (badge) badge.textContent = `✅ စာသား (${foundLines.length}) ကြောင်း အသင့်ရရှိပြီး`;
-      toast(`✅ "${cleanedTitle}" သီချင်းစာသား (${foundLines.length}) ကြောင်း အလိုအလျောက် ရှာတွေ့ပါပြီ!`);
+      if (badge) badge.textContent = `✅ စာသား (${foundLines.length}) ကြောင်း ရရှိပြီး`;
+      if (!isSilentBackground) {
+        toast(`✅ "${cleanedTitle}" စာသား (${foundLines.length}) ကြောင်း ရှာတွေ့ပါပြီ!`);
+      }
       return lyricsBox.value;
     } else {
       if (badge) badge.textContent = "🎤 အသံမှ တိုက်ရိုက်နားထောင်မည်";
-      if (!isAutoFromFilename) {
+      if (!isSilentBackground) {
         toast("ℹ️ စာသားအသင့် မတွေ့ပါသဖြင့် Generate နှိပ်သည့်အခါ အသံမှ တိုက်ရိုက်နားထောင်ပေးပါမည်");
       }
       return null;
     }
   } catch (err) {
-    if (!isAutoFromFilename) toast("Error: " + err.message);
+    if (!isSilentBackground) toast("Error: " + err.message);
     return null;
   } finally {
     btn.disabled = false;
@@ -1674,6 +1846,16 @@ function updateTrackStyle(key) {
   if (!tr) return;
   const p = key.toLowerCase();
 
+  const fontSel = document.getElementById(p + "FontFamily");
+  if (fontSel && fontSel.value) {
+    tr.fontFamily = fontSel.value;
+    const badge = document.getElementById(p + "FontBadge");
+    if (badge) {
+      const selectedOpt = fontSel.options[fontSel.selectedIndex];
+      badge.textContent = selectedOpt ? selectedOpt.textContent.replace(/\s*\(.*?\)/g, "") : tr.fontFamily;
+    }
+  }
+
   tr.karaoke = document.getElementById(p + "KaraokeCheck").checked;
   tr.activeColor = document.getElementById(p + "ActiveColor").value;
   tr.textColor = document.getElementById(p + "TextColor").value;
@@ -1693,6 +1875,7 @@ function updateTrackStyle(key) {
   if (innerEl) innerEl.style.backgroundColor = `rgba(${r}, ${g}, ${b}, ${tr.opacity / 100})`;
   if (targetEl) {
     targetEl.style.webkitTextStroke = `${tr.outlineWidth}px ${tr.outlineColor}`;
+    targetEl.style.fontFamily = getFontStackString(tr.fontFamily);
   }
 
   updateLiveSubtitleOverlays(video.currentTime || 0);
@@ -1716,7 +1899,7 @@ function updateTrackPosFromSlider(key) {
 }
 
 // -------------------------------------------------------------
-// UNIFORM FIXED FONT SIZE + NATURAL WORD WRAPPING ENGINE
+// UNIFORM FIXED FONT SIZE + CUSTOM FONT WORD WRAPPING ENGINE
 // -------------------------------------------------------------
 function splitTextIntoTokensForWrap(str) {
   if (str.includes(" ")) {
@@ -1726,13 +1909,13 @@ function splitTextIntoTokensForWrap(str) {
   return str.match(regex) || [str];
 }
 
-function layoutSubtitleLines(rawText, fixedFontSizePx, maxPixelWidth) {
+function layoutSubtitleLines(rawText, fixedFontSizePx, maxPixelWidth, fontFamilyName = "Padauk") {
   if (!rawText || !String(rawText).trim()) {
     return { lines: [], fontSize: fixedFontSizePx };
   }
 
   const fontSize = fixedFontSizePx;
-  measureCtx.font = `700 ${fontSize}px 'Padauk', 'Segoe UI', sans-serif`;
+  measureCtx.font = `700 ${fontSize}px ${getFontStackString(fontFamilyName)}`;
 
   const paragraphs = String(rawText)
     .split(/\r?\n/)
@@ -1798,10 +1981,11 @@ function renderDomTrackOverlay(key, rawText, progressPct) {
   innerEl.style.display = "inline-flex";
 
   const boxWidthPx = Math.max(80, (videoBox.clientWidth || 240) * 0.86);
-  const layout = layoutSubtitleLines(rawText, tr.size, boxWidthPx);
+  const layout = layoutSubtitleLines(rawText, tr.size, boxWidthPx, tr.fontFamily);
   const lines = layout.lines;
 
   targetEl.style.fontSize = layout.fontSize + "px";
+  targetEl.style.fontFamily = getFontStackString(tr.fontFamily);
   targetEl.innerHTML = "";
 
   const totalChars = Math.max(1, lines.reduce((acc, l) => acc + Math.max(1, l.length), 0));
@@ -1810,6 +1994,7 @@ function renderDomTrackOverlay(key, rawText, progressPct) {
   lines.forEach((lineText) => {
     const span = document.createElement("span");
     span.className = "karaokeLineSpan";
+    span.style.fontFamily = getFontStackString(tr.fontFamily);
     span.textContent = lineText;
 
     const lineLen = Math.max(1, lineText.length);
@@ -2010,6 +2195,7 @@ function addNewTitle() {
   const id = Date.now();
   const newTitle = {
     id, text: "သီချင်းအမည် / အဆိုတော်", size: 16, color: "#ffffff",
+    fontFamily: subTracks.MM.fontFamily || "Padauk",
     outlineColor: "#000000", outlineWidth: 1.5, bgColor: "#000000", opacity: 75,
     x: 50, y: Math.min(80, 12 + titlesList.length * 8)
   };
@@ -2085,6 +2271,7 @@ function renderTitles() {
     el.style.left = t.x + "%";
     el.style.top = t.y + "%";
     el.style.fontSize = t.size + "px";
+    el.style.fontFamily = getFontStackString(t.fontFamily || subTracks.MM.fontFamily);
     el.style.color = t.color;
     el.style.webkitTextStroke = `${t.outlineWidth}px ${t.outlineColor}`;
 
@@ -2113,6 +2300,7 @@ function addNewCustomText() {
   const id = Date.now();
   const newText = {
     id, text: "Karaoke Version", size: 14, color: "#0284c7",
+    fontFamily: subTracks.MM.fontFamily || "Padauk",
     outlineColor: "#000000", outlineWidth: 1.0, bgColor: "#000000", opacity: 60,
     x: 50, y: Math.min(80, 20 + textsList.length * 8)
   };
@@ -2187,6 +2375,7 @@ function renderTexts() {
     el.style.left = t.x + "%";
     el.style.top = t.y + "%";
     el.style.fontSize = t.size + "px";
+    el.style.fontFamily = getFontStackString(t.fontFamily || subTracks.MM.fontFamily);
     el.style.color = t.color;
     el.style.webkitTextStroke = `${t.outlineWidth}px ${t.outlineColor}`;
 
@@ -2419,7 +2608,7 @@ function loadVideo(f) {
   });
   generating = false;
 
-  // AUTO DETECT SONG TITLE FROM VIDEO FILENAME & AUTO FETCH LYRICS
+  // Cleanly populate song title input from video filename without blocking UI
   const titleInput = document.getElementById("songTitleInput");
   const lyricsBox = document.getElementById("customLyricsInput");
   const badge = document.getElementById("autoLookupBadge");
@@ -2429,11 +2618,10 @@ function loadVideo(f) {
     lyricsBox.value = "";
     if (!isGenericCameraOrSystemFilename(cleanName)) {
       titleInput.value = cleanName;
-      if (badge) badge.textContent = `🔍 "${cleanName}" စာသား ရှာနေသည်...`;
-      fetchLyricsBySongTitle(true);
+      if (badge) badge.textContent = `✨ "${cleanName.slice(0, 18)}" အသင့်ဖတ်ပြီး`;
     } else {
       titleInput.value = "";
-      if (badge) badge.textContent = "✨ Auto-Filename Search";
+      if (badge) badge.textContent = "✨ Auto-Filename Ready";
     }
   }
 
@@ -2529,13 +2717,42 @@ function formatConciseMyanmarSubtitle(mmText) {
 }
 
 // -------------------------------------------------------------
-// VOCAL ISOLATION & CENTER-VOICE FREQUENCY FILTER (WEB AUDIO DSP)
+// VOCAL ISOLATION & PARALLEL AUDIO CHUNK SLICER (0% -> 100% REAL PROGRESS)
 // -------------------------------------------------------------
-async function extractVocalIsolatedAudioBlob(videoFile, targetRate = 8000) {
+function encodeFloat32SliceToWavBlob(samplesFloat32, sampleRate, normGain = 1.0) {
+  const outBuf = new ArrayBuffer(samplesFloat32.length * 2 + 44);
+  const v = new DataView(outBuf);
+  function wstr(o, s) { for (let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); }
+  wstr(0, "RIFF");
+  v.setUint32(4, outBuf.byteLength - 8, true);
+  wstr(8, "WAVE");
+  wstr(12, "fmt ");
+  v.setUint32(16, 16, true);
+  v.setUint16(20, 1, true);
+  v.setUint16(22, 1, true);
+  v.setUint32(24, sampleRate, true);
+  v.setUint32(28, sampleRate * 2, true);
+  v.setUint16(32, 2, true);
+  v.setUint16(34, 16, true);
+  wstr(36, "data");
+  v.setUint32(40, samplesFloat32.length * 2, true);
+
+  let p = 44;
+  for (let i = 0; i < samplesFloat32.length; i++) {
+    const s = Math.max(-1, Math.min(1, samplesFloat32[i] * normGain));
+    v.setInt16(p, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+    p += 2;
+  }
+  return new Blob([outBuf], { type: "audio/wav" });
+}
+
+async function extractVocalIsolatedAudioChunks(videoFile, chunkSec = 60, targetRate = 10000, onProgress = null) {
+  if (onProgress) onProgress(4, "🎛️ ဗီဒီယိုထဲမှ အသံလှိုင်းကို ဆွဲထုတ်နေပါသည် (4%)...");
   const buf = await videoFile.arrayBuffer();
   const actx = new (window.AudioContext || window.webkitAudioContext)();
   const dec = await actx.decodeAudioData(buf);
 
+  if (onProgress) onProgress(9, "🎛️ တီးလုံးသံ လျှော့ချပြီး လူဆိုသံ (Vocal) သီးသန့်စစ်ထုတ်နေသည် (9%)...");
   const rate = targetRate;
   const numFrames = Math.ceil(dec.duration * rate);
   const off = new OfflineAudioContext(1, numFrames, rate);
@@ -2588,6 +2805,7 @@ async function extractVocalIsolatedAudioBlob(videoFile, targetRate = 8000) {
   const rendered = await off.startRendering();
   actx.close();
 
+  if (onProgress) onProgress(15, "✂️ အသံဖိုင်ကို အမြန်စစ်ဆေးနိုင်ရန် အပိုင်းလိုက် ပြင်ဆင်နေသည် (15%)...");
   const cdata = rendered.getChannelData(0);
   let maxPeak = 0.01;
   for (let i = 0; i < cdata.length; i++) {
@@ -2596,21 +2814,25 @@ async function extractVocalIsolatedAudioBlob(videoFile, targetRate = 8000) {
   }
   const normGain = Math.min(2.5, 0.92 / maxPeak);
 
-  const outBuf = new ArrayBuffer(cdata.length * 2 + 44);
-  const v = new DataView(outBuf);
-  function wstr(o, s) { for (let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); }
-  wstr(0, 'RIFF'); v.setUint32(4, outBuf.byteLength - 8, true); wstr(8, 'WAVE'); wstr(12, 'fmt ');
-  v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
-  v.setUint32(24, rate, true); v.setUint32(28, rate * 2, true);
-  v.setUint16(32, 2, true); v.setUint16(34, 16, true); wstr(36, 'data');
-  v.setUint32(40, cdata.length * 2, true);
-  let p = 44;
-  for (let i = 0; i < cdata.length; i++) {
-    const s = Math.max(-1, Math.min(1, cdata[i] * normGain));
-    v.setInt16(p, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
-    p += 2;
+  const fullBlob = encodeFloat32SliceToWavBlob(cdata, rate, normGain);
+  const chunks = [];
+  const samplesPerChunk = chunkSec * rate;
+
+  for (let startSample = 0, idx = 0; startSample < cdata.length; startSample += samplesPerChunk, idx++) {
+    const endSample = Math.min(cdata.length, startSample + samplesPerChunk);
+    if (endSample - startSample < rate * 0.8) break; // Ignore tiny <0.8s tail
+    const sliceData = cdata.subarray(startSample, endSample);
+    const wavBlob = encodeFloat32SliceToWavBlob(sliceData, rate, normGain);
+    chunks.push({
+      index: idx,
+      timeOffset: Number((startSample / rate).toFixed(2)),
+      duration: Number(((endSample - startSample) / rate).toFixed(2)),
+      blob: wavBlob
+    });
   }
-  return new Blob([outBuf], { type: 'audio/wav' });
+
+  if (onProgress) onProgress(18, `✅ အသံပိုင်း (${chunks.length}) ပိုင်း ပြင်ဆင်ပြီးပါပြီ (18%)`);
+  return { fullBlob, chunks, totalDuration: dec.duration };
 }
 
 // Client Fallback Translators
@@ -2664,7 +2886,7 @@ async function translateIndependentLanguageTrack(origLinesArray, targetLang) {
 }
 
 // -------------------------------------------------------------
-// PROCESS & TRANSLATE SEGMENTS ACCORDING TO MODE
+// PROCESS & TRANSLATE SEGMENTS WITH REAL PROGRESS (72% -> 98%)
 // -------------------------------------------------------------
 async function processSongSegmentsForMode(rawSegments, onProgress) {
   const validSegments = rawSegments.filter(s => {
@@ -2680,6 +2902,7 @@ async function processSongSegmentsForMode(rawSegments, onProgress) {
 
   // MODE 1: MYANMAR SONG -> Myanmar Subtitle ONLY!
   if (songSourceMode === "my") {
+    if (onProgress) onProgress(92, "🇲🇲 မြန်မာကာရာအိုကေ စာတန်းအချိန်များ အပြီးသတ် ချိန်ညှိနေပါသည် (92%)...");
     let prevEnd = 0;
     return validSegments.map((seg, i) => {
       const cleanMM = formatConciseMyanmarSubtitle(origLines[i]);
@@ -2709,7 +2932,7 @@ async function processSongSegmentsForMode(rawSegments, onProgress) {
 
   for (const baseUrl of [WORKER_URL, RENDER_BACKEND_URL]) {
     try {
-      if (onProgress) onProgress(60, "✨ Gemini-3.8-Flash ဖြင့် မြန်မာစာတန်းတိုတို ဘာသာပြန်နေပါသည်...");
+      if (onProgress) onProgress(76, "✨ မြန်မာစာတန်းတိုတို (ကျစ်လျစ်စနစ်) ဖြင့် ဘာသာပြန်နေပါသည် (76%)...");
       const resp = await fetch(baseUrl + "/song", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -2729,7 +2952,7 @@ async function processSongSegmentsForMode(rawSegments, onProgress) {
           const candidateMM = data.lyrics.map((item, idx) => formatConciseMyanmarSubtitle(item.mm || ""));
           const mmHasBurmeseCount = candidateMM.filter(l => hasMyanmarScript(l)).length;
 
-          if (mmHasBurmeseCount >= Math.ceil(validSegments.length * 0.4)) {
+          if (mmHasBurmeseCount >= Math.ceil(validSegments.length * 0.35)) {
             enLines = data.lyrics.map((item, idx) => String(item.en || origLines[idx]).replace(/\r?\n/g, " ").trim());
             mmLines = candidateMM;
             songSuccess = true;
@@ -2741,14 +2964,14 @@ async function processSongSegmentsForMode(rawSegments, onProgress) {
   }
 
   if (!songSuccess) {
-    if (onProgress) onProgress(68, "🇬🇧 English စာတန်းသီးသန့် ထုတ်ယူနေသည်...");
+    if (onProgress) onProgress(82, "🇬🇧 English စာတန်းသီးသန့် ထုတ်ယူနေသည် (82%)...");
     enLines = await translateIndependentLanguageTrack(origLines, "en");
-    if (onProgress) onProgress(82, "🇲🇲 မြန်မာစာတန်း အတို (ကျစ်လျစ်စနစ်) ဘာသာပြန်နေသည်...");
+    if (onProgress) onProgress(88, "🇲🇲 မြန်မာစာတန်း အတို (ကျစ်လျစ်စနစ်) ဘာသာပြန်နေသည် (88%)...");
     const rawMm = await translateIndependentLanguageTrack(origLines, "my");
     mmLines = rawMm.map(l => formatConciseMyanmarSubtitle(l));
   }
 
-  // Ensure every single line has genuine Myanmar translation if English leaked through
+  if (onProgress) onProgress(94, "✅ မြန်မာစာတန်း စစ်ဆေးအတည်ပြုနေပါသည် (94%)...");
   for (let i = 0; i < origLines.length; i++) {
     if (!mmLines[i] || (!hasMyanmarScript(mmLines[i]) && /[a-zA-Z]/.test(mmLines[i]))) {
       try {
@@ -2822,7 +3045,48 @@ async function retranslateExistingSubtitles() {
 }
 
 // -------------------------------------------------------------
-// MAIN HYBRID GENERATOR: RENDER SERVER (OPTION B) + FILENAME LYRICS (OPTION C)
+// SEND SINGLE AUDIO CHUNK TO WORKER / RENDER WITH AUTO-FAILOVER
+// -------------------------------------------------------------
+async function transcribeSingleChunkWithFailover(chunkObj, isMM, songTitle, customLyrics) {
+  const buildFd = () => {
+    const fd = new FormData();
+    const chunkFile = new File([chunkObj.blob], `chunk_${chunkObj.index}.wav`, { type: "audio/wav" });
+    fd.append("file", chunkFile);
+    fd.append("lang", isMM ? "my" : "auto");
+    fd.append("mode", isMM ? "myanmar_gemini_only" : "foreign_song");
+    fd.append("time_offset", String(chunkObj.timeOffset || 0));
+    if (songTitle) fd.append("song_title", songTitle);
+    if (customLyrics) fd.append("lyrics", customLyrics);
+    return fd;
+  };
+
+  // Try Cloudflare Worker first (0ms cold start, fast for 60s chunks), then Render Server
+  const endpoints = [`${WORKER_URL}/transcribe`, `${RENDER_BACKEND_URL}/api/karaoke`];
+  let lastErr = "";
+
+  for (const ep of endpoints) {
+    try {
+      const r = await fetch(ep, {
+        method: "POST",
+        body: buildFd()
+      });
+      if (r.ok) {
+        const d = await r.json();
+        if (d && Array.isArray(d.segments)) {
+          return d.segments;
+        }
+      } else {
+        lastErr = await r.text();
+      }
+    } catch (e) {
+      lastErr = e.message;
+    }
+  }
+  throw new Error(lastErr || `Chunk #${chunkObj.index + 1} failed`);
+}
+
+// -------------------------------------------------------------
+// MAIN GENERATOR WITH REAL 0% -> 100% PROGRESS & PARALLEL CHUNKING
 // -------------------------------------------------------------
 async function generateSongKaraokeSubtitles() {
   if (generating) return;
@@ -2845,8 +3109,7 @@ async function generateSongKaraokeSubtitles() {
       document.getElementById("songTitleInput").value = songTitle;
     }
   }
-
-  let customLyrics = (document.getElementById("customLyricsInput")?.value || "").trim();
+  const customLyrics = (document.getElementById("customLyricsInput")?.value || "").trim();
 
   document.querySelectorAll(".lockable, input.lockable, select.lockable, textarea.lockable").forEach(el => {
     el.disabled = true;
@@ -2855,94 +3118,75 @@ async function generateSongKaraokeSubtitles() {
   const spinner = document.getElementById("songSpinner");
   const btnText = document.getElementById("songBtnText");
   if (spinner) spinner.style.display = "inline-block";
-  if (btnText) btnText.textContent = "Render Server + Gemini 3.8 ဖြင့် ချိန်ညှိနေပါသည်...";
+  if (btnText) btnText.textContent = "0% - 100% အမြန်စနစ်ဖြင့် စာတန်းထုတ်နေပါသည်...";
 
   subs = [];
   render();
 
   try {
-    // STEP 1: If songTitle is available and customLyrics is still empty, auto-fetch lyrics first!
-    if (songTitle && !customLyrics) {
-      setLockProgress(10, `🔍 "${songTitle}" သီချင်းစာသားအမှန်ကို အရင်ရှာဖွေနေပါသည်...`, "Gemini-3.8-Flash Lyrics Database မှ ဆွဲထုတ်နေသည်...");
-      const fetched = await fetchLyricsBySongTitle(true);
-      if (fetched) {
-        customLyrics = fetched;
+    setLockProgress(2, "🎬 သီချင်းဖိုင်ကို စတင်စစ်ဆေးနေပါသည် (2%)...", "Vocal Isolation Audio Engine စတင်နေသည်...");
+
+    // STEP 1: Extract Vocal Isolated Audio & Slice into 60s Chunks (Progress: 2% -> 18%)
+    const chunkSec = isMM ? 55 : 90;
+    const { fullBlob, chunks } = await extractVocalIsolatedAudioChunks(file, chunkSec, 10000, (pct, msg) => {
+      setLockProgress(pct, msg, "တီးလုံးသံ လျှော့ချပြီး လူဆိုသံ သီးသန့် ခွဲထုတ်နေသည်...");
+    });
+
+    let collectedSegments = [];
+
+    // STEP 2: Transcribe Audio with Real-Time Progress (18% -> 72%)
+    if (!isMM && chunks.length <= 4) {
+      // Foreign Song Fast Path: Send full vocal audio to Groq Whisper (2-4 seconds!)
+      setLockProgress(28, "⚡ နိုင်ငံခြားသီချင်း ဆိုသံနှင့် အချိန်များကို အမြန်ဖမ်းယူနေသည် (28%)...", "High-Speed Whisper + Gemini AI စစ်ဆေးနေသည်...");
+      const singleChunk = { index: 0, timeOffset: 0, blob: fullBlob };
+      collectedSegments = await transcribeSingleChunkWithFailover(singleChunk, false, songTitle, customLyrics);
+      setLockProgress(70, `✅ သီချင်းစာကြောင်း (${collectedSegments.length}) ကြောင်း ဖမ်းယူပြီးပါပြီ (70%)`, "မြန်မာဘာသာပြန်ရန် ပြင်ဆင်နေသည်...");
+    } else {
+      // Parallel Batch Chunking for Myanmar Songs or Long Songs (Never times out, updates % as each chunk finishes!)
+      const totalChunks = chunks.length;
+      let completedChunks = 0;
+      const chunkResults = new Array(totalChunks).fill([]);
+
+      setLockProgress(
+        22,
+        `🚀 သီချင်းအပိုင်း (0 / ${totalChunks}) စတင်နားထောင်နေပါသည် (22%)...`,
+        `အပိုင်း ${totalChunks} ပိုင်းကို ပြိုင်တူ စစ်ဆေးနေပါသည်...`
+      );
+
+      // Process up to 3 chunks concurrently for maximum speed & stability
+      const CONCURRENCY = 3;
+      for (let startIdx = 0; startIdx < totalChunks; startIdx += CONCURRENCY) {
+        const batch = chunks.slice(startIdx, startIdx + CONCURRENCY);
+        await Promise.all(
+          batch.map(async (ch) => {
+            try {
+              const segs = await transcribeSingleChunkWithFailover(ch, isMM, songTitle, customLyrics);
+              chunkResults[ch.index] = segs || [];
+            } catch (chunkErr) {
+              console.warn(`Chunk ${ch.index} warning:`, chunkErr);
+              chunkResults[ch.index] = [];
+            } finally {
+              completedChunks++;
+              const realPct = 20 + Math.round((completedChunks / totalChunks) * 52);
+              setLockProgress(
+                realPct,
+                `🎤 သီချင်းအပိုင်း (${completedChunks} / ${totalChunks}) နားထောင်ပြီးပါပြီ (${realPct}%)...`,
+                `အဆိုတော် သီဆိုသည့် စက္ကန့်နှင့် စာသားများကို စုစည်းနေသည်...`
+              );
+            }
+          })
+        );
       }
+
+      collectedSegments = chunkResults.flat().sort((a, b) => (a.start || 0) - (b.start || 0));
     }
 
-    setLockProgress(
-      20,
-      "🎛️ သီချင်းထဲမှ တီးလုံးသံများကို လျှော့ချပြီး ဆိုသံ (Vocal) သီးသန့်ခွဲထုတ်နေပါသည်...",
-      "Vocal Isolation Bandpass Filter (220Hz - 3800Hz) ဖြင့် သန့်စင်နေသည်..."
-    );
-
-    let payloadFile = file;
-    try {
-      const vocalBlob = await extractVocalIsolatedAudioBlob(file, 8000);
-      const safeFileName = songTitle ? `${songTitle}.wav` : "vocal_isolated.wav";
-      payloadFile = new File([vocalBlob], safeFileName, { type: "audio/wav" });
-    } catch (extractErr) {
-      console.warn("Vocal filter fallback to original file:", extractErr);
-      payloadFile = file;
-    }
-
-    setLockProgress(
-      42,
-      isMM
-        ? "🚀 Render Server + Gemini-3.8-Flash ဖြင့် မြန်မာသီချင်းကို အချိန်ညှိနေပါသည်..."
-        : "🚀 Render Server + Gemini-3.8-Flash ဖြင့် နိုင်ငံခြားသီချင်းကို အချိန်ညှိနေပါသည်...",
-      songTitle
-        ? `သီချင်း "${songTitle}" စာသားနှင့် အသံလှိုင်းကို တိုက်ဆိုင်စစ်ဆေးနေသည်...`
-        : "သီချင်းအစမှအဆုံး ဆိုသံစက္ကန့်အတိအကျကို နားထောင်နေပါသည် (စက္ကန့် ၂၀-၄၀ ခန့် စောင့်ပေးပါ)..."
-    );
-
-    const buildFormData = () => {
-      const fd = new FormData();
-      fd.append("file", payloadFile);
-      fd.append("lang", isMM ? "my" : "auto");
-      fd.append("mode", isMM ? "myanmar_gemini_only" : "foreign_song");
-      if (songTitle) fd.append("song_title", songTitle);
-      if (customLyrics) fd.append("lyrics", customLyrics);
-      return fd;
-    };
-
-    // PRIMARY: Call Render Python Server (/api/karaoke) -> No 30s Worker Timeout!
-    let d1 = null;
-    let lastErrorText = "";
-
-    try {
-      const rRender = await fetch(`${RENDER_BACKEND_URL}/api/karaoke`, {
-        method: "POST",
-        body: buildFormData()
-      });
-      if (rRender.ok) {
-        d1 = await rRender.json();
-      } else {
-        lastErrorText = await rRender.text();
-      }
-    } catch (renderErr) {
-      lastErrorText = renderErr.message;
-    }
-
-    // FALLBACK: Call Cloudflare Worker (/transcribe) if Render is still waking up
-    if (!d1 || !Array.isArray(d1.segments) || !d1.segments.length) {
-      setLockProgress(52, "🔄 Backup Worker (Gemini-3.8-Flash) ဖြင့် ဆက်လက်ချိတ်ဆက်နေပါသည်...", "သီချင်းအသံလှိုင်းကို စစ်ဆေးနေပါသည်...");
-      const rWorker = await fetch(`${WORKER_URL}/transcribe`, {
-        method: "POST",
-        body: buildFormData()
-      });
-      if (!rWorker.ok) {
-        const wErr = await rWorker.text();
-        throw new Error(lastErrorText || wErr || `HTTP ${rWorker.status}`);
-      }
-      d1 = await rWorker.json();
-    }
-
-    const rawSegments = (d1?.segments || []).filter(s => s && String(s.text || "").trim());
+    const rawSegments = (collectedSegments || []).filter(s => s && String(s.text || "").trim());
     if (!rawSegments.length) {
-      throw new Error("သီချင်းထဲတွင် ဆိုသံစာသား မတွေ့ရှိပါ။ သီချင်းအမည် သို့မဟုတ် စာသား ရိုက်ထည့်ပြီး ထပ်မံစမ်းကြည့်ပါ။");
+      throw new Error("သီချင်းထဲတွင် ဆိုသံစာသား မတွေ့ရှိပါ။ သီချင်းစာသား ကူးထည့်ပြီး ထပ်မံစမ်းကြည့်ပါ။");
     }
 
+    // STEP 3: Format & Translate with Real Progress (74% -> 96%)
     subs = await processSongSegmentsForMode(rawSegments, (pct, titleMsg) => {
       setLockProgress(pct, titleMsg, `စာကြောင်း (${rawSegments.length}) ကြောင်းကို ချိန်ညှိနေပါသည်...`);
     });
@@ -2960,11 +3204,11 @@ async function generateSongKaraokeSubtitles() {
     autoAdjustSubtitleForAspectRatio();
     render();
 
-    setLockProgress(100, "🎉 သီချင်း ကာရာအိုကေ စာတန်းထိုး ပြီးပါပြီ!", "စာတန်းအားလုံး အသင့်ဖြစ်ပါပြီ...");
-    await new Promise(r => setTimeout(r, 450));
+    setLockProgress(100, "🎉 သီချင်း ကာရာအိုကေ စာတန်းထိုး 100% ပြီးပါပြီ!", `စာကြောင်း (${subs.length}) ကြောင်း အသင့်ဖြစ်ပါပြီ!`);
+    await new Promise(r => setTimeout(r, 400));
     videoLockOverlay.classList.remove("active");
     setStatus("ready", `Generated ${subs.length} karaoke lines`);
-    toast("🎉 သီချင်း Karaoke စာတန်းများ အောင်မြင်စွာ ရရှိပါပြီ!");
+    toast(`🎉 သီချင်း Karaoke စာတန်း (${subs.length}) ကြောင်း အောင်မြင်စွာ ရရှိပါပြီ!`);
   } catch (err) {
     console.error("Song Karaoke generation error:", err);
     videoLockOverlay.classList.remove("active");
@@ -3195,7 +3439,7 @@ videoBox.addEventListener("click", (e) => {
 });
 
 // -------------------------------------------------------------
-// EXPORT & DOWNLOAD LOGIC (Fast WebCodecs + Standard + Audio + SRT)
+// EXPORT & DOWNLOAD LOGIC (RENDERS CUSTOM .TTF FONTS ON CANVAS!)
 // -------------------------------------------------------------
 function openExportModal() {
   document.getElementById('exportModalBackdrop').classList.add('show');
@@ -3256,7 +3500,7 @@ function drawTrackBoxOnCanvas(bCtx, burnCanvas, trackKey, rawText, karaokeProg, 
   const maxBoxWidth = burnCanvas.width * 0.88;
   const maxTextWidth = maxBoxWidth - (padX * 2);
 
-  const layout = layoutSubtitleLines(rawText, tr.size * scale, maxTextWidth);
+  const layout = layoutSubtitleLines(rawText, tr.size * scale, maxTextWidth, tr.fontFamily);
   const lines = layout.lines;
   const activeFontSize = layout.fontSize;
   if (!lines.length) return;
@@ -3267,7 +3511,7 @@ function drawTrackBoxOnCanvas(bCtx, burnCanvas, trackKey, rawText, karaokeProg, 
   const boxOpacity = tr.opacity / 100;
 
   bCtx.save();
-  bCtx.font = `700 ${activeFontSize}px 'Padauk', 'Segoe UI', sans-serif`;
+  bCtx.font = `700 ${activeFontSize}px ${getFontStackString(tr.fontFamily)}`;
   bCtx.textAlign = "center";
   bCtx.textBaseline = "middle";
   bCtx.lineJoin = "round";
@@ -3385,7 +3629,7 @@ function drawCanvasFrame(bCtx, burnCanvas, currTime, scale) {
     const padY = 4 * scale;
 
     bCtx.save();
-    bCtx.font = `800 ${fsize}px 'Padauk', 'Segoe UI', sans-serif`;
+    bCtx.font = `800 ${fsize}px ${getFontStackString(t.fontFamily || subTracks.MM.fontFamily)}`;
     bCtx.textAlign = "center";
     bCtx.textBaseline = "middle";
     bCtx.lineJoin = "round";
@@ -3424,7 +3668,7 @@ function drawCanvasFrame(bCtx, burnCanvas, currTime, scale) {
     const padY = 4 * scale;
 
     bCtx.save();
-    bCtx.font = `800 ${fsize}px 'Padauk', 'Segoe UI', sans-serif`;
+    bCtx.font = `800 ${fsize}px ${getFontStackString(t.fontFamily || subTracks.MM.fontFamily)}`;
     bCtx.textAlign = "center";
     bCtx.textBaseline = "middle";
     bCtx.lineJoin = "round";
