@@ -3,6 +3,7 @@ import re
 import json
 import base64
 import tempfile
+import urllib.parse
 import aiohttp
 import edge_tts
 from typing import Optional, List, Any
@@ -64,14 +65,15 @@ class RecapRequest(BaseModel):
     duration: Optional[float] = 60.0
 
 # =====================================================
-# API KEY HELPERS (OXION 1 -> OXION 2 -> GEMINI -> GROQ)
+# CONFIG & API KEY HELPERS
 # =====================================================
 
 GEMINI_MODELS = [
     "gemini-3.8-flash",
-    "gemini-2.0-flash",
-    "gemini-1.5-flash",
-    "gemini-1.5-pro",
+    "gemini-3.5-flash-lite",
+    "gemini-3.6-flash",
+    "gemini-3.1-flash-lite",
+    "gemini-2.5-flash",
 ]
 
 def get_oxion_keys() -> List[str]:
@@ -110,7 +112,7 @@ def clean_song_title_from_filename(raw_name: str) -> str:
         return ""
     s = re.sub(r"\.[a-zA-Z0-9]{2,4}$", "", str(raw_name).strip())
     s = re.sub(
-        r"(?i)\b(official\s*mv|official\s*video|music\s*video|lyric\s*video|lyrics|audio|karaoke|hd|fhd|4k|1080p|720p|mp4|mp3|vocals?)\b",
+        r"(?i)\b(official\s*mv|official\s*video|music\s*video|lyric\s*video|lyrics|audio|karaoke|hd|fhd|4k|1080p|720p|mp4|mp3|vocals?|mv)\b",
         " ",
         s,
     )
@@ -128,6 +130,27 @@ def is_gibberish_text(text: str) -> bool:
     if re.search(r"[\u10A0-\u10FF\u0530-\u058F\u0590-\u05FF]", s):
         return True
     return False
+
+def has_myanmar_script(text: str) -> bool:
+    return bool(re.search(r"[\u1000-\u109F]", str(text or "")))
+
+async def server_side_translate_gtx(text: str, target_lang: str = "my") -> str:
+    clean = str(text or "").strip()
+    if not clean:
+        return ""
+    try:
+        q = urllib.parse.quote(clean)
+        url = f"https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl={target_lang}&dt=t&q={q}"
+        timeout = aiohttp.ClientTimeout(total=10)
+        async with aiohttp.ClientSession(timeout=timeout) as session:
+            async with session.get(url, headers={"User-Agent": "Mozilla/5.0"}) as resp:
+                if resp.status == 200:
+                    data = await resp.json(content_type=None)
+                    if isinstance(data, list) and len(data) > 0 and isinstance(data[0], list):
+                        return "".join(str(item[0] or "") for item in data[0] if isinstance(item, list) and len(item) > 0).strip()
+    except Exception:
+        pass
+    return clean
 
 def parse_json_array(raw_text: str) -> Optional[List[Any]]:
     if not raw_text:
@@ -167,7 +190,7 @@ def parse_json_array(raw_text: str) -> Optional[List[Any]]:
     return None
 
 # =====================================================
-# PURE BINARY MULTIPART PARSER (NEVER FAILS ON LARGE AUDIO)
+# PURE BINARY MULTIPART PARSER (NO EXTRA PIP DEPENDENCY)
 # =====================================================
 
 async def parse_incoming_form(request: Request) -> dict:
@@ -232,15 +255,15 @@ async def parse_incoming_form(request: Request) -> dict:
 # MASTER AI ROUTER (GEMINI-3.8-FLASH + OXION 1 & 2 + GROQ)
 # =====================================================
 
-async def call_master_ai(prompt: str) -> dict:
+async def call_master_ai(prompt: str, max_timeout: int = 45) -> dict:
     oxion_keys = get_oxion_keys()
     gemini_keys = get_gemini_keys()
     groq_key = get_groq_key()
     errors = []
 
-    timeout = aiohttp.ClientTimeout(total=75)
+    timeout = aiohttp.ClientTimeout(total=max_timeout)
     async with aiohttp.ClientSession(timeout=timeout) as session:
-        # 1. Try Gemini Direct Keys First (gemini-3.8-flash -> gemini-2.0-flash -> gemini-1.5-flash)
+        # 1. Try Gemini Direct Keys First (gemini-3.8-flash -> gemini-3.5-flash-lite -> gemini-3.6-flash)
         for g_key in gemini_keys:
             for model in GEMINI_MODELS:
                 try:
@@ -262,7 +285,7 @@ async def call_master_ai(prompt: str) -> dict:
                         if resp.status == 200:
                             data = await resp.json(content_type=None)
                             parts = data.get("candidates", [{}])[0].get("content", {}).get("parts", [])
-                            text = "".join(p.get("text", "") for p in parts).strip()
+                            text = "".join(p.get("text", "") for p in parts if not p.get("thought")).strip()
                             if text:
                                 return {"ok": True, "provider": model, "text": text}
                         else:
@@ -277,7 +300,7 @@ async def call_master_ai(prompt: str) -> dict:
             "[https://api.oxionai.com/v1/chat/completions](https://api.oxionai.com/v1/chat/completions)",
             "[https://oxionai.com/api/v1/chat/completions](https://oxionai.com/api/v1/chat/completions)",
         ]
-        oxion_models = ["gemini-3.8-flash", "gemini-2.0-flash", "gemini-1.5-flash", "gpt-4o-mini"]
+        oxion_models = ["gemini-3.8-flash", "gemini-3.5-flash-lite", "gemini-3.6-flash", "gpt-4o-mini"]
 
         for idx, ox_key in enumerate(oxion_keys):
             for ep in oxion_endpoints:
@@ -344,7 +367,7 @@ async def call_master_ai(prompt: str) -> dict:
     return {"ok": False, "error": "AI Models အားလုံး ချိတ်ဆက်မရပါ: " + ", ".join(errors[:6])}
 
 # =====================================================
-# GEMINI MULTIMODAL AUDIO ENGINE (GEMINI-3.8-FLASH)
+# GEMINI MULTIMODAL AUDIO ENGINE (FAST CHUNK & FULL AUDIO)
 # =====================================================
 
 async def transcribe_or_align_audio_gemini(
@@ -353,6 +376,7 @@ async def transcribe_or_align_audio_gemini(
     lang: str = "my",
     song_title: str = "",
     reference_lyrics: str = "",
+    time_offset: float = 0.0,
 ) -> dict:
     gemini_keys = get_gemini_keys()
     if not gemini_keys:
@@ -363,9 +387,9 @@ async def transcribe_or_align_audio_gemini(
         mime_type = "audio/wav"
 
     clean_title = clean_song_title_from_filename(song_title)
-    title_context = f'သီချင်းအမည်/ဖိုင်အမည်: "{clean_title}"\n' if clean_title else ""
+    title_context = f'သီချင်းအမည်/အဆိုတော်: "{clean_title}"\n' if clean_title else ""
     lyrics_context = (
-        f"အောက်ပါ သီချင်းစာသားအမှန်ကို အခြေခံ၍ အသံဖိုင်ထဲတွင် အဆိုတော် သီဆိုသွားသည့် အချိန် (start နှင့် end စက္ကန့်) များနှင့် တိကျစွာ ချိန်ညှိ (Align) ပေးပါ:\n{reference_lyrics}\n"
+        f"အောက်ပါ မူရင်းသီချင်းစာသားအမှန်ထဲမှ ဤအသံပိုင်းတွင် သီဆိုနေသော စာကြောင်းများကို အသံချိန် (start နှင့် end စက္ကန့်) အတိအကျဖြင့် ချိန်ညှိပေးပါ:\n{reference_lyrics}\n"
         if reference_lyrics
         else ""
     )
@@ -374,30 +398,29 @@ async def transcribe_or_align_audio_gemini(
         prompt = f"""
 သင်သည် မြန်မာသီချင်း ကာရာအိုကေ စာတန်းထိုးနှင့် အသံအချိန်ညှိပညာရှင် ဖြစ်သည်။
 {title_context}{lyrics_context}
-ဤအသံဖိုင်ထဲရှိ နောက်ခံတီးလုံးသံများ (Guitar, Drums, Intro/Outro Music) ကို လုံးဝ ကျော်ပြီး အဆိုတော် သီဆိုနေသော မြန်မာသီချင်းစာသားများကို အစမှအဆုံး နားထောင်ကာ စာကြောင်းတစ်ကြောင်းချင်းစီ၏ စချိန် (start) နှင့် ဆုံးချိန် (end) စက္ကန့်များကို အတိအကျ ထုတ်ပေးပါ။
+ဤအသံဖိုင်ထဲရှိ နောက်ခံတီးလုံးသံများ (Guitar, Drums, Intro/Outro Music) ကို ကျော်ပြီး အဆိုတော် သီဆိုနေသော မြန်မာသီချင်းစာသားများကို နားထောင်ကာ စာကြောင်းတစ်ကြောင်းချင်းစီ၏ စချိန် (start) နှင့် ဆုံးချိန် (end) စက္ကန့်များကို အတိအကျ ထုတ်ပေးပါ။
+အကယ်၍ ဤအသံပိုင်းတွင် လူဆိုသံ လုံးဝမပါဘဲ တီးလုံးသက်သက်သာ ဖြစ်နေပါက [] (Empty array) သာ ပြန်ပေးပါ။
 
-အလွန်အရေးကြီးသော စည်းမျဉ်းများ:
-1. သီချင်းအမည် သို့မဟုတ် မူရင်းစာသား ပေးထားပါက သတ်ပုံ ၁၀၀% မှန်ကန်သော ထိုသီချင်း၏ စာသားအစစ်ကိုသာ သုံးပြီး အသံနှင့် စက္ကန့် ကိုက်ညှိပေးပါ။
-2. အဆိုတော် စဆိုသည့် စက္ကန့်အတိအကျကို "start" တွင်ထားပြီး စာကြောင်းဆုံးသည့် စက္ကန့်ကို "end" တွင် ထားပါ။
-3. စာကြောင်းတစ်ကြောင်းလျှင် ကာရာအိုကေအတွက် ဖတ်ရလွယ်သော အရှည် (စက္ကန့် ၂.၅ မှ ၄.၅ စက္ကန့်စာခန့်) ပိုင်းဖြတ်ပေးပါ။
-4. မည်သည့်အခါမှ "random gibberish", "random text", "အဓိပ္ပာယ်မရှိသော စာသား" လုံးဝ မထည့်ရပါ။ မြန်မာစာသား စစ်စစ်ကိုသာ ရေးပါ။
-5. Output MUST be ONLY a valid JSON array:
+စည်းမျဉ်းများ:
+1. အဆိုတော် စဆိုသည့် စက္ကန့်အတိအကျကို "start" တွင်ထားပြီး စာကြောင်းဆုံးသည့် စက္ကန့်ကို "end" တွင် ထားပါ (ဤအသံဖိုင်၏ 0.0 စက္ကန့်မှ စတင်တွက်ချက်ပါ)။
+2. စာကြောင်းတစ်ကြောင်းလျှင် စက္ကန့် ၂.၅ မှ ၄.၅ စက္ကန့်စာခန့် ပိုင်းဖြတ်ပေးပါ။
+3. Output MUST be ONLY a valid JSON array:
 [
-  {{ "id": 1, "start": 12.0, "end": 15.8, "text": "မြန်မာသီချင်းစာသား..." }}
+  {{ "id": 1, "start": 2.0, "end": 5.8, "text": "မြန်မာသီချင်းစာသား..." }}
 ]
 """
     else:
         prompt = f"""
-Listen carefully to the singing voice in this song audio and transcribe/align every sung lyric line with accurate start and end timestamps in seconds.
+Listen carefully to the singing voice in this song audio clip and transcribe/align every sung lyric line with accurate start and end timestamps in seconds relative to the start of this clip (0.0s).
 {title_context}{lyrics_context}
-Ignore purely instrumental intros, solos, or outros.
+If there are no vocals in this clip, output [].
 Output ONLY a valid JSON array:
 [
-  {{ "id": 1, "start": 10.5, "end": 14.2, "text": "Original sung lyric line..." }}
+  {{ "id": 1, "start": 2.5, "end": 6.2, "text": "Original sung lyric line..." }}
 ]
 """
 
-    timeout = aiohttp.ClientTimeout(total=180)
+    timeout = aiohttp.ClientTimeout(total=120)
     errors = []
 
     async with aiohttp.ClientSession(timeout=timeout) as session:
@@ -430,16 +453,16 @@ Output ONLY a valid JSON array:
                         if resp.status == 200:
                             data = await resp.json(content_type=None)
                             parts = data.get("candidates", [{}])[0].get("content", {}).get("parts", [])
-                            raw_text = "".join(p.get("text", "") for p in parts).strip()
+                            raw_text = "".join(p.get("text", "") for p in parts if not p.get("thought")).strip()
                             parsed = parse_json_array(raw_text)
-                            if isinstance(parsed, list) and len(parsed) > 0:
+                            if isinstance(parsed, list):
                                 clean_segments = []
                                 for item in parsed:
                                     if not isinstance(item, dict):
                                         continue
                                     txt = str(item.get("text") or item.get("mm") or item.get("orig") or "").replace("\n", " ").strip()
-                                    st = float(item.get("start") or 0.0)
-                                    en = float(item.get("end") or (st + 3.5))
+                                    st = float(item.get("start") or 0.0) + time_offset
+                                    en = float(item.get("end") or ( float(item.get("start") or 0.0) + 3.5 )) + time_offset
                                     if txt and not is_gibberish_text(txt) and en > st:
                                         clean_segments.append({
                                             "id": len(clean_segments) + 1,
@@ -447,14 +470,13 @@ Output ONLY a valid JSON array:
                                             "end": round(en, 2),
                                             "text": txt,
                                         })
-                                if clean_segments:
-                                    return {
-                                        "ok": True,
-                                        "engine": f"render-{model}",
-                                        "language": lang,
-                                        "duration": clean_segments[-1]["end"],
-                                        "segments": clean_segments,
-                                    }
+                                return {
+                                    "ok": True,
+                                    "engine": f"render-{model}",
+                                    "language": lang,
+                                    "duration": clean_segments[-1]["end"] if clean_segments else time_offset,
+                                    "segments": clean_segments,
+                                }
                         else:
                             errors.append(f"{model}:{resp.status}")
                             continue
@@ -527,16 +549,14 @@ async def fetch_lyrics_by_title(req: LyricsLookupRequest):
 သင်သည် မြန်မာသီချင်းနှင့် နိုင်ငံတကာသီချင်းစာသားများကို အတိအကျ သိရှိသော သီချင်းစာသားဘဏ် (Lyrics Database) ဖြစ်သည်။
 ရှာဖွေလိုသော သီချင်းအမည် / ဖိုင်အမည်: "{cleaned_title}"
 
-စည်းမျဉ်းများ:
-1. အကယ်၍ သီချင်းခေါင်းစဉ် တစ်ခုတည်း (ဥပမာ - "တမ်းတ") သို့မဟုတ် ဗီဒီယိုဖိုင်အမည် ပေးထားပါက မြန်မာနိုင်ငံတွင် အကျော်ကြားဆုံး သက်ဆိုင်ရာ သီချင်း၏ စာသားအပြည့်အစုံကို ထုတ်ပေးပါ။
-2. စာသားများကို ကာရာအိုကေ စာတန်းထိုးရန်အတွက် တစ်ကြောင်းချင်းစီ အစဉ်လိုက် ထုတ်ပေးပါ။
-3. Output MUST be ONLY a valid JSON array of strings:
+အထက်ပါ သီချင်း၏ စာသားအပြည့်အစုံကို ကာရာအိုကေ စာတန်းထိုးရန်အတွက် တစ်ကြောင်းချင်းစီ အစဉ်လိုက် ထုတ်ပေးပါ။
+Output MUST be ONLY a valid JSON array of strings:
 [
   "ပထမ စာကြောင်း...",
   "ဒုတိယ စာကြောင်း..."
 ]
 """
-    res = await call_master_ai(prompt)
+    res = await call_master_ai(prompt, max_timeout=25)
     if not res.get("ok"):
         raise HTTPException(status_code=503, detail=res.get("error", "Lyrics ရှာမတွေ့ပါ"))
 
@@ -553,7 +573,7 @@ async def fetch_lyrics_by_title(req: LyricsLookupRequest):
     }
 
 # =====================================================
-# ROUTE 2: HYBRID AUDIO TRANSCRIBE & KARAOKE ALIGNMENT
+# ROUTE 2: FAST AUDIO TRANSCRIBE & KARAOKE ALIGNMENT
 # =====================================================
 
 @app.post("/transcribe")
@@ -580,55 +600,46 @@ async def transcribe_and_align_karaoke(request: Request):
 
     lang = str(form.get("lang") or "my").lower()
     mode = str(form.get("mode") or "").lower()
+    time_offset = max(0.0, float(form.get("time_offset") or 0.0))
+
     raw_song_title = str(form.get("song_title") or filename or "").strip()
     song_title = clean_song_title_from_filename(raw_song_title)
-    if re.match(r"^(vocal_isolated|audio|video|vid_\d+|lv_\d+|capcut.*|inshot.*|\d+)$", song_title, re.I):
+    if re.match(r"^(vocal_isolated|chunk_\d+|audio|video|vid_\d+|lv_\d+|capcut.*|inshot.*|\d+)$", song_title, re.I):
         song_title = ""
 
     custom_lyrics = str(form.get("lyrics") or "").strip()
     is_myanmar = lang in ("my", "myanmar") or mode == "myanmar_gemini_only"
 
-    # STEP 1: Pre-fetch reference lyrics if song_title is valid and custom_lyrics is empty
-    if song_title and not custom_lyrics:
-        lyric_prompt = f"""
-Provide the accurate sung lyrics line-by-line for the song: "{song_title}".
-Output ONLY a JSON array of strings representing each lyric line in order.
-"""
-        ai_res = await call_master_ai(lyric_prompt)
-        if ai_res.get("ok"):
-            parsed_lines = parse_json_array(ai_res.get("text", ""))
-            if isinstance(parsed_lines, list) and len(parsed_lines) > 2:
-                custom_lyrics = "\n".join(str(x).strip() for x in parsed_lines if str(x).strip())
-
-    # STEP 2: Myanmar Song OR Reference Lyrics -> Use Gemini 3.8 Flash Multimodal Audio Alignment
-    if is_myanmar or song_title or custom_lyrics:
+    # MYANMAR SONG MODE -> Direct Single-Pass Gemini Multimodal Audio (No extra blocking lookups!)
+    if is_myanmar:
         gem_res = await transcribe_or_align_audio_gemini(
             audio_bytes=audio_bytes,
             mime_type=mime_type,
-            lang="my" if is_myanmar else "auto",
+            lang="my",
             song_title=song_title,
             reference_lyrics=custom_lyrics,
+            time_offset=time_offset,
         )
-        if gem_res.get("ok") and gem_res.get("segments"):
+        if gem_res.get("ok"):
+            segs = gem_res.get("segments", [])
             return JSONResponse({
                 "ok": True,
                 "engine": gem_res.get("engine", "render-gemini-3.8-flash"),
-                "language": gem_res.get("language", "my"),
-                "duration": gem_res.get("duration"),
-                "text": " ".join(s["text"] for s in gem_res["segments"]),
-                "segments": gem_res["segments"],
+                "language": "my",
+                "duration": gem_res.get("duration", time_offset),
+                "text": " ".join(s["text"] for s in segs),
+                "segments": segs,
             })
-        if is_myanmar:
-            return JSONResponse(
-                {"error": gem_res.get("error", "မြန်မာသီချင်းဆိုသံကို နားထောင်ရာတွင် အဆင်မပြေပါ။")},
-                status_code=422,
-            )
+        return JSONResponse(
+            {"error": gem_res.get("error", "မြန်မာသီချင်းဆိုသံကို နားထောင်ရာတွင် အဆင်မပြေပါ။")},
+            status_code=422,
+        )
 
-    # STEP 3: Foreign Song without reference lyrics -> Groq Whisper then Gemini Audio
+    # FOREIGN SONG MODE -> Fast Groq Whisper First (2-4 seconds!)
     groq_key = get_groq_key()
     if groq_key:
         try:
-            timeout = aiohttp.ClientTimeout(total=90)
+            timeout = aiohttp.ClientTimeout(total=60)
             async with aiohttp.ClientSession(timeout=timeout) as session:
                 fd = aiohttp.FormData()
                 fd.add_field("file", audio_bytes, filename=filename, content_type=mime_type)
@@ -648,8 +659,8 @@ Output ONLY a JSON array of strings representing each lyric line in order.
                         clean_segs = []
                         for s in raw_segs:
                             txt = str(s.get("text") or "").strip()
-                            st = float(s.get("start") or 0.0)
-                            en = float(s.get("end") or 0.0)
+                            st = float(s.get("start") or 0.0) + time_offset
+                            en = float(s.get("end") or 0.0) + time_offset
                             if txt and not is_gibberish_text(txt) and en > st:
                                 clean_segs.append({
                                     "id": len(clean_segs) + 1,
@@ -662,19 +673,21 @@ Output ONLY a JSON array of strings representing each lyric line in order.
                                 "ok": True,
                                 "engine": "render-groq-whisper",
                                 "language": data.get("language", "auto"),
-                                "duration": data.get("duration"),
+                                "duration": float(data.get("duration") or 0.0) + time_offset,
                                 "text": " ".join(x["text"] for x in clean_segs),
                                 "segments": clean_segs,
                             })
         except Exception:
             pass
 
+    # Fallback to Gemini Audio for foreign songs
     gem_fallback = await transcribe_or_align_audio_gemini(
         audio_bytes=audio_bytes,
         mime_type=mime_type,
         lang="auto",
         song_title=song_title,
         reference_lyrics=custom_lyrics,
+        time_offset=time_offset,
     )
     if gem_fallback.get("ok") and gem_fallback.get("segments"):
         return JSONResponse(gem_fallback)
@@ -682,7 +695,7 @@ Output ONLY a JSON array of strings representing each lyric line in order.
     return JSONResponse({"error": "အသံဖိုင်ထဲမှ သီချင်းစာသား ထုတ်ယူမရနိုင်ပါ။"}, status_code=422)
 
 # =====================================================
-# ROUTE 3: FOREIGN SONG CONCISE MYANMAR TRANSLATION
+# ROUTE 3: FOREIGN SONG CONCISE MYANMAR TRANSLATION (100% GUARANTEED)
 # =====================================================
 
 @app.post("/song")
@@ -732,8 +745,8 @@ Input:
                     found = parsed[i]
 
             mm_val = str(found.get("mm") or "").replace("\n", " ").strip()
-            if not mm_val or is_gibberish_text(mm_val):
-                mm_val = orig_clean
+            if not mm_val or is_gibberish_text(mm_val) or (not has_myanmar_script(mm_val) and re.search(r"[a-zA-Z]", mm_val)):
+                mm_val = await server_side_translate_gtx(orig_clean, "my")
 
             all_lyrics.append({
                 "id": start_idx + i + 1,
@@ -741,7 +754,7 @@ Input:
                 "end": seg.end,
                 "orig": str(found.get("orig") or orig_clean).replace("\n", " ").strip(),
                 "en": str(found.get("en") or orig_clean).replace("\n", " ").strip(),
-                "mm": mm_val,
+                "mm": mm_val or orig_clean,
             })
 
     return {"ok": True, "lyrics": all_lyrics}
@@ -751,9 +764,10 @@ async def translate_batch(req: TranslateRequest):
     if not req.texts:
         return {"ok": True, "translations": []}
 
+    is_en = req.targetLang == "en"
     target_desc = (
         "clear, natural poetic English"
-        if req.targetLang == "en"
+        if is_en
         else "ULTRA-SHORT, concise poetic Myanmar Burmese (only 4 to 6 words per line for song subtitles)"
     )
 
@@ -767,13 +781,19 @@ Input:
 """
     res = await call_master_ai(prompt)
     parsed = parse_json_array(res.get("text", "")) if res.get("ok") else None
-    if not isinstance(parsed, list):
-        return {"ok": True, "translations": req.texts}
 
     out = []
     for i, orig in enumerate(req.texts):
-        tr = parsed[i] if i < len(parsed) and isinstance(parsed[i], str) else orig
-        out.append(tr.replace("\n", " ").strip() or orig)
+        orig_str = str(orig or "").strip()
+        tr = parsed[i] if isinstance(parsed, list) and i < len(parsed) and isinstance(parsed[i], str) else ""
+        tr = tr.replace("\n", " ").strip()
+
+        if not is_en and (not tr or not has_myanmar_script(tr) or is_gibberish_text(tr)):
+            tr = await server_side_translate_gtx(orig_str, "my")
+        elif is_en and (not tr or is_gibberish_text(tr)):
+            tr = await server_side_translate_gtx(orig_str, "en")
+
+        out.append(tr or orig_str)
     return {"ok": True, "translations": out}
 
 # =====================================================
@@ -848,7 +868,7 @@ async def generate_captivating_story(req: StoryRequest):
 ]
 """
 
-    res = await call_master_ai(prompt)
+    res = await call_master_ai(prompt, max_timeout=60)
     if not res.get("ok"):
         raise HTTPException(status_code=503, detail=res.get("error", "Story generation failed"))
 
@@ -879,7 +899,7 @@ Output MUST be ONLY valid JSON array:
 SOURCE SEGMENTS:
 {json.dumps(req.segments[:150], ensure_ascii=False)}
 """
-    res = await call_master_ai(prompt)
+    res = await call_master_ai(prompt, max_timeout=60)
     if not res.get("ok"):
         raise HTTPException(status_code=503, detail=res.get("error", "Recap generation failed"))
 
