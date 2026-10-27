@@ -1801,7 +1801,16 @@ async function handleCustomFontFileUpload(e) {
     document.fonts.add(loadedNormal);
     document.fonts.add(loadedBold);
     document.fonts.add(loadedExtra);
+    // Explicitly request the exact weight used by the subtitle preview and Canvas.
+    await Promise.all([
+      document.fonts.load(`400 16px "${uniqueFontFamily}"`),
+      document.fonts.load(`700 16px "${uniqueFontFamily}"`),
+      document.fonts.load(`800 16px "${uniqueFontFamily}"`)
+    ]);
     await document.fonts.ready;
+    if (!document.fonts.check(`700 16px "${uniqueFontFamily}"`)) {
+      throw new Error("Uploaded font did not become available to the browser");
+    }
 
     const sel = document.getElementById("mmFontFamily");
     if (sel) {
@@ -1813,9 +1822,17 @@ async function handleCustomFontFileUpload(e) {
     }
 
     subTracks.MM.fontFamily = uniqueFontFamily;
+    if (sel) sel.value = uniqueFontFamily;
+    // Apply immediately to all preview nodes before rebuilding subtitle line layout.
+    const previewTarget = document.getElementById("overlayMMTarget");
+    if (previewTarget) previewTarget.style.fontFamily = `"${uniqueFontFamily}", sans-serif`;
+    document.querySelectorAll("#overlayMMTarget .karaokeLineSpan").forEach(span => {
+      span.style.fontFamily = `"${uniqueFontFamily}", sans-serif`;
+    });
     updateTrackStyle("MM", true);
+    updateLiveSubtitleOverlays(video.currentTime || 0, true);
 
-    toast(`✅ "${cleanFileName}" ဖောင့် ပြောင်းလဲပြီးပါပြီ!`);
+    toast(`✅ "${cleanFileName}" ဖောင့်ကို Preview အတွက် အသုံးပြုလိုက်ပါပြီ။`);
   } catch (err) {
     console.error("Font upload error:", err);
     toast("❌ ဖောင့်ဖိုင် (.ttf) ဖတ်ရာတွင် အဆင်မပြေပါ");
@@ -4156,21 +4173,39 @@ function drawCanvasFrame(bCtx, burnCanvas, currTime, scale) {
 }
 
 function seekVideoAndWait(targetTime) {
+  // Avoid unnecessary seeks and always remove the exact event handler.
+  // The old code registered an anonymous seeked handler but tried to remove `done`,
+  // leaving one listener behind for every frame during MP4 export.
   return new Promise((resolve) => {
+    if (!Number.isFinite(targetTime) || !video || video.readyState < 1) {
+      resolve();
+      return;
+    }
+    if (Math.abs((video.currentTime || 0) - targetTime) < 0.015 && video.readyState >= 2) {
+      resolve();
+      return;
+    }
     let resolved = false;
-    const done = () => {
-      if (!resolved) {
-        resolved = true;
-        video.removeEventListener("seeked", done);
-        resolve();
-      }
+    let timer = null;
+    const cleanup = () => {
+      video.removeEventListener("seeked", onSeeked);
+      if (timer !== null) clearTimeout(timer);
     };
-    const timer = setTimeout(done, 250);
-    video.addEventListener("seeked", () => {
-      clearTimeout(timer);
+    const done = () => {
+      if (resolved) return;
+      resolved = true;
+      cleanup();
+      resolve();
+    };
+    const onSeeked = () => done();
+    video.addEventListener("seeked", onSeeked, { once: true });
+    // A short safety timeout prevents a stalled seek from blocking the whole export.
+    timer = setTimeout(done, 120);
+    try {
+      video.currentTime = Math.max(0, Math.min(targetTime, Math.max(0, (video.duration || targetTime) - 0.001)));
+    } catch (err) {
       done();
-    }, { once: true });
-    video.currentTime = targetTime;
+    }
   });
 }
 
@@ -4306,7 +4341,8 @@ async function exportFastVideo() {
     const bCtx = burnCanvas.getContext("2d");
     const scale = width / BASE_REF_VIDEO_WIDTH;
     const totalDur = video.duration || 60;
-    const fps = 24;
+    // Fewer expensive seeks on phones; desktop remains at 24 fps.
+    const fps = (window.matchMedia && window.matchMedia("(max-width: 700px)").matches) ? 20 : 24;
     const totalFrames = Math.max(1, Math.ceil(totalDur * fps));
 
     const h264Profiles = ["avc1.42001f", "avc1.4d001f", "avc1.42E01E", "avc1.640028"];
