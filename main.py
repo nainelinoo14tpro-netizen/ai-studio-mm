@@ -5,8 +5,6 @@ import base64
 import tempfile
 import aiohttp
 import edge_tts
-from email.parser import BytesParser
-from email.policy import default as email_default_policy
 from typing import Optional, List, Any
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import FileResponse, JSONResponse
@@ -25,7 +23,7 @@ app.add_middleware(
 )
 
 # =====================================================
-# MODELS
+# REQUEST MODELS
 # =====================================================
 
 class TTSRequest(BaseModel):
@@ -53,9 +51,28 @@ class LyricsLookupRequest(BaseModel):
     song_title: str
     lang: str = "my"
 
+class StoryRequest(BaseModel):
+    topic: str
+    duration: Any = 1
+    type: str = "single"
+    category: str = "horror"
+    episodes: int = 2
+
+class RecapRequest(BaseModel):
+    segments: List[Any] = []
+    tone: str = "narrator"
+    duration: Optional[float] = 60.0
+
 # =====================================================
 # API KEY HELPERS (OXION 1 -> OXION 2 -> GEMINI -> GROQ)
 # =====================================================
+
+GEMINI_MODELS = [
+    "gemini-3.8-flash",
+    "gemini-2.0-flash",
+    "gemini-1.5-flash",
+    "gemini-1.5-pro",
+]
 
 def get_oxion_keys() -> List[str]:
     raw = [
@@ -88,6 +105,20 @@ def get_gemini_keys() -> List[str]:
 def get_groq_key() -> str:
     return os.getenv("GROQ_API_KEY", "").strip()
 
+def clean_song_title_from_filename(raw_name: str) -> str:
+    if not raw_name:
+        return ""
+    s = re.sub(r"\.[a-zA-Z0-9]{2,4}$", "", str(raw_name).strip())
+    s = re.sub(
+        r"(?i)\b(official\s*mv|official\s*video|music\s*video|lyric\s*video|lyrics|audio|karaoke|hd|fhd|4k|1080p|720p|mp4|mp3|vocals?)\b",
+        " ",
+        s,
+    )
+    s = re.sub(r"[\[\(\{]\s*[\]\)\}]", " ", s)
+    s = re.sub(r"[_]+", " ", s)
+    s = re.sub(r"\s+", " ", s).strip(" -_.")
+    return s
+
 def is_gibberish_text(text: str) -> bool:
     s = str(text or "").strip()
     if not s:
@@ -115,7 +146,7 @@ def parse_json_array(raw_text: str) -> Optional[List[Any]]:
         if isinstance(parsed, list):
             return parsed
         if isinstance(parsed, dict):
-            for k in ["lyrics", "translations", "segments", "data", "recap", "story"]:
+            for k in ["lyrics", "translations", "segments", "lines", "story", "recap", "data", "episodes", "scenes"]:
                 if isinstance(parsed.get(k), list):
                     return parsed[k]
             for v in parsed.values():
@@ -136,7 +167,7 @@ def parse_json_array(raw_text: str) -> Optional[List[Any]]:
     return None
 
 # =====================================================
-# MULTIPART FORM PARSER (WORKS WITHOUT python-multipart)
+# PURE BINARY MULTIPART PARSER (NEVER FAILS ON LARGE AUDIO)
 # =====================================================
 
 async def parse_incoming_form(request: Request) -> dict:
@@ -151,31 +182,54 @@ async def parse_incoming_form(request: Request) -> dict:
     if not body:
         return {}
 
-    raw_headers = b"Content-Type: " + content_type.encode("utf-8") + b"\r\n\r\n"
-    msg = BytesParser(policy=email_default_policy).parsebytes(raw_headers + body)
+    boundary_match = re.search(r"boundary=([^;\s]+)", content_type)
+    if not boundary_match:
+        return {}
+
+    boundary_str = boundary_match.group(1).strip('"')
+    boundary_bytes = ("--" + boundary_str).encode("utf-8")
+    parts = body.split(boundary_bytes)
 
     result = {}
-    if msg.is_multipart():
-        for part in msg.iter_parts():
-            cd = part.get("Content-Disposition", "")
-            name_match = re.search(r'name="([^"]+)"', cd)
-            if not name_match:
-                continue
-            field_name = name_match.group(1)
-            filename_match = re.search(r'filename="([^"]+)"', cd)
-            payload = part.get_payload(decode=True)
-            if filename_match:
-                result[field_name] = {
-                    "filename": filename_match.group(1),
-                    "content_type": part.get_content_type() or "audio/wav",
-                    "bytes": payload or b"",
-                }
-            else:
-                result[field_name] = (payload or b"").decode("utf-8", errors="replace").strip()
+    for part in parts:
+        if not part or part in (b"--\r\n", b"--", b"\r\n"):
+            continue
+        if part.startswith(b"\r\n"):
+            part = part[2:]
+        if part.endswith(b"\r\n"):
+            part = part[:-2]
+        if part.endswith(b"--"):
+            part = part[:-2]
+
+        sep_idx = part.find(b"\r\n\r\n")
+        if sep_idx == -1:
+            continue
+
+        header_block = part[:sep_idx].decode("utf-8", errors="replace")
+        content_bytes = part[sep_idx + 4 :]
+        if content_bytes.endswith(b"\r\n"):
+            content_bytes = content_bytes[:-2]
+
+        name_m = re.search(r'name="([^"]+)"', header_block)
+        if not name_m:
+            continue
+        field_name = name_m.group(1)
+        file_m = re.search(r'filename="([^"]*)"', header_block)
+        ct_m = re.search(r"Content-Type:\s*([^\r\n;]+)", header_block, re.I)
+
+        if file_m:
+            result[field_name] = {
+                "filename": file_m.group(1) or "audio.wav",
+                "content_type": ct_m.group(1).strip() if ct_m else "audio/wav",
+                "bytes": content_bytes,
+            }
+        else:
+            result[field_name] = content_bytes.decode("utf-8", errors="replace").strip()
+
     return result
 
 # =====================================================
-# MASTER TEXT AI ROUTER (OXION 1 -> OXION 2 -> GEMINI -> GROQ)
+# MASTER AI ROUTER (GEMINI-3.8-FLASH + OXION 1 & 2 + GROQ)
 # =====================================================
 
 async def call_master_ai(prompt: str) -> dict:
@@ -184,14 +238,46 @@ async def call_master_ai(prompt: str) -> dict:
     groq_key = get_groq_key()
     errors = []
 
-    timeout = aiohttp.ClientTimeout(total=60)
+    timeout = aiohttp.ClientTimeout(total=75)
     async with aiohttp.ClientSession(timeout=timeout) as session:
-        # 1 & 2. Try Oxion AI Keys (Key 1 -> Key 2)
+        # 1. Try Gemini Direct Keys First (gemini-3.8-flash -> gemini-2.0-flash -> gemini-1.5-flash)
+        for g_key in gemini_keys:
+            for model in GEMINI_MODELS:
+                try:
+                    url = f"[https://generativelanguage.googleapis.com/v1beta/models/](https://generativelanguage.googleapis.com/v1beta/models/){model}:generateContent"
+                    async with session.post(
+                        url,
+                        headers={
+                            "Content-Type": "application/json",
+                            "x-goog-api-key": g_key,
+                        },
+                        json={
+                            "contents": [{"parts": [{"text": prompt}]}],
+                            "generationConfig": {
+                                "responseMimeType": "application/json",
+                                "temperature": 0.25,
+                            },
+                        },
+                    ) as resp:
+                        if resp.status == 200:
+                            data = await resp.json(content_type=None)
+                            parts = data.get("candidates", [{}])[0].get("content", {}).get("parts", [])
+                            text = "".join(p.get("text", "") for p in parts).strip()
+                            if text:
+                                return {"ok": True, "provider": model, "text": text}
+                        else:
+                            errors.append(f"{model}:{resp.status}")
+                            continue
+                except Exception as e:
+                    errors.append(f"{model}:{str(e)}")
+                    continue
+
+        # 2. Try Oxion AI Keys (Key 1 -> Key 2)
         oxion_endpoints = [
             "[https://api.oxionai.com/v1/chat/completions](https://api.oxionai.com/v1/chat/completions)",
             "[https://oxionai.com/api/v1/chat/completions](https://oxionai.com/api/v1/chat/completions)",
         ]
-        oxion_models = ["gemini-2.5-flash", "gemini-2.0-flash", "gpt-4o-mini"]
+        oxion_models = ["gemini-3.8-flash", "gemini-2.0-flash", "gemini-1.5-flash", "gpt-4o-mini"]
 
         for idx, ox_key in enumerate(oxion_keys):
             for ep in oxion_endpoints:
@@ -210,7 +296,7 @@ async def call_master_ai(prompt: str) -> dict:
                                     {"role": "system", "content": "Output ONLY valid JSON without markdown."},
                                     {"role": "user", "content": prompt},
                                 ],
-                                "temperature": 0.2,
+                                "temperature": 0.25,
                             },
                         ) as resp:
                             if resp.status == 200:
@@ -222,45 +308,14 @@ async def call_master_ai(prompt: str) -> dict:
                                 if text:
                                     return {"ok": True, "provider": f"oxion-key-{idx+1}", "text": text}
                             else:
-                                errors.append(f"oxion-{idx+1}:{resp.status}")
-                                if resp.status in (401, 402, 403, 429):
+                                errors.append(f"oxion-{idx+1}-{model}:{resp.status}")
+                                if resp.status in (401, 402, 403):
                                     break
                     except Exception as e:
                         errors.append(f"oxion-{idx+1}:{str(e)}")
                         break
 
-        # 3. Fallback to Gemini API Keys
-        gemini_models = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"]
-        for g_key in gemini_keys:
-            for model in gemini_models:
-                try:
-                    url = f"[https://generativelanguage.googleapis.com/v1beta/models/](https://generativelanguage.googleapis.com/v1beta/models/){model}:generateContent"
-                    async with session.post(
-                        url,
-                        headers={
-                            "Content-Type": "application/json",
-                            "x-goog-api-key": g_key,
-                        },
-                        json={
-                            "contents": [{"parts": [{"text": prompt}]}],
-                            "generationConfig": {
-                                "responseMimeType": "application/json",
-                                "temperature": 0.2,
-                            },
-                        },
-                    ) as resp:
-                        if resp.status == 200:
-                            data = await resp.json(content_type=None)
-                            parts = data.get("candidates", [{}])[0].get("content", {}).get("parts", [])
-                            text = "".join(p.get("text", "") for p in parts).strip()
-                            if text:
-                                return {"ok": True, "provider": model, "text": text}
-                        else:
-                            errors.append(f"{model}:{resp.status}")
-                except Exception as e:
-                    errors.append(f"{model}:{str(e)}")
-
-        # 4. Fallback to Groq Llama-3.3-70b
+        # 3. Fallback to Groq Llama-3.3-70b
         if groq_key:
             try:
                 async with session.post(
@@ -275,7 +330,7 @@ async def call_master_ai(prompt: str) -> dict:
                             {"role": "system", "content": "Output valid JSON only."},
                             {"role": "user", "content": prompt},
                         ],
-                        "temperature": 0.2,
+                        "temperature": 0.25,
                     },
                 ) as resp:
                     if resp.status == 200:
@@ -286,11 +341,10 @@ async def call_master_ai(prompt: str) -> dict:
             except Exception as e:
                 errors.append(f"groq:{str(e)}")
 
-    return {"ok": False, "error": "AI Models အားလုံး ချိတ်ဆက်မရပါ: " + ", ".join(errors)}
+    return {"ok": False, "error": "AI Models အားလုံး ချိတ်ဆက်မရပါ: " + ", ".join(errors[:6])}
 
 # =====================================================
-# GEMINI MULTIMODAL AUDIO ENGINE (NO 30s WORKER TIMEOUT!)
-# Supports Hybrid Option B (Audio) + Option C (Song Title / Lyrics)
+# GEMINI MULTIMODAL AUDIO ENGINE (GEMINI-3.8-FLASH)
 # =====================================================
 
 async def transcribe_or_align_audio_gemini(
@@ -308,10 +362,10 @@ async def transcribe_or_align_audio_gemini(
     if not mime_type or not mime_type.startswith("audio/"):
         mime_type = "audio/wav"
 
-    # Build Hybrid Prompt (uses Song Title & Reference Lyrics if provided)
-    title_context = f'သီချင်းအမည်/အဆိုတော်: "{song_title}"\n' if song_title else ""
+    clean_title = clean_song_title_from_filename(song_title)
+    title_context = f'သီချင်းအမည်/ဖိုင်အမည်: "{clean_title}"\n' if clean_title else ""
     lyrics_context = (
-        f"အောက်ပါ မူရင်းသီချင်းစာသားအမှန်ကို အခြေခံ၍ အသံဖိုင်ထဲတွင် အဆိုတော် သီဆိုသွားသည့် အချိန် (start နှင့် end စက္ကန့်) များနှင့် တိကျစွာ ချိန်ညှိ (Align) ပေးပါ:\n{reference_lyrics}\n"
+        f"အောက်ပါ သီချင်းစာသားအမှန်ကို အခြေခံ၍ အသံဖိုင်ထဲတွင် အဆိုတော် သီဆိုသွားသည့် အချိန် (start နှင့် end စက္ကန့်) များနှင့် တိကျစွာ ချိန်ညှိ (Align) ပေးပါ:\n{reference_lyrics}\n"
         if reference_lyrics
         else ""
     )
@@ -343,13 +397,12 @@ Output ONLY a valid JSON array:
 ]
 """
 
-    models = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-pro"]
     timeout = aiohttp.ClientTimeout(total=180)
     errors = []
 
     async with aiohttp.ClientSession(timeout=timeout) as session:
         for api_key in gemini_keys:
-            for model in models:
+            for model in GEMINI_MODELS:
                 try:
                     url = f"[https://generativelanguage.googleapis.com/v1beta/models/](https://generativelanguage.googleapis.com/v1beta/models/){model}:generateContent"
                     payload = {
@@ -381,7 +434,7 @@ Output ONLY a valid JSON array:
                             parsed = parse_json_array(raw_text)
                             if isinstance(parsed, list) and len(parsed) > 0:
                                 clean_segments = []
-                                for idx, item in enumerate(parsed):
+                                for item in parsed:
                                     if not isinstance(item, dict):
                                         continue
                                     txt = str(item.get("text") or item.get("mm") or item.get("orig") or "").replace("\n", " ").strip()
@@ -403,23 +456,25 @@ Output ONLY a valid JSON array:
                                         "segments": clean_segments,
                                     }
                         else:
-                            err_body = await resp.text()
                             errors.append(f"{model}:{resp.status}")
+                            continue
                 except Exception as e:
                     errors.append(f"{model}:{str(e)}")
+                    continue
 
     return {"ok": False, "error": "Gemini Audio နားထောင်မှု မအောင်မြင်ပါ (" + ", ".join(errors[:4]) + ")"}
 
 # =====================================================
-# ROUTES: HEALTH & ORIGINAL EDGE TTS
+# ORIGINAL ROUTES: HEALTH & EDGE TTS
 # =====================================================
 
 @app.get("/")
 async def root():
     return {
         "ok": True,
-        "service": "burmese-edge-tts-and-karaoke-render",
+        "service": "burmese-edge-tts-python",
         "status": "online",
+        "primary_gemini_model": GEMINI_MODELS[0],
         "oxion_keys": len(get_oxion_keys()),
         "gemini_keys": len(get_gemini_keys()),
         "groq_configured": bool(get_groq_key()),
@@ -430,6 +485,7 @@ async def health():
     return {
         "ok": True,
         "status": "online",
+        "primary_gemini_model": GEMINI_MODELS[0],
         "oxion_keys": len(get_oxion_keys()),
         "gemini_keys": len(get_gemini_keys()),
         "groq_configured": bool(get_groq_key()),
@@ -458,21 +514,23 @@ async def synthesize_speech(req: TTSRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 # =====================================================
-# NEW ROUTE 1: FETCH LYRICS BY SONG TITLE (OPTION C)
+# ROUTE 1: FETCH LYRICS BY SONG TITLE OR VIDEO FILENAME
 # =====================================================
 
 @app.post("/api/fetch-lyrics")
 async def fetch_lyrics_by_title(req: LyricsLookupRequest):
-    title = (req.song_title or "").strip()
-    if not title:
+    cleaned_title = clean_song_title_from_filename(req.song_title)
+    if not cleaned_title:
         raise HTTPException(status_code=400, detail="သီချင်းအမည် ရိုက်ထည့်ပေးပါ။")
 
     prompt = f"""
 သင်သည် မြန်မာသီချင်းနှင့် နိုင်ငံတကာသီချင်းစာသားများကို အတိအကျ သိရှိသော သီချင်းစာသားဘဏ် (Lyrics Database) ဖြစ်သည်။
-သီချင်းအမည် / အဆိုတော်: "{title}"
+ရှာဖွေလိုသော သီချင်းအမည် / ဖိုင်အမည်: "{cleaned_title}"
 
-အထက်ပါ သီချင်း၏ စာသားအမှန် (Lyrics) ကို စာကြောင်းတစ်ကြောင်းချင်းစီ အစဉ်လိုက် ထုတ်ပေးပါ။
-Output MUST be ONLY a valid JSON array of strings (each element is 1 lyric line):
+စည်းမျဉ်းများ:
+1. အကယ်၍ သီချင်းခေါင်းစဉ် တစ်ခုတည်း (ဥပမာ - "တမ်းတ") သို့မဟုတ် ဗီဒီယိုဖိုင်အမည် ပေးထားပါက မြန်မာနိုင်ငံတွင် အကျော်ကြားဆုံး သက်ဆိုင်ရာ သီချင်း၏ စာသားအပြည့်အစုံကို ထုတ်ပေးပါ။
+2. စာသားများကို ကာရာအိုကေ စာတန်းထိုးရန်အတွက် တစ်ကြောင်းချင်းစီ အစဉ်လိုက် ထုတ်ပေးပါ။
+3. Output MUST be ONLY a valid JSON array of strings:
 [
   "ပထမ စာကြောင်း...",
   "ဒုတိယ စာကြောင်း..."
@@ -486,12 +544,16 @@ Output MUST be ONLY a valid JSON array of strings (each element is 1 lyric line)
     if not isinstance(lines, list) or not lines:
         raise HTTPException(status_code=422, detail="သီချင်းစာသား ဖတ်မရပါ။")
 
-    clean_lines = [str(l).strip() for l in lines if str(l).strip()]
-    return {"ok": True, "song_title": title, "lyrics_text": "\n".join(clean_lines), "lines": clean_lines}
+    clean_lines = [str(l).strip() for l in lines if str(l).strip() and not is_gibberish_text(str(l))]
+    return {
+        "ok": True,
+        "song_title": cleaned_title,
+        "lyrics_text": "\n".join(clean_lines),
+        "lines": clean_lines,
+    }
 
 # =====================================================
-# NEW ROUTE 2: HYBRID AUDIO TRANSCRIBE & KARAOKE ALIGNMENT
-# (OPTION B + OPTION C ON RENDER SERVER)
+# ROUTE 2: HYBRID AUDIO TRANSCRIBE & KARAOKE ALIGNMENT
 # =====================================================
 
 @app.post("/transcribe")
@@ -511,18 +573,22 @@ async def transcribe_and_align_karaoke(request: Request):
     elif isinstance(form.get("audio_base64"), str) and form.get("audio_base64"):
         audio_bytes = base64.b64decode(form["audio_base64"])
         mime_type = form.get("mime_type", "audio/wav")
+        filename = str(form.get("filename") or "audio.wav")
 
     if not audio_bytes:
         return JSONResponse({"error": "Audio file မတွေ့ရှိပါ။"}, status_code=400)
 
     lang = str(form.get("lang") or "my").lower()
     mode = str(form.get("mode") or "").lower()
-    song_title = str(form.get("song_title") or "").strip()
-    custom_lyrics = str(form.get("lyrics") or "").strip()
+    raw_song_title = str(form.get("song_title") or filename or "").strip()
+    song_title = clean_song_title_from_filename(raw_song_title)
+    if re.match(r"^(vocal_isolated|audio|video|vid_\d+|lv_\d+|capcut.*|inshot.*|\d+)$", song_title, re.I):
+        song_title = ""
 
+    custom_lyrics = str(form.get("lyrics") or "").strip()
     is_myanmar = lang in ("my", "myanmar") or mode == "myanmar_gemini_only"
 
-    # STEP 1: If user provided a Song Title but no custom lyrics yet, pre-fetch lyrics via AI (Option C)
+    # STEP 1: Pre-fetch reference lyrics if song_title is valid and custom_lyrics is empty
     if song_title and not custom_lyrics:
         lyric_prompt = f"""
 Provide the accurate sung lyrics line-by-line for the song: "{song_title}".
@@ -534,7 +600,7 @@ Output ONLY a JSON array of strings representing each lyric line in order.
             if isinstance(parsed_lines, list) and len(parsed_lines) > 2:
                 custom_lyrics = "\n".join(str(x).strip() for x in parsed_lines if str(x).strip())
 
-    # STEP 2: If Myanmar Song OR if Song Title/Lyrics provided -> Use Gemini Multimodal Audio Alignment
+    # STEP 2: Myanmar Song OR Reference Lyrics -> Use Gemini 3.8 Flash Multimodal Audio Alignment
     if is_myanmar or song_title or custom_lyrics:
         gem_res = await transcribe_or_align_audio_gemini(
             audio_bytes=audio_bytes,
@@ -546,7 +612,7 @@ Output ONLY a JSON array of strings representing each lyric line in order.
         if gem_res.get("ok") and gem_res.get("segments"):
             return JSONResponse({
                 "ok": True,
-                "engine": gem_res.get("engine", "render-gemini-audio"),
+                "engine": gem_res.get("engine", "render-gemini-3.8-flash"),
                 "language": gem_res.get("language", "my"),
                 "duration": gem_res.get("duration"),
                 "text": " ".join(s["text"] for s in gem_res["segments"]),
@@ -558,7 +624,7 @@ Output ONLY a JSON array of strings representing each lyric line in order.
                 status_code=422,
             )
 
-    # STEP 3: Foreign Song without reference lyrics -> Try Groq Whisper first, then Gemini Audio
+    # STEP 3: Foreign Song without reference lyrics -> Groq Whisper then Gemini Audio
     groq_key = get_groq_key()
     if groq_key:
         try:
@@ -603,7 +669,6 @@ Output ONLY a JSON array of strings representing each lyric line in order.
         except Exception:
             pass
 
-    # Fallback to Gemini Audio for foreign songs
     gem_fallback = await transcribe_or_align_audio_gemini(
         audio_bytes=audio_bytes,
         mime_type=mime_type,
@@ -617,7 +682,7 @@ Output ONLY a JSON array of strings representing each lyric line in order.
     return JSONResponse({"error": "အသံဖိုင်ထဲမှ သီချင်းစာသား ထုတ်ယူမရနိုင်ပါ။"}, status_code=422)
 
 # =====================================================
-# NEW ROUTE 3: ULTRA-SHORT CONCISE SONG & BATCH TRANSLATION
+# ROUTE 3: FOREIGN SONG CONCISE MYANMAR TRANSLATION
 # =====================================================
 
 @app.post("/song")
@@ -640,10 +705,11 @@ async def translate_song_lyrics(req: SongRequest):
 အောက်ပါ သီချင်းစာကြောင်း တစ်ကြောင်းချင်းစီအတွက် မူရင်းစာသား (orig)၊ အင်္ဂလိပ်ဘာသာပြန် (en) နှင့် အလွန်ကျစ်လျစ်တိုတောင်းသော မြန်မာဘာသာပြန် (mm) တို့ကို ထုတ်ပေးပါ။
 
 အလွန်အရေးကြီးသော စည်းမျဉ်းများ:
-1. "mm" (မြန်မာစာတန်း) သည် ဗီဒီယိုပေါ်တွင် (၁) ကြောင်းတည်း လှပစွာ ပေါ်စေရန် အလွန်တိုတိုနှင့် အဓိပ္ပာယ်ထိမိသော သီချင်းစာသားစတိုင် (စကားလုံး ၄ လုံး မှ ၆ လုံးခန့်သာ) ရေးပေးရမည်။ စာကြောင်းအရှည်ကြီး လုံးဝ မရေးရပါ။
-2. "ကျွန်တော်/ကျွန်မ/ခင်ဗျား/သင်" အစား သီချင်းဆန်သော "ကိုယ်/ငါ/မင်း/တို့" ကိုသာ သုံးပါ။
-3. စာကြောင်းအရေအတွက် ({len(payload)} ကြောင်း) နှင့် အစီအစဉ် (idx) အတိအကျ တူညီရမည်။
-4. Output MUST be ONLY a valid JSON array:
+1. "mm" သည် မြန်မာဘာသာစစ်စစ် ဖြစ်ရမည် (အင်္ဂလိပ်စာသား ပြန်မထည့်ရပါ)။
+2. "mm" (မြန်မာစာတန်း) သည် ဗီဒီယိုပေါ်တွင် (၁) ကြောင်းတည်း လှပစွာ ပေါ်စေရန် အလွန်တိုတိုနှင့် အဓိပ္ပာယ်ထိမိသော သီချင်းစာသားစတိုင် (စကားလုံး ၄ လုံး မှ ၆ လုံးခန့်သာ) ရေးပေးရမည်။
+3. "ကျွန်တော်/ကျွန်မ/ခင်ဗျား/သင်" အစား သီချင်းဆန်သော "ကိုယ်/ငါ/မင်း/တို့" ကိုသာ သုံးပါ။
+4. စာကြောင်းအရေအတွက် ({len(payload)} ကြောင်း) နှင့် အစီအစဉ် (idx) အတိအကျ တူညီရမည်။
+5. Output MUST be ONLY a valid JSON array:
 [
   {{ "idx": 0, "orig": "မူရင်းစာသား", "en": "Short English lyric", "mm": "တိုတိုကျစ်လျစ်သော မြန်မာစာတန်း" }}
 ]
@@ -665,8 +731,8 @@ Input:
                 if not found and i < len(parsed) and isinstance(parsed[i], dict):
                     found = parsed[i]
 
-            mm_val = str(found.get("mm") or orig_clean).replace("\n", " ").strip()
-            if is_gibberish_text(mm_val):
+            mm_val = str(found.get("mm") or "").replace("\n", " ").strip()
+            if not mm_val or is_gibberish_text(mm_val):
                 mm_val = orig_clean
 
             all_lyrics.append({
@@ -709,3 +775,116 @@ Input:
         tr = parsed[i] if i < len(parsed) and isinstance(parsed[i], str) else orig
         out.append(tr.replace("\n", " ").strip() or orig)
     return {"ok": True, "translations": out}
+
+# =====================================================
+# ROUTE 4: STORY MAKER & STORY TO VIDEO (CAPTIVATING HOOK!)
+# =====================================================
+
+@app.post("/story")
+async def generate_captivating_story(req: StoryRequest):
+    topic = (req.topic or "").strip()
+    if not topic:
+        raise HTTPException(status_code=400, detail="Story topic လိုအပ်ပါသည်။")
+
+    category = req.category or "horror"
+    story_type = req.type or "single"
+
+    hook_instruction = """
+🔥 အလွန်အရေးကြီးသော အဖွင့်ပိုင်း (SCENE 1 HOOK RULE):
+- ပထမဆုံး အခန်း (Scene 1) ကို "တစ်ခါတုန်းက..." သို့မဟုတ် ရိုးရှင်းသော မိတ်ဆက်စကားဖြင့် လုံးဝ မစရပါ!
+- ပထမဆုံး စက္ကန့်ပိုင်းအတွင်း နားထောင်သူ ကြက်သီးထသွားစေမည့်၊ သိချင်စိတ် ပြင်းပြသွားစေမည့် (Scroll-Stopping Dramatic Hook / ထူးဆန်းထိတ်လန့်ဖွယ် အဖြစ်အပျက် သို့မဟုတ် မေးခွန်းထုတ်ချက်) ဖြင့် ချက်ချင်း ဆွဲဆောင်မှုရှိရှိ စတင်ရေးသားပါ။
+- အခန်းတိုင်းကို စကားပြောဟန် သဘာဝကျကျ၊ ရုပ်ရှင်ဆန်ဆန် စိတ်ဝင်စားဖွယ် အရှိန်အဟုန်မပြတ် စီးဆင်းအောင် ရေးသားပါ။
+"""
+
+    if story_type == "series":
+        ep_count = min(6, max(2, int(req.episodes or 2)))
+        prompt = f"""
+သင်သည် ပရိသတ် သန်းချီကြည့်ရှုသော Viral Short Video ဇာတ်လမ်းရေးဆရာ ဖြစ်သည်။
+အောက်ပါ ခေါင်းစဉ်ကို အခြေခံ၍ စုစုပေါင်း {ep_count} ပိုင်း (Episode 1 မှ Episode {ep_count} အထိ) ပါဝင်သော ဇာတ်လမ်းတွဲကို ရေးပေးပါ။
+
+ခေါင်းစဉ်: "{topic}"
+အမျိုးအစား: {category}
+အပိုင်း အရေအတွက်: စုစုပေါင်း {ep_count} ပိုင်း (တစ်ပိုင်းလျှင် အခန်း ၁၅ ခန်း အတိအကျ)
+
+{hook_instruction}
+
+စည်းမျဉ်းများ:
+1. Episode တစ်ခုစီ၏ Scene 1 တိုင်းတွင် ပရိသတ် ဆက်မကြည့်ဘဲ မနေနိုင်အောင် ဆွဲဆောင်နိုင်သည့် အဖွင့် Hook ဖြင့် စတင်ပြီး၊ အပိုင်းအဆုံး (Scene 15) တွင် နောက်တစ်ပိုင်း ဆက်ကြည့်ချင်လာအောင် Cliffhanger ဖြင့် အဆုံးသတ်ပါ။
+2. Scene တစ်ခုစီ၏ မြန်မာစာသား (text_mm) သည် စကားလုံးရေ ၃၅ လုံးမှ ၄၅ လုံးခန့် ရှိရမည်။
+3. image_prompt_en ကို Cinematic English visual prompt အဖြစ် အသေးစိတ် ရေးပါ။
+4. Output MUST be ONLY a valid JSON array:
+[
+  {{
+    "episode": 1,
+    "scene": 1,
+    "text_mm": "ညသန်းခေါင် ၁၂ နာရီတိတိမှာ သင့်အိပ်ခန်းတံခါးကို အပြင်ကမဟုတ်ဘဲ အထဲကနေ လာခေါက်နေသံ ကြားလိုက်ရရင် သင်ဘာလုပ်မလဲ...",
+    "image_prompt_en": "Eerie bedroom door at midnight, dramatic shadows, cinematic horror lighting, 8k"
+  }}
+]
+"""
+    else:
+        num_dur = int(req.duration or 1)
+        scene_count = 8 if num_dur == 1 else (15 if num_dur == 2 else (20 if num_dur == 3 else 32))
+        prompt = f"""
+သင်သည် ပရိသတ် သန်းချီကြည့်ရှုသော Viral Faceless AI Video ဇာတ်လမ်းရေးဆရာ ဖြစ်သည်။
+ခေါင်းစဉ်: "{topic}"
+အမျိုးအစား: {category}
+ကြာချိန်: {num_dur} မိနစ် (စုစုပေါင်း အခန်း {scene_count} ခန်း အတိအကျ)
+
+{hook_instruction}
+
+စည်းမျဉ်းများ:
+1. Scene 1 ကို ပရိသတ် ဖုန်းပွတ်နေရာမှ ရပ်ပြီး နားထောင်ချင်လာစေမည့် အပြင်းထန်ဆုံး စိတ်ဝင်စားဖွယ် Hook ဖြင့် စတင်ပါ။
+2. Scene တစ်ခုစီ၏ မြန်မာစာသား (text_mm) သည် စကားလုံးရေ ၃၅ လုံးမှ ၄၅ လုံးခန့် ရှိရမည်။
+3. image_prompt_en ကို Cinematic English visual prompt အဖြစ် ရေးပါ။
+4. Output MUST be ONLY a valid JSON array:
+[
+  {{
+    "episode": 1,
+    "scene": 1,
+    "text_mm": "လူတိုင်း မေ့ပျောက်ထားကြတဲ့ ဒီရွာပျက်ကြီးထဲကို ခြေချမိသူတိုင်း ဘာကြောင့် မနက်မိုးလင်းတာနဲ့ ပျောက်ဆုံးသွားကြရတာလဲ...",
+    "image_prompt_en": "Abandoned mysterious village in deep fog, cinematic dramatic lighting, 8k resolution"
+  }}
+]
+"""
+
+    res = await call_master_ai(prompt)
+    if not res.get("ok"):
+        raise HTTPException(status_code=503, detail=res.get("error", "Story generation failed"))
+
+    parsed_story = parse_json_array(res.get("text", ""))
+    if not isinstance(parsed_story, list) or not parsed_story:
+        raise HTTPException(status_code=502, detail="Story JSON array ဖတ်မရပါ။")
+
+    return {"ok": True, "story": parsed_story}
+
+# =====================================================
+# ROUTE 5: MOVIE RECAPS
+# =====================================================
+
+@app.post("/recap")
+async def generate_movie_recap(req: RecapRequest):
+    if not req.segments:
+        raise HTTPException(status_code=400, detail="Segments မပါရှိပါ။")
+
+    video_dur = float(req.duration or 60.0)
+    prompt = f"""
+သင်သည် မြန်မာ Movie Recap Channel အတွက် ကျွမ်းကျင်သော ဇာတ်ကြောင်းပြော စာရေးဆရာ ဖြစ်သည်။
+ဗီဒီယို စုစုပေါင်း ကြာချိန်: {round(video_dur)} စက္ကန့်။
+ပထမဆုံး စာကြောင်း (id: 1) တွင် ပရိသတ် စိတ်ဝင်စားသွားစေမည့် ဆွဲဆောင်မှုရှိသော အဖွင့်စကားဖြင့် စတင်ပြီး 0 စက္ကန့်မှ {round(video_dur)} စက္ကန့်အထိ ဇာတ်ကြောင်းပြော စာတန်းထိုးများ ရေးပေးပါ။
+Output MUST be ONLY valid JSON array:
+[
+  {{ "id": 1, "start": 0.0, "end": 4.5, "recap_mm": "ဆွဲဆောင်မှုရှိသော အဖွင့်စာသား..." }}
+]
+SOURCE SEGMENTS:
+{json.dumps(req.segments[:150], ensure_ascii=False)}
+"""
+    res = await call_master_ai(prompt)
+    if not res.get("ok"):
+        raise HTTPException(status_code=503, detail=res.get("error", "Recap generation failed"))
+
+    parsed = parse_json_array(res.get("text", ""))
+    if not isinstance(parsed, list):
+        raise HTTPException(status_code=502, detail="Recap JSON ဖတ်မရပါ။")
+
+    return {"ok": True, "recap": parsed}
